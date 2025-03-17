@@ -1,18 +1,58 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\TaskController;
+use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use phpDocumentor\Reflection\Types\Resource_;
 
-Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
+// Route::get('/', function () {
+//     return Inertia::render('Welcome', [
+//         'canLogin' => Route::has('login'),
+//         'canRegister' => Route::has('register'),
+//         'laravelVersion' => Application::VERSION,
+//         'phpVersion' => PHP_VERSION,
+//     ]);
+// });
+
+
+// Route::redirect('/', '/index');
+
+// Route::get('/', function () {
+//     return view('index');
+// });
+
+Route::redirect('/', '/dashboard');
+Route::middleware(['auth','verified'])->group(function()
+{
+Route::get('/dashboard',fn() => Inertia::render('Dashboard'))
+->name('dashboard');
+
+Route::resource('project',ProjectController::class);
+
+Route::resource('task',TaskController::class);
+Route::resource('user',UserController::class);
+
+
+
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
@@ -37,8 +77,8 @@ Route::middleware('auth')->group(function () {
 // });
 
 
-// Route::get('/power_generation', function () {
-//     return view('project_business');})->name('power_generation');
+Route::get('/power_generation', function () {
+    return view('project_business');})->name('power_generation');
 
 
 
