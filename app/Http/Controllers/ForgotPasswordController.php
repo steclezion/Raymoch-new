@@ -77,7 +77,7 @@ class ForgotPasswordController extends Controller
      */
     public function showLinkRequestForm()
     {
-        return view('auth.forgot-password');
+        return view('raymoch.auth.forgot-password');
     }
 
     /**
@@ -93,6 +93,11 @@ class ForgotPasswordController extends Controller
         $status = Password::sendResetLink(
             $request->only('email')
         );
+
+        if ($status === Password::RESET_LINK_SENT) {
+            //dd("Password reset link sent successfully!");
+        }
+
 
         // Check the result and respond accordingly
         return $status === Password::RESET_LINK_SENT

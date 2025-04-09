@@ -27,6 +27,7 @@ class AuthController extends Controller
 
           if (Auth::attempt(["email"=>$request->email,"password"=>$request->password]))
           {
+            session()->put('expires_at', now()->addMinutes(60));
           return redirect()->route('dashboard', 'You have logged in!');
           //return redirect()->intended('dashboard', 'You have logged in!');
          // return redirect('/dashboard'); // Or wherever you want

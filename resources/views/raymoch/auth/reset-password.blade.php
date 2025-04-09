@@ -7,7 +7,7 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport" >
     <meta content="Gardyn — Garden and Landscape Website Template" name="description" >
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title> Raymoch | Login | Admin </title>
+    <title> Raymoch | Reset Password | Admin </title>
     <meta content="" name="keywords" >
     <meta content="" name="author" >
     <style>
@@ -162,13 +162,11 @@
     }, 5000);
 </script>
 
-<script src="{{ asset('https://accounts.google.com/gsi/client')}}" async defer></script>
 <link rel="stylesheet" href="{{ asset('https://unpkg.com/bootstrap@5.3.3/dist/css/bootstrap.min.css')}}">
 
-<script src="{{ asset('https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js') }}"></script>
-
-</head>
 <!-- Login 8 - Bootstrap Brain Component -->
+
+
 <section class="bg-light p-3 p-md-4 p-xl-5">
     <div class="container">
       <div class="row justify-content-center">
@@ -176,14 +174,15 @@
           <div class="card border-light-subtle shadow-sm">
 
 
-                <div class="row g-0">
-                <div class="col-12 col-md-6 rotate-on-hover">
+            <div class="row g-0">
+              <div class="col-12 col-md-6 rotate-on-hover">
                 <img class="img-fluid rounded-start   w-100 h-100 object-fit-cover" loading="lazy" src="{{ asset('images/1-edited-ai.jpg') }}" alt="Welcome back you've been missed!">
                 <div class="color-overlay"></div>
                 <div class="raymoch-object raymoch-1">Raymoch</div>
-                <div class="raymoch-object raymoch-2">Raymoch</div>
-                <div class="raymoch-object raymoch-3">Raymoch</div>
-                </div>
+        <div class="raymoch-object raymoch-2">Raymoch</div>
+        <div class="raymoch-object raymoch-3">Raymoch</div>
+            </div>
+
 
 
               <div class="col-12 col-md-6 d-flex align-items-center justify-content-center">
@@ -191,6 +190,7 @@
                   <div class="card-body p-3 p-md-4 p-xl-5">
                     <div class="row">
                       <div class="col-12">
+
                         <div class="mb-5">
                             <div class="text-center mb-4">
                                 <a href="#!">
@@ -203,90 +203,62 @@
                             </div>
                           <h4 class="text-center">Welcome back you've been missed!</h4>
                         </div>
+
+
                       </div>
                     </div>
 
+
                     <div class="row">
-                      <div class="col-12">
-                        <div class="d-flex gap-3 flex-column">
-                          <a href=" {{ route('auth_google') }}" class="btn btn-lg btn-outline-white">
-                            {{-- <span class="ms-2 fs-6">Log in with Google</span> --}}
-                            <img src="{{ secure_asset('https://developers.google.com/identity/images/btn_google_signin_dark_normal_web.png')}}"  alt="Sign in with Google">
-                          </a>
-                    </div>
-                        <p class="text-center mt-4 mb-5">Or sign in with</p>
+                        <div class="col-12">
+                          <div class="d-flex gap-3 flex-column">
+                            <a href=" {{ route('auth_google') }}" class="btn btn-lg btn-outline-white">
+                              {{-- <span class="ms-2 fs-6">Log in with Google</span> --}}
+                              <img src="{{ secure_asset('https://developers.google.com/identity/images/btn_google_signin_dark_normal_web.png')}}"  alt="Sign in with Google">
+                            </a>
                       </div>
-                    </div>
-                    <form action="{{ route('login.post') }}" method="post" name="LoginForm" >
-                        @csrf
-                        @session('error')
-{{-- <div id="my-alert" class="alert alert-danger alert-dismissible fade show" role="alert">
-    {{ $value }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-</div> --}}
-<div class="container mt-4">
-    <div id="login-alert" class="alert alert-warning alert-dismissible fade show shadow-sm border-0" role="alert">
-        <strong>Oops!</strong>{{ $value }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                          <p class="text-center mt-4 mb-5">Or sign in with</p>
+                        </div>
+                      </div>
+
+
+
+
+<form method="POST" action="{{ route('password.update') }}">
+    @csrf
+
+    <input type="hidden" name="token" value="{{ $token }}">
+    <input type="hidden" name="email" value="{{ request('email') }}">
+
+    <div class="form-floating mb-3">
+        <input type="password" name="password" class="form-control" placeholder="New Password" required>
+        <label for="password">New Password</label>
     </div>
-</div>
- @endsession
 
-                      <div class="row gy-3 overflow-hidden">
-                        <div class="col-12">
+    <div class="form-floating mb-3">
+        <input type="password" name="password_confirmation" class="form-control" placeholder="Confirm Password" required>
+        <label for="password_confirmation">Confirm Password</label>
+    </div>
 
-                          <div class="form-floating mb-3">
-                            <input type="email" class="form-control" name="email" id="email" placeholder="name@example.com" required>
-                            <label for="email" class="form-label">Email</label>
-                            @error('email')
-                            <span class="text-danger"> {{$message}}</span>
-                            @enderror
-                        </div>
-                        </div>
-
-                        <div class="col-12">
-                          <div class="form-floating mb-3">
-                            <input type="password" class="form-control" name="password" id="password" value="" placeholder="Password" required>
-                            <label for="password" class="form-label">Password</label>
-                            @error('password')
-                            <span class="text-danger"> {{$message}}</span>
-                            @enderror
-                        </div>
-                        </div>
+    <button type="submit" class="btn btn-dark btn-lg">Reset Password</button>
+</form>
 
 
-
-                        {{-- <div class="col-12">
-                          <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="" name="remember_me" id="remember_me">
-                            <label class="form-check-label text-secondary" for="remember_me">
-                              Keep me logged in
-                            </label>
-                          </div>
-                        </div> --}}
-                        <div class="col-12">
-                          <div class="d-grid">
-                            <button class="btn btn-dark btn-lg" type="submit">Login</button>
-
-                        </div>
-                        </div>
-                      </div>
-                    </form>
-                    <div class="row">
-                      <div class="col-12">
-                        <div class="d-flex gap-2 gap-md-4 flex-column flex-md-row justify-content-md-center mt-5">
-                          <a href="{{ route('register') }}" class="link-secondary text-decoration-none">Create new account</a>
-                          <a href="{{ route('password.request') }}" class="link-secondary text-decoration-none">Forgot password</a>
-
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+<div class="row">
+    <div class="col-12">
+      <div class="d-flex gap-2 gap-md-4 flex-column flex-md-row justify-content-md-center mt-5">
+          <a href="{{ route('register') }}" class="link-secondary text-decoration-none">Create new account</a>
+          <a href="{{ route('password.request') }}" class="link-secondary text-decoration-none">Forgot password</a>
         </div>
-      </div>
     </div>
-  </section>
+  </div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+

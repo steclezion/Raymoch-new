@@ -4,12 +4,14 @@
 <!-- jQuery UI 1.11.4 -->
 <!-- <script src="{{asset('plugins/jquery-ui/jquery-ui.min.js')}}"></script> -->
 {{--@endcannot--}}
+<script src="{{ asset('//cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js')}}"></script>
+<script src="{{ asset('//cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js')}}"></script>
 
  <script rel="stylesheet" src="{{ asset('/app/lib/ajax/jquery/1.9.1/jquery.js')}}" ></script>
 <script rel="stylesheet" src="{{ asset('/app/lib/ajax/jquery-validate/1.19.0/jquery.validate.js')}}" ></script>
 <script rel="stylesheet" src="{{ asset('/app/lib/1.10.16/js/jquery.dataTables.min.js')}}" ></script>
 <script rel="stylesheet" src="{{ asset('/app/lib/4.1.3/js/bootstrap.min.js')}}" ></script>
-<script rel="stylesheet" src="{{ asset('/app/lib/1.10.19/js/dataTables.bootstrap4.min.js')}}" ></script> 
+<script rel="stylesheet" src="{{ asset('/app/lib/1.10.19/js/dataTables.bootstrap4.min.js')}}" ></script>
 
 <!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
 <script>

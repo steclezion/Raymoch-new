@@ -8,6 +8,14 @@
         <a href="index3.html" class="nav-link">Home</a>
       </li>
 
+      <li class="nav-item d-none d-sm-inline-block">
+        <a href="{{ url('/roles') }}" class="nav-link">Roles</a>
+      </li>
+
+      <li class="nav-item d-none d-sm-inline-block">
+        <a href="{{ url('/permissions') }}" class="nav-link">Permissions</a>
+      </li>
+
     </ul>
 
     <!-- Right navbar links -->
@@ -16,7 +24,7 @@
 
 
       <!-- Messages Dropdown Menu -->
-{{--      <li class="nav-item dropdown">--}}
+     {{-- <li class="nav-item dropdown">--}}
 {{--        <a class="nav-link" data-toggle="dropdown" href="#">--}}
 {{--          <i class="far fa-comments"></i>--}}
 {{--          <span class="badge badge-danger navbar-badge">3</span>--}}
@@ -71,9 +79,10 @@
 {{--          <div class="dropdown-divider"></div>--}}
 {{--          <a href="#" class="dropdown-item dropdown-footer">See All Messages</a>--}}
 {{--        </div>--}}
-{{--      </li>--}}
+{{--      </li> --}}
       <!-- Notifications Dropdown Menu -->
       <li class="nav-item dropdown">
+
         <a class="nav-link" data-toggle="dropdown" href="#">
           <i class="far fa-bell"></i>
           <span class="badge badge-warning navbar-badge" id="notification_count"> </span>
@@ -82,25 +91,19 @@
           <p style="horiz-align: center ;margin-left: 5px;">
           You have
           <span id="notification_count_header">
-
-
-          </span>
+           </span>
           notifications.
           </p>
           <div class="dropdown-divider"></div>
           <p id="notification_contents" >
 
           </p>
-
-
           <div class="dropdown-divider"></div>
           <a href="" class="dropdown-item dropdown-footer">See All Notifications</a>
-
-        </div>
+          </div>
 
       </li>
-      <a href="{{ route('logout') }}" class="dropdown-item" title="Logout
-">
+      <a href="{{ route('logout') }}" class="dropdown-item" title="Logout">
         <i class="fas fa-sign-out-alt"></i>
         <span class="float-right text-muted text-sm"></span>
       </a>

@@ -10,11 +10,6 @@
   <link rel="stylesheet" href="{{asset('dist/css/adminlte.min.css')}}">
   <!-- overlayScrollbars -->
   <link rel="stylesheet" href="{{asset('plugins/overlayScrollbars/css/OverlayScrollbars.min.css')}}">
-
   <link rel="stylesheet" href="{{asset('plugins/toastr/toastr.min.css') }}">
+  <link rel="stylesheet" href="{{asset('//cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css') }}">
 
-
-
-
-
-  

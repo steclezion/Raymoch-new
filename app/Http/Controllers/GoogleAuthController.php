@@ -113,8 +113,10 @@ class GoogleAuthController extends Controller
 // Send notification only if it was newly created
 if ($user->wasRecentlyCreated) {
     $user->notify(new WelcomeGoogleUser());
+
 }
-        return redirect('/dashboard'); // Or wherever you want
+session()->put('expires_at', now()->addMinutes(60));
+return redirect('/dashboard'); // Or wherever you want
 
     }
 
