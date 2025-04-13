@@ -6,27 +6,20 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreHomePageWelcomeRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            //
+
             'title' => 'required|string|max:255',
-            'first_picture' => 'nullable|file|mimes:jpg,jpeg,png',
-            'second_picture' => 'nullable|file|mimes:jpg,jpeg,png',
-            'status' => 'required|string|in:active,inactive',
+            'description' => 'required|string|max:4550',
+            'first_picture' => 'nullable|image|mimes:jpeg,jpg,png,svg|max:4048',
+            'second_picture' => 'nullable|image|mimes:jpeg,jpg,png,svg|max:4048',
+            'status' => 'required|string',
         ];
     }
 }

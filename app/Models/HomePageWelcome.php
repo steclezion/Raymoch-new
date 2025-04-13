@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,5 +8,5 @@ class HomePageWelcome extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['title', 'first_picture', 'second_picture', 'status'];
+    protected $fillable = ['title','description','first_picture', 'second_picture', 'status'];
 }

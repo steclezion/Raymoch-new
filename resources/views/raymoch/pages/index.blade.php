@@ -1,6 +1,18 @@
 @extends('layouts.app_ray')
 @section('content')
 
+@foreach($HomePageActive as $HomePageActive)  @endforeach
+@foreach ( $Selected_Home_Page_Second_p as $Selected_Home_Page_Second_p )  @endforeach
+@foreach ( $Selected_Home_Page_Second_w as $Selected_Home_Page_Second_w )  @endforeach
+@foreach ( $Selected_Home_Page_Second_c as $Selected_Home_Page_Second_c  )  @endforeach
+@foreach ( $Selected_Home_Page_Second_h as $Selected_Home_Page_Second_h       )  @endforeach
+@foreach ( $Selected_Home_Page_Second_m as $Selected_Home_Page_Second_m        )  @endforeach
+@foreach ( $Selected_Home_Page_Second_r as  $Selected_Home_Page_Second_r      )  @endforeach
+@foreach ( $Selected_Home_Page_Second_s as  $Selected_Home_Page_Second_s      )  @endforeach
+@foreach ( $Selected_Home_Page_Second_e as $Selected_Home_Page_Second_e       )  @endforeach
+
+
+
 <link href="{{ asset('https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css') }}" rel="stylesheet">
 <script src="{{ asset('https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js')}}"></script>
 
@@ -14,10 +26,10 @@
                         <div class="col-lg-6">
                             <div class="relative">
                                 <div class="rounded-1 bg-body w-90 overflow-hidden wow zoomIn">
-                                    <img src="{{asset('images/services/9.png')}}" class="w-100 jarallax wow scaleIn" alt="">
+                                    <img src="{{ asset('storage/' . $HomePageActive->first_picture) }}" class="w-100 jarallax wow scaleIn" alt="">
                                 </div>
                                 <div class="rounded-1 bg-body w-50 abs mb-min-50 end-0 bottom-0 z-2 overflow-hidden shadow-soft wow zoomIn" data-wow-delay=".2s">
-                                    <img src="{{asset('images/services/10.png')}}" class="w-100 wow scaleIn" data-wow-delay=".2s" alt="">
+                                    <img src="{{ asset('storage/' . $HomePageActive->second_picture) }}"  class="w-100 wow scaleIn" data-wow-delay=".2s" alt="">
                                 </div>
                             </div>
                         </div>
@@ -27,10 +39,10 @@
                                 {{-- <div class="subtitle id-color wow fadeInUp" data-wow-delay=".3s">Welcome to Raymoch-Ventures
                                 </div> --}}
                                 <br>
-                                <h2 class="text-uppercase wow fadeInUp" data-wow-delay=".4s">East African  Enterprise Hub
+                                <h2 class="text-uppercase wow fadeInUp" data-wow-delay=".4s">{{ $HomePageActive->title }}
                                     {{-- <span class="id-color-2">Explore East Africa Potential</span> --}}
                                 </h2>
-                                <p class="wow fadeInUp" data-wow-delay=".6s">As part of the Eritrean Enterprise Hub, you are now connected to a network of forward-thinkers, entrepreneurs, and industry leaders who are dedicated to driving positive change and economic development in the region. Our mission is to support and nurture your aspirations by providing you with the resources, mentorship, and collaborative environment needed to turn your ideas into reality.</p>
+                                <p class="wow fadeInUp" data-wow-delay=".6s">{{ $HomePageActive->description }}</p>
                                 <button type="button" class="btn-main wow fadeInUp" data-wow-delay=".6s" data-bs-toggle="modal" data-bs-target="#myModal"> Our Services</button>
 
                                 @include('layouts/modal_our_service')
@@ -46,17 +58,18 @@
             <section class="p-4">
                 <div class="container-fluid">
                     <div class="row g-4">
+                        @if($Selected_Home_Page_Second_p->title == 'Power Generation')
                         <div class="col-lg-3 col-sm-6 wow fadeInRight" data-wow-delay=".0s">
                             <div class="bg-color text-light rounded-1 overflow-hidden">
                                 <div class="hover relative overflow-hidden text-light text-center">
-                                    <img src="{{asset('images/services/1.png')}}" class="hover-scale-1-1 w-100" alt="">
+                                    <img src="{{ asset('storage/' . $Selected_Home_Page_Second_p->picture) }}" class="hover-scale-1-1 w-100" alt="">
                                     <div class="abs w-100 px-4 hover-op-1 z-4 hover-mt-40 abs-centered">
                                         <a class="btn-line"  href="{{route('power_generation')}}">View Details</a>
                                     </div>
                                     <img src="{{asset('images/1-edited-ai-reference.png')}}" class="abs abs-centered w-20" alt="">
 
                                     <div class="abs z-2 bottom-0 mb-3 w-100 text-center hover-op-0">
-                                        <h4 class="mb-3">Power Generation</h4>
+                                        <h4 class="mb-3">{{ $Selected_Home_Page_Second_p->title }} </h4>
                                     </div>
                                     <div class="gradient-trans-color-bottom abs w-100 h-40 bottom-0 Z-1"></div>
                                 </div>
@@ -64,97 +77,103 @@
                                 <div class="p-4 py-2">
                                     <p class="mt-3">
                                         <li>
-                                        <ul>✅ Affordable electricity drives industries, supports businesses, and transforms everyday life.</ul>
-                                        <ul>✅ Renewable energy solutions power homes, schools, and hospitals for a brighter future.</ul>
-                                        <ul>✅ Digital expansion enables entrepreneurs, tech startups, and cross-border opportunities.</p> </ul>
+                                        <ul> {{ $Selected_Home_Page_Second_p->description_one }} </ul>
+                                        <ul> {{ $Selected_Home_Page_Second_p->description_two }}</ul>
+                                        <ul> {{ $Selected_Home_Page_Second_p->description_three }}</p> </ul>
                                         </li>
                                     </p>
                                 </div>
                             </div>
                         </div>
+           @endif
 
-                        <div class="col-lg-3 col-sm-6 wow fadeInRight" data-wow-delay=".3s">
-                            <div class="bg-color text-light rounded-1 overflow-hidden">
-                                <div class="hover relative overflow-hidden text-light text-center">
-                                    <img src="{{asset('images/services/2.png')}}" class="hover-scale-1-1 w-100" alt="">
-                                    <div class="abs w-100 px-4 hover-op-1 z-4 hover-mt-40 abs-centered">
-                                        <a class="btn-line" href="service-single.html">View Details</a>
-                                    </div>
-                                    <img src="{{asset('images/1-edited-ai-reference.png')}}" class="abs abs-centered w-20" alt="">
-                                    <div class="abs bg-color z-2 top-0 w-100 h-100 hover-op-1"></div>
-                                    <div class="abs z-2 bottom-0 mb-3 w-100 text-center hover-op-0">
-                                        <h4 class="mb-3">Whole Sales</h4>
-                                    </div>
-                                    <div class="gradient-trans-color-bottom abs w-100 h-40 bottom-0 Z-1"></div>
-                                </div>
 
-                                <div class="p-4 py-2">
-                                    <p class="mt-3">
-                                        <li>
-                                        <ul>✅  Reliable supply chains ensure businesses stay competitive and profitable.</ul>
-                                        <ul>✅  Bulk purchasing power lowers costs and maximizes revenue. </ul>
-                                        <ul>✅  Technology-driven trade streamlines logistics, payments, and cross-border transactions.</p> </ul>
-                                        </li>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+           @if($Selected_Home_Page_Second_w->title == 'Whole Sale')
+           <div class="col-lg-3 col-sm-6 wow fadeInRight" data-wow-delay=".0s">
+               <div class="bg-color text-light rounded-1 overflow-hidden">
+                   <div class="hover relative overflow-hidden text-light text-center">
+                       <img src="{{ asset('storage/' . $Selected_Home_Page_Second_w->picture) }}" class="hover-scale-1-1 w-100" alt="">
+                       <div class="abs w-100 px-4 hover-op-1 z-4 hover-mt-40 abs-centered">
+                           <a class="btn-line"  href="{{route('power_generation')}}">View Details</a>
+                       </div>
+                       <img src="{{asset('images/1-edited-ai-reference.png')}}" class="abs abs-centered w-20" alt="">
 
-                        <div class="col-lg-3 col-sm-6 wow fadeInRight" data-wow-delay=".6s">
-                            <div class="bg-color text-light rounded-1 overflow-hidden">
-                                <div class="hover relative overflow-hidden text-light text-center">
-                                    <img src="{{asset('images/services/3.png')}}" class="hover-scale-1-1 w-100" alt="">
-                                    <div class="abs w-100 px-4 hover-op-1 z-4 hover-mt-40 abs-centered">
-                                        <a class="btn-line" href="service-single.html">View Details</a>
-                                    </div>
-                                    <img src="{{asset('images/1-edited-ai-reference.png')}}" class="abs abs-centered w-20" alt="">
-                                    <div class="abs bg-color z-2 top-0 w-100 h-100 hover-op-1"></div>
-                                    <div class="abs z-2 bottom-0 mb-3 w-100 text-center hover-op-0">
-                                        <h4 class="mb-3">Construction</h4>
-                                    </div>
-                                    <div class="gradient-trans-color-bottom abs w-100 h-40 bottom-0 Z-1"></div>
-                                </div>
+                       <div class="abs z-2 bottom-0 mb-3 w-100 text-center hover-op-0">
+                           <h4 class="mb-3">{{ $Selected_Home_Page_Second_w->title }} </h4>
+                       </div>
+                       <div class="gradient-trans-color-bottom abs w-100 h-40 bottom-0 Z-1"></div>
+                   </div>
 
-                                <div class="p-4 py-2">
-                                    <p class="mt-3">
-                                        <li>
-                                        <ul>✅ Reliable materials & technology drive efficiency and quality in every project.</ul>
-                                        <ul>✅ Sustainable building solutions ensure long-term growth and environmental responsibility </ul>
-                                        <ul>✅ Strong networks & partnerships unlock opportunities in real estate, roads, and mega projects. </p> </ul>
-                                        </li>
-                                    </p>
-                                 </div>
-                            </div>
-                        </div>
+                   <div class="p-4 py-2">
+                       <p class="mt-3">
+                           <li>
+                           <ul> {{ $Selected_Home_Page_Second_w->description_one }} </ul>
+                           <ul> {{ $Selected_Home_Page_Second_w->description_two }}</ul>
+                           <ul> {{ $Selected_Home_Page_Second_w->description_three }}</p> </ul>
+                           </li>
+                       </p>
+                   </div>
+               </div>
+           </div>
+@endif
 
-                        <div class="col-lg-3 col-sm-6 wow fadeInRight" data-wow-delay=".9s">
-                            <div class="bg-color text-light rounded-1 overflow-hidden">
-                                <div class="hover relative overflow-hidden text-light text-center">
-                                    <img src="{{asset('images/services/4.png')}}" class="hover-scale-1-1 w-100" alt="">
-                                    <div class="abs w-100 px-4 hover-op-1 z-4 hover-mt-40 abs-centered">
-                                        <a class="btn-line" href="service-single.html">View Details</a>
-                                    </div>
-                                    <img src="{{asset('images/1-edited-ai-reference.png')}}" class="abs abs-centered w-20" alt="">
-                                    <div class="abs bg-color z-2 top-0 w-100 h-100 hover-op-1"></div>
-                                    <div class="abs z-2 bottom-0 mb-3 w-100 text-center hover-op-0">
-                                        <h4 class="mb-3">Hotel and Dining Business </h4>
-                                    </div>
-                                    <div class="gradient-trans-color-bottom abs w-100 h-40 bottom-0 Z-1"></div>
-                                </div>
+@if($Selected_Home_Page_Second_c->title == 'Construction')
+<div class="col-lg-3 col-sm-6 wow fadeInRight" data-wow-delay=".0s">
+    <div class="bg-color text-light rounded-1 overflow-hidden">
+        <div class="hover relative overflow-hidden text-light text-center">
+            <img src="{{ asset('storage/' . $Selected_Home_Page_Second_c->picture) }}" class="hover-scale-1-1 w-100" alt="">
+            <div class="abs w-100 px-4 hover-op-1 z-4 hover-mt-40 abs-centered">
+                <a class="btn-line"  href="{{route('power_generation')}}">View Details</a>
+            </div>
+            <img src="{{asset('images/1-edited-ai-reference.png')}}" class="abs abs-centered w-20" alt="">
 
-                                <div class="p-4 py-2">
+            <div class="abs z-2 bottom-0 mb-3 w-100 text-center hover-op-0">
+                <h4 class="mb-3">{{ $Selected_Home_Page_Second_c->title }} </h4>
+            </div>
+            <div class="gradient-trans-color-bottom abs w-100 h-40 bottom-0 Z-1"></div>
+        </div>
 
-                                    <p class="mt-3">
-                                        <li>
-                                        <ul>✅ Exceptional service & quality attract local and international guests.</ul>
-                                        <ul>✅ Culinary excellence & ambiance create unforgettable dining experiences. </ul>
-                                        <ul>✅ Strong digital presence & customer engagement boost reservations and brand recognition.</ul>
-                                        </li>
-                                    </p>
+        <div class="p-4 py-2">
+            <p class="mt-3">
+                <li>
+                <ul> {{ $Selected_Home_Page_Second_c->description_one }} </ul>
+                <ul> {{ $Selected_Home_Page_Second_c->description_two }}</ul>
+                <ul> {{ $Selected_Home_Page_Second_c->description_three }}</p> </ul>
+                </li>
+            </p>
+        </div>
+    </div>
+</div>
+@endif
 
-                                 </div>
-                            </div>
-                        </div>
+@if($Selected_Home_Page_Second_h->title == 'Hotel and Dining Services')
+<div class="col-lg-3 col-sm-6 wow fadeInRight" data-wow-delay=".0s">
+    <div class="bg-color text-light rounded-1 overflow-hidden">
+        <div class="hover relative overflow-hidden text-light text-center">
+            <img src="{{ asset('storage/' . $Selected_Home_Page_Second_h->picture) }}" class="hover-scale-1-1 w-100" alt="">
+            <div class="abs w-100 px-4 hover-op-1 z-4 hover-mt-40 abs-centered">
+                <a class="btn-line"  href="{{route('power_generation')}}">View Details</a>
+            </div>
+            <img src="{{asset('images/1-edited-ai-reference.png')}}" class="abs abs-centered w-20" alt="">
+
+            <div class="abs z-2 bottom-0 mb-3 w-100 text-center hover-op-0">
+                <h4 class="mb-3">{{ $Selected_Home_Page_Second_h->title }} </h4>
+            </div>
+            <div class="gradient-trans-color-bottom abs w-100 h-40 bottom-0 Z-1"></div>
+        </div>
+
+        <div class="p-4 py-2">
+            <p class="mt-3">
+                <li>
+                <ul> {{ $Selected_Home_Page_Second_h->description_one }} </ul>
+                <ul> {{ $Selected_Home_Page_Second_h->description_two }}</ul>
+                <ul> {{ $Selected_Home_Page_Second_h->description_three }}</p> </ul>
+                </li>
+            </p>
+        </div>
+    </div>
+</div>
+@endif
 
                     </div>
                 </div>
@@ -567,109 +586,122 @@
             <section class="p-4">
                 <div class="container-fluid">
                     <div class="row g-4">
-                        <div class="col-lg-3 col-sm-6 wow fadeInRight" data-wow-delay=".0s">
-                            <div class="bg-color text-light rounded-1 overflow-hidden">
-                                <div class="hover relative overflow-hidden text-light text-center">
-                                    <img src="{{asset('images/background/1.png')}}" class="hover-scale-1-1 w-100" alt="">
-                                    <div class="abs w-100 px-4 hover-op-1 z-4 hover-mt-40 abs-centered">
-                                        <a class="btn-line" href="service-single.html">View Details</a>
-                                    </div>
-                                    <img src="{{asset('images/1-edited-ai-reference.png')}}" class="abs abs-centered w-20" alt="">
-                                    <div class="abs bg-color z-2 top-0 w-100 h-100 hover-op-1"></div>
-                                    <div class="abs z-2 bottom-0 mb-3 w-100 text-center hover-op-0">
-                                        <h4 class="mb-3">Manufacturing</h4>
-                                    </div>
-                                    <div class="gradient-trans-color-bottom abs w-100 h-40 bottom-0 Z-1"></div>
-                                </div>
 
-                                <div class="p-4 py-2">
-                                    <p class="mt-3">
-                                        <li>
-                                        <ul>✅ Advanced production & technology enhance efficiency and product quality.</ul>
-                                        <ul>✅ Strong supply chains & logistics ensure seamless operations and market expansion. </ul>
-                                        <ul>✅ Sustainable manufacturing practices drive long-term growth and competitiveness.</ul>
-                                        </li>
-                                    </p>                                </div>
-                            </div>
-                        </div>
+@if($Selected_Home_Page_Second_m->title == 'Manufacturing')
+<div class="col-lg-3 col-sm-6 wow fadeInRight" data-wow-delay=".0s">
+    <div class="bg-color text-light rounded-1 overflow-hidden">
+        <div class="hover relative overflow-hidden text-light text-center">
+            <img src="{{ asset('storage/' . $Selected_Home_Page_Second_m->picture) }}" class="hover-scale-1-1 w-100" alt="">
+            <div class="abs w-100 px-4 hover-op-1 z-4 hover-mt-40 abs-centered">
+                <a class="btn-line"  href="{{route('power_generation')}}">View Details</a>
+            </div>
+            <img src="{{asset('images/1-edited-ai-reference.png')}}" class="abs abs-centered w-20" alt="">
 
-                        <div class="col-lg-3 col-sm-6 wow fadeInRight" data-wow-delay=".3s">
-                            <div class="bg-color text-light rounded-1 overflow-hidden">
-                                <div class="hover relative overflow-hidden text-light text-center">
-                                    <img src="{{asset('images/background/2.png')}}" class="hover-scale-1-1 w-100" alt="">
-                                    <div class="abs w-100 px-4 hover-op-1 z-4 hover-mt-40 abs-centered">
-                                        <a class="btn-line" href="service-single.html">View Details</a>
-                                    </div>
-                                    <img src="{{asset('images/1-edited-ai-reference.png')}}" class="abs abs-centered w-20" alt="">
-                                    <div class="abs bg-color z-2 top-0 w-100 h-100 hover-op-1"></div>
-                                    <div class="abs z-2 bottom-0 mb-3 w-100 text-center hover-op-0">
-                                        <h4 class="mb-3">Retail</h4>
-                                    </div>
-                                    <div class="gradient-trans-color-bottom abs w-100 h-40 bottom-0 Z-1"></div>
-                                </div>
+            <div class="abs z-2 bottom-0 mb-3 w-100 text-center hover-op-0">
+                <h4 class="mb-3">{{ $Selected_Home_Page_Second_m->title }} </h4>
+            </div>
+            <div class="gradient-trans-color-bottom abs w-100 h-40 bottom-0 Z-1"></div>
+        </div>
 
-                                <div class="p-4 py-2">
-                                    <p class="mt-3">
-                                        <li>
-                                        <ul>✅ Seamless supply chains ensure stocked shelves and satisfied customers.</ul>
-                                        <ul>✅ Digital retail solutions expand reach and boost sales. </ul>
-                                        <ul>✅ Customer-focused strategies build brand loyalty and long-term success.</ul>
-                                        </li>
-                                    </p>                                </div>
-                            </div>
-                        </div>
+        <div class="p-4 py-2">
+            <p class="mt-3">
+                <li>
+                <ul> {{ $Selected_Home_Page_Second_m->description_one }} </ul>
+                <ul> {{ $Selected_Home_Page_Second_m->description_two }}</ul>
+                <ul> {{ $Selected_Home_Page_Second_m->description_three }}</p> </ul>
+                </li>
+            </p>
+        </div>
+    </div>
+</div>
+@endif
 
-                        <div class="col-lg-3 col-sm-6 wow fadeInRight" data-wow-delay=".6s">
-                            <div class="bg-color text-light rounded-1 overflow-hidden">
-                                <div class="hover relative overflow-hidden text-light text-center">
-                                    <img src="{{asset('images/background/3.jpg')}}" class="hover-scale-1-1 w-100" alt="">
-                                    <div class="abs w-100 px-4 hover-op-1 z-4 hover-mt-40 abs-centered">
-                                        <a class="btn-line" href="service-single.html">View Details</a>
-                                    </div>
-                                    <img src="{{asset('images/1-edited-ai-reference.png')}}" class="abs abs-centered w-20" alt="">
-                                    <div class="abs bg-color z-2 top-0 w-100 h-100 hover-op-1"></div>
-                                    <div class="abs z-2 bottom-0 mb-3 w-100 text-center hover-op-0">
-                                        <h4 class="mb-3">Service</h4>
-                                    </div>
-                                    <div class="gradient-trans-color-bottom abs w-100 h-40 bottom-0 Z-1"></div>
-                                </div>
+@if($Selected_Home_Page_Second_r->title == 'Retail')
+<div class="col-lg-3 col-sm-6 wow fadeInRight" data-wow-delay=".0s">
+    <div class="bg-color text-light rounded-1 overflow-hidden">
+        <div class="hover relative overflow-hidden text-light text-center">
+            <img src="{{ asset('storage/' . $Selected_Home_Page_Second_r->picture) }}" class="hover-scale-1-1 w-100" alt="">
+            <div class="abs w-100 px-4 hover-op-1 z-4 hover-mt-40 abs-centered">
+                <a class="btn-line"  href="{{route('power_generation')}}">View Details</a>
+            </div>
+            <img src="{{asset('images/1-edited-ai-reference.png')}}" class="abs abs-centered w-20" alt="">
 
-                                <div class="p-4 py-2">
-                                    <p class="mt-3">
-                                        <li>
-                                        <ul>✅ Quality-driven solutions build trust and long-term client relationships.</ul>
-                                        <ul>✅ Technology & digital tools enhance efficiency and service delivery. </ul>
-                                        <ul>✅ Strong networks & customer engagement expand market reach and brand reputation.</ul>
-                                        </li>
-                                    </p>                                </div>
-                            </div>
-                        </div>
+            <div class="abs z-2 bottom-0 mb-3 w-100 text-center hover-op-0">
+                <h4 class="mb-3">{{ $Selected_Home_Page_Second_r->title }} </h4>
+            </div>
+            <div class="gradient-trans-color-bottom abs w-100 h-40 bottom-0 Z-1"></div>
+        </div>
 
-                        <div class="col-lg-3 col-sm-6 wow fadeInRight" data-wow-delay=".9s">
-                            <div class="bg-color text-light rounded-1 overflow-hidden">
-                                <div class="hover relative overflow-hidden text-light text-center">
-                                    <img src="{{asset('images/background/4.png')}}" class="hover-scale-1-1 w-100" alt="">
-                                    <div class="abs w-100 px-4 hover-op-1 z-4 hover-mt-40 abs-centered">
-                                        <a class="btn-line" href="service-single.html">View Details</a>
-                                    </div>
-                                    <img src="{{asset('images/1-edited-ai-reference.png')}}" class="abs abs-centered w-20" alt="">
-                                    <div class="abs bg-color z-2 top-0 w-100 h-100 hover-op-1"></div>
-                                    <div class="abs z-2 bottom-0 mb-3 w-100 text-center hover-op-0">
-                                        <h4 class="mb-3">E-commerce </h4>
-                                    </div>
-                                    <div class="gradient-trans-color-bottom abs w-100 h-40 bottom-0 Z-1"></div>
-                                </div>
+        <div class="p-4 py-2">
+            <p class="mt-3">
+                <li>
+                <ul> {{ $Selected_Home_Page_Second_r->description_one }} </ul>
+                <ul> {{ $Selected_Home_Page_Second_r->description_two }}</ul>
+                <ul> {{ $Selected_Home_Page_Second_r->description_three }}</p> </ul>
+                </li>
+            </p>
+        </div>
+    </div>
+</div>
+@endif
 
-                                <div class="p-4 py-2">
-                                    <p class="mt-3">
-                                        <li>
-                                        <ul>✅ Seamless online shopping experiences boost customer engagement and sales.</ul>
-                                        <ul>✅ Secure payment gateways & logistics solutions ensure smooth transactions and deliveries. </ul>
-                                        <ul>✅ Data-driven insights & digital marketing maximize visibility and business growth.</ul>
-                                        </li>
-                                    </p>                                </div>
-                            </div>
-                        </div>
+
+@if($Selected_Home_Page_Second_s->title == 'Service')
+<div class="col-lg-3 col-sm-6 wow fadeInRight" data-wow-delay=".0s">
+    <div class="bg-color text-light rounded-1 overflow-hidden">
+        <div class="hover relative overflow-hidden text-light text-center">
+            <img src="{{ asset('storage/' . $Selected_Home_Page_Second_s->picture) }}" class="hover-scale-1-1 w-100" alt="">
+            <div class="abs w-100 px-4 hover-op-1 z-4 hover-mt-40 abs-centered">
+                <a class="btn-line"  href="{{route('power_generation')}}">View Details</a>
+            </div>
+            <img src="{{asset('images/1-edited-ai-reference.png')}}" class="abs abs-centered w-20" alt="">
+
+            <div class="abs z-2 bottom-0 mb-3 w-100 text-center hover-op-0">
+                <h4 class="mb-3">{{ $Selected_Home_Page_Second_s->title }} </h4>
+            </div>
+            <div class="gradient-trans-color-bottom abs w-100 h-40 bottom-0 Z-1"></div>
+        </div>
+
+        <div class="p-4 py-2">
+            <p class="mt-3">
+                <li>
+                <ul> {{ $Selected_Home_Page_Second_s->description_one }} </ul>
+                <ul> {{ $Selected_Home_Page_Second_s->description_two }}</ul>
+                <ul> {{ $Selected_Home_Page_Second_s->description_three }}</p> </ul>
+                </li>
+            </p>
+        </div>
+    </div>
+</div>
+@endif
+@if($Selected_Home_Page_Second_e->title == 'E-Commerce')
+<div class="col-lg-3 col-sm-6 wow fadeInRight" data-wow-delay=".0s">
+    <div class="bg-color text-light rounded-1 overflow-hidden">
+        <div class="hover relative overflow-hidden text-light text-center">
+            <img src="{{ asset('storage/' . $Selected_Home_Page_Second_e->picture) }}" class="hover-scale-1-1 w-100" alt="">
+            <div class="abs w-100 px-4 hover-op-1 z-4 hover-mt-40 abs-centered">
+                <a class="btn-line"  href="{{route('power_generation')}}">View Details</a>
+            </div>
+            <img src="{{asset('images/1-edited-ai-reference.png')}}" class="abs abs-centered w-20" alt="">
+
+            <div class="abs z-2 bottom-0 mb-3 w-100 text-center hover-op-0">
+                <h4 class="mb-3">{{ $Selected_Home_Page_Second_e->title }} </h4>
+            </div>
+            <div class="gradient-trans-color-bottom abs w-100 h-40 bottom-0 Z-1"></div>
+        </div>
+
+        <div class="p-4 py-2">
+            <p class="mt-3">
+                <li>
+                <ul> {{ $Selected_Home_Page_Second_e->description_one }} </ul>
+                <ul> {{ $Selected_Home_Page_Second_e->description_two }}</ul>
+                <ul> {{ $Selected_Home_Page_Second_e->description_three }}</p> </ul>
+                </li>
+            </p>
+        </div>
+    </div>
+</div>
+@endif
 
                     </div>
                 </div>

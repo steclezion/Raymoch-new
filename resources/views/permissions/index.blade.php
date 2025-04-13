@@ -10,9 +10,20 @@
 
 @section('content')
 
-<div class="container">
-    <a href="{{ route('permissions.create') }}" class="btn btn-primary mb-3">Create Permission</a>
-    <table class="table table-bordered">
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+
+            <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><h2>Permission Management</h2></h3>
+
+    <a href="{{ route('permissions.create') }}" class="btn btn-primary mb-3">Create New Permission</a>
+    <div class="card-body">
+        <table id="example1" class="table table-bordered table-striped dataTable no-footer dtr-inline"
+               role="grid"
+               aria-describedby="example1_info">
         <thead>
             <tr>
                 <th>Name</th>
@@ -34,5 +45,12 @@
             @endforeach
         </tbody>
     </table>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
 </div>
 @endsection

@@ -11,6 +11,131 @@
     <meta content="" name="keywords" >
     <meta content="" name="author" >
 
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+          new google.translate.TranslateElement({pageLanguage: 'en'}, 'google_translate_element');
+        }
+        </script>
+
+        <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+        <style>
+               .goog-logo-link {
+            display:none !important;
+        }
+
+        .goog-te-gadget{
+            color: transparent;
+        }
+        .goog-te-gadget .goog-te-combo {
+            margin: 0px 0;
+                padding: 8px;
+        }
+        #google_translate_element{
+                padding-top: 14px;
+        }
+        </style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+<script>
+    const toggleBtn = document.getElementById('toggleLang');
+    const langBox = document.getElementById('languageSwitcher');
+
+    toggleBtn.addEventListener('click', function () {
+        if (langBox.style.display === 'none' || langBox.style.display === '') {
+            langBox.style.display = 'flex';
+            langBox.classList.remove('animate__fadeOut');
+            langBox.classList.add('animate__fadeIn');
+        } else {
+            langBox.classList.remove('animate__fadeIn');
+            langBox.classList.add('animate__fadeOut');
+            setTimeout(() => langBox.style.display = 'none', 500); // delay to allow animation
+        }
+    });
+</script>
+
+
+<style>
+    #languageSwitcher:hover {
+        opacity: 1;
+        backdrop-filter: blur(0);
+
+    }
+
+
+    #languageSwitcher {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+}
+
+/* Hover: clear and show */
+
+/* Responsive (mobile view) */
+@media (max-width: 768px) {
+    #languageSwitcher {
+        top: 10px;
+        bottom: auto;
+        right: 10px;
+        left: 10px;
+        width: auto;
+        justify-content: space-between;
+    }
+
+    #languageSwitcher img {
+        height: 25px;
+    }
+
+    #google_translate_element {
+        flex: 1;
+        margin-left: 10px;
+    }
+
+    /* Only apply hover fade on desktop (optional) */
+    @media (min-width: 769px) {
+        #languageSwitcher:hover {
+            opacity: 1 !important;
+            backdrop-filter: blur(0);
+        }
+    }
+
+}
+
+
+
+</style>
+
+
+
+
+<script>
+    function relocateSwitcher() {
+        const langBox = document.getElementById('languageSwitcher');
+        const mobileContainer = document.getElementById('translate');
+
+        if (window.innerWidth <= 768) {
+            // Move to mobile container
+            if (!mobileContainer.contains(langBox)) {
+                langBox.style.position = 'static'; // Reset positioning for inline flow
+                mobileContainer.appendChild(langBox);
+            }
+        } else {
+            // Move back to floating position
+            if (langBox.parentElement !== document.body) {
+                langBox.style.position = 'fixed';
+                langBox.style.bottom = '20px';
+                langBox.style.right = '20px';
+                document.body.appendChild(langBox);
+            }
+        }
+    }
+
+    window.addEventListener('load', relocateSwitcher);
+    window.addEventListener('resize', relocateSwitcher);
+</script>
+
+
+
 
 
 

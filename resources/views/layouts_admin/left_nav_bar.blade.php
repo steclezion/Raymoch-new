@@ -17,11 +17,11 @@
             </div>
             <div class="info">
 
-                @if (Route::has('login'))
+                {{-- @if (Route::has('login'))
                     @auth
                         <a href="#" class="d-block">    {{ Auth::user()->name }}   </a>
                     @endauth
-                @endif
+                @endif --}}
 
             </div>
         </div>
@@ -41,25 +41,33 @@
 
         <!-- Sidebar Menu -->
         <nav class="mt-2">
-            <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-                <!-- Add icons to the links using the .nav-icon class
+            {{-- flex-column" data-widget="treeview"  --}}
+            <ul class="nav nav-pills nav-sidebar flex-column" role="menu">                <!-- Add icons to the links using the .nav-icon class
                      with font-awesome or any other icon font library -->
                      <li class="nav-item">
-            <a href="#" class="nav-link">
+            <a href="#" class="nav-link ">
               <i class="nav-icon fas fa-tachometer-alt"></i>
               <p>
                 Welcome Page
                 <i class="right fas fa-angle-left"></i>
               </p>
             </a>
-            <ul class="nav nav-treeview">
+            <ul class="nav nav-item">
             {{-- @can('application-list') --}}
               <li class="nav-item">
-                <a href="" class="nav-link">
+                <a href="{{ url('/home-page-welcomes') }}" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
            <p>First Section </p>
                 </a>
               </li>
+
+              <li class="nav-item">
+                <a href="{{ url('/home-welcome-second-page') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+           <p>Second Section </p>
+                </a>
+              </li>
+
                {{-- @endcan --}}
 
 

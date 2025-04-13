@@ -1,17 +1,27 @@
 <?php
 
 use App\Http\Controllers\AuthController;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\GoogleAuthController;
-use App\Mail\HelloMail;
-use Illuminate\Support\Facades\Mail;
+use App\Http\Controllers\ControlLayoutController;
 use App\Http\Controllers\ForgotPasswordController;
+use App\Http\Controllers\GoogleAuthController;
+use App\Http\Controllers\HomePageWelcomeController;
+use App\Http\Controllers\HomeWelcomeSecondPageController;
+use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\RoleController;
-use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\UserController;
+use App\Mail\HelloMail;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Route;
 
 
-Route::get('/', function () { return view('raymoch.pages.index'); })->name('/');
+
+
+
+
+// Route::get('/', function () { return view('raymoch.pages.index'); })->name('/');
+
+Route::get('/',[ControlLayoutController::class,'index'])->name('/');
 
 Route::get('login',[AuthController::class,'login'])->name('login');
 Route::post('login',[AuthController::class,'loginPost'])->name('login.post');
@@ -53,12 +63,14 @@ Route::post('reset-password', [ResetPasswordController::class, 'reset'])
     ->name('password.update');
 
 
+Route::get('/home-page-welcomes', [HomePageWelcomeController::class, 'index'])->name('home-page-welcomes.index')->middleware('auth');
+Route::get('/home-page-welcomes-data', [HomePageWelcomeController::class, 'data'])->name('home-page-welcomes.data')->middleware('auth');
+Route::post('/home-page-welcomes', [HomePageWelcomeController::class, 'store'])->name('home-page-welcomes.store')->middleware('auth');
+Route::delete('/home-page-welcomes/{homePageWelcome}', [HomePageWelcomeController::class, 'destroy'])->name('home-page-welcomes.destroy')->middleware('auth');
+Route::get('/home-page-welcomes/{homePageWelcome}', [HomePageWelcomeController::class, 'show'])->middleware('auth');
+Route::put('/home-page-welcomes/{homePageWelcome}', [HomePageWelcomeController::class, 'update'])->name('home-page-welcomes.update')->middleware('auth');
 
-
-
-
-
-Route::get('/test-mail', function () {
+    Route::get('/test-mail', function () {
     Mail::raw('Test email working!', function ($message) {
         $message->to('steclezion@gmai.com')
                 ->subject('Mail Test');
@@ -66,5 +78,11 @@ Route::get('/test-mail', function () {
 
     return 'Mail sent!';
 });
+Route::get('/phpinfo', function () {
+    phpinfo();
+});
 
+Route::resource('users', UserController::class);
+
+Route::resource('home-welcome-second-page', HomeWelcomeSecondPageController::class)->middleware('auth');
 

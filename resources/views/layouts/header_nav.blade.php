@@ -42,6 +42,8 @@
                         <!-- logo end -->
                     </div>
                     <div class="de-flex-col header-col-mid">
+
+                        <div id="translate">  </div>
                         <!-- mainemenu begin -->
                         <ul id="mainmenu">
                             <li><a class="menu-item" href="index.html">Home</a>
@@ -129,14 +131,13 @@
                                     <li><a href="project-single.html">Project Single</a></li> --}}
                                 </ul>
                             </li>
-                            <li><a class="menu-item" href="#">Networking </a>
+                            {{-- <li><a class="menu-item" href="#">Networking </a>
                                 <ul>
                                     <li><a href="about.html">Events</a></li>
                                     <li><a href="team.html">Our Team</a></li>
-                                    {{-- <li><a href="gallery.html">Gallery</a></li>
-                                    <li><a href="gallery-carousel.html">Gallery Carousel</a></li> --}}
+
                                 </ul>
-                            </li>
+                            </li> --}}
                             <li><a class="menu-item" href="shop-homepage.html">Market Analysis </a></li>
                             <li><a class="menu-item" href="blog.html">Blog</a></li>
                             <li><a class="menu-item" href="contact.html">Contact</a></li>
@@ -145,7 +146,27 @@
                     </div>
                     <div class="de-flex-col">
                         <div class="menu_side_area">
-                            <a href="contact.html" class="btn-main btn-line">Get In Touch</a>
+                            {{-- <a href="contact.html" class="btn-main btn-line">Get In Touch</a> --}}
+
+                            <div id="languageSwitcher" class="d-flex align-items-center"
+                            style="
+                               position: fixed;
+                               bottom: 20px;
+                               right: 20px;
+                               background-color: white;
+                               padding: 10px 15px;
+                               border-radius: 4px;
+                               box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                               /* z-index: 9998; */
+                               opacity: 0.4;
+                               backdrop-filter: blur(4px);
+                               transition: all 0.4s ease;">
+                           <img src="{{ asset('images/uploadImage/Logo/transalation.png') }}" alt="Translate Icon" style="height: 30px; width: auto;">
+                           <div id="google_translate_element" style="margin-left: 8px;"></div>
+                       </div>
+
+
+
                             <span id="menu-btn"></span>
                         </div>
 

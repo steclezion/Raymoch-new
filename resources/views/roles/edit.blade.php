@@ -1,39 +1,109 @@
 @extends('layouts_admin.app')
+
+
+
 @section('content')
-<!-- Content Wrapper. Contains page content -->
-<link rel="stylesheet" href="../../plugins/fontawesome-free/css/all.min.css">
-<!-- icheck bootstrap -->
-<link rel="stylesheet" href="../../plugins/icheck-bootstrap/icheck-bootstrap.min.css">
-<!-- Theme style -->
-<link rel="stylesheet" href="../../dist/css/adminlte.min.css">
-<script src="{{asset('plugins/jquery/jquery.min.js')}}"></script>
-@section('content')
-<div class="container">
-    <h2>{{ isset($role) ? 'Edit Role' : 'Create Role' }}</h2>
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
 
-    <form action="{{ isset($role) ? route('roles.update', $role) : route('roles.store') }}" method="POST">
-        @csrf
-        @if(isset($role)) @method('PUT') @endif 
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"><h2>Edit Role</h2></h3>
+                            <div class="card-tools">
+                                <a href="{{ route('roles.index') }}" class="btn btn-primary">
+                                    <i class="fa fa-arrow-alt-circle-left"></i> Back
+                                </a>
 
-        <div class="mb-3">
-            <label for="name" class="form-label">Role Name</label>
-            <input type="text" name="name" class="form-control" value="{{ old('name', $role->name ?? '') }}" required>
-        </div>
+                            </div>
+                        </div>
 
-        <div class="mb-3">
-            <label>Assign Permissions</label><br>
-            @foreach($permissions as $permission)
-                <div class="form-check form-check-inline">
-                    <input type="checkbox" name="permissions[]" value="{{ $permission->name }}"
 
-                    {{ isset($rolePermissions) && in_array($permission->name, $rolePermissions) ? 'checked' : '' }}
-                    class="form-check-input">
-                    <label class="form-check-label">{{ $permission->name }}</label>
+                        @if (count($errors) > 0)
+
+                            <div class="alert alert-danger">
+
+                                <strong>Whoops!</strong> There were some problems with your input.<br><br>
+
+                                <ul>
+
+                                    @foreach ($errors->all() as $error)
+
+                                        <li>{{ $error }}</li>
+
+                                    @endforeach
+
+                                </ul>
+
+                            </div>
+
+                        @endif
+
+
+
+
+                        <form action="{{ route('roles.update', $role->id) }}" method="POST">
+                            @csrf
+                            @method('PATCH')
+
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="name"><strong>Name:</strong></label>
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        id="name"
+                                        class="form-control"
+                                        placeholder="Name"
+                                        value="{{ old('name', $role->name) }}"
+                                    >
+                                </div>
+
+                                <div class="form-group mt-3">
+                                    <strong>Permission:</strong><br>
+
+                                    @foreach($permission as $value)
+                                        <div class="form-check">
+                                            <input
+                                                type="checkbox"
+                                                name="permission[]"
+                                                value="{{ $value->id }}"
+                                                class="form-check-input"
+                                                id="perm_{{ $value->id }}"
+                                                {{ in_array($value->id, $rolePermissions) ? 'checked' : '' }}
+                                            >
+                                            <label class="form-check-label" for="perm_{{ $value->id }}">
+                                                {{ $value->name }}
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                                <div class="card-footer mt-3">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-edit"></i> Update
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+
+
+
+                        </div>
+                    </div>
                 </div>
-            @endforeach
+            </div>
         </div>
 
-        <button type="submit" class="btn btn-success">{{ isset($role) ? 'Update' : 'Create' }}</button>
-    </form>
-</div>
+    </section>
+
+
+
+
+
+
 @endsection
+
+
+
