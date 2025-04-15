@@ -5,7 +5,7 @@
     <link rel="icon" href="{{asset('images/1-edited-ai-reference.png')}}" type="image/gif" sizes="16x16">
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
     <meta content="width=device-width, initial-scale=1.0" name="viewport" >
-    <meta content="Gardyn — Garden and Landscape Website Template" name="description" >
+    <meta content="raymoch — Garden and Landscape Website Template" name="description" >
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title> Raymoch | Login | Admin </title>
     <meta content="" name="keywords" >
@@ -217,21 +217,18 @@
                         <p class="text-center mt-4 mb-5">Or sign in with</p>
                       </div>
                     </div>
-                    <form action="{{ route('login.post') }}" method="post" name="LoginForm" >
-                        @csrf
-                        @session('error')
-{{-- <div id="my-alert" class="alert alert-danger alert-dismissible fade show" role="alert">
-    {{ $value }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-</div> --}}
+              <form action="{{ route('login.post') }}" method="POST">
+    @csrf
+
+
+@if(session('error'))
 <div class="container mt-4">
     <div id="login-alert" class="alert alert-warning alert-dismissible fade show shadow-sm border-0" role="alert">
-        <strong>Oops!</strong>{{ $value }}
+        <strong>Oops!</strong> {{ session('error') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 </div>
- @endsession
-
+@endif
                       <div class="row gy-3 overflow-hidden">
                         <div class="col-12">
 
