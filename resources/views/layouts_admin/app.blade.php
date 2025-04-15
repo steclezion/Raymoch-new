@@ -7,7 +7,42 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title> Raymoch | Admin</title>
 
- <!-- css scripts -->
+  {{-- <script>
+    // Disable Right Click
+    document.addEventListener('contextmenu', function (e) {
+      e.preventDefault();
+    });
+
+    // Disable F12, Ctrl+Shift+I, Ctrl+U, Ctrl+Shift+C, Ctrl+Shift+J
+    document.onkeydown = function (e) {
+      if (
+        e.keyCode === 123 || // F12
+        (e.ctrlKey && e.shiftKey && ['I', 'C', 'J'].includes(e.key)) ||
+        (e.ctrlKey && e.key === 'U')
+      ) {
+        return false;
+      }
+    };
+  </script> --}}
+
+<script>
+    // Disable Right Click
+    document.addEventListener('contextmenu', function (e) {
+      e.preventDefault();
+    });
+
+    // Disable F12, Ctrl+Shift+I, Ctrl+U, Ctrl+Shift+C, Ctrl+Shift+J
+    document.onkeydown = function (e) {
+      if (
+        e.keyCode === 123 || // F12
+        (e.ctrlKey && e.shiftKey && ['I', 'C', 'J'].includes(e.key)) ||
+        (e.ctrlKey && e.key === 'U')
+      ) {
+        return false;
+      }
+    };
+  </script>
+
 @include('layouts_admin.css_libs')
 @yield('stylesheets')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">

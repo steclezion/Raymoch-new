@@ -7,7 +7,12 @@ use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
 use App\Notifications\WelcomeGoogleUser;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
+use App\Mail\GoogleVerifyMail;
 
 class GoogleAuthController extends Controller
 {
@@ -78,25 +83,6 @@ class GoogleAuthController extends Controller
         $googleUser  = Socialite::driver('google')->stateless()->user();
         $find_user = User::where('google_id',  $googleUser->id)->first();
 
-        // if(!is_null($find_user) )
-        // {
-        //         Auth::login($find_user);
-        // }
-        // else
-        // {
-        //     $user = User::Create(
-        //         [   'email' => $googleUser->getEmail(),
-        //             'name' => $googleUser->getName(),
-        //             'google_id' => $googleUser->getId(),
-        //             'avatar' => $googleUser->getAvatar(),
-        //             'password' => bcrypt(12345678)
-        //         ]
-        //     );
-        //     Auth::login($user);
-
-        // return redirect('/dashboard'); // Or wherever you want
-        // }
-         //dd($find_google_id );
 
         // Find or create user
         $user = User::updateOrCreate(
@@ -109,15 +95,40 @@ class GoogleAuthController extends Controller
             ]
         );
 
-        Auth::login($user);
-// Send notification only if it was newly created
-if ($user->wasRecentlyCreated) {
-    $user->notify(new WelcomeGoogleUser());
+//         Auth::login($user);
+// // Send notification only if it was newly created
+// if ($user->wasRecentlyCreated) {
+//     $user->notify(new WelcomeGoogleUser());
 
-}
-session()->put('expires_at', now()->addMinutes(60));
-return redirect('/dashboard'); // Or wherever you want
+// }
+// session()->put('expires_at', now()->addMinutes(60));
+// return redirect('/dashboard'); // Or wherever you want
 
+$verificationUrl = URL::temporarySignedRoute(
+    'verify.email.link',
+    now()->addMinutes(60),
+    ['user' => $user->id]
+);
+
+Mail::to($user->email)->send(new \App\Mail\GoogleVerifyMail($user, $verificationUrl));
+
+return redirect()->route('login')->with('success', 'We sent you a verification email. Please check your inbox.');
+
+
+    }
+
+
+    public function verifyEmail(Request $request)
+    {
+        if (! $request->hasValidSignature()) {
+            abort(403, 'Invalid or expired verification link.');
+        }
+
+        $user = User::findOrFail($request->input('user'));
+        $user->is_verified = true;
+        $user->save();
+
+        return redirect()->route('dashboard')->with('success', 'Your email is verified. Welcome to Raymoch!!.');
     }
 
 

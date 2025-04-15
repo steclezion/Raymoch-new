@@ -12,6 +12,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Mail\HelloMail;
 use Illuminate\Support\Facades\Mail;
+use App\Mail\GoogleVerifyMail;
 use Illuminate\Support\Facades\Route;
 
 
@@ -35,7 +36,7 @@ Route::resource('permissions', PermissionController::class)->middleware('auth');
 Route::get('/power_generation', function () {return view('raymoch.pages.project_business');})->name('power_generation');
 Route::get('/auth/google', [GoogleAuthController::class, 'redirectToGoogle'])->name('auth_google');
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleCallback']);
-
+Route::get('verify-email', [GoogleAuthController::class, 'verifyEmail'])->name('verify.email.link');
 Route::get('/send', function () {
    // return view('raymoch.pages.index');
 Mail::to('steclezion@gmail.com')->send(new HelloMail());
@@ -44,10 +45,20 @@ return 'Email sent!';
 
 Route::get('/test-email', function () {
     Mail::raw('This is a test email', function ($message) {
-        $message->to('steclezion@gmail.com')
+        $message->to('samsonteclezion@gmail.com')
                 ->subject('Test Email');
     });
     return 'Email sent!';
+});
+
+
+Route::get('/test-emaill', function () {
+    $user = (object)[ 'name' => 'Test User' ];
+    $link = 'https://raymoch.com/verify?user=999';
+
+    Mail::to('steclezion@gmail.com')->send(new GoogleVerifyMail($user, $link));
+
+    return 'Email sent (check Mailtrap)';
 });
 
 

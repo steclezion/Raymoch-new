@@ -11,6 +11,32 @@
     <meta content="" name="keywords" >
     <meta content="" name="author" >
 
+    {{-- <script>
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) {
+          if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
+            return false;
+          }
+        };
+      </script> --}}
+
+<script>
+    // Disable Right Click
+    document.addEventListener('contextmenu', function (e) {
+      e.preventDefault();
+    });
+
+    // Disable F12, Ctrl+Shift+I, Ctrl+U, Ctrl+Shift+C, Ctrl+Shift+J
+    document.onkeydown = function (e) {
+      if (
+        e.keyCode === 123 || // F12
+        (e.ctrlKey && e.shiftKey && ['I', 'C', 'J'].includes(e.key)) ||
+        (e.ctrlKey && e.key === 'U')
+      ) {
+        return false;
+      }
+    };
+  </script>
     <script type="text/javascript">
         function googleTranslateElementInit() {
           new google.translate.TranslateElement({pageLanguage: 'en'}, 'google_translate_element');

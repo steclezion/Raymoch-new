@@ -161,9 +161,22 @@
         }
     }, 5000);
 </script>
+<script>
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        const alert = document.getElementById('fade-alert');
+        if (alert) {
+            alert.classList.remove('show');
+            alert.classList.add('fade');
+            setTimeout(() => alert.remove(), 500); // Remove from DOM after fade
+        }
+    }, 5000);
+</script>
 
 <script src="{{ asset('https://accounts.google.com/gsi/client')}}" async defer></script>
 <link rel="stylesheet" href="{{ asset('https://unpkg.com/bootstrap@5.3.3/dist/css/bootstrap.min.css')}}">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
 <script src="{{ asset('https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js') }}"></script>
 
@@ -193,6 +206,15 @@
                       <div class="col-12">
                         <div class="mb-5">
                             <div class="text-center mb-4">
+                                <div class="container-fluid" id="alert-messages">
+                                    @if(session('success'))
+                                        <div class="alert alert-success alert-dismissible fade show" role="alert" id="fade-alert">
+                                            <strong><i class="icon fas fa-check"></i> Success:</strong>
+                                            {{ session('success') }}
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                        </div>
+                                    @endif
+                                </div>
                                 <a href="#!">
                                     <img
                                         src="{{ asset('images/1-edited-ai-reference.png') }}"
