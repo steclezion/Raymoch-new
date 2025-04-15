@@ -124,7 +124,7 @@ return redirect()->route('login')->with('success', 'We sent you a verification e
             abort(403, 'Invalid or expired verification link.');
         }
 
-        $user = User::findOrFail($request->input('user'));
+        $user = User::findOrFail($request->user);
         $user->is_verified = true;
         $user->save();
 
