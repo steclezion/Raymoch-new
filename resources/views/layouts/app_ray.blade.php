@@ -209,6 +209,7 @@
     <!-- preloader end -->
     @include('layouts.header_nav')
     <!-- content wraper -->
+    
     @yield('content')
    @include('layouts.footer')
     </div>

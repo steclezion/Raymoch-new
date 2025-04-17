@@ -5,6 +5,7 @@
         <!-- content begin -->
         <div class="no-bottom no-top" id="content">
 
+            &NonBreakingSpace;
             <div id="top"></div>
 
             <section id="subheader" class="relative jarallax text-light">
