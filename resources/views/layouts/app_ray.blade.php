@@ -37,6 +37,8 @@
       }
     };
   </script>
+
+
     <script type="text/javascript">
         function googleTranslateElementInit() {
           new google.translate.TranslateElement({pageLanguage: 'en'}, 'google_translate_element');
@@ -132,25 +134,51 @@
 </style>
 
 
+<style>
+    .translate-box {
+        transform: scale(1);
+        transform-origin: left center;
+        transition: transform 0.3s ease, opacity 0.3s ease;
+        opacity: 0.4; /* default low transparency */
+    }
+
+    @media (max-width: 768px) {
+        .translate-box {
+            transform: scale(0.8);
+            opacity: 0.8; /* more visible on smaller screens */
+        }
+    }
+
+    @media (max-width: 480px) {
+        .translate-box {
+            transform: scale(0.7);
+            opacity: 1; /* fully visible on very small screens */
+        }
+    }
+</style>
 
 
 <script>
     function relocateSwitcher() {
         const langBox = document.getElementById('languageSwitcher');
-        const mobileContainer = document.getElementById('translate');
+        const topContainer = document.getElementById('top');
 
         if (window.innerWidth <= 768) {
-            // Move to mobile container
-            if (!mobileContainer.contains(langBox)) {
-                langBox.style.position = 'static'; // Reset positioning for inline flow
-                mobileContainer.appendChild(langBox);
+            // Move to top container (responsive/mobile mode)
+            if (!topContainer.contains(langBox)) {
+                langBox.style.position = 'static'; // Remove fixed positioning
+                langBox.style.bottom = '';
+                langBox.style.right = '';
+                langBox.style.opacity = '1'; // optional: make it fully visible on mobile
+                topContainer.appendChild(langBox);
             }
         } else {
-            // Move back to floating position
+            // Return to fixed position at bottom right
             if (langBox.parentElement !== document.body) {
                 langBox.style.position = 'fixed';
                 langBox.style.bottom = '20px';
                 langBox.style.right = '20px';
+                langBox.style.opacity = '0.4'; // restore mobile-specific styles if any
                 document.body.appendChild(langBox);
             }
         }
@@ -159,7 +187,6 @@
     window.addEventListener('load', relocateSwitcher);
     window.addEventListener('resize', relocateSwitcher);
 </script>
-
 
 
 

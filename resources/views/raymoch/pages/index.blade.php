@@ -18,10 +18,12 @@
 
     <div class="no-bottom no-top" id="content">
 
-            <div id="top"></div>
+
 
             <section class="pb-50">
+                <div id="top"></div>
                 <div class="container">
+
                     <div class="row g-4 align-items-center">
                         <div class="col-lg-6">
                             <div class="relative">

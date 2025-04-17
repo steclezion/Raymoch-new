@@ -144,27 +144,29 @@
                         </ul>
                         <!-- mainmenu end -->
                     </div>
+
                     <div class="de-flex-col">
                         <div class="menu_side_area">
                             {{-- <a href="contact.html" class="btn-main btn-line">Get In Touch</a> --}}
 
-                            <div id="languageSwitcher" class="d-flex align-items-center"
-                            style="
-                               position: fixed;
-                               bottom: 20px;
-                               right: 20px;
-                               background-color: white;
-                               padding: 10px 15px;
-                               border-radius: 4px;
-                               box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-                               /* z-index: 9998; */
-                               opacity: 0.4;
-                               backdrop-filter: blur(4px);
-                               transition: all 0.4s ease;">
-                           <img src="{{ asset('images/uploadImage/Logo/transalation.png') }}" alt="Translate Icon" style="height: 30px; width: auto;">
-                           <div id="google_translate_element" style="margin-left: 8px;"></div>
-                       </div>
-
+                      <!-- Floating Translate Switcher -->
+                      <div id="languageSwitcher" class="d-flex align-items-center translate-box"
+                      style="margin-left: 8px;
+                            position: fixed;
+                          bottom: 20px;
+                          right: 20px;
+                          background-color: white;
+                          padding: 10px 15px;
+                          border-radius: 4px;
+                          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                          opacity: 0.4;
+                          backdrop-filter: blur(4px);
+                          transition: all 0.4s ease;
+                          z-index: 99999;
+                          pointer-events: auto;">
+                      <img src="{{ asset('images/uploadImage/Logo/transalation.png') }}" alt="Translate Icon" style="height: 30px; width: auto;">
+                      <div id="google_translate_element" style="margin-left: 8px;"></div>
+                  </div>
 
 
                             <span id="menu-btn"></span>
