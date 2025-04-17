@@ -3,7 +3,6 @@
     <a href="{{ url('/')}}" class="brand-link">
         <img src="{{ asset('dist/img/AdminLTELogo.png') }}" alt="NMFA logo" class="brand-image img-circle elevation-3"
              style="opacity: .8">
-        <span class="brand-text font-weight-light">PERU</span>
     </a>
 
 
@@ -83,7 +82,7 @@
                         </a>
 
                         <ul class="nav nav-treeview">
-                    
+
 
                             <li class="nav-item">
                                 <a href="{{route('nmfa_registered_application')}}" class="nav-link">
@@ -91,7 +90,7 @@
                                     <p>Issue Alert Notifications</p>
                                 </a>
                             </li>
-                  
+
                                 <li class="nav-item">
                                     <a href="{{ route('suspensions.index') }}" class="nav-link">
                                         <i class="fa fa-check-circle nav-icon"></i>
@@ -128,7 +127,7 @@
                                 </li>
 
                     </li>
-                   
+
 
                 @endcan
 
@@ -293,7 +292,7 @@
 
                             </ul>
                         </li>
-                       
+
 
 
                     @endcan
@@ -736,7 +735,7 @@
                         </li>
 
                         {{--------------------END  Settings--------------------}}
-                       
+
 
                     @endcan
 
@@ -810,13 +809,13 @@
                                     </a>
                                 </li> -->
 
-                                
+
                                 </li>
 
    <li class="nav-item">
-                                
+
                                 </li>
-                                
+
                                 <li class="nav-item">
                                     <a href="{{ url('AssessorTimeline') }}" class="nav-link"> <i
                                                 class="fas fa-timeline  nav-icon"></i>
@@ -939,7 +938,7 @@
 
                             </ul>
                         </li>
-                       
+
 
                     @endcan
 
@@ -955,7 +954,7 @@
 
                             </a>
                         </li>
-                       
+
 
 
                     @endcan
@@ -971,7 +970,7 @@
                             </a>
                         </li>
 
-                       
+
                     @endcan
                     @can('perc_roles')
 

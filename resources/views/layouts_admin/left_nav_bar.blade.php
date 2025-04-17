@@ -15,19 +15,11 @@
                 {{-- <img src="{{ asset('dist/img/user2-160x160.jpg') }}" class="img-circle elevation-2" alt="User Image"> --}}
                 <span class="brand-text font-weight-light" style="color:white">{{ Auth::user()->name }}</span>
             </div>
-            <div class="info">
 
-                {{-- @if (Route::has('login'))
-                    @auth
-                        <a href="#" class="d-block">    {{ Auth::user()->name }}   </a>
-                    @endauth
-                @endif --}}
-
-            </div>
         </div>
 <span hidden id="user_idd" > {{ Auth::user()->id }} </span>
         <!-- not needed -->
-        <!-- SidebarSearch Form
+        <!-- SidebarSearch Form-->
         <div class="form-inline">
           <div class="input-group" data-widget="sidebar-search">
             <input class="form-control form-control-sidebar" type="search" placeholder="Search" aria-label="Search">
@@ -37,7 +29,7 @@
               </button>
             </div>
           </div>
-        </div> -->
+        </div>
 
         <!-- Sidebar Menu -->
         <nav class="mt-2">
@@ -65,6 +57,13 @@
                 <a href="{{ url('/home-welcome-second-page') }}" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
            <p>Second Section </p>
+                </a>
+              </li>
+
+              <li class="nav-item">
+                <a href="{{ url('/home-welcome-third-page') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+           <p>Third Section </p>
                 </a>
               </li>
 

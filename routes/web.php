@@ -14,6 +14,7 @@ use App\Mail\HelloMail;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\GoogleVerifyMail;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\HomeWelcomeThirdPageController;
 
 
 
@@ -96,4 +97,7 @@ Route::get('/phpinfo', function () {
 Route::resource('users', UserController::class);
 
 Route::resource('home-welcome-second-page', HomeWelcomeSecondPageController::class)->middleware('auth');
+
+Route::resource('home-welcome-third-page', HomeWelcomeThirdPageController::class)->middleware('auth');
+
 

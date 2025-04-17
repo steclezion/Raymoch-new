@@ -716,40 +716,19 @@
                     <div class="row justify-content-center">
                         <div class="col-lg-10 text-center">
                             <div class="owl-single-dots owl-carousel owl-theme">
+
+                                @foreach ( $Selected_Home_Page_Third as $Selected_Home_Page_Third )
                                 <div class="item">
                                     {{-- <i class="float fs-40 mb-4 wow fadeInUp id-color-2 center ">Our Mission...</i> --}}
 
                                     <h3 class="mb-4 wow fadeInUp fs-32">
-                                        To create a platform that connects East African businesses with global markets,
-                                         increasing their visibility, opportunities, and international partnerships.
+                                        {{ $Selected_Home_Page_Third->description }}
                                           </h3>
 
-                                    <span class="wow fadeInUp">Our Goal</span>
+                                    <span class="wow fadeInUp">{{ $Selected_Home_Page_Third ->title }}</span>
                                 </div>
 
-                                <div class="item">
-                                    <i class="icofont-quote-left fs-40 mb-4 wow fadeInUp id-color-2"></i>
-                                    <h3 class="mb-4 wow fadeInUp fs-32">  Empower East African businesses by providing a digital platform to showcase their products and services globally.
-                                        Bridge the gap between local businesses and international markets through networking, digital marketing, and technology-driven solutions.
-                                        Facilitate trade by offering resources, insights, and connections that enhance global business opportunities for East African entrepreneurs.
-                                        Promote economic development by enabling small and large businesses to expand beyond regional borders and attract international investors.
-                                    </h3>
-                                    <span class="wow fadeInUp">Our Mission</span>
-                                </div>
-
-                                <div class="item">
-                                    <i class="icofont-quote-left fs-40 mb-4 wow fadeInUp id-color-2"></i>
-                                    <h3 class="mb-4 wow fadeInUp fs-32">
-                                        To be the leading digital gateway that promotes East African businesses to the world, fostering economic growth, cross-border trade, and global recognition for the region’s enterprises.
-                                    </h3>
-                                    <span class="wow fadeInUp">Our Vision</span>
-                                </div>
-
-                                 {{-- <div class="item">
-                                    <i class="icofont-quote-left fs-40 mb-4 wow fadeInUp id-color-2"></i>
-                                    <h3 class="mb-4 wow fadeInUp fs-32">was professional, punctual, and incredibly knowledgeable about plants and landscaping.</h3>
-                                    <span class="wow fadeInUp">Donette Fondren</span>
-                                </div> --}}
+                                @endforeach
 
                             </div>
                         </div>
