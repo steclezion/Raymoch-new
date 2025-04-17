@@ -132,5 +132,7 @@ class GoogleAuthController extends Controller
         return redirect()->route('dashboard')->with('success', 'Welcome! Your email is verified.');
     }
 
+    
+
 
 }
