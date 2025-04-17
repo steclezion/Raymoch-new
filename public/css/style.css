@@ -59,7 +59,7 @@ Table of content:
 
 
 /* ================================================== */
-/* 
+/*
 @import url("../fonts/fontawesome4/css/font-awesome.css");
 @import url("../fonts/fontawesome6/css/fontawesome.css");
 @import url("../fonts/fontawesome6/css/brands.css");
@@ -78,7 +78,7 @@ Table of content:
   --body-font: "Heebo", Helvetica, Arial, sans-serif;
   --body-font-weight: "300";
   --mainmenu-font: "Plus Jakarta Sans", Helvetica, Arial, sans-serif;
-  --mainmenu-font-size: 14px;
+  --mainmenu-font-size: 15px;
   --mainmenu-font-weight: 500;
   --mainmenu-text-transform: uppercase;
   --deco-font: "";
@@ -15223,6 +15223,8 @@ body.dark-scheme::-webkit-scrollbar-track,
   display: flex;
   justify-content: space-between;
 }
+
+
 
 .de-flex>.de-flex-col {
   display: flex;

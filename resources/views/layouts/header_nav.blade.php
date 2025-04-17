@@ -41,12 +41,13 @@
                         </div>
                         <!-- logo end -->
                     </div>
-                    <div class="de-flex-col header-col-mid">
 
-                        <div id="translate">  </div>
+                    <div class="de-flex-col header-col-mid">
                         <!-- mainemenu begin -->
                         <ul id="mainmenu">
-                            <li><a class="menu-item" href="index.html">Home</a>
+                            <br>
+                            <li><a class="menu-item" href="index.html"> Home </a>
+
                                 <ul class="mega">
                                     <li>
                                         <div class="container">
