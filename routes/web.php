@@ -1,20 +1,22 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\ControlLayoutController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\HomePageWelcomeController;
 use App\Http\Controllers\HomeWelcomeSecondPageController;
+use App\Http\Controllers\HomeWelcomeThirdPageController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
+use App\Mail\GoogleVerifyMail;
 use App\Mail\HelloMail;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\GoogleVerifyMail;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\HomeWelcomeThirdPageController;
+
 
 
 
@@ -43,6 +45,7 @@ Route::get('/send', function () {
 Mail::to('steclezion@gmail.com')->send(new HelloMail());
 return 'Email sent!';
 });
+Route::post('/chatbot', [ChatbotController::class, 'respond']);
 
 Route::get('/test-email', function () {
     Mail::raw('This is a test email', function ($message) {

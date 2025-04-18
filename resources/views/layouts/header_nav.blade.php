@@ -169,7 +169,37 @@
                  </div>
 
 
-                            <span id="menu-btn"></span>
+                 <!-- Chat toggle button -->
+<div id="chat-toggle" style="position:fixed; bottom:100px; right:20px; z-index:9999;">
+    <button class="btn btn-warning rounded-circle shadow" onclick="toggleChat()">💬</button>
+</div>
+
+
+<!-- Chat box -->
+<div id="chat-box" style="display:none; position:fixed;
+ bottom:120px;
+ right:20px;
+ width:320px;
+ background:white;
+ border-radius:12px;
+ box-shadow:0 4px 12px rgba(0,0,0,0.2);
+  z-index:9999;">
+
+    <div class="p-3 border-bottom">
+        <strong>Hey there 👋</strong><br>
+        Welcome to Raymoch 🎉<br>
+        <small>If you have any questions, just message us here!</small>
+    </div>
+    <div class="p-3" style="max-height:200px; overflow-y:auto;" id="chat-messages">
+        <!-- Chat messages will go here -->
+    </div>
+    <div class="p-2 border-top d-flex align-items-center">
+        <input type="text" id="chat-input" class="form-control form-control-sm me-2" placeholder="Message...">
+        <button  type="submit" class="btn btn-sm btn-primary" onclick="sendMessage()">Send</button>
+    </div>
+</div>
+
+                    <span id="menu-btn"></span>
                         </div>
 
                         <div id="btn-extra">
@@ -264,4 +294,72 @@
 
     window.addEventListener('load', relocateSwitcher);
     window.addEventListener('resize', relocateSwitcher);
+</script>
+
+<script>
+    function toggleChat() {
+        const box = document.getElementById('chat-box');
+        box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function sendMessage() {
+        const input = document.getElementById('chat-input');
+        const msg = input.value.trim();
+        if (!msg) return;
+
+        // Append to chat
+        const container = document.getElementById('chat-messages');
+        container.innerHTML += `<div class="mb-2"><strong>You:</strong> ${msg}</div>`;
+        input.value = '';
+
+        // Send to backend via fetch or AJAX
+        fetch('/chatbot', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ message: msg })
+        })
+        .then(res => res.json())
+        .then(data => {
+            container.innerHTML += `<div class="mb-2"><strong>Bot:</strong> ${data.reply}</div>`;
+            container.scrollTop = container.scrollHeight;
+        });
+    }
+
+    document.addEventListener('click', function(event) {
+        const chatBox = document.getElementById('chat-box');
+        const chatToggle = document.getElementById('chat-toggle');
+
+        // If click is outside the chat box AND not on the toggle button
+        if (chatBox && !chatBox.contains(event.target) && !chatToggle.contains(event.target)) {
+            chatBox.style.display = 'none';
+        }
+    });
+
+    // function sendToBot() {
+    //     let message = document.getElementById('chat-input').value;
+    //     fetch('/chatbot', {
+    //         method: 'POST',
+    //         headers: {
+    //             'Content-Type': 'application/json',
+    //             'X-CSRF-TOKEN': '{{ csrf_token() }}'
+    //         },
+    //         body: JSON.stringify({ message: message })
+    //     })
+    //     .then(res => res.json())
+    //     .then(data => {
+    //         document.getElementById('chat-box').innerHTML += "<div class='bot'>" + data.reply + "</div>";
+    //     });
+    // }
+
+
+        // Listen for Enter key in input
+        document.getElementById('chat-input').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault(); // prevent form submit if inside a form
+            sendMessage();
+        }
+    });
 </script>
