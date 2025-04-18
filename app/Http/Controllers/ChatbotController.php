@@ -30,7 +30,7 @@ class ChatbotController extends Controller
      */
     public function respond(Request $request)
     {
-        $raymochInfo = "Raymoch is a modern business ... Empower East African businesses by providing a digital platform to showcase their products and services globally Bridge the gap between local businesses and international markets through networking, digital marketing, and technology-driven solutions. Facilitate trade by offering resources, insights, and connections that enhance global business opportunities for East African entrepreneurs. Promote economic development by enabling small and large businesses to expand beyond regional borders and attract international investors.";
+        $raymochInfo = "Raymoch.com is modern business ... Empower East African businesses by providing a digital platform to showcase their products and services globally Bridge the gap between local businesses and international markets through networking, digital marketing, and technology-driven solutions. Facilitate trade by offering resources, insights, and connections that enhance global business opportunities for East African entrepreneurs. Promote economic development by enabling small and large businesses to expand beyond regional borders and attract international investors.";
 
         $response = OpenAI::chat()->create([
             'model' => 'gpt-3.5-turbo',
