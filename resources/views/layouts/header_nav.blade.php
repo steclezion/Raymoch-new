@@ -152,22 +152,21 @@
 
                       <!-- Floating Translate Switcher -->
                       <div id="languageSwitcher" class="d-flex align-items-center translate-box"
-                      style="margin-left: 8px;
-                            position: fixed;
-                          bottom: 20px;
-                          right: 20px;
-                          background-color: white;
-                          padding: 10px 15px;
-                          border-radius: 4px;
-                          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-                          opacity: 0.4;
-                          backdrop-filter: blur(4px);
-                          transition: all 0.4s ease;
-                          z-index: 99999;
-                          pointer-events: auto;">
-                      <img src="{{ asset('images/uploadImage/Logo/transalation.png') }}" alt="Translate Icon" style="height: 30px; width: auto;">
-                      <div id="google_translate_element" style="margin-left: 8px;"></div>
-                  </div>
+                      style="margin-left: 10px;
+                             position: fixed;
+                             bottom: 20px;
+                             right: 45px;
+                             background-color: white;
+                             padding: 10px 15px;
+                             border-radius: 4px;
+                             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                             opacity: 0.4;
+                             transition: all 0.4s ease;
+                             z-index: 99999;
+                              pointer-events: auto;">
+                     <img src="{{ asset('images/uploadImage/Logo/transalation.png') }}" alt="Translate Icon" style="height: 30px; width: auto;">
+                     <div id="google_translate_element" style="margin-left: 8px;"></div>
+                 </div>
 
 
                             <span id="menu-btn"></span>
@@ -183,3 +182,86 @@
         </div>
     </div>
 </header>
+
+
+<style>
+    #languageSwitcher:hover {
+        opacity: 1;
+        /* backdrop-filter: blur(0); */
+
+    }
+
+
+    #languageSwitcher {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+}
+
+/* Hover: clear and show */
+
+/* Responsive (mobile view) */
+@media (max-width: 768px) {
+    #languageSwitcher {
+        top: 10px;
+        bottom: auto;
+        right: 10px;
+        left: 10px;
+        width: auto;
+        justify-content: space-between;
+    }
+
+    #languageSwitcher img {
+        height: 25px;
+    }
+
+    #google_translate_element {
+        flex: 1;
+        margin-left: 10px;
+    }
+
+    /* Only apply hover fade on desktop (optional) */
+    /* @media (min-width: 769px) {
+        #languageSwitcher:hover {
+            opacity: 1 !important;
+            backdrop-filter: blur(0);
+        }
+    } */
+
+}
+
+
+
+</style>
+
+
+
+<script>
+    function relocateSwitcher() {
+        const langBox = document.getElementById('languageSwitcher');
+        const topContainer = document.getElementById('top');
+
+        if (window.innerWidth <= 768) {
+            // Move to top container (responsive/mobile mode)
+            if (!topContainer.contains(langBox)) {
+                langBox.style.position = 'static'; // Remove fixed positioning
+                langBox.style.bottom = '';
+                langBox.style.right = '';
+                langBox.style.opacity = '1'; // optional: make it fully visible on mobile
+                topContainer.appendChild(langBox);
+            }
+        } else {
+            // Return to fixed position at bottom right
+            if (langBox.parentElement !== document.body) {
+                langBox.style.position = 'fixed';
+                langBox.style.bottom = '20px';
+                langBox.style.right = '65px';
+                langBox.style.opacity = '0.4'; // restore mobile-specific styles if any
+                document.body.appendChild(langBox);
+            }
+        }
+    }
+
+    window.addEventListener('load', relocateSwitcher);
+    window.addEventListener('resize', relocateSwitcher);
+</script>
