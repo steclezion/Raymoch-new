@@ -356,7 +356,7 @@
 
 
         // Listen for Enter key in input
-        document.getElementById('chat-input').addEventListener('keydown', function(e) {
+    document.getElementById('chat-input').addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
             e.preventDefault(); // prevent form submit if inside a form
             sendMessage();
