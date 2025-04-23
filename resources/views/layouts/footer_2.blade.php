@@ -24,7 +24,7 @@
         <h5>Contact Us</h5>
         <div><i class="icofont-clock-time me-2 op-5"></i>Monday - Friday 08.00 - 18.00</div>
         <div><i class="icofont-location-pin me-2 op-5"></i>100 S Main St, New York, </div>
-        <div><i class="icofont-envelope me-2 op-5"></i>contact@gardyn.com</div>
+        <div><i class="icofont-envelope me-2 op-5"></i>contact@raymoch.com</div>
 
         <div class="spacer-30-line"></div>
 

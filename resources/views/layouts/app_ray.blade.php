@@ -9,7 +9,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Raymoch-Home</title>
     <meta content="" name="keywords" >
-    <meta content="" name="author" >
+ 
 
     {{-- <script>
         document.addEventListener('contextmenu', event => event.preventDefault());

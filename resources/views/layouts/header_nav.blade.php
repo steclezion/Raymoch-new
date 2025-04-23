@@ -311,13 +311,17 @@
         const container = document.getElementById('chat-messages');
         container.innerHTML += `<div class="mb-2"><strong>You:</strong> ${msg}</div>`;
         input.value = '';
+        var sam = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        alert(sam);
 
         // Send to backend via fetch or AJAX
         fetch('/chatbot', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                //'X-CSRF-TOKEN': '{{ csrf_token() }}'
             },
             body: JSON.stringify({ message: msg })
         })

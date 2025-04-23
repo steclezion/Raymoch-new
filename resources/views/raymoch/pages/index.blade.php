@@ -736,7 +736,7 @@
                 </div>
             </section>
 
-            <section class="px-4">
+            {{-- <section class="px-4">
                 <div class="container-fluid">
                     <div class="row g-4 align-items-center justify-content-center">
                         <div class="col-lg-8 text-center">
@@ -813,7 +813,7 @@
 
                     </div>
                 </div>
-            </section>
+            </section> --}}
 
         </div>
 
