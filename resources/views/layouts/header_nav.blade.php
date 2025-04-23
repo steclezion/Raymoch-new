@@ -313,7 +313,7 @@
         input.value = '';
         var sam = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-        alert(sam);
+       // alert(sam);
 
         // Send to backend via fetch or AJAX
         fetch('/chatbot', {
