@@ -21,21 +21,6 @@
 
                                 <div class="row g-3 mt-2">
 
-                                    <div class="col-md-3">
-{{--
-                                        <div class="dropdown">
-                                          <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-expanded="false">
-                                            Any Status
-                                          </button>
-                                          <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                            <li><a class="dropdown-item" href="#">Rural</a></li>
-                                            <li><a class="dropdown-item" href="#">Urban</a></li>
-                                            <li><a class="dropdown-item" href="#">All</a></li>
-                                          </ul>
-                                        </div> --}}
-
-                                    </div>
-
                                     <div class="col-md-6">
 
                                         <input type="text" class="form-control" placeholder="Enter address e.g. street, city and state or zip">
@@ -103,12 +88,7 @@
                     <div class="row g-4 gx-5">
                         <div class="col-lg-3">
                             <div class="me-lg-3">
-                                <a href="installation.html" class="bg-color text-light d-block p-3 px-4 rounded-10px mb-3 relative"><h4 class="mb-0">Garden Design</h4><i class="icofont-long-arrow-right absolute abs-middle fs-24 end-20px"></i></a>
-                                {{-- <a href="repair.html" class="bg-light d-block p-3 px-4 rounded-10px mb-3"><h4 class="mb-0">Garden Maintenance</h4></a>
-                                <a href="maintenance.html" class="bg-light d-block p-3 px-4 rounded-10px mb-3"><h4 class="mb-0">Decking and Patio</h4></a>
-                                <a href="maintenance.html" class="bg-light d-block p-3 px-4 rounded-10px mb-3"><h4 class="mb-0">Plant Selection</h4></a>
-                                <a href="maintenance.html" class="bg-light d-block p-3 px-4 rounded-10px mb-3"><h4 class="mb-0">Garden Irrigation</h4></a>
-                                <a href="maintenance.html" class="bg-light d-block p-3 px-4 rounded-10px mb-3"><h4 class="mb-0">Outdoor Lighting</h4></a> --}}
+<a href="installation.html" class="bg-color text-light d-block p-3 px-4 rounded-10px mb-3 relative"><h4 class="mb-0">Company Name</h4><i class="icofont-long-arrow-right absolute abs-middle fs-24 end-20px"></i></a>
                             </div>
                         </div>
 
@@ -116,8 +96,8 @@
                             <div class="row g-4 gx-5">
 
                                 <div class="col-lg-6">
-                                    <h2><span class="id-color-2">Transform</span> Your Outdoor Space into a <span class="id-color-2">Beautiful Oasis</span></h2>
-                                    <p>At Gardyn, we believe that your garden should be a reflection of your personal style and a sanctuary where you can relax and unwind. Our team of expert garden designers is dedicated to bringing your vision to life, creating stunning outdoor spaces that combine beauty, functionality, and sustainability.</p>
+                                    <h2><span class="id-color-2"> Tagline or Slogan</span></h2>
+
                                 </div>
 
                                 <div class="col-lg-6">
@@ -147,12 +127,12 @@
 
                             <div class="row g-4">
                                 <div class="col-lg-12">
-                                    <h2 class="mb-0">Why <span class="id-color-2">Choose</span> Us</h2>
+                                    <h2 class="mb-0"> <span class="id-color-2">Infos...</span></h2>
                                 </div>
                                 <div class="col-lg-4 col-md-6 wow fadeInRight" data-wow-delay=".0s">
                                     <div class="relative h-100 bg-color text-light padding30 rounded-1">
                                         <div>
-                                            <h4>Expertise and Experience</h4>
+                                            <h4>About Us</h4>
                                             <p class="mb-0">With years of hands-on experience, our team of professional gardeners and landscapers bring a wealth of knowledge to every project.</p>
                                         </div>
                                     </div>
@@ -161,7 +141,7 @@
                                 <div class="col-lg-4 col-md-6 wow fadeInRight" data-wow-delay=".3s">
                                     <div class="relative h-100 bg-color text-light padding30 rounded-1">
                                         <div>
-                                            <h4>Personalized Service</h4>
+                                            <h4>Products or Services</h4>
                                             <p class="mb-0">We believe that every garden is unique, just like its owner. We take the time to understand your vision, preferences, and the specific needs.</p>
                                         </div>
                                     </div>
@@ -170,7 +150,7 @@
                                 <div class="col-lg-4 col-md-6 wow fadeInRight" data-wow-delay=".6s">
                                     <div class="relative h-100 bg-color text-light padding30 rounded-1">
                                         <div>
-                                            <h4>Comprehensive Solutions</h4>
+                                            <h4>Mission</h4>
                                             <p class="mb-0">From garden design and installation to regular maintenance and specialty services, we offer a full range of garden services.</p>
                                         </div>
                                     </div>
@@ -179,7 +159,7 @@
                                 <div class="col-lg-4 col-md-6 wow fadeInRight" data-wow-delay=".0s">
                                     <div class="relative h-100 bg-color-2 text-light padding30 rounded-1">
                                         <div>
-                                            <h4>Quality Workmanship</h4>
+                                            <h4>Vision</h4>
                                             <p class="mb-0">Our commitment to quality is evident in every service we provide. We use only the best materials, plants, and tools to your garden.</p>
                                         </div>
                                     </div>
@@ -188,7 +168,7 @@
                                 <div class="col-lg-4 col-md-6 wow fadeInRight" data-wow-delay=".3s">
                                     <div class="relative h-100 bg-color-2 text-light padding30 rounded-1">
                                         <div>
-                                            <h4>Eco-Friendly Practices</h4>
+                                            <h4>Unique Selling Proposition</h4>
                                             <p class="mb-0">We are dedicated to environmentally sustainable practices. Our organic gardening methods, water-wise landscaping, and  waste management.</p>
                                         </div>
                                     </div>
@@ -207,10 +187,10 @@
                             <div class="spacer-double"></div>
 
                             <div class="row g-4">
-                                <div class="col-lg-12">
+                                {{-- <div class="col-lg-12">
                                     <h2 class="mb-0">Latest <span class="id-color-2">Projects</span></h2>
-                                </div>
-                                <div class="col-lg-6">
+                                </div> --}}
+                                {{-- <div class="col-lg-6">
                                     <div class="hover rounded-1 overflow-hidden relative text-light wow fadeInRight" data-wow-delay=".3s">
                                         <img src="images/projects-square/4.jpg" class="hover-scale-1-1 w-100" alt="">
                                         <div class="abs w-100 px-4 hover-op-1 z-4 hover-mt-40 abs-centered">
@@ -232,9 +212,9 @@
                                         </div>
                                         <div class="gradient-trans-color-bottom abs w-100 h-40 bottom-0"></div>
                                     </div>
-                                </div>
+                                </div> --}}
 
-                                <div class="col-lg-6">
+                                {{-- <div class="col-lg-6">
                                     <div class="hover rounded-1 overflow-hidden relative text-light wow fadeInRight" data-wow-delay=".6s">
                                         <img src="images/projects-square/5.jpg" class="hover-scale-1-1 w-100" alt="">
                                         <div class="abs w-100 px-4 hover-op-1 z-4 hover-mt-40 abs-centered">
@@ -256,7 +236,7 @@
                                         </div>
                                         <div class="gradient-trans-color-bottom abs w-100 h-40 bottom-0"></div>
                                     </div>
-                                </div>
+                                </div> --}}
 
                                 <div class="col-lg-12 text-center">
                                     <a class="btn-main wow fadeInUp" href="projects.html">Next <i class="fa fa-arrow-alt-circle-right"> </i> </a>
