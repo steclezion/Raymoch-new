@@ -8,6 +8,7 @@
     "require": {
         "php": "^8.2",
         "illuminate/mail": "*",
+        "intervention/image": "^3.11",
         "laravel/framework": "^11.31",
         "laravel/reverb": "^1.4",
         "laravel/socialite": "^5.18",

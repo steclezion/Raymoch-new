@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChatbotController;
+use App\Http\Controllers\company_description;
+use App\Http\Controllers\company_description_type_controller;
+use App\Http\Controllers\CompanyInfosController;
 use App\Http\Controllers\ControlLayoutController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\GoogleAuthController;
@@ -14,6 +17,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Mail\GoogleVerifyMail;
 use App\Mail\HelloMail;
+
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 
@@ -102,5 +106,18 @@ Route::resource('users', UserController::class);
 Route::resource('home-welcome-second-page', HomeWelcomeSecondPageController::class)->middleware('auth');
 
 Route::resource('home-welcome-third-page', HomeWelcomeThirdPageController::class)->middleware('auth');
+
+
+Route::resource('companyinfos', CompanyInfosController::class)->middleware('auth');
+
+
+Route::get('/descriptions', [company_description::class, 'index'])->name('descriptions.index');
+Route::get('/descriptions/create', [company_description::class, 'create'])->name('descriptions.create');
+Route::post('/descriptions', [company_description::class, 'store'])->name('descriptions.store');
+Route::get('/descriptions/{company}/{description}/edit', [Company_description::class, 'edit'])->name('descriptions.edit');
+Route::put('/descriptions/{company}', [company_description::class, 'update'])->name('descriptions.update');
+Route::delete('/descriptions/{id}', [company_description::class, 'destroy'])->name('descriptions.destroy');
+
+Route::resource('company_description_types', company_description_type_controller::class)->middleware('auth');
 
 

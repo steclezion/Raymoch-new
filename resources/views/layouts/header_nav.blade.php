@@ -46,14 +46,14 @@
                         <!-- mainemenu begin -->
                         <ul id="mainmenu">
                             <br>
-                            <li><a class="menu-item" href="index.html"> Home </a>
+                            <li><a class="menu-item" href="{{ route('/') }}"> Home </a>
 
                                 <ul class="mega">
                                     <li>
                                         <div class="container">
                                             <div class="sb-menu p-4">
                                                 <div class="row g-3">
-                                                    <div class="col-lg-2 col-md-4 text-center">
+                                                    {{-- <div class="col-lg-2 col-md-4 text-center">
                                                         <div class="relative hover text-center overflow-hidden rounded-5px">
                                                             <a href="index.html">
                                                                 <img src="images/demo/homepage-1.jpg" class="w-100 relative hover-scale-1-1" alt="">
@@ -106,7 +106,7 @@
                                                         </div>
                                                         <h5 class="new mt-3 mb-1">Shop</h5>
                                                     </div>
-
+ --}}
                                                 </div>
                                             </div>
                                         </div>

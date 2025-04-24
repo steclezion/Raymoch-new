@@ -1,30 +1,34 @@
-<?php
+@extends('layouts_admin.app')
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
+@section('content')
+<div class="container">
+    <h2>Edit Company Descriptions</h2>
 
-return new class extends Migration
-{
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
-    {
-        Schema::create('company_descriptions', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('companyinfo_id')->constrained('companyinfos')->onDelete('cascade');
-            $table->string('description_type');
-            $table->string('description');
-            $table->timestamps();
-        });
-    }
+    <form method="POST" action="{{ route('descriptions.update', $companyinfo->id) }}">
+        @csrf
+        @method('PUT')
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::dropIfExists('company_descriptions');
-    }
-};
+        <!-- Select Company -->
+        <div class="mb-3">
+            <label>Select Company</label>
+            <select name="companyinfo_id" class="form-control" required>
+                <option value="">-- Choose Company --</option>
+                @foreach($companies as $company)
+                    <option value="{{ $company->id }}" {{ $company->id == $companyinfo->id ? 'selected' : '' }}>
+                        {{ $company->company_title }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <!-- Existing Descriptions -->
+        <div id="description-rows">
+            @foreach($descriptions as $desc)
+            <div class="row description-row mb-2">
+                <div class="col-md-4">
+                    <select name="description_type[]" class="form-control">
+                        <option value="">-- Type --</option>
+                        <option value="mission" {{ $desc->description_type == 'mission' ? 'selected' : '' }}>Mission</option>
+                        <option value="vision" {{ $desc->description_type == 'vision' ? 'selected' : '' }}>Vision</option>
+                        <option value="goal" {{ $desc->description_type == 'goal' ? 'selected' : '' }}>Goal</option>
+                        <option value="value" {{ $desc

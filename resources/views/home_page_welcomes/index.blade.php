@@ -2,9 +2,7 @@
 @section('content')
 <div class="container">
 
-
-
-    <div class="container mt-3" style="max-width: 80%; margin: 0 auto;">
+<div class="container mt-3" style="max-width: 80%; margin: 0 auto;">
         <div class="d-flex justify-content-between mb-3">
             <h2>Home Page Welcomes</h2>
             <button class="btn btn-primary btn-md addBtn">Add New</button>

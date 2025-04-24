@@ -40,8 +40,7 @@
             <a href="#" class="nav-link ">
               <i class="nav-icon fas fa-tachometer-alt"></i>
               <p>
-                Welcome Page
-                <i class="right fas fa-angle-left"></i>
+                Welcome Page <i class="right fas fa-angle-left"></i>
               </p>
             </a>
             <ul class="nav nav-item">
@@ -66,6 +65,51 @@
            <p>Third Section </p>
                 </a>
               </li>
+            </ul>
+        </li>
+
+              <li class="nav-item">
+                <a href="#" class="nav-link">
+                    <i class="nav-icon fas fa-chart-pie"></i>
+                    <p>
+                       Descriptions
+                        <i class="right fas fa-angle-left"></i>
+                    </p>
+                </a>
+                <ul class="nav nav-item">
+                    <li class="nav-item">
+                        <a href="{{url('companyinfos')}}" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p>Company Description</p>
+
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{url('/descriptions')}}" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p>Detailed Description</p>
+
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="{{url('/company_description_types')}}" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p>Description Type</p>
+
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{url('/descriptions')}}" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p>Business Type</p>
+
+                        </a>
+                    </li>
+
+
+                </ul>
+            </li>
 
                {{-- @endcan --}}
 
@@ -217,12 +261,7 @@
                         </ul>
                     </li>
 
-
-
-
-
-
-                @endcan
+                 @endcan
 
 
                 @can('assessor_roles')
