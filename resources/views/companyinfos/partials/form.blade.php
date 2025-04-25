@@ -8,8 +8,9 @@
     <select name="classification_id" class="form-control" required>
         <option value="">-- Select Classification --</option>
         @foreach($classifications as $classification)
-            <option value="{{ $classification->id }}">
-                {{ $classification->business_type }} ({{ $classification->industry }})
+            <option value="{{ $classification->id }}"
+                {{ old('classification_id', $companyinfo->classification_id ?? '') == $classification->id ? 'selected' : '' }}>
+                {{ $classification->business_type }}
             </option>
         @endforeach
     </select>

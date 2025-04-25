@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 use Intervention\Image\ImageManager;
+use Illuminate\Support\Facades\DB;
 
 class CompanyinfosController extends Controller
 {
@@ -16,8 +17,18 @@ class CompanyinfosController extends Controller
      */
     public function index()
     {
-        $companyinfos = CompanyInfos::all();
+
+
+        $companyinfos = DB::table('companyinfos')
+            ->join('company_classifications', 'companyinfos.classification_id', '=', 'company_classifications.id')
+            ->select(
+                'companyinfos.*',
+                'company_classifications.industry',
+                'company_classifications.business_type'
+            )
+            ->get();
         return view('companyinfos.index', compact('companyinfos'));
+
     }
 
 
@@ -26,7 +37,10 @@ class CompanyinfosController extends Controller
      */
     public function create()
     {
-        $classifications = CompanyClassification::where('status', 'active')->get();
+        $classifications = CompanyClassification::where('status', 'active')
+        ->select('*')
+        ->distinct()
+        ->get();
         return view('companyinfos.create', compact('classifications'));
 
     }
@@ -37,21 +51,28 @@ class CompanyinfosController extends Controller
 
     public function store(Request $request)
     {
+       // dd($request->all());
+
+        $request->validate([
+            'company_title' => 'required|string|max:255',
+            'tagline' => 'nullable|string',
+            'status' => 'required|in:active,inactive',
+            'classification_id' => 'required|exists:company_classifications,id',
+        ]);
+
         $data = $request->all();
-      //  $manager = new ImageManager('imagick');
+
         $manager = new ImageManager(new GdDriver());
 
         foreach (['first_picture', 'second_picture', 'third_picture'] as $field) {
             if ($request->hasFile($field)) {
                 $uploaded = $request->file($field);
 
-                // Read & resize image
-                $image = $manager->read($uploaded)->resize(800, 600, function ($constraint) {
+                $image = $manager->read($uploaded)->resize(800, 800, function ($constraint) {
                     $constraint->aspectRatio();
                     $constraint->upsize();
                 });
 
-                // Encode and store
                 $filename = time() . '_' . $field . '.' . $uploaded->getClientOriginalExtension();
                 Storage::disk('public')->put("company_images/{$filename}", (string) $image->encode());
 
@@ -59,8 +80,14 @@ class CompanyinfosController extends Controller
             }
         }
 
+
+
+
         CompanyInfos::create($data);
-        return redirect()->route('companyinfos.index')->with('success', 'Company info created with resized images!');
+
+
+        return redirect()->route('companyinfos.index')->with('success', 'Company info created with classification and resized images!');
+
     }
 
     /**
@@ -76,7 +103,9 @@ class CompanyinfosController extends Controller
      */
     public function edit(CompanyInfos $companyinfo)
     {
-        return view('companyinfos.edit', compact('companyinfo'));
+        $classifications = CompanyClassification::where('status', 'active')->get();
+
+        return view('companyinfos.edit', compact('companyinfo', 'classifications'))->with('editing', true);
     }
 
     /**
@@ -84,31 +113,46 @@ class CompanyinfosController extends Controller
      */
     public function update(Request $request, CompanyInfos $companyinfo)
     {
-        $data = $request->all();
-        //  $manager = new ImageManager('imagick');
-          $manager = new ImageManager(new GdDriver());
+        $request->validate([
+            'company_title' => 'required|string|max:255',
+            'tagline' => 'nullable|string|max:255',
+            'status' => 'required|in:active,inactive',
+            'classification_id' => 'required|exists:company_classifications,id',
+            'first_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:4048',
+            'second_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:4048',
+            'third_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:4048',
+        ]);
 
-          foreach (['first_picture', 'second_picture', 'third_picture'] as $field) {
-              if ($request->hasFile($field)) {
-                  $uploaded = $request->file($field);
+        $data = $request->only([
+            'company_title',
+            'tagline',
+            'status',
+            'classification_id'
+        ]);
 
-                  // Read & resize image
-                  $image = $manager->read($uploaded)->resize(800, 600, function ($constraint) {
-                      $constraint->aspectRatio();
-                      $constraint->upsize();
-                  });
+        $manager = new ImageManager(new GdDriver());
 
-                  // Encode and store
-                  $filename = time() . '_' . $field . '.' . $uploaded->getClientOriginalExtension();
-                  Storage::disk('public')->put("company_images/{$filename}", (string) $image->encode());
+        foreach (['first_picture', 'second_picture', 'third_picture'] as $field) {
+            if ($request->hasFile($field)) {
+                $uploaded = $request->file($field);
 
-                  $data[$field] = "company_images/{$filename}";
-              }
-          }
+                $image = $manager->read($uploaded)->resize(800, 800, function ($constraint) {
+                    $constraint->aspectRatio();
+                    $constraint->upsize();
+                });
+
+                $filename = time() . '_' . $field . '.' . $uploaded->getClientOriginalExtension();
+                Storage::disk('public')->put("company_images/{$filename}", (string) $image->encode());
+
+                $data[$field] = "company_images/{$filename}";
+            }
+        }
 
         $companyinfo->update($data);
-        return redirect()->route('companyinfos.index')->with('success', 'Company info updated!');
+
+        return redirect()->route('companyinfos.index')->with('success', 'Company info updated successfully!');
     }
+
 
     /**
      * Remove the specified resource from storage.

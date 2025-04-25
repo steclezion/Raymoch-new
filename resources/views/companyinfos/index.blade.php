@@ -10,6 +10,8 @@
                 <tr>
                     <th>ID</th>
                 <th>Title</th>
+                <th>Company Type</th>
+                <th>Company Business Classification</th>
                 <th>Tagline</th>
                 <th>First Picture</th>
                 <th>Second Picture</th>
@@ -23,6 +25,8 @@
             <tr>
                 <td>{{ $loop->iteration }}</td>
                 <td>{{ $info->company_title }}</td>
+                <td>{{ $info->industry ?? 'N/A' }}</td>
+                <td>{{ $info->business_type ?? 'N/A' }}</td>
                 <td>{{ $info->tagline }}</td>
 
                 <td>

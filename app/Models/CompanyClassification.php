@@ -4,6 +4,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+
 class CompanyClassification extends Model
 {
     use HasFactory;
@@ -18,4 +19,14 @@ class CompanyClassification extends Model
         'description',
         'status',
     ];
+
+
+
+//     public function companyinfos()
+// {
+//     return $this->belongsTo(companyinfos::class, 'classification_id');
+
+// }
+
+
 }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\companydescription;
+use App\Models\CompanyClassification;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -20,6 +21,7 @@ class companyinfos extends Model
         'second_picture',
         'third_picture',
         'status',
+        'classification_id',
     ];
 
     // If you have a relation to descriptions (like one-to-many)
@@ -27,4 +29,15 @@ class companyinfos extends Model
     {
         return $this->hasMany(companydescription::class);
     }
+
+
+      // If you have a relation to descriptions (like one-to-many)
+
+public function classification()
+{
+    return $this->belongsTo(CompanyClassification::class, 'classification_id');
+}
+
+
+
 }
