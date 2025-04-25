@@ -55,12 +55,18 @@
 
                 <td>{{ $info->status }}</td>
                 <td>
-                    <a href="{{ route('companyinfos.edit', $info->id) }}" class="btn btn-sm btn-warning">Edit</a>
-                    <form action="{{ route('companyinfos.destroy', $info->id) }}" method="POST" style="display:inline;">
-                        @csrf
-                        @method('DELETE')
-                        <button class="btn btn-sm btn-danger" onclick="return confirm('Delete this record?')">Delete</button>
-                    </form>
+                    <div class="d-flex gap-2">
+                        <a href="{{ route('companyinfos.edit', $info->id) }}" class="btn btn-sm btn-warning">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <form action="{{ route('companyinfos.destroy', $info->id) }}" method="POST">
+                            @csrf
+                            @method('DELETE')
+                            <button class="btn btn-sm btn-danger" onclick="return confirm('Delete this record?')">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             @endforeach
