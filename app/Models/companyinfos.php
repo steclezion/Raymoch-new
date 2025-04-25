@@ -22,6 +22,11 @@ class companyinfos extends Model
         'third_picture',
         'status',
         'classification_id',
+        'website',
+        'founder_name',
+        'location',
+        'description',
+
     ];
 
     // If you have a relation to descriptions (like one-to-many)

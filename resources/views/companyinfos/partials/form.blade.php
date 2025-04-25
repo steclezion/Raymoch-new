@@ -40,11 +40,52 @@
 </div>
 
 <div class="mb-3">
+    <label>Country</label>
+    <select name="country" class="form-control" required>
+        <option value="">-- Select Country --</option>
+        @foreach($countries as $country)
+            <option value="{{ $country->name }}" {{ old('country', $companyinfo->country ?? '') == $country->name ? 'selected' : '' }}>
+                {{ $country->name }}
+            </option>
+        @endforeach
+    </select>
+    @error('country')
+        <small class="text-danger">{{ $message }}</small>
+    @enderror
+</div>
+
+
+<div class="mb-3">
     <label>Status</label>
     <select name="status" class="form-control">
         <option value="active" {{ old('status', $companyinfo->status ?? '') === 'active' ? 'selected' : '' }}>Active</option>
         <option value="inactive" {{ old('status', $companyinfo->status ?? '') === 'inactive' ? 'selected' : '' }}>Inactive</option>
     </select>
+</div>
+
+<div class="mb-3">
+    <label>Website</label>
+    <input type="text" name="website" class="form-control" value="{{ old('website', $companyinfo->website ?? '') }}">
+</div>
+
+<div class="mb-3">
+    <label>Founder Name</label>
+    <input type="text" name="founder_name" class="form-control" value="{{ old('founder_name', $companyinfo->founder_name ?? '') }}">
+</div>
+
+<div class="mb-3">
+    <label>Description</label>
+    <textarea name="description" class="form-control">{{ old('description', $companyinfo->description ?? '') }}</textarea>
+</div>
+
+<div class="mb-3">
+    <label>Location</label>
+    <input type="text" name="location" class="form-control" value="{{ old('location', $companyinfo->location ?? '') }}">
+</div>
+
+<div class="mb-3">
+    <label>Email</label>
+    <input type="email" name="email" class="form-control" value="{{ old('email', $companyinfo->email ?? '') }}">
 </div>
 
 {{-- <button type="submit" class="btn btn-success">Save</button> --}}

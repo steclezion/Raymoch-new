@@ -23,10 +23,10 @@
 
                                     <div class="col-md-6">
 
-                                        <input type="text" class="form-control" placeholder="Enter address e.g. street, city and state or zip">
+                                        <input type="text" class="form-control" placeholder="Enter Company Name, Founder Name">
 
                                     </div>
-
+                                    php artisan makes:migrations add_column_name_to_companyinfos_table --table=companyinfos
                                     <div class="col-md-3">
 
                                         <button class="btn btn-secondary btn-block">Search Results</button>

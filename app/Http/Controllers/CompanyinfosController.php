@@ -4,11 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\CompanyClassification;
 use App\Models\companyinfos;
+use App\Models\Country;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 use Intervention\Image\ImageManager;
-use Illuminate\Support\Facades\DB;
 
 class CompanyinfosController extends Controller
 {
@@ -41,7 +42,10 @@ class CompanyinfosController extends Controller
         ->select('*')
         ->distinct()
         ->get();
-        return view('companyinfos.create', compact('classifications'));
+        
+        $countries = Country::orderBy('name')->get();
+
+        return view('companyinfos.create', compact(['classifications', 'countries']));
 
     }
 
