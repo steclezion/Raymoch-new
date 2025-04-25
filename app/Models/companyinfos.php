@@ -2,11 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use App\Models\companydescription;
 use App\Models\CompanyClassification;
+use App\Models\companydescription;
+use App\Models\Country;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class companyinfos extends Model
 {
@@ -26,6 +27,8 @@ class companyinfos extends Model
         'founder_name',
         'location',
         'description',
+        'country_id',
+        'email',
 
     ];
 
@@ -43,6 +46,10 @@ public function classification()
     return $this->belongsTo(CompanyClassification::class, 'classification_id');
 }
 
+public function country()
+{
+    return $this->belongsTo(Country::class);
+}
 
 
 }

@@ -41,15 +41,16 @@
 
 <div class="mb-3">
     <label>Country</label>
-    <select name="country" class="form-control" required>
+    <select name="country_id" class="form-control" required>
         <option value="">-- Select Country --</option>
         @foreach($countries as $country)
-            <option value="{{ $country->name }}" {{ old('country', $companyinfo->country ?? '') == $country->name ? 'selected' : '' }}>
+            <option value="{{ $country->id }}"
+                {{ old('country_id', $companyinfo->country_id ?? '') == $country->id ? 'selected' : '' }}>
                 {{ $country->name }}
             </option>
         @endforeach
     </select>
-    @error('country')
+    @error('country_id')
         <small class="text-danger">{{ $message }}</small>
     @enderror
 </div>

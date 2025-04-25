@@ -42,7 +42,7 @@ class CompanyinfosController extends Controller
         ->select('*')
         ->distinct()
         ->get();
-        
+
         $countries = Country::orderBy('name')->get();
 
         return view('companyinfos.create', compact(['classifications', 'countries']));
@@ -107,11 +107,11 @@ class CompanyinfosController extends Controller
      */
     public function edit(CompanyInfos $companyinfo)
     {
-        $classifications = CompanyClassification::where('status', 'active')->get();
+        $classifications = CompanyClassification::where('status', 'active')->orderBy('business_type')->get();
+    $countries = Country::orderBy('name')->get();
 
-        return view('companyinfos.edit', compact('companyinfo', 'classifications'))->with('editing', true);
+    return view('companyinfos.edit', compact('companyinfo', 'classifications', 'countries'))->with('editing', true);
     }
-
     /**
      * Update the specified resource in storage.
      */
@@ -122,6 +122,12 @@ class CompanyinfosController extends Controller
             'tagline' => 'nullable|string|max:255',
             'status' => 'required|in:active,inactive',
             'classification_id' => 'required|exists:company_classifications,id',
+            'country_id' => 'required|exists:countries,id',
+            'website' => 'nullable|string|max:255|url',
+            'founder_name' => 'nullable|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            'location' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
             'first_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:4048',
             'second_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:4048',
             'third_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:4048',
@@ -131,7 +137,13 @@ class CompanyinfosController extends Controller
             'company_title',
             'tagline',
             'status',
-            'classification_id'
+            'classification_id',
+            'country_id',
+            'website',
+            'founder_name',
+            'description',
+            'location',
+            'email'
         ]);
 
         $manager = new ImageManager(new GdDriver());
@@ -156,8 +168,6 @@ class CompanyinfosController extends Controller
 
         return redirect()->route('companyinfos.index')->with('success', 'Company info updated successfully!');
     }
-
-
     /**
      * Remove the specified resource from storage.
      */
@@ -167,3 +177,4 @@ class CompanyinfosController extends Controller
         return redirect()->route('companyinfos.index')->with('success', 'Company info deleted!');
     }
 }
+

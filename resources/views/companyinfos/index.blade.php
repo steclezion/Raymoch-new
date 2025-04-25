@@ -53,7 +53,15 @@
                     @endif
                 </td>
 
-                <td>{{ $info->status }}</td>
+                <td>
+                    @if($info->status === 'active')
+                        <span class="badge bg-success">Active</span>
+                    @elseif($info->status === 'inactive')
+                        <span class="badge bg-warning text-dark">Inactive</span>
+                    @else
+                        <span class="badge bg-secondary">{{ ucfirst($info->status) }}</span>
+                    @endif
+                </td>
                 <td>
                     <div class="d-flex gap-2">
                         <a href="{{ route('companyinfos.edit', $info->id) }}" class="btn btn-sm btn-warning">
