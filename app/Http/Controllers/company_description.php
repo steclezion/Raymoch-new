@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\CompanyInfos;
 use App\Models\Companydescription;
 use Illuminate\Support\Facades\DB;
+use App\Models\CompanyDescriptionType;
 
 
 class company_description extends Controller
@@ -31,7 +32,9 @@ public function index()
 public function create()
 {
     $companies = CompanyInfos::all();
-    return view('company-description.create', compact('companies'));
+    $descriptionTypes = CompanyDescriptionType::where('status', 'active')->get(); // or all()
+
+    return view('company-description.create', compact('companies', 'descriptionTypes'));
 }
 
 public function store(Request $request)
@@ -62,16 +65,29 @@ public function store(Request $request)
 
 
 
-public function edit($companyId, $descriptionId)
-{
+// public function edit($companyId, $descriptionId)
+// {
 
+//     $companyinfo = CompanyInfos::findOrFail($companyId);
+//     $companies = CompanyInfos::all();
+//     $descriptions = Companydescription::where('companyinfo_id', $companyId)->get();
+
+//     return view('company-description.edit', compact('companyinfo', 'companies', 'descriptions'))->with('editing', true);
+
+// }
+
+
+public function edit($companyId)
+{
     $companyinfo = CompanyInfos::findOrFail($companyId);
     $companies = CompanyInfos::all();
-    $descriptions = Companydescription::where('companyinfo_id', $companyId)->get();
+    $descriptions = CompanyDescription::where('companyinfo_id', $companyId)->get();
+    $descriptionTypes = CompanyDescriptionType::where('status', 'active')->get(); // 👈 load dynamic options
 
-    return view('company-description.edit', compact('companyinfo', 'companies', 'descriptions'))->with('editing', true);
-
+    return view('company-description.edit', compact('companyinfo', 'companies', 'descriptions', 'descriptionTypes'))
+           ->with('editing', true);
 }
+
 
 public function update(Request $request, $companyId)
 {

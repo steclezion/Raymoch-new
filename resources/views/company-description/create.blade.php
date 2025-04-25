@@ -23,14 +23,13 @@
         <div id="description-rows">
             <div class="row description-row mb-2">
                 <div class="col-md-4">
-                    <select name="description_type[]" class="form-control">
-                        <option value="">-- Type --</option>
-                        <option value="mission">Mission</option>
-                        <option value="vision">Vision</option>
-                        <option value="goal">Goal</option>
-                        <option value="value">Value</option>
+                    <select name="description_type[]" class="form-control" required>
+                        <option value="">-- Choose Type --</option>
+                        @foreach($descriptionTypes as $type)
+                            <option value="{{ $type->name }}">{{ ucfirst($type->name) }}</option>
+                        @endforeach
                     </select>
-                </div>
+                                </div>
                 <div class="col-md-6">
                     <input type="text" required name="description[]" class="form-control" placeholder="Enter Description">
                 </div>
@@ -51,24 +50,24 @@
 
 <script>
     function addRow() {
-          const row = `
-            <div class="row description-row mb-2">
-                <div class="col-md-4">
-                    <select name="description_type[]" class="form-control">
-                        <option value="">-- Type --</option>
-                        <option value="mission">Mission</option>
-                        <option value="vision">Vision</option>
-                        <option value="goal">Goal</option>
-                        <option value="value">Value</option>
-                    </select>
-                </div>
-                <div class="col-md-6">
-                    <input type="text" name="description[]" class="form-control" placeholder="Enter Description">
-                </div>
-                <div class="col-md-2">
-                    <button type="button" class="btn btn-danger" onclick="removeRow(this)">❌</button>
-                </div>
-            </div>`;
+        const typeOptions = `{!! collect($descriptionTypes)->map(fn($t) => "<option value='{$t->name}'>" . ucfirst($t->name) . "</option>")->implode('') !!}`;
+
+        const row = `
+        <div class="row description-row mb-2">
+            <div class="col-md-4">
+                <select name="description_type[]" class="form-control" required>
+                    <option value="">-- Choose Type --</option>
+                    ${typeOptions}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <input type="text" required name="description[]" class="form-control" placeholder="Enter Description">
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-danger" onclick="removeRow(this)">❌</button>
+            </div>
+        </div>`;
+
         document.getElementById('description-rows').insertAdjacentHTML('beforeend', row);
     }
 
