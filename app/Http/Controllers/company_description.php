@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\CompanyInfos;
-use App\Models\Companydescription;
+use App\Models\CompanyDescription;
 use Illuminate\Support\Facades\DB;
 use App\Models\CompanyDescriptionType;
 
@@ -14,7 +14,7 @@ class company_description extends Controller
 
 public function index()
 {
-   // $descriptions =  companydescription::with('companyinfos')->get();
+   // $descriptions =  CompanyDescription::with('companyinfos')->get();
 
     $descriptions = DB::table('company_descriptions')
     ->join('companyinfos', 'company_descriptions.companyinfo_id', '=', 'companyinfos.id')
@@ -53,7 +53,7 @@ public function store(Request $request)
     }
 
     foreach ($request->description_type as $index => $type) {
-        companydescription::create([
+        CompanyDescription::create([
             'companyinfo_id' => $request->companyinfo_id,
             'description_type' => $type,
             'description' => $request->description[$index]

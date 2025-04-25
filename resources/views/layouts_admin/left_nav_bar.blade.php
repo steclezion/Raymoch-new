@@ -80,7 +80,7 @@
                     <li class="nav-item">
                         <a href="{{url('companyinfos')}}" class="nav-link">
                             <i class="far fa-circle nav-icon"></i>
-                            <p>Company Description</p>
+                            <p>Company Information</p>
 
                         </a>
                     </li>

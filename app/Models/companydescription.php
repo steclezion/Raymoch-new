@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\companyinfos;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class companydescription extends Model
+class CompanyDescription extends Model
 {
     //
     public $table = 'company_descriptions';
@@ -14,7 +14,7 @@ class companydescription extends Model
     use HasFactory;
 
     protected $fillable = [
-        
+
         'companyinfo_id',
         'description_type',
         'description',
