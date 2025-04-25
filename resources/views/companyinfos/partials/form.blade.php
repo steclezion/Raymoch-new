@@ -4,6 +4,18 @@
 </div>
 
 <div class="mb-3">
+    <label>Classification</label>
+    <select name="classification_id" class="form-control" required>
+        <option value="">-- Select Classification --</option>
+        @foreach($classifications as $classification)
+            <option value="{{ $classification->id }}">
+                {{ $classification->business_type }} ({{ $classification->industry }})
+            </option>
+        @endforeach
+    </select>
+</div>
+
+<div class="mb-3">
     <label>Tagline</label>
     <input type="text" name="tagline" class="form-control" value="{{ old('tagline', $companyinfo->tagline ?? '') }}">
 </div>
@@ -36,7 +48,11 @@
 
 {{-- <button type="submit" class="btn btn-success">Save</button> --}}
 <button type="submit" class="btn btn-success">
-    {{ isset($companyinfo) ? 'Update' : 'Create' }}
+    @if(isset($companyinfo))
+        <i class="fas fa-edit"></i> Update
+    @else
+        <i class="fas fa-plus"></i> Create
+    @endif
 </button>
 
 <br>

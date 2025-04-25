@@ -2,10 +2,23 @@
 
 @section('content')
 <div class="container">
-    <h2>{{ isset($editing) ? 'Edit' : 'Create' }} Company Classification</h2>
+    <div class="row justify-content-center">
+                <div class="col-md-10">
+                    <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+    <div class="d-flex justify-content-between align-items-center">
+    <h5>{{ isset($editing) ? 'Edit' : 'Create' }} Add Company Classification</h5>
+    </div>
+    <a href="{{ url('/company_classifications') }}" class="btn btn-secondary">
+    <i class="far fa-arrow-alt-circle-left"></i> Back
+    </a>
+    </div>
 
+
+
+<div class="card-body">
     <div class="container">
-    <h2>Import Industry & Business Types from Excel</h2>
+    <h4>Import Industry & Business Types from Excel</h4>
 
     <form method="POST" action="{{ route('company_classifications.import') }}" enctype="multipart/form-data" class="mb-4">
         @csrf
@@ -75,6 +88,10 @@
 
         <button type="submit" class="btn btn-success">{{ isset($editing) ? 'Update' : 'Save' }}</button>
     </form>
+</div>
+</div>
+</div>
+</div>
 </div>
 <!-- Select2 CSS -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />

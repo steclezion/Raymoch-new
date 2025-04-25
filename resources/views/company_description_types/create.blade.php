@@ -1,9 +1,18 @@
 @extends('layouts_admin.app')
 
 @section('content')
-<div class="container">
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
     <h2>{{ isset($editing) ? 'Edit' : 'Create' }} Description Type</h2>
-
+    <a href="{{ url('/company_description_types') }}" class="btn btn-secondary">
+        <i class="far fa-arrow-alt-circle-left"></i> Back
+    </a>
+</div>
+</div>
+<div class="card-body">
     <form method="POST" action="{{ isset($editing) ? route('company_description_types.update', $type->id) : route('company_description_types.store') }}">
         @csrf
         @if(isset($editing)) @method('PUT') @endif
@@ -26,7 +35,13 @@
             </select>
         </div>
 
-        <button type="submit" class="btn btn-success">Save</button>
+        <button type="submit" class="btn btn-success"><i class="fas fa-plus"></i>Save</button>
     </form>
 </div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
 @endsection

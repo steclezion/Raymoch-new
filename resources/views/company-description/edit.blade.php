@@ -1,9 +1,25 @@
 @extends('layouts_admin.app')
-
 @section('content')
 <div class="container">
-    <h2>{{ isset($editing) ? 'Edit' : 'Create' }} Company Descriptions</h2>
+    <div class="row justify-content-center">
+                <div class="col-md-10">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <div class="d-flex justify-content-between align-items-center">
+    <h5>
+    @if(isset($editing))
+        <i class="fas fa-edit"></i> Edit
+    @else
+        <i class="fas fa-plus"></i> Create
+    @endif
+    Company Descriptions</h5>
 
+    <a href="{{ url('/descriptions') }}" class="btn btn-secondary">
+        <i class="far fa-arrow-alt-circle-left"></i> Back
+    </a>
+</div>
+</div>
+<div class="card-body">
     <form method="POST" action="{{ isset($editing) ? route('descriptions.update', $companyinfo->id) : route('descriptions.store') }}">
         @csrf
         @if(isset($editing)) @method('PUT') @endif
@@ -70,7 +86,7 @@
         <button type="button" class="btn btn-sm btn-primary my-2" onclick="addRow()">+ Add Row</button>
 
         <br><br>
-        <button type="submit" class="btn btn-success">Save Descriptions</button>
+        <button type="submit" class="btn btn-success"><i class="fas fa-edit"></i>Update</button>
     </form>
 </div>
 
@@ -94,6 +110,11 @@
     </div>
 </div>
 
+</div>
+</div>
+</div>
+</div>
+</div>
 
 
 <script>
@@ -108,7 +129,7 @@
 
         if (rows.length > 2) {
             button.closest('.description-row').remove();
-        
+
         } else {
             alert('At least one row is required.');
         }

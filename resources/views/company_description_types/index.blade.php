@@ -4,7 +4,7 @@
 @section('content')
 <div class="container">
     <h2>Company Description Types</h2>
-    <a href="{{ route('company_description_types.create') }}" class="btn btn-primary mb-3">+ Add New Type</a>
+    <a href="{{ route('company_description_types.create') }}" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Add New Type</a>
 
     <table id="example" class="table table-bordered table-striped">
         <thead>

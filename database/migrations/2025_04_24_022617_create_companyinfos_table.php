@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('companyinfos', function (Blueprint $table) {
             $table->id();
             $table->string('company_title')->default('Project');
-            $table->foreignId('company_classifications_id')->constrained('company_classifications')->onDelete('cascade');
+            // $table->foreignId('company_classifications_id')->constrained('company_classifications')->onDelete('cascade');
+            // $table->foreignId('classification_id')->nullable()->constrained('company_classifications')->onDelete('set null');
             $table->string('tagline')->default('Toafy');
             $table->longText('first_picture')->nullable();
             $table->string('second_picture')->nullable();

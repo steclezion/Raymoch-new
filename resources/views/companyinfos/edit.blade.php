@@ -5,11 +5,13 @@
                 <div class="col-md-10">
                     <div class="card shadow-sm">
                         <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0"> Edit Companies </h5>
-                            <a href="{{ url('/companyinfos') }}" class="float-right">
-                                <button class="btn btn-secondary"> <span class="far fa-arrow-alt-circle-left"> Back </button>
+                            <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">  <i class="fas fa-edit"></i> Edit Companies </h5>
+                            <a href="{{ url('/companyinfos') }}" class="btn btn-secondary">
+                                <i class="far fa-arrow-alt-circle-left"></i> Back
                             </a>
                         </div>
+                    </div>
                          <div class="card-body">
      <form action="{{ route('companyinfos.update', $companyinfo->id) }}" method="POST" enctype="multipart/form-data">
                                 @csrf

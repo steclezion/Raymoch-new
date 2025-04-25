@@ -4,7 +4,7 @@
 <div class="container">
     <h2>All Company Descriptions</h2>
     <div class="container">
-        <a href="{{ url('descriptions/create') }}" class="btn btn-primary mb-3">Add New</a>
+        <a href="{{ url('descriptions/create') }}" class="btn btn-primary mb-3"> <i class="fas fa-plus"></i> Add New</a>
         <table id="example" class="table table-bordered table-striped">
 
         <thead>

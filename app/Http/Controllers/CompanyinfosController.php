@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CompanyClassification;
 use App\Models\companyinfos;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver as GdDriver;
+use Intervention\Image\ImageManager;
 
 class CompanyinfosController extends Controller
 {
@@ -25,27 +26,14 @@ class CompanyinfosController extends Controller
      */
     public function create()
     {
-        return view('companyinfos.create');
+        $classifications = CompanyClassification::where('status', 'active')->get();
+        return view('companyinfos.create', compact('classifications'));
+
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    // public function store(Request $request)
-    // {
-    //     $data = $request->all();
-
-    //     // Handle image upload
-    //     foreach (['first_picture', 'second_picture', 'third_picture'] as $field) {
-    //         if ($request->hasFile($field)) {
-    //             $data[$field] = $request->file($field)->store('company_images', 'public');
-    //         }
-    //     }
-
-    //     CompanyInfos::create($data);
-    //     return redirect()->route('companyinfos.index')->with('success', 'Company info created!');
-    // }
-
 
     public function store(Request $request)
     {

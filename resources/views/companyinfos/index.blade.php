@@ -3,7 +3,7 @@
 @section('content')
 <div class="container">
     <h2>Company Info List</h2>
-    <a href="{{ route('companyinfos.create') }}" class="btn btn-primary mb-3">Add New Company</a>
+    <a href="{{ route('companyinfos.create') }}" class="btn btn-primary mb-3"><i class="fa fa-plus"> </i>Add New Company</a>
         <div class="table-responsive">
         <table class="table table-bordered table-responsive-md" id="welcomeSecondTable">
             <thead>
