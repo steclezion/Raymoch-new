@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\company_description;
 use App\Http\Controllers\company_description_type_controller;
+use App\Http\Controllers\CompanyClassificationController;
 use App\Http\Controllers\CompanyInfosController;
 use App\Http\Controllers\ControlLayoutController;
 use App\Http\Controllers\ForgotPasswordController;
@@ -120,4 +121,5 @@ Route::delete('/descriptions/{id}', [company_description::class, 'destroy'])->na
 
 Route::resource('company_description_types', company_description_type_controller::class)->middleware('auth');
 
-
+Route::post('/company_classifications/import', [CompanyClassificationController::class, 'import'])->name('company_classifications.import');
+Route::resource('company_classifications', CompanyClassificationController::class)->middleware('auth');

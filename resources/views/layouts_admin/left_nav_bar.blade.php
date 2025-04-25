@@ -100,7 +100,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="{{url('/descriptions')}}" class="nav-link">
+                        <a href="{{url('/company_classifications')}}" class="nav-link">
                             <i class="far fa-circle nav-icon"></i>
                             <p>Business Type</p>
 
