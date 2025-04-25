@@ -105,8 +105,10 @@
 
     function removeRow(button) {
         const rows = document.querySelectorAll('.description-row');
-        if (rows.length > 1) {
+
+        if (rows.length > 2) {
             button.closest('.description-row').remove();
+        
         } else {
             alert('At least one row is required.');
         }
