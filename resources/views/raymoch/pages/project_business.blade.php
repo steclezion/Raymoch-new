@@ -36,10 +36,22 @@
                                                     <input name="website" type="text" placeholder="Website Name"
                                                         class="form-control">
                                                 </div>
-                                                <div class="col-md-4">
+                                                {{-- <div class="col-md-4">
                                                     <input name="tagline" type="text" class="form-control"
                                                         placeholder="Renowned Title">
+                                                </div> --}}
+                                                <div class="col-md-4">
+
+                                                    <select name="companyinfo_id" class="form-control" required>
+                                                        <option value="">-- Company Type --</option>
+                                                        @foreach( $classifications as  $classifications)
+                                                            <option value="{{  $classifications->id }}">
+                                                                {{  $classifications->industry }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
                                                 </div>
+
                                                 <div class="col-md-4">
                                                     <input name="founder_name" type="text" class="form-control"
                                                         placeholder="Search by Co-Founder Name">
@@ -59,7 +71,7 @@
             </div>
         </section>
 
-        <section id="searched_content">
+        {{-- <section id="searched_content">
             <div class="container">
                 <div class="row g-4 gx-5">
                     <div class="col-lg-3">
@@ -111,6 +123,9 @@
                             <div class="col-lg-12">
                                 <h2 class="mb-0"> <span class="id-color-2">Infos...</span></h2>
                             </div>
+
+
+
                             <div class="col-lg-4 col-md-6 wow fadeInRight" data-wow-delay=".0s">
                                 <div class="relative h-100 bg-color text-light padding30 rounded-1">
                                     <div>
@@ -120,6 +135,8 @@
                                     </div>
                                 </div>
                             </div>
+
+
 
                             <div class="col-lg-4 col-md-6 wow fadeInRight" data-wow-delay=".3s">
                                 <div class="relative h-100 bg-color text-light padding30 rounded-1">
@@ -171,6 +188,9 @@
                                     </div>
                                 </div>
                             </div>
+
+                            -----
+
                         </div>
 
                         <div class="spacer-double"></div>
@@ -184,9 +204,19 @@
                     </div>
                 </div>
             </div>
-        </section>
+        </section> --}}
+        <div class="mt-4 d-flex justify-content-center">
+            {{  $results->links('pagination::bootstrap-5') }}
+        </div>
 
-        <div class="row g-4">
+        {!! $product_result  !!}
+
+        <div class="mt-4 d-flex justify-content-center">
+            {{  $results->links('pagination::bootstrap-5') }}
+        </div>
+
+
+        {{-- <div class="row g-4">
             @foreach($companyinfos as $company)
                 <div class="col-md-4">
                     <div class="card p-3 shadow-sm">
@@ -199,12 +229,11 @@
                     </div>
                 </div>
             @endforeach
-        </div>
+        </div> --}}
 
-        <div class="mt-4">
-            {{ $companyinfos->links('pagination::bootstrap-5') }}
-        </div>
 
+
+<br>
     </div>
     <!-- content end -->
     <script src="{{ asset('https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-alpha1/dist/css/bootstrap.min.css') }}"></script>

@@ -11,6 +11,7 @@
         "intervention/image": "^3.11",
         "laravel/framework": "^11.31",
         "laravel/reverb": "^1.4",
+        "laravel/scout": "^10.14",
         "laravel/socialite": "^5.18",
         "laravel/tinker": "^2.9",
         "maatwebsite/excel": "^3.1",
