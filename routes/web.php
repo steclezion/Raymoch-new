@@ -41,7 +41,6 @@ Route::get('logout',[AuthController::class,'logout'])->name('logout');
 Route::resource('permissions', PermissionController::class);
 Route::resource('roles', RoleController::class)->middleware('auth');
 Route::resource('permissions', PermissionController::class)->middleware('auth');
-Route::get('/power-generation', function () {return view('raymoch.pages.project_business');})->name('power-generation');
 Route::get('/auth/google', [GoogleAuthController::class, 'redirectToGoogle'])->name('auth_google');
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleCallback']);
 Route::get('verify-email', [GoogleAuthController::class, 'verifyEmail'])->name('verify.email.link');
@@ -123,3 +122,15 @@ Route::resource('company_description_types', company_description_type_controller
 
 Route::post('/company_classifications/import', [CompanyClassificationController::class, 'import'])->name('company_classifications.import');
 Route::resource('company_classifications', CompanyClassificationController::class)->middleware('auth');
+Route::get('/company-search', [CompanyInfosController::class, 'search'])->name('company.search');
+
+
+//Route::get('/power-generation', function () {return view('raymoch.pages.project_business');})->name('power-generation');
+Route::get('/power-generation', [CompanyInfosController::class, 'power_generation'])->name('power-generation');
+
+// Other routes...
+Route::middleware(['auth'])->group(function () {
+// User Management (CRUD)
+Route::resource('users', UserController::class);
+
+});

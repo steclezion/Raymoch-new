@@ -176,5 +176,53 @@ class CompanyinfosController extends Controller
         $companyinfo->delete();
         return redirect()->route('companyinfos.index')->with('success', 'Company info deleted!');
     }
+
+
+
+    public function search(Request $request)
+{
+    $query = CompanyInfos::query();
+
+    // Basic search by company title
+    if ($request->filled('company_title')) {
+        $query->where('company_title', 'LIKE', '%' . $request->company_title . '%');
+    }
+
+    // Advanced search filters
+    if ($request->filled('website')) {
+        $query->where('website', 'LIKE', '%' . $request->website . '%');
+    }
+
+    if ($request->filled('founder_name')) {
+        $query->where('founder_name', 'LIKE', '%' . $request->founder_name . '%');
+    }
+
+    if ($request->filled('tagline')) {
+        $query->where('tagline', 'LIKE', '%' . $request->tagline . '%');
+    }
+
+    $results = $query->get();
+
+    return view('frontend.search-results', compact('results'));
+}
+
+public function power_generation(Request $request )
+{
+    $companyinfos = CompanyInfos::paginate(10); // adjust per page as needed
+    $classifications = CompanyClassification::where('status', 'active')->orderBy('business_type')->get();
+    $countries = Country::orderBy('name')->get();
+
+
+
+    return view('raymoch.pages.project_business', compact('companyinfos', 'classifications', 'countries'))->with('editing', true);
+
+}
+
+
+
+
+
+
+
 }
 

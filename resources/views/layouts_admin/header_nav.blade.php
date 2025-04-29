@@ -16,11 +16,14 @@
         <a href="{{ url('/permissions') }}" class="nav-link">Permissions</a>
       </li>
 
+      <li class="nav-item d-none d-sm-inline-block">
+        <a href="{{ url('/users') }}" class="nav-link">Users</a>
+      </li>
     </ul>
 
     <!-- Right navbar links -->
     <ul class="navbar-nav ml-auto">
- 
+
       <li class="nav-item dropdown">
 
         <a class="nav-link" data-toggle="dropdown" href="#">

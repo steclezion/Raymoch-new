@@ -1,106 +1,40 @@
 @extends('layouts_admin.app')
 
-
 @section('content')
-
-    <section class="content">
-        <div class="container-fluid">
-            <div class="row">
-
-                <div class="col-12">
-                    @if (count($errors) > 0)
-
-                        <div class="alert alert-danger">
-
-                            <strong>Whoops!</strong> There were some problems with your input.<br><br>
-
-                            <ul>
-
-                                @foreach ($errors->all() as $error)
-
-                                    <li>{{ $error }}</li>
-
-                                @endforeach
-
-                            </ul>
-
-                        </div>
-
-                    @endif
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title"><h2>Create New User</h2></h3>
-
-
-                            <div class="card-tools">
-
-                                <a class="btn btn-primary" href="{{ route('users.index') }}"> Back</a>
-
-                            </div>
-
-                        </div>
-                        {!! Form::open(array('route' => 'users.store','method'=>'POST')) !!}
-
-                        <div class="card-body">
-
-                            <div class="form-group">
-
-                                <strong>Name:</strong>
-
-                                {!! Form::text('name', null, array('placeholder' => 'Name','class' => 'form-control')) !!}
-
-                            </div>
-
-
-                            <div class="form-group">
-
-                                <strong>Email:</strong>
-
-                                {!! Form::text('email', null, array('placeholder' => 'Email','class' => 'form-control')) !!}
-
-                            </div>
-
-
-                            <div class="form-group">
-
-                                <strong>Password:</strong>
-
-                                {!! Form::password('password', array('placeholder' => 'Password','class' => 'form-control')) !!}
-
-                            </div>
-
-
-                            <div class="form-group">
-
-                                <strong>Confirm Password:</strong>
-
-                                {!! Form::password('confirm-password', array('placeholder' => 'Confirm Password','class' => 'form-control')) !!}
-
-                            </div>
-
-
-                            <div class="form-group">
-
-                                <strong>Role:</strong>
-
-                                {!! Form::select('roles[]', $roles,[], array('class' => 'form-control','multiple')) !!}
-
-                            </div>
-
-                            <div class="card-footer">
-
-                                <button type="submit" class="btn btn-success">Submit</button>
-
-                            </div>
-
-                        </div>
-
-                        {!! Form::close() !!}
-
-
-                    </div>
-                </div>
-            </div>
+<div class="container">
+    <h2>Add New User</h2>
+    <form method="POST" action="{{ route('users.store') }}">
+        @csrf
+        <div class="mb-3">
+            <label>Name</label>
+            <input type="text" name="name" class="form-control" required>
         </div>
-    </section>
+
+        <div class="mb-3">
+            <label>Email</label>
+            <input type="email" name="email" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label>Password</label>
+            <input type="password" name="password" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label>Confirm Password</label>
+            <input type="password" name="password_confirmation" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label>Assign Roles</label>
+            <select name="roles[]" class="form-control" multiple>
+                @foreach($roles as $role)
+                    <option value="{{ $role->name }}">{{ $role->name }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-success">Create User</button>
+    </form>
+</div>
 @endsection
