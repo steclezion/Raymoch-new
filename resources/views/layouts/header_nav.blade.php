@@ -46,10 +46,10 @@
                         <!-- mainemenu begin -->
                         <ul id="mainmenu">
                             <br>
-                            <li><a class="menu-item" href="{{ route('/') }}"> Home </a>
+                            <li><a class="menu-item" href="{{ route('/') }}"> Home </a>   
 
-                                <ul class="mega">
-                                    <li>
+                                {{-- <ul class="mega"> --}}
+                                    {{-- <li> --}}
                                         <div class="container">
                                             <div class="sb-menu p-4">
                                                 <div class="row g-3">
@@ -107,11 +107,11 @@
                                                         <h5 class="new mt-3 mb-1">Shop</h5>
                                                     </div>
  --}}
-                                                </div>
+                                                {{-- </div>
                                             </div>
                                         </div>
-                                    </li>
-                                </ul>
+                                    </li> --}}
+                                {{-- </ul> --}}
                             </li>
 
                             </style>

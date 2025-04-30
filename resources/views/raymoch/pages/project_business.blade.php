@@ -13,45 +13,43 @@
                     <div class="col-md-10">
 
                         <form action="{{ route('company.search') }}" method="GET">
-                            <div class="card p-3  py-4">
+                            <div class="card p-3 py-4">
                                 <h5 style="color:black">An Easier way to find a Company</h5>
+                        
                                 <div class="row g-3 mt-2">
                                     <div class="col-md-6">
-                                        <input name="company_title" type="text" class="form-control"
-                                            placeholder="Enter Business Name">
+                                        <input name="company_title" type="text" class="form-control" placeholder="Enter Business Name">
                                     </div>
+                        
                                     <div class="col-md-3">
-                                        <button type="submit" class="btn btn-secondary btn-block">Search</button>
+                                        <button type="submit" class="btn btn-secondary w-100">Search</button>
                                     </div>
                                 </div>
+                        
                                 <div class="mt-3">
-                                    <a data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false"
+                                    <a data-bs-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false"
                                         aria-controls="collapseExample" class="advanced">
                                         Advance Search With Filters <i class="fa fa-angle-down"></i>
                                     </a>
+                        
                                     <div class="collapse" id="collapseExample">
-                                        <div class="card card-body">
-                                            <div class="row">
+                                        <div class="card card-body mt-3">
+                                            <div class="row g-3">
                                                 <div class="col-md-4">
-                                                    <input name="website" type="text" placeholder="Website Name"
-                                                        class="form-control">
+                                                    <input name="website" type="text" placeholder="Website Name" class="form-control">
                                                 </div>
-                                                {{-- <div class="col-md-4">
-                                                    <input name="tagline" type="text" class="form-control"
-                                                        placeholder="Renowned Title">
-                                                </div> --}}
+                        
                                                 <div class="col-md-4">
-
-                                                    <select name="companyinfo_id" class="form-control" required>
+                                                    <select name="industry" class="form-control">
                                                         <option value="">-- Company Type --</option>
-                                                        @foreach( $classifications as  $classifications)
-                                                            <option value="{{  $classifications->id }}">
-                                                                {{  $classifications->industry }}
+                                                        @foreach($classifications as $classification)
+                                                            <option value="{{ $classification->industry }}">
+                                                                {{ $classification->industry }}
                                                             </option>
                                                         @endforeach
                                                     </select>
                                                 </div>
-
+                        
                                                 <div class="col-md-4">
                                                     <input name="founder_name" type="text" class="form-control"
                                                         placeholder="Search by Co-Founder Name">
@@ -62,6 +60,7 @@
                                 </div>
                             </div>
                         </form>
+                        
 
 
 
@@ -216,20 +215,6 @@
         </div>
 
 
-        {{-- <div class="row g-4">
-            @foreach($companyinfos as $company)
-                <div class="col-md-4">
-                    <div class="card p-3 shadow-sm">
-                        <h5>{{ $company->company_title }}</h5>
-                        <p>{{ Str::limit($company->description, 100) }}</p>
-
-                        <small class="text-muted">Location: {{ $company->location ?? 'N/A' }}</small>
-                        <br>
-                        <a href="#" class="btn btn-sm btn-primary mt-2">View Details</a>
-                    </div>
-                </div>
-            @endforeach
-        </div> --}}
 
 
 
