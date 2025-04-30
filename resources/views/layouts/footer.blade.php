@@ -35,17 +35,17 @@
                                     <ul>
                                         <li><a href="service-single.html">Raymoch Design</a></li>
                                         <li><a href="service-single.html">Raymoch Maintenance</a></li>
-                                        <li><a href="service-single.html">Planting Services</a></li>
+                                        {{-- <li><a href="service-single.html">Planting Services</a></li>
                                         <li><a href="service-single.html">Tree Care</a></li>
                                         <li><a href="service-single.html">Irrigation Services</a></li>
-                                        <li><a href="service-single.html">Specialty Services</a></li>
+                                        <li><a href="service-single.html">Specialty Services</a></li> --}}
                                     </ul>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="col-lg-4 col-sm-6 order-lg-2 order-sm-1">
-                        <div class="widget">
+                        {{-- <div class="widget">
                             <div class="fw-bold text-white"><i class="icofont-clock-time me-2 id-color-2"></i>We're Open</div>
                             Monday - Friday 08.00 - 18.00
 
@@ -58,7 +58,7 @@
 
                             <div class="fw-bold text-white"><i class="icofont-envelope me-2 id-color-2"></i>Send a Message</div>
                             contact@raymoch.com
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
             </div>

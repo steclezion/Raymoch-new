@@ -134,3 +134,9 @@ Route::middleware(['auth'])->group(function () {
 Route::resource('users', UserController::class);
 
 });
+
+
+Route::get('/feature-x', function () {
+ abort(503, 'This page is under construction.');
+   // return response()->view('error.503', [], 503);
+});

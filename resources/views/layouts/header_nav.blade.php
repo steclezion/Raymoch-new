@@ -115,17 +115,17 @@
                             </li>
 
                             </style>
-                            <li><a class="menu-item" href="services.html">Business Profiles</a>
+                            <li><a class="menu-item" href="{{ url('/feature-x')  }}">Business Profiles</a>
                                 <ul >
-                                    <li><a href="services.html">All Services</a></li>
+                                    <li><a href="{{ url('/feature-x')  }}">All Services</a></li>
                                     {{-- <li><a href="service-single.html">Service Single</a></li>
                                     <li><a href="pricing-plans.html">Pricing Plans</a></li>
                                     <li><a href="price-list.html">Price List</a></li> --}}
                                 </ul>
                             </li>
-                            <li><a class="menu-item" href="projects.html">Industry Insights  </a>
+                            <li><a class="menu-item" href="{{ url('/feature-x')  }}">Industry Insights  </a>
                                 <ul>
-                                    <li><a href="projects.html">Projects Default</a></li>
+                                    <li><a href="{{ url('/feature-x') }}">Projects Default</a></li>
                                     {{-- <li><a href="projects-2.html">Projects 3 Columns</a></li>
                                     <li><a href="projects-3.html">Projects Parallax</a></li>
                                     <li><a href="projects-4.html">Projects Carousel</a></li>
@@ -139,9 +139,9 @@
 
                                 </ul>
                             </li> --}}
-                            <li><a class="menu-item" href="shop-homepage.html">Market Analysis </a></li>
-                            <li><a class="menu-item" href="blog.html">Blog</a></li>
-                            <li><a class="menu-item" href="contact.html">Contact</a></li>
+                            <li><a class="menu-item" href="{{ url('/feature-x')  }}">Market Analysis </a></li>
+                            <li><a class="menu-item" href="{{ url('/feature-x')  }}">Blog</a></li>
+                            <li><a class="menu-item" href="{{ url('/feature-x')  }}">Contact</a></li>
                         </ul>
                         <!-- mainmenu end -->
                     </div>
