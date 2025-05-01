@@ -67,7 +67,7 @@
                                 <div class="hover relative overflow-hidden text-light text-center">
                                     <img src="{{ asset('storage/' . $Selected_Home_Page_Second_p->picture) }}" class="hover-scale-1-1 w-100" alt="">
                                     <div class="abs w-100 px-4 hover-op-1 z-4 hover-mt-40 abs-centered">
-                                        <a class="btn-line"  href="{{route('power-generation')}}">View Details</a>
+                                        <a class="btn-line"  href="{{ route('search', ['industry' =>  urlencode('Natural Resources-Environmental')]) }}">View Details</a>
                                     </div>
                                     <img src="{{asset('images/1-edited-ai-reference.png')}}" class="abs abs-centered w-20" alt="">
 
@@ -97,7 +97,7 @@
                    <div class="hover relative overflow-hidden text-light text-center">
                        <img src="{{ asset('storage/' . $Selected_Home_Page_Second_w->picture) }}" class="hover-scale-1-1 w-100" alt="">
                        <div class="abs w-100 px-4 hover-op-1 z-4 hover-mt-40 abs-centered">
-                           <a class="btn-line"  href="{{route('power-generation')}}">View Details</a>
+                           <a class="btn-line"  href="{{ route('search', ['industry' => 'Business & Information']) }}">View Details</a>
                        </div>
                        <img src="{{asset('images/1-edited-ai-reference.png')}}" class="abs abs-centered w-20" alt="">
 
@@ -126,7 +126,7 @@
         <div class="hover relative overflow-hidden text-light text-center">
             <img src="{{ asset('storage/' . $Selected_Home_Page_Second_c->picture) }}" class="hover-scale-1-1 w-100" alt="">
             <div class="abs w-100 px-4 hover-op-1 z-4 hover-mt-40 abs-centered">
-                <a class="btn-line"  href="{{route('power-generation')}}">View Details</a>
+                <a class="btn-line"  href="{{ route('search', ['industry' => 'ConstructionUtilitiesContracting']) }}">View Details</a>
             </div>
             <img src="{{asset('images/1-edited-ai-reference.png')}}" class="abs abs-centered w-20" alt="">
 
@@ -155,7 +155,7 @@
         <div class="hover relative overflow-hidden text-light text-center">
             <img src="{{ asset('storage/' . $Selected_Home_Page_Second_h->picture) }}" class="hover-scale-1-1 w-100" alt="">
             <div class="abs w-100 px-4 hover-op-1 z-4 hover-mt-40 abs-centered">
-                <a class="btn-line"  href="{{route('power-generation')}}">View Details</a>
+                <a class="btn-line"  href="{{ route('search', ['industry' => 'Food & Hospitality']) }}">View Details</a>
             </div>
             <img src="{{asset('images/1-edited-ai-reference.png')}}" class="abs abs-centered w-20" alt="">
 
@@ -596,7 +596,7 @@
         <div class="hover relative overflow-hidden text-light text-center">
             <img src="{{ asset('storage/' . $Selected_Home_Page_Second_m->picture) }}" class="hover-scale-1-1 w-100" alt="">
             <div class="abs w-100 px-4 hover-op-1 z-4 hover-mt-40 abs-centered">
-                <a class="btn-line"  href="{{route('power-generation')}}">View Details</a>
+                <a class="btn-line"  href="{{ route('search', ['industry' => 'Real Estate & Housing']) }}">View Details</a>
             </div>
             <img src="{{asset('images/1-edited-ai-reference.png')}}" class="abs abs-centered w-20" alt="">
 
@@ -625,7 +625,7 @@
         <div class="hover relative overflow-hidden text-light text-center">
             <img src="{{ asset('storage/' . $Selected_Home_Page_Second_r->picture) }}" class="hover-scale-1-1 w-100" alt="">
             <div class="abs w-100 px-4 hover-op-1 z-4 hover-mt-40 abs-centered">
-                <a class="btn-line"  href="{{route('power-generation')}}">View Details</a>
+                <a class="btn-line"  href="{{ route('search', ['industry' => 'Business & Information']) }}">View Details</a>
             </div>
             <img src="{{asset('images/1-edited-ai-reference.png')}}" class="abs abs-centered w-20" alt="">
 
@@ -655,7 +655,7 @@
         <div class="hover relative overflow-hidden text-light text-center">
             <img src="{{ asset('storage/' . $Selected_Home_Page_Second_s->picture) }}" class="hover-scale-1-1 w-100" alt="">
             <div class="abs w-100 px-4 hover-op-1 z-4 hover-mt-40 abs-centered">
-                <a class="btn-line"  href="{{route('power-generation')}}">View Details</a>
+                <a class="btn-line"  href="{{ route('search', ['industry' => 'Health Services']) }}">View Details</a>
             </div>
             <img src="{{asset('images/1-edited-ai-reference.png')}}" class="abs abs-centered w-20" alt="">
 
@@ -683,7 +683,7 @@
         <div class="hover relative overflow-hidden text-light text-center">
             <img src="{{ asset('storage/' . $Selected_Home_Page_Second_e->picture) }}" class="hover-scale-1-1 w-100" alt="">
             <div class="abs w-100 px-4 hover-op-1 z-4 hover-mt-40 abs-centered">
-                <a class="btn-line"  href="{{route('power-generation')}}">View Details</a>
+                <a class="btn-line"  href="{{ route('search', ['industry' => 'Business & Information']) }}">View Details</a>
             </div>
             <img src="{{asset('images/1-edited-ai-reference.png')}}" class="abs abs-centered w-20" alt="">
 

@@ -104,35 +104,27 @@ Route::get('/phpinfo', function () {
 Route::resource('users', UserController::class);
 
 Route::resource('home-welcome-second-page', HomeWelcomeSecondPageController::class)->middleware('auth');
-
 Route::resource('home-welcome-third-page', HomeWelcomeThirdPageController::class)->middleware('auth');
-
-
 Route::resource('companyinfos', CompanyInfosController::class)->middleware('auth');
-
-
 Route::get('/descriptions', [company_description::class, 'index'])->name('descriptions.index');
 Route::get('/descriptions/create', [company_description::class, 'create'])->name('descriptions.create');
 Route::post('/descriptions', [company_description::class, 'store'])->name('descriptions.store');
 Route::get('/descriptions/{company}/{description}/edit', [Company_description::class, 'edit'])->name('descriptions.edit');
 Route::put('/descriptions/{company}', [company_description::class, 'update'])->name('descriptions.update');
 Route::delete('/descriptions/{id}', [company_description::class, 'destroy'])->name('descriptions.destroy');
-
 Route::resource('company_description_types', company_description_type_controller::class)->middleware('auth');
-
 Route::post('/company_classifications/import', [CompanyClassificationController::class, 'import'])->name('company_classifications.import');
 Route::resource('company_classifications', CompanyClassificationController::class)->middleware('auth');
 Route::get('/company-search', [CompanyInfosController::class, 'search'])->name('company.search');
-
-
-//Route::get('/power-generation', function () {return view('raymoch.pages.project_business');})->name('power-generation');
 Route::get('/power-generation', [CompanyInfosController::class, 'power_generation'])->name('power-generation');
+
+Route::get('/search/{industry?}', [CompanyInfosController::class, 'search_query'])->name('search');
+
 
 // Other routes...
 Route::middleware(['auth'])->group(function () {
 // User Management (CRUD)
 Route::resource('users', UserController::class);
-
 });
 
 

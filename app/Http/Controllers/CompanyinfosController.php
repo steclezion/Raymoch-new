@@ -327,7 +327,7 @@ $product_result .="</div>";
    $countries = Country::orderBy('name')->get();
 
    $no_results = $results->isEmpty();
-   
+
    if ($results->isEmpty()) {
     $product_result = "<div class='alert alert-warning text-center'>
         <strong>No data found.</strong> Please try a different search.
@@ -337,6 +337,152 @@ $product_result .="</div>";
 return view('raymoch.pages.project_business', compact('product_result','results','classifications', 'countries','no_results'));
 
 }
+
+
+public function search_query(Request $request, $industry = null)
+{
+    $product_result = '';
+
+    // Step 1: Get all industries for select filters (optional, you already do)
+    $classifications = CompanyClassification::select('industry', DB::raw('MIN(id) as id'))
+    ->groupBy('industry')
+    ->orderBy('industry')
+    ->get();
+    
+    $countries = Country::orderBy('name')->get();
+
+    $query = CompanyInfos::query();
+    $companyinfos = $query->paginate(1); // 15 record per page for full viewing and navigation
+
+
+if($industry == 'Natural+Resources-Environmental') {
+    $industry = $request->input('Natural Resources/Environmental');
+ } // e.g., from a search form
+  
+
+ if($industry == ' ConstructionUtilitiesContracting') {
+    $industry = $request->input(' Construction/Utilities/Contracting');
+ } // e.g., from a search form
+  
+
+    $results = DB::table('companyinfos')
+        ->join('company_classifications', 'companyinfos.classification_id', '=', 'company_classifications.id')
+        ->where('company_classifications.industry', 'LIKE', "%{$industry}%")
+        ->select('companyinfos.*', 'company_classifications.industry')
+        ->paginate(1)
+        ->withQueryString();
+
+
+
+
+    foreach($results as $company)
+    {
+        $imageUrl_ = asset('storage/' . $company->first_picture);
+        $imageUrl__ = asset('storage/' . $company->second_picture);
+        $imageUrl___ = asset('storage/' . $company->third_picture);
+
+   $product_result = "<section id='searched_content'>
+       <div class='container'>
+           <div class='row g-4 gx-5'>
+               <div class='col-lg-3'>
+                   <div class='me-lg-3'>
+                       <a href='#' class='bg-color text-light d-block p-3 px-4 rounded-10px mb-3 relative'>
+                           <h4 class='mb-0'> $company->company_title </h4>
+                           <i class='icofont-long-arrow-right absolute abs-middle fs-24 end-20px'></i>
+                       </a>
+                   </div>
+               </div>
+
+               <div class='col-lg-9'>
+                   <div class='row g-4 gx-5'>
+                       <div class='col-lg-6'>
+                           <h2><span class='id-color-2'>$company->tagline </span></h2>
+                       </div>
+
+                       <div class='col-lg-6'>
+                           <div class='row g-4'>
+                               <div class='col-sm-6'>
+
+                                       <img src='{$imageUrl_}' class='w-100 rounded-1' alt=''>
+
+                               </div>
+                               <div class='col-sm-6'>
+
+                                       <img src='{$imageUrl__}' class='w-100 rounded-1' alt=''>
+
+                                  <br>
+                                       <img src='{$imageUrl___}' class='w-100 rounded-1' alt=''>
+
+                               </div>
+                           </div>
+                       </div>
+                   </div>
+
+                   <div class='spacer-double'></div>";
+
+                   $result_company_details = DB::table('companyinfos')
+                   ->join('company_descriptions', 'companyinfos.id', '=', 'company_descriptions.companyinfo_id')
+                   ->where('companyinfos.id', '=', $company->id)
+                   ->select('companyinfos.*', 'company_descriptions.*', 'company_descriptions.description_type as destype', 'company_descriptions.description as des')
+                   ->get();
+
+
+
+
+               $product_result .=  " <div class='row g-4'>
+                   <div class='col-lg-12'> <h2 class='mb-0'> <span class='id-color-2'>Infos...</span></h2> </div>";
+
+				 foreach($result_company_details as $details)
+                   {
+
+                          $product_result .=" <div class='col-lg-4 col-md-6 wow fadeInRight' data-wow-delay='.0s'>
+                                <div class='relative h-100 bg-color text-light padding30 rounded-1'>
+                                    <div>
+                                        <h4>$details->destype</h4>
+                                        <p class='mb-0'>$details->des</p>
+                                    </div>
+                                </div>
+                            </div>";
+
+
+	}
+
+
+$product_result .="</div>";
+
+                     $product_result .= "
+
+           </div>
+       </div>
+   </section>";
+
+}
+
+if ($results->isEmpty()) {
+    $product_result = "<div class='alert alert-warning text-center'>
+        <strong>No data found.</strong> Please try a different search.
+    </div>";
+}
+
+
+return view('raymoch.pages.project_business', compact('product_result','results','classifications', 'companyinfos', 'countries'));
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
