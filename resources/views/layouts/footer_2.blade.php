@@ -1,30 +1,34 @@
-<div id="extra-wrap" style="color:red" class="text-light">
+<div id="extra-wrap" style="color:#418ac6;;" class="text-light">
     <div id="btn-close">
         <span></span>
         <span></span>
     </div>
 
     <div id="extra-content">
-        <img src="{{asset('images/1-edited-ai-1.svg')}}" class="w-150px" alt="">
+        <img src="{{asset('images/Raymoch_Logo_Design___.png')}}" class="w-150px" alt="">
 
-        <div class="spacer-30-line"></div>
+        <div class="spacer-30-line">
+
+
+            
+        </div>
 
         <h5>Our Services</h5>
         <ul class="no-style">
-            <li><a href="service-single.html">Raymoch Design</a></li>
-            {{-- <li><a href="service-single.html">Raymoch Maintenance</a></li>
+            <li><a href="service-single.html">Raymoch</a></li>
+            <li><a href="service-single.html">Raymoch Maintenance</a></li>
             <li><a href="service-single.html">Planting Services</a></li>
             <li><a href="service-single.html">Tree Care</a></li>
             <li><a href="service-single.html">Irrigation Services</a></li>
-            <li><a href="service-single.html">Specialty Services</a></li> --}}
+            <li><a href="service-single.html">Specialty Services</a></li>
         </ul>
 
-        {{-- <div class="spacer-30-line"></div> --}}
+        <div class="spacer-30-line"></div>
 
-        {{-- <h5>Contact Us</h5>
+        <h5>Contact Us</h5>
         <div><i class="icofont-clock-time me-2 op-5"></i>Monday - Friday 08.00 - 18.00</div>
         <div><i class="icofont-location-pin me-2 op-5"></i>100 S Main St, New York, </div>
-        <div><i class="icofont-envelope me-2 op-5"></i>contact@raymoch.com</div> --}}
+        <div><i class="icofont-envelope me-2 op-5"></i>contact@raymoch.com</div>
 
         <div class="spacer-30-line"></div>
 

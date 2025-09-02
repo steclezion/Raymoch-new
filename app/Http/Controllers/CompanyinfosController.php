@@ -260,7 +260,7 @@ class CompanyinfosController extends Controller
                <div class='col-lg-9'>
                    <div class='row g-4 gx-5'>
                        <div class='col-lg-6'>
-                           <h2><span class='id-color-2'>$company->tagline </span></h2>
+                           <h3><span class='id-color-2'>$company->tagline </span></h3>
                        </div>
 
                        <div class='col-lg-6'>
@@ -536,7 +536,7 @@ public function power_generation(Request $request)
                <div class='col-lg-9'>
                    <div class='row g-4 gx-5'>
                        <div class='col-lg-6'>
-                           <h2><span class='id-color-2'>$company->tagline </span></h2>
+                           <h3><span class='id-color-2'>$company->tagline </span></h3>
                        </div>
 
                        <div class='col-lg-6'>

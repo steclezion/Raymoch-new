@@ -2,7 +2,7 @@
             <div class="container relative z-2">
                 <div class="row gx-5">
                     <div class="col-lg-4 col-sm-6">
-                        <img src="{{asset('images/1-edited-ai-1.svg')}}" class="w-150px" alt="" >
+                        <img src="{{asset('images/Raymoch_Logo_Design___.png')}}" class="w-150px" alt="" >
                         <div class="spacer-20"></div>
                         <p>Transform your outdoor space with our expert Raymoch services! From design to maintenance, we create beautiful, thriving Raymochs tailored to your vision. Let us bring your dream Raymoch to life—professional, reliable, and passionate about nature.</p>
 
@@ -68,16 +68,21 @@
                         <div class="col-md-12">
                             <div class="de-flex">
                                 <div class="de-flex-col">
-                                    Copyright 2025 - Raymoch Design - All Rights Reserved
+                                  
+                                     © {{ date('Y') }} {{ config('app.name') }}. All rights reserved.
+                                    
                                 </div>
-                                <ul class="menu-simple">
+                          
+                                <ul class="menu-simple" s>
                                     <li><a href="#">Terms &amp; Conditions</a></li>
                                     <li><a href="#">Privacy Policy</a></li>
+                                    <li ><a href="#">Cookie Settings</a></li>
+                                   <li><a href="#">Contact</a></li>
                                 </ul>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <img src="{{asset('images/misc/silhuette-1-black.webp')}}" class="abs bottom-0 op-3" alt="">
+            <img style="opacity:.20; pointer-events:none;" src="{{asset('images/Raymoch_Logo_Design__.png')}}" class="abs bottom-0 op-3" alt="">
         </footer>

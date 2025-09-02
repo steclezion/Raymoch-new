@@ -1330,7 +1330,7 @@ header:not(.header-mobile) #mainmenu>li:hover ul.mega {
   height: 100%;
   overflow: hidden;
   /* background: rgba(var(--bg-dark-3-rgb), .8); */
-  background:  #800020;
+  background:  #5194cb;
   -webkit-backdrop-filter: blur(10px);
   -o-backdrop-filter: blur(10px);
   -moz-backdrop-filter: blur(10px);

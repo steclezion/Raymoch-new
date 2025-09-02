@@ -19,6 +19,7 @@
                                 <a href="#"><i class="fa-brands fa-pinterest fa-lg"></i></a>
                                 <a href="#"><i class="fa-brands fa-instagram fa-lg"></i></a>
                             </div>
+                            
                         </div>
                     </div>
                 </div>
@@ -26,6 +27,10 @@
             <div class="clearfix"></div>
         </div>
     </div> --}}
+
+
+
+    
     <div class="container">
         <div class="row">
             <div class="col-md-12">
@@ -34,9 +39,9 @@
                         <!-- logo begin -->
                         <div id="logo">
                             <a href="/">
-                                <img class="logo-main rounded" width="60"  height="60" src="{{asset('images/1-edited-ai-1.svg')}}" alt="" >
-                                <h5 class="float-center" style="color:white;width:30;height;30">Raymoch</h2>
-                                <img class="logo-mobile" size="10" width="60"  height="60" src="{{asset('images/1-edited-ai-1.svg')}}" alt="" >
+                                <img class="logo-main rounded"  src="{{asset('images/Raymoch_Logo_Design___.png')}}" alt="" >
+                                {{-- <h5 class="float-center" style="color:white;width:10;height;10">Raymoch</h5> --}}
+                                <img class="logo-mobile"   height="100" src="{{asset('images/Raymoch_Logo_Design___.png')}}" alt="" >
                             </a>
                         </div>
                         <!-- logo end -->
@@ -148,7 +153,8 @@
 
                     <div class="de-flex-col">
                         <div class="menu_side_area">
-                            {{-- <a href="contact.html" class="btn-main btn-line">Get In Touch</a> --}}
+                            <a href="contact.html" class="btn-main btn-line btn-login btn-default">Login</a>
+                            <a href="contact.html" class="btn-main btn-line btn-signup btn-primary">Signup</a>
 
                       <!-- Floating Translate Switcher -->
                       <div id="languageSwitcher" class="d-flex align-items-center translate-box"
@@ -366,4 +372,55 @@
             sendMessage();
         }
     });
+</script>
+
+
+
+
+<style>
+  body::before{
+    content:"";
+    position: fixed; inset:0;
+    background: url("{{asset('images/Raymoch_Logo_Design___.png')}}") repeat center / 280px auto;
+    opacity: .03;
+    pointer-events: none;
+  }
+  @media print { body::before { display:none !important; } }
+
+  /* medium-sized button helper */
+.btn-md{
+  --bs-btn-padding-y: .5rem;
+  --bs-btn-padding-x: 1rem;
+  --bs-btn-font-size: 1rem;
+  --bs-btn-border-radius: .5rem;
+}
+</style>
+
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+<script>
+  window.onload = function () {
+    @guest
+    google.accounts.id.initialize({
+      client_id: "{{ env('GOOGLE_CLIENT_ID') }}",
+      callback: handleCredentialResponse,
+      auto_select: true,           // auto-prompt if user previously consented
+      cancel_on_tap_outside: false
+    });
+    google.accounts.id.prompt();   // show One Tap
+    @endguest
+  };
+
+  function handleCredentialResponse(response){
+    // response.credential is the ID token (JWT)
+    fetch("{{ route('onetap.login') }}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+      },
+      body: JSON.stringify({ credential: response.credential })
+    }).then(r => location.reload());
+  }
 </script>
