@@ -4,7 +4,7 @@
     <!-- Promo 1 -->
     <div class="promo">
       <span class="promo-arrow">→</span>
-      <img src="{{ asset('storage/' . $HomePageActive->second_picture) }}" alt="Highway lights" />
+      <img src="{{ asset('storage/' . $HomePageActive->first_picture) }}" alt="Highway lights" />
       <div class="promo-body">
         <h3 class="h3 mb-2">Our Products</h3>
         <p class="small mb-3">
@@ -19,7 +19,7 @@
     <!-- Promo 2 (exact copy) Under the first Promo2  -->
     <div class="promo">
       <span class="promo-arrow">→</span>
-      <img src="{{ asset('storage/' . $HomePageActive->second_picture) }}" alt="Highway lights" />
+      <img src="{{ asset('storage/' . $HomePageActive->first_picture) }}" alt="Highway lights" />
       <div class="promo-body">
         <h3 class="h3 mb-2">Our Products</h3>
         <p class="small mb-3">

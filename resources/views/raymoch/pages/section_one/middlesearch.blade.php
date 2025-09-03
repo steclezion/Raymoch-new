@@ -228,7 +228,7 @@
           <div class="ratio ratio-16x9 ratio-hero bg-light">
             <img src="{{ asset('storage/' . $HomePageActive->second_picture) }}" class="w-100 h-100" alt="Shipping containers" 
                style="object-fit:cover;"/>
-               @php echo $HomePageActive->second_picture; @endphp
+            
           </div>
           <div class="mt-4">
             <div class="hero-tag">Look Forward Report</div>
