@@ -74,7 +74,7 @@
 
       <div class="d-flex align-items-center gap-2">
         <button id="pauseBtn" class="btn btn-ghost btn-sm" aria-pressed="false" aria-label="Pause">
-          <span class="icon-pause">⏸</span><span class="icon-play d-none">▶</span>
+          {{-- <span class="icon-pause">⏸</span><span class="icon-play d-none">▶</span> --}}
         </button>
         <div class="d-none d-sm-flex align-items-center gap-2">
           <label for="speedRange" class="small text-secondary mb-0">Speed</label>

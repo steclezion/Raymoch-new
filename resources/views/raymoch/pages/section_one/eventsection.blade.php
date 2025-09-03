@@ -108,7 +108,7 @@
         <span class="badge text-bg-primary">Live</span>
       </div>
       <div class="d-flex align-items-center gap-2">
-        <button id="pauseBtn" class="btn btn-outline-secondary btn-sm">Pause</button>
+        {{-- <button id="pauseBtn" class="btn btn-outline-secondary btn-sm">Pause</button> --}}
         <label for="speed" class="small text-secondary m-0">Speed</label>
         <input id="speed" type="range" min="20" max="80" value="48" step="2" style="width:140px;">
       </div>
