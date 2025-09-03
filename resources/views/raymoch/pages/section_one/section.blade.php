@@ -34,13 +34,13 @@
        <div class="container-lg" style="padding-bottom:12px;">
        <div class="row gx-4 gy-2 align-items-start">
 <!-- Left: Featured -->
-@include('raymoch/Pages/section_one/feature')
+@include('raymoch/pages/section_one/feature')
 <!-- Center: Hero story -->
-@include('raymoch/Pages/section_one/middlesearch')
+@include('raymoch/pages/section_one/middlesearch')
 <!-- Right: Promo column with TWO stacked promos -->
-@include('raymoch/Pages/section_one/productsection')
+@include('raymoch/pages/section_one/productsection')
 <!-- Right: Promo card Events -->
-@include('raymoch/Pages/section_one/eventsection')
+@include('raymoch/pages/section_one/eventsection')
 </div>
 
     </div>

@@ -1,5 +1,5 @@
-  <aside class="col-12 col-md-2 col-xl-2">
-          <h2 class="h3 featured-title mb-3">Featured</h2>
+<aside class="col-12 col-md-2 col-xl-2" style="border:2px groove #0e0d0d33; border-radius:5px; padding:10px;">          
+  <h2 class="h3 featured-title mb-3">Featured</h2>
           <div class="featured-item">
             <div class="featured-meta">31 Aug 2025 — Commodity Insights</div>
             <a href="#" class="featured-link d-block mt-1">Sudan says field work at Haglig oil fields may have to be suspended after terrorist attack</a>

@@ -135,5 +135,4 @@ Route::get('/feature-x', function () {
 });
 
 
-Route::post('/auth/google/onetap', [OneTapController::class, 'login'])
-    ->name('onetap.login');
+Route::post('/auth/google/onetap', [OneTapController::class, 'login'])->name('onetap.login');

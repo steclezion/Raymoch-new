@@ -21,16 +21,16 @@
     @endforeach
     @foreach ($Selected_Home_Page_Second_e as $Selected_Home_Page_Second_e)
     @endforeach
- @include('raymoch/Pages/section_one/style')
+ @include('raymoch/pages/section_one/style')
 <div class="no-bottom no-top" id="content">
         <!--  Front section that includes all feature, middle search marquee, events and product views  -->
-       @include('raymoch.Pages.section_one.section') {{-- use dot notation --}}
-        @include('raymoch/Pages/section_two/section')
-        @include('raymoch/Pages/section_three/section')
-        @include('raymoch/Pages/section_three/section_three_second')
-        @include('raymoch/Pages/section_four/section')
-        @include('raymoch/Pages/section_five/section')
-        @include('raymoch/Pages/section_six/section')
+       @include('raymoch.pages.section_one.section') {{-- use dot notation --}}
+        @include('raymoch/pages/section_two/section')
+        @include('raymoch/pages/section_three/section')
+        @include('raymoch/pages/section_three/section_three_second')
+        @include('raymoch/pages/section_four/section')
+        @include('raymoch/pages/section_five/section')
+        @include('raymoch/pages/section_six/section')
     </div>
 
     <!-- content end -->
