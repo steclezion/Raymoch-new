@@ -24,7 +24,7 @@
  @include('raymoch/pages/section_one/style')
 <div class="no-bottom no-top" id="content">
         <!--  Front section that includes all feature, middle search marquee, events and product views  -->
-       @include('raymoch.pages.section_one.section') {{-- use dot notation --}}
+        @include('raymoch.pages.section_one.section') {{-- use dot notation --}}
         @include('raymoch/pages/section_two/section')
         @include('raymoch/pages/section_three/section')
         @include('raymoch/pages/section_three/section_three_second')

@@ -1,4 +1,4 @@
-<div id="extra-wrap" style="color:#418ac6;;" class="text-light">
+<div id="extra-wrap" style="color:#418ac6;" class="text-light">
     <div id="btn-close">
         <span></span>
         <span></span>
