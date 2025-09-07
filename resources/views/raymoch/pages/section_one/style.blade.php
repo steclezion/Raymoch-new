@@ -35,10 +35,6 @@
     /* Utilities */
     .rounded-2xl{ border-radius:1rem; }
 
-
-
-
-
     :root { --accent:#e11d48; }
     .ticker-card{ border:1px solid #e9ecef; border-radius:1rem; }
     .status-dot{ width:.55rem; height:.55rem; border-radius:50%; display:inline-block; margin-right:.35rem; background:#22c55e; }
@@ -72,6 +68,158 @@
     .btn-ghost:hover{ background:#eceef1; }
 
 
+    :root { --accent:#1506e8; }
+    .ticker-card{ border:1px solid #e9ecef; border-radius:1rem; }
+    .status-dot{ width:.55rem; height:.55rem; border-radius:50%; display:inline-block; margin-right:.35rem; background:#22c55e; }
+    .paused .status-dot{ background:#adb5bd; }
+
+    /* viewport + motion */
+    .ticker-viewport{ position:relative; overflow:hidden; height:46px; border-radius:.75rem; background:#fffefe0c; }
+    .ticker-move{ display:flex; width:max-content; animation: ticker-scroll var(--ticker-speed, 35s) linear infinite; }
+    .ticker-paused .ticker-move{ animation-play-state: paused; }
+    .ticker-track{ display:flex; align-items:center; gap:.75rem; padding:0 .5rem; }
+
+    /* clickable chips (anchors) */
+    .ticker-item{
+      display:inline-flex; align-items:center; gap:.5rem;
+      white-space:nowrap; text-decoration:none; color:#111;
+      border:1px solid #e9ecef; background:#f8f9fa; border-radius:999px;
+      padding:.35rem .65rem; font-weight:600; font-size:.9rem; cursor:pointer;
+      transition: box-shadow .2s, border-color .2s, background-color .2s;
+    }
+    .ticker-item:hover{ background:#fff; border-color:var(--accent); box-shadow:0 0 0 3px rgba(225,29,72,.12); }
+    .ticker-item .num{
+      display:inline-flex; align-items:center; justify-content:center;
+      min-width:1.35rem; height:1.35rem; border-radius:999px;
+      background:var(--accent); color:#fff; font-size:.75rem; font-weight:700;
+    }
+
+    @media (prefers-reduced-motion: reduce) { .ticker-move{ animation:none; } }
+    @keyframes ticker-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+    .btn-ghost{ background:#f1f3f5; border:1px solid #e9ecef; }
+    .btn-ghost:hover{ background:#eceef1; }
+  </style>
 
 
+{{-- Middle Search Organizations Details Data Style sheet Data --}}
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+      /* Make the image fully responsive */
+      .carousel-inner img {
+          width: 100%;
+          height: 100%;
+      }
+
+      :root {
+          --accent: #1506e8;
+      }
+
+      .ticker-card {
+          border: 1px solid #e9ecef;
+          border-radius: 1rem;
+      }
+
+      .status-dot {
+          width: .55rem;
+          height: .55rem;
+          border-radius: 50%;
+          display: inline-block;
+          margin-right: .35rem;
+          background: #22c55e;
+      }
+
+      .paused .status-dot {
+          background: #adb5bd;
+      }
+
+      /* viewport + motion */
+      .ticker-viewport {
+          position: relative;
+          overflow: hidden;
+          height: 46px;
+          border-radius: .75rem;
+          background: #fffefe0c;
+      }
+
+      .ticker-move {
+          display: flex;
+          width: max-content;
+          animation: ticker-scroll var(--ticker-speed, 35s) linear infinite;
+      }
+
+      .ticker-paused .ticker-move {
+          animation-play-state: paused;
+      }
+
+      .ticker-track {
+          display: flex;
+          align-items: center;
+          gap: .75rem;
+          padding: 0 .5rem;
+      }
+
+      /* clickable chips (anchors) */
+      .ticker-item {
+          display: inline-flex;
+          align-items: center;
+          gap: .5rem;
+          white-space: nowrap;
+          text-decoration: none;
+          color: #111;
+          border: 1px solid #e9ecef;
+          background: #f8f9fa;
+          border-radius: 999px;
+          padding: .35rem .65rem;
+          font-weight: 600;
+          font-size: .9rem;
+          cursor: pointer;
+          transition: box-shadow .2s, border-color .2s, background-color .2s;
+      }
+
+      .ticker-item:hover {
+          background: #fff;
+          border-color: var(--accent);
+          box-shadow: 0 0 0 3px rgba(225, 29, 72, .12);
+      }
+
+      .ticker-item .num {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 1.35rem;
+          height: 1.35rem;
+          border-radius: 999px;
+          background: var(--accent);
+          color: #fff;
+          font-size: .75rem;
+          font-weight: 700;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+          .ticker-move {
+              animation: none;
+          }
+      }
+
+      @keyframes ticker-scroll {
+          from {
+              transform: translateX(0);
+          }
+
+          to {
+              transform: translateX(-50%);
+          }
+      }
+
+      .btn-ghost {
+          background: #f1f3f5;
+          border: 1px solid #e9ecef;
+      }
+
+      .btn-ghost:hover {
+          background: #eceef1;
+      }
   </style>

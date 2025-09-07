@@ -1,6 +1,7 @@
-<aside class="col-12 col-md-2 col-xl-2" style="border:2px groove #0e0d0d33; border-radius:5px; padding:10px;">          
-  <h2 class="h3 featured-title mb-3">Featured</h2>
-          <div class="featured-item">
+<aside class="col-12 col-md-3 order-2 order-lg-1">
+        <div class="panel h-auto">
+          <h2 class="featured-title mb-3">Featured</h2>
+      <div class="featured-item">
             <div class="featured-meta">31 Aug 2025 — Commodity Insights</div>
             <a href="#" class="featured-link d-block mt-1">Sudan says field work at Haglig oil fields may have to be suspended after terrorist attack</a>
           </div>
@@ -24,4 +25,5 @@
             <div class="featured-meta">28 Aug 2025 — Ratings</div>
             <a href="#" class="featured-link d-block mt-1">Credit Trends: U.S. Corporate Bond Yields As Of Aug. 27, 2025</a>
           </div>
-        </aside>
+        </div>
+      </aside>
