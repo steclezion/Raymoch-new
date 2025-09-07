@@ -1301,6 +1301,8 @@
             jQuery('#extra-content').addClass('fadeInRight');
          });
 
+         
+
          jQuery("#btn-close").on("click", function() {
             jQuery('#extra-wrap').removeClass('open');
             //jQuery('body').removeClass('no-scroll');

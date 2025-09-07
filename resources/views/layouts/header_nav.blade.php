@@ -28,6 +28,9 @@
     </div> --}}
 
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+      crossorigin="anonymous" referrerpolicy="no-referrer"/>
 
 
     <div class="container">
@@ -182,17 +185,17 @@
                             <!-- Chat toggle button -->
                             <div id="chat-toggle" style="position:fixed; bottom:100px; right:20px; z-index:9999;">
                                 <button class="btn btn-warning rounded-circle shadow"
-                                    onclick="toggleChat()">ðŸ’¬</button>
+                                    onclick="toggleChat()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z"/></svg>
+</button>
                             </div>
 
 
                             <!-- Chat box -->
-                            <div id="chat-box"
-                                style="display:none; position:fixed;  bottom:120px;  right:20px;  width:320px;  background:white; border-radius:12px;  box-shadow:0 4px 12px rgba(0,0,0,0.2); z-index:9999;">
+                            <div id="chat-box" style="display:none; position:fixed;  bottom:120px;  right:20px;  width:320px;  background:white; border-radius:12px;  box-shadow:0 4px 12px rgba(0,0,0,0.2); z-index:9999;">
 
                                 <div class="p-3 border-bottom">
-                                    <strong>Hey there ðŸ‘‹</strong><br>
-                                    Welcome to Raymoch ðŸŽ‰<br>
+                                    <strong>Hey there 👋</strong><br>
+                                    Welcome to Raymoch 🚀<br>
                                     <small>If you have any questions, just message us here!</small>
                                 </div>
                                 <div class="p-3" style="max-height:200px; overflow-y:auto;" id="chat-messages">
@@ -206,12 +209,13 @@
                                 </div>
                             </div>
 
-                            <span id="menu-btn"></span>
+                            <span id="menu-btn"><i class="fa-solid fa-bars"></i> </span>
                         </div>
 
                         <div id="btn-extra">
-                            <span></span>
-                            <span></span>
+                            <span class="fa-solid fa-bars"></span>
+                         <span class="fa-solid fa-bars"></span>
+                            
                         </div>
                     </div>
                 </div>
