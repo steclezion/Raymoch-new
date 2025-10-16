@@ -12,32 +12,27 @@ use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\HomePageWelcomeController;
 use App\Http\Controllers\HomeWelcomeSecondPageController;
 use App\Http\Controllers\HomeWelcomeThirdPageController;
+use App\Http\Controllers\OneTapController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ResetPasswordController;
-use App\Http\Controllers\OneTapController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\searchcontroller;
 use App\Mail\GoogleVerifyMail;
 use App\Mail\HelloMail;
-
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
-
-
-
-
-
-
 
 // Route::get('/', function () { return view('raymoch.pages.index'); })->name('/');
 
 Route::get('/', [ControlLayoutController::class, 'index'])->name('/');
+Route::get('/bussiness_menu', [ControlLayoutController::class, 'Business_menus'])->name('bussiness_menu');
 
 Route::get('login', [AuthController::class, 'login'])->name('login');
 Route::post('login', [AuthController::class, 'loginPost'])->name('login.post');
 Route::get('register', [AuthController::class, 'register'])->name('register');
 Route::post('register', [AuthController::class, 'registerPost'])->name('register.post');
-Route::get('dashboard', [AuthController::class, 'dashboard'])->name('dashboard')->middleware('auth');;
+Route::get('dashboard', [AuthController::class, 'dashboard'])->name('dashboard')->middleware('auth');
 Route::get('logout', [AuthController::class, 'logout'])->name('logout');
 Route::resource('permissions', PermissionController::class);
 Route::resource('roles', RoleController::class)->middleware('auth');
@@ -48,6 +43,7 @@ Route::get('verify-email', [GoogleAuthController::class, 'verifyEmail'])->name('
 Route::get('/send', function () {
     // return view('raymoch.pages.index');
     Mail::to('steclezion@gmail.com')->send(new HelloMail());
+
     return 'Email sent!';
 });
 Route::post('/chatbot', [ChatbotController::class, 'respond']);
@@ -57,12 +53,12 @@ Route::get('/test-email', function () {
         $message->to('samsonteclezion@gmail.com')
             ->subject('Test Email');
     });
+
     return 'Email sent!';
 });
 
-
 Route::get('/test-emaill', function () {
-    $user = (object)['name' => 'Test User'];
+    $user = (object) ['name' => 'Test User'];
     $link = 'https://raymoch.com/verify?user=999';
 
     Mail::to('steclezion@gmail.com')->send(new GoogleVerifyMail($user, $link));
@@ -70,18 +66,14 @@ Route::get('/test-emaill', function () {
     return 'Email sent (check Mailtrap)';
 });
 
-
 Route::get('forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
 Route::post('forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
-
-
 
 Route::get('reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])
     ->name('password.reset');
 
 Route::post('reset-password', [ResetPasswordController::class, 'reset'])
     ->name('password.update');
-
 
 Route::get('/home-page-welcomes', [HomePageWelcomeController::class, 'index'])->name('home-page-welcomes.index')->middleware('auth');
 Route::get('/home-page-welcomes-data', [HomePageWelcomeController::class, 'data'])->name('home-page-welcomes.data')->middleware('auth');
@@ -104,13 +96,17 @@ Route::get('/phpinfo', function () {
 
 Route::resource('users', UserController::class);
 
+Route::get('/bussiness_menus', function () {
+    return view('raymoch.pages.bussiness_menu.business_menu');
+})->name('/');
+
 Route::resource('home-welcome-second-page', HomeWelcomeSecondPageController::class)->middleware('auth');
 Route::resource('home-welcome-third-page', HomeWelcomeThirdPageController::class)->middleware('auth');
 Route::resource('companyinfos', CompanyInfosController::class)->middleware('auth');
 Route::get('/descriptions', [company_description::class, 'index'])->name('descriptions.index');
 Route::get('/descriptions/create', [company_description::class, 'create'])->name('descriptions.create');
 Route::post('/descriptions', [company_description::class, 'store'])->name('descriptions.store');
-Route::get('/descriptions/{company}/{description}/edit', [Company_description::class, 'edit'])->name('descriptions.edit');
+Route::get('/descriptions/{company}/{description}/edit', [company_description::class, 'edit'])->name('descriptions.edit');
 Route::put('/descriptions/{company}', [company_description::class, 'update'])->name('descriptions.update');
 Route::delete('/descriptions/{id}', [company_description::class, 'destroy'])->name('descriptions.destroy');
 Route::resource('company_description_types', company_description_type_controller::class)->middleware('auth');
@@ -121,18 +117,27 @@ Route::get('/power-generation', [CompanyInfosController::class, 'power_generatio
 
 Route::get('/search/{industry?}', [CompanyInfosController::class, 'search_query'])->name('search');
 
-
 // Other routes...
 Route::middleware(['auth'])->group(function () {
     // User Management (CRUD)
     Route::resource('users', UserController::class);
 });
 
-
 Route::get('/feature-x', function () {
     abort(503, 'This page is under construction.');
     // return response()->view('error.503', [], 503);
 });
 
-
 Route::post('/auth/google/onetap', [OneTapController::class, 'login'])->name('onetap.login');
+
+
+Route::post('/search/businesses', [SearchController::class, 'businesses'])->name('search.businesses');
+
+Route::get('/debug/csrf', function (\Illuminate\Http\Request $req) {
+    return response()->json([
+        'session_id' => $req->session()->getId(),
+        'session__token' => $req->session()->get('_token'),
+        'csrf_token_helper' => csrf_token(),
+        'has_cookie_laravel_session' => $req->hasCookie(config('session.cookie')),
+    ]);
+});

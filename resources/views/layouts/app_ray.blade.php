@@ -10,7 +10,6 @@
      <title>@yield('title', config('app.name'))</title>
     <meta content="" name="keywords" >
  
-
     {{-- <script>
         document.addEventListener('contextmenu', event => event.preventDefault());
         document.onkeydown = function(e) {
@@ -29,9 +28,9 @@
     // Disable F12, Ctrl+Shift+I, Ctrl+U, Ctrl+Shift+C, Ctrl+Shift+J
     document.onkeydown = function (e) {
       if (
-        e.keyCode === 123 || // F12
-        (e.ctrlKey && e.shiftKey && ['I', 'C', 'J'].includes(e.key)) ||
-        (e.ctrlKey && e.key === 'U')
+        // e.keyCode === 123 || // F12
+        // (e.ctrlKey && e.shiftKey && ['I', 'C', 'J'].includes(e.key)) ||
+        // (e.ctrlKey && e.key === 'U')
       ) {
         return false;
       }
@@ -130,7 +129,8 @@
     <!-- preloader begin -->
     <div id="de-loader"></div>
     <!-- preloader end -->
-    @include('layouts.header_nav')
+    {{-- @include('layouts.header_nav') --}}
+      {{-- @include('layouts.header_nav_3') --}}
     <!-- content wraper -->
 
     @yield('content')
@@ -141,16 +141,12 @@
 
   @include('layouts.footer_2')
 
+  @include('layouts.js_libs')
+
+  @yield('scripts')
 
 
-
-
-
-@include('layouts.js_libs')
-@yield('scripts')
-
-
-
-
-</body>
-</html>
+  </body>
+  
+   
+  </html>

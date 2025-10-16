@@ -28,13 +28,13 @@
 
 <div class="no-bottom no-top" id="content">
         <!--  Front section that includes all feature, middle search marquee, events and product views  -->
-       @include('raymoch.pages.section_one.section') {{-- use dot notation --}}
+       {{-- @include('raymoch.pages.section_one.section') use dot notation --}}
         @include('raymoch/pages/section_two/section')
-        @include('raymoch/pages/section_three/section')
-        @include('raymoch/pages/section_three/section_three_second')
+        {{-- @include('raymoch/pages/section_three/section') --}}
+        {{-- @include('raymoch/pages/section_three/section_three_second')
         @include('raymoch/pages/section_four/section')
         @include('raymoch/pages/section_five/section')
-        @include('raymoch/pages/section_six/section')
+        @include('raymoch/pages/section_six/section') --}}
     </div>
 
     <!-- content end -->
@@ -44,7 +44,7 @@
     <!-- footer end -->
 
 
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    {{-- <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script> --}}
     <script>
         $(function() {
             // DATA: give each org a URL. (Laravel: replace with json(organizations))

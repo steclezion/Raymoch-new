@@ -1,5 +1,6 @@
   <aside class="col-12 col-md-6 order-1 order-lg-2">
-      <div class="container-xxl my-6">
+      
+    <div class="container-xxl my-6">
           <div id="orgTicker" class="ticker-card bg-white shadow-sm p-3">
 
               <div class="d-flex align-items-center justify-content-between">
