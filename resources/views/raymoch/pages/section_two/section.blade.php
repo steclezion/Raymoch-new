@@ -132,14 +132,14 @@
                         <div class="col-lg-6">
                             <ul class="crumb">
                                 <li><a href="index.html">Home</a></li>
-                                <li class="active">Nature's Palette</li>
+                                <li class="active">Under Maintenance</li>
                             </ul>
-                            <h1 class="text-uppercase">Site under construction</h1>
+                            <h1 class="text-uppercase">We are coming soon......</h1>
                             <p class="col-lg-10 lead">Transforming our web-site into a Personal Paradise!</p>
                         </div>
                     </div>
                 </div>
-                <img src="images/logo-wm.webp" class="abs end-0 bottom-0 z-2 w-20" alt="">
+                {{-- <img src="images/logo-wm.webp" class="abs end-0 bottom-0 z-2 w-20" alt=""> --}}
             </section>
 {{-- 
             <div class="relative wow fadeIn">
