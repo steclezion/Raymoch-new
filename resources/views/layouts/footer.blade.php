@@ -4,7 +4,7 @@
                     <div class="col-lg-4 col-sm-6">
                         <img src="{{asset('images/Raymoch_Logo_Design___.png')}}" class="w-150px" alt="" >
                         <div class="spacer-20"></div>
-                        <p> Raymoch.com is a modern business platform that empowers East African businesses by providing a digital platform to showcase their products and services globally. They bridge the gap between local businesses and international markets through networking, digital marketing, and technology-driven solutions. Raymoch.com facilitates trade by offering resources, insights, and connections that enhance global business opportunities for East African entrepreneurs and promotes economic development by enabling small and large businesses to expand beyond regional borders and attract international investors.</p>
+                        <p> Raymoch.com is a modern business platform that empowers African businesses by providing a digital platform to showcase their products and services globally. They bridge the gap between local businesses and international markets through networking, digital marketing, and technology-driven solutions. Raymoch.com facilitates trade by offering resources, insights, and connections that enhance global business opportunities for East African entrepreneurs and promotes economic development by enabling small and large businesses to expand beyond regional borders and attract international investors.</p>
 
                         <div class="social-icons mb-sm-30">
                             <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
