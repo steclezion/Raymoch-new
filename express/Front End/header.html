@@ -1,0 +1,112 @@
+<!-- /public/partials/header.html -->
+<header class="header" id="site-header">
+  <!-- Tier 1 -->
+  <div class="row1">
+    <div class="brandrow">
+      <a class="brand" href="Entire.html" aria-label="Raymoch home">
+        <!-- Simple R-mark logo -->
+        <svg width="28" height="28" viewBox="0 0 200 200" aria-hidden="true">
+          <polygon fill="none" stroke="currentColor" stroke-width="10"
+                   points="100,18 172,59 172,141 100,182 28,141 28,59"/>
+          <text x="100" y="118" text-anchor="middle"
+                style="fill:currentColor;font:700 105px Georgia">R</text>
+        </svg>
+        <span class="brand-word">Raymoch</span>
+      </a>
+
+      <!-- Explore button -->
+      <button class="explore-toggle" id="exploreToggle"
+              aria-haspopup="true" aria-expanded="false">
+        <span class="dotgrid" aria-hidden="true">
+          <i></i><i></i><i></i><i></i>
+        </span>
+        Explore
+      </button>
+
+      <!-- Explore dropdown -->
+      <div class="menu-panel" id="t1Menu" role="menu"
+           aria-labelledby="exploreToggle" hidden>
+        <div class="menu-head"><h4>Explore services</h4></div>
+        <div class="menu-grid">
+          <a class="menu-item" href="Matching.html">
+            <h5>Trusted Matching</h5>
+            <p>Get paired with credible businesses using CTI & verification.</p>
+          </a>
+          <a class="menu-item" href="verification.html">
+            <h5>Verification</h5>
+            <p>CTI badges, document checks, and data provenance.</p>
+          </a>
+          <a class="menu-item" href="Market_Insight.html">
+            <h5>Research & Insights</h5>
+            <p>Sector reports, trends, and regional briefs.</p>
+          </a>
+          <a class="menu-item" href="Services.html">
+            <h5>Programs & Services</h5>
+            <p>Advisory, partner programs, and support options.</p>
+          </a>
+          <a class="menu-item" href="incentives.html">
+            <h5>Policy & Incentives</h5>
+            <p>Tax credits, grants, and regulatory signals.</p>
+          </a>
+          <a class="menu-item" href="whitespace.html">
+            <h5>Whitespace Map</h5>
+            <p>Where demand outpaces supply across sectors.</p>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="rightside">
+      <form class="search-box" action="search.html">
+        <input type="search" name="q"
+               placeholder="Search companies, sectors, regions…" />
+      </form>
+      <div class="auth">
+        <a class="btn" href="login.html">Log in</a>
+        <a class="btn primary" href="signup.html">Sign up</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tier 2 links -->
+  <div class="row2">
+    <div class="wrap">
+      <nav class="links" aria-label="Secondary">
+        <a href="explore2.html">Businesses</a>
+        <a href="Services.html">Services</a>
+        <a href="Market_Insight.html">Research &amp; Insights</a>
+        <a href="About.html">Who We Are</a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<!-- Lightweight script for dropdown + active link -->
+<script>
+(function(){
+  const btn = document.getElementById('exploreToggle');
+  const menu = document.getElementById('t1Menu');
+  if(btn && menu){
+    const toggle = open => {
+      btn.setAttribute('aria-expanded', open);
+      menu.hidden = !open;
+    };
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      toggle(menu.hidden);
+    });
+    document.addEventListener('click', e => {
+      if(!menu.hidden && !menu.contains(e.target) && !btn.contains(e.target))
+        toggle(false);
+    });
+    document.addEventListener('keydown', e => { if(e.key==='Escape') toggle(false); });
+  }
+
+  // Highlight active link
+  const current = location.pathname.split('/').pop() || 'Entire.html';
+  document.querySelectorAll('#site-header a[href]').forEach(a=>{
+    const href = a.getAttribute('href');
+    if(href && href === current) a.classList.add('active');
+  });
+})();
+</script>

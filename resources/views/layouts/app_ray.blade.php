@@ -129,7 +129,7 @@
     <!-- preloader begin -->
     <div id="de-loader"></div>
     <!-- preloader end -->
-    {{-- @include('layouts.header_nav') --}}
+    @include('layouts.header_nav')
       {{-- @include('layouts.header_nav_3') --}}
     <!-- content wraper -->
 

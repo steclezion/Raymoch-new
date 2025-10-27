@@ -1,0 +1,13 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+
+class MatchingController extends Controller
+{
+    //
+}
+mkdir -p ~/Desktop/Raymoch-Project/raymoch/resources/views/matching
+
+(base)

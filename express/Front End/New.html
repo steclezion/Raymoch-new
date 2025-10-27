@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>New</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- React 18 UMD (production) -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js?v=1"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js?v=1"></script>
+  <style>
+    :root{ --brand-blue:#0A2A6B; --brand-gold:#DAA520; --bg:#fafafa; --card:#fff; --ink:#101114; --muted:#6b7280; --border:#e8e8ee; --shadow:0 8px 30px rgba(10,42,107,0.08); --radius:14px; --radius-pill:999px; --fs-xxl:40px; --fs-lg:18px; --fs-md:16px; --fs-sm:14px; --focus:0 0 0 3px rgba(10,42,107,.25);} 
+    *{box-sizing:border-box} html,body{height:100%} body{margin:0;font-family:ui-sans-serif,-apple-system,system-ui,"Segoe UI",Roboto,"Helvetica Neue",Arial;font-size:var(--fs-md);color:var(--ink);background:var(--bg);display:flex;flex-direction:column;min-height:100vh}
+    a{color:inherit}
+
+    /* Layout */
+    .container{max-width:1100px;margin:0 auto;padding:22px 16px 60px;flex:1}
+    .section{margin-top:22px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+    .card.lift:hover{transform:translateY(-2px);box-shadow:0 14px 38px rgba(10,42,107,0.12)}
+    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+    .col{display:flex;flex-direction:column;gap:6px;min-width:260px}
+    .stack{display:flex;flex-direction:column;gap:6px}
+    /* keep cards full-width within sections for consistent sizing */
+    .section > .card{width:100%}
+    @media (min-width:900px){ .row{flex-wrap:nowrap} }
+
+    /* Text helpers */
+    .label{font-size:13px;color:#555}
+    .muted{color:var(--muted)}
+    .hint{font-size:12px;color:var(--muted)}
+
+    /* Form */
+    .input,.select{padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:#fff}
+    .input:focus,.select:focus{outline:none;box-shadow:var(--focus)}
+
+    /* Pills & badges */
+    .pill{border-radius:var(--radius-pill);padding:4px 10px;font-size:var(--fs-sm);border:1px solid var(--border);background:#fff;display:inline-flex;align-items:center;gap:8px}
+    .pill.blue{border-color:#cfd6ea;color:#0A2A6B;background:#f5f7fb}
+    .pill.fit{font-weight:800}
+    .fit-great{color:#0a7a3d;background:#e9f7ef;border-color:#bfe8cc}
+    .fit-good{color:#7a5a00;background:#fff6db;border-color:#f0e0a6}
+    .fit-near{color:#3f3f46;background:#f4f4f5;border-color:#e4e4e7}
+
+    /* Chips */
+    .chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);background:#fff;border-radius:999px;padding:6px 10px;cursor:pointer;transition:background .15s ease,border-color .15s ease}
+    .chip:hover{background:#f8fafc;border-color:#dbe2f1}
+    .chip input{accent-color:#0A2A6B}
+    .chipset{display:flex;flex-wrap:wrap;gap:8px}
+
+    /* Buttons */
+    .btn{height:40px;padding:0 14px;border-radius:10px;border:1px solid #ffffff30;background:#ffffff;color:#0A2A6B;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+    .btn.secondary{background:#f8fafc;border:1px solid var(--border);color:#0f172a}
+    .btn.ghost{background:#fff;border:1px solid var(--border);color:#0f172a}
+    .btn:focus{outline:none;box-shadow:var(--focus)}
+
+    /* Header */
+    .header{position:sticky;top:0;z-index:50;background:#0A2A6B;color:#fff;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+    .header-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:12px 16px}
+    .logo{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none}
+    .logo-word{font-weight:800;letter-spacing:.5px}
+    .nav{display:none;gap:16px;margin-left:8px}
+    .nav a{color:#e6e8ef;text-decoration:none;font-weight:600;font-size:14px}
+    .header-actions{margin-left:auto;display:flex;align-items:center;gap:10px}
+    .search{height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.12);color:#fff;padding:0 10px;width:240px}
+
+    /* Hero */
+    .hero{color:#fff;background:linear-gradient(0deg,#0A2A6B,#0A2A6B)}
+    .hero-inner{max-width:1100px;margin:0 auto;padding:48px 16px 36px}
+    .hero h1{font-size:var(--fs-xxl);line-height:1.1;margin:0 0 8px}
+    .hero p{margin:0 0 16px;color:#e6e8ef;font-size:var(--fs-lg)}
+
+    /* Stepper */
+    .stepper{display:flex;gap:10px;align-items:center;margin-bottom:12px}
+    .step{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:#fff;cursor:pointer}
+    .step.active{border-color:#cfd6ea;background:#f5f7fb;color:#0A2A6B;font-weight:700}
+    .progress{position:relative;height:6px;background:#eaeef8;border-radius:999px;overflow:hidden;margin-bottom:10px}
+    .progress .bar{position:absolute;top:0;left:0;height:100%;background:#0A2A6B;border-radius:999px;width:0;transition:width .25s ease}
+
+    /* Result items */
+    ul{list-style:none;margin:14px 0 0;padding:0}
+    .biz{background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:var(--shadow)}
+    .title{font-weight:800;font-size:18px;margin:0 0 4px}
+    .meta{font-size:14px;color:var(--muted)}
+
+    /* Footer */
+    .site-footer{background:#0A2A6B;color:#fff;padding:36px 16px;margin-top:auto;font-size:15px}
+    .site-footer .inner{max-width:1100px;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px}
+    .site-footer nav{display:flex;gap:18px}
+    .site-footer nav a{color:#fff;text-decoration:none;font-weight:600}
+    .site-footer nav a:hover{text-decoration:underline}
+    .site-footer .tagline{max-width:1100px;margin:12px auto 0;font-size:14px;color:#e6e8ef}
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <a class="logo" href="#"><span class="logo-word">RAYMOCH</span></a>
+      <nav class="nav"><a href="#">Businesses</a><a href="#">Insights</a><a href="#">Services</a><a href="#">About</a></nav>
+      <div class="header-actions"><input class="search" placeholder="Search…"/><button class="btn">Sign Up</button></div>
+    </div>
+  </header>
+
+  <section class="hero"><div class="hero-inner"><h1>Matching: private fit, public clarity</h1><p>Start with what you want. We’ll build preferences and matches around it.</p></div></section>
+
+  <main class="container"><div id="root"></div></main>
+
+  <footer class="site-footer" role="contentinfo">
+    <div class="inner">
+      <div>© 2025 Raymoch. All rights reserved.</div>
+      <nav aria-label="Footer"><a href="#">About</a><a href="#">Contact</a><a href="#">Privacy</a><a href="#">Terms</a></nav>
+    </div>
+    <div class="tagline">Visibility → Trust → Capital. Building pathways for African enterprises and diaspora investment.</div>
+  </footer>
+
+  <script>
+    // ===== Data + helpers =====
+    const clamp01 = v => Math.max(0, Math.min(1, v));
+    const readinessBase = tier => tier==="Gold"?0.85:tier==="Silver"?0.60:0.35;
+    const bandProximity = ([a,b],[x1,x2])=>{ const center=(a+b)/2, width=(b-a)/2, x=(x1+x2)/2, d=Math.abs(x-center); return clamp01(1 - d/(width||1)); };
+    const instrumentAffinity = (prefList,acceptable)=>{ if(!acceptable||!acceptable.length) return 0; let best=0; for(const instr of acceptable){ const i=prefList.indexOf(instr); if(i===0) best=Math.max(best,1.0); else if(i===1) best=Math.max(best,0.6); else if(i>=2) best=Math.max(best,0.3);} return best; };
+    const overlapRatio = ([a1,a2],[b1,b2])=>{ const start=Math.max(a1,b1), end=Math.min(a2,b2); const inter=Math.max(0,end-start), uni=Math.max(a2,b2)-Math.min(a1,b1); return uni<=0?0:inter/uni; };
+    const sectorAffinity = (preferred,s)=> preferred.length?(preferred.includes(s)?1:0.5):0.5;
+    const geoAffinity    = (preferred,g)=> preferred.length?(preferred.includes(g)?1:0.5):0.5;
+
+    const FIRMS = [
+      { id:"f1", name:"Shashamane Agro Co.", country:"Ethiopia", sector:"Agriculture & Food", verification:"Existence Only", lastVerifiedDays:21, capital:{ min_ticket:15000, max_ticket:80000, instruments:["revenue_share","equity"], timing_window:[0,6] }, ctiLite:"Silver", flags:{compliant:true} },
+      { id:"f2", name:"Kigali Solar Works", country:"Rwanda", sector:"Energy & Renewables", verification:"Existence Only", lastVerifiedDays:120, capital:{ min_ticket:20000, max_ticket:120000, instruments:["equity","debt"], timing_window:[1,9] }, ctiLite:"Bronze", flags:{compliant:true} },
+      { id:"f3", name:"Nairobi FinServe", country:"Kenya", sector:"Fintech & Banking", verification:"Existence Only", lastVerifiedDays:9, capital:{ min_ticket:30000, max_ticket:150000, instruments:["revenue_share","equity"], timing_window:[0,6] }, ctiLite:"Gold", flags:{compliant:true} },
+      { id:"f4", name:"Cape Coast Textiles", country:"Ghana", sector:"Manufacturing", verification:"Existence Only", lastVerifiedDays:185, capital:{ min_ticket:10000, max_ticket:40000, instruments:["revenue_share","PO_finance"], timing_window:[3,12] }, ctiLite:"Silver", flags:{compliant:true} },
+      { id:"f5", name:"Addis Health Labs", country:"Ethiopia", sector:"Healthcare & Biotech", verification:"Existence Only", lastVerifiedDays:40, capital:{ min_ticket:25000, max_ticket:90000, instruments:["equity","revenue_share"], timing_window:[2,10] }, ctiLite:"Silver", flags:{compliant:true} },
+    ];
+
+    function gate(inv, firm){
+      if (!firm.flags?.compliant) return { pass:false, reason:"Compliance" };
+      if (inv.geo_include.length && !inv.geo_include.includes(firm.country))  return { pass:false, reason:"Geo" };
+      if (inv.sector_include.length && !inv.sector_include.includes(firm.sector)) return { pass:false, reason:"Sector" };
+      const [tiMin,tiMax] = inv.ticket_pref; const {min_ticket, max_ticket} = firm.capital; const overlap = !(tiMax < min_ticket || tiMin > max_ticket);
+      if (!overlap) return { pass:false, reason:"Ticket band" };
+      const instOK = firm.capital.instruments.some(x => inv.instrument_pref.includes(x)); if (!instOK) return { pass:false, reason:"Instrument" };
+      const horizon = [0, inv.time_horizon]; if (overlapRatio(horizon, firm.capital.timing_window) === 0) return { pass:false, reason:"Timing" };
+      return { pass:true };
+    }
+
+    function fitScore(inv, firm){
+      const ticket = bandProximity([firm.capital.min_ticket, firm.capital.max_ticket], inv.ticket_pref);
+      const instr  = instrumentAffinity(inv.instrument_pref, firm.capital.instruments);
+      const timing = overlapRatio(inv.timing_pref, firm.capital.timing_window);
+      const sec    = sectorAffinity(inv.sector_include, firm.sector);
+      const geo    = geoAffinity(inv.geo_include, firm.country);
+      const ready  = readinessBase(firm.ctiLite);
+      const total = clamp01(0.35*ticket + 0.20*instr + 0.15*timing + 0.10*sec + 0.10*geo + 0.10*ready);
+      return { total, parts:{ticket,instr,timing,sec,geo,ready} };
+    }
+
+    const bandFromScore = s => s>=0.75?{label:"Great fit",cls:"fit-great"}: s>=0.55?{label:"Good fit",cls:"fit-good"}:{label:"Near fit",cls:"fit-near"};
+    const fmtUSD = n => n.toLocaleString(undefined,{style:"currency",currency:"USD",maximumFractionDigits:0});
+    const e = React.createElement;
+
+    // ===== Shared =====
+    function Stepper({active, onJump}){
+      const cls = i => 'step'+(active===i?' active':'');
+      const pct = active===1? 0 : active===2? 50 : 100;
+      return e(React.Fragment,null,
+        e('div',{className:'stepper'},
+          e('button',{className:cls(1),onClick:()=>onJump(1)},'1 · What & Amount'),
+          e('button',{className:cls(2),onClick:()=>onJump(2)},'2 · Preferences & Matches'),
+          e('button',{className:cls(3),onClick:()=>onJump(3)},'3 · Suggestions')
+        ),
+        e('div',{className:'progress',role:'progressbar','aria-valuemin':0,'aria-valuemax':100,'aria-valuenow':pct}, e('div',{className:'bar',style:{width:pct+'%'}}))
+      );
+    }
+
+    function CheckboxChips({label, options, values, onChange, name}){
+      const toggle = (opt)=>{ const set = new Set(values); if(set.has(opt)) set.delete(opt); else set.add(opt); onChange(Array.from(set)); };
+      return e('div',{className:'col'},
+        label? e('label',{className:'label'},label):null,
+        e('div',{className:'chipset',role:'group','aria-label':label||name}, options.map(opt=> e('label',{key:opt,className:'chip',tabIndex:0,onKeyDown:(ev)=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();toggle(opt);}}}, e('input',{type:'checkbox',name,checked:values.includes(opt),onChange:()=>toggle(opt)}), e('span',{style:{textTransform:'capitalize'}}, opt.replace('_',' ')) )))
+      );
+    }
+
+    function ResultCard({firm,fit}){
+      const band = bandFromScore(fit.total);
+      const whyBits = [ fit.parts.ticket>=0.7? 'ticket aligned':null, fit.parts.instr>=0.6? 'instrument match':null, fit.parts.timing>=0.5? 'timing ok':null, fit.parts.sec>=1? 'preferred sector':null, fit.parts.geo>=1? 'preferred country':null, fit.parts.ready>=0.6? 'ready soon':null ].filter(Boolean);
+      return e('li',{className:'biz card lift'},
+        e('div',{className:'row',style:{justifyContent:'space-between',alignItems:'flex-start'}},
+          e('div',null, e('h3',{className:'title'},firm.name), e('div',{className:'meta'},`${firm.country} • ${firm.sector}`), e('div',{className:'row',style:{marginTop:6}}, e('span',{className:'pill blue'},firm.verification), e('span',{className:'pill'},`Verified ${firm.lastVerifiedDays}d ago`), e('span',{className:`pill fit ${band.cls}`},band.label) ) ),
+          e('div',{className:'stack',style:{minWidth:'220px',alignItems:'flex-end'}},
+            e('div',{className:'meta',style:{fontSize:'12px'}},'Ticket band'),
+            e('div',{style:{fontWeight:800}},`${fmtUSD(firm.capital.min_ticket)} – ${fmtUSD(firm.capital.max_ticket)}`),
+            e('div',{className:'meta',style:{fontSize:'12px'}},'Accepts'),
+            e('div',null, firm.capital.instruments.map(x=>x.replace('_',' ')).join(', ')
+          ))
+        ),
+        e('div',{className:'meta',style:{marginTop:8}},`Why: ${whyBits.join(' · ') || 'best overall fit given your inputs'}`)
+      );
+    }
+
+    // ===== Step 1 =====
+    function Step1({value,onNext,goTo}){
+      const [sector,setSector] = React.useState(value.sector_include[0]||[...new Set(FIRMS.map(f=>f.sector))][0]);
+      const [amount,setAmount] = React.useState(Math.round((value.ticket_pref[0]+value.ticket_pref[1])/2));
+      const [country,setCountry] = React.useState(value.geo_include[0]||'');
+      const [showResults,setShowResults] = React.useState(false);
+      const sectors = [...new Set(FIRMS.map(f=>f.sector))].sort();
+      const countries = ['', ...new Set(FIRMS.map(f=>f.country))].sort();
+
+      const derivedInv = ()=>({ ticket_pref:[Math.max(0,Math.round(amount*0.6)), Math.round(amount*1.4)], timing_pref:[0,6], time_horizon:12, instrument_pref:["revenue_share","PO_finance","equity","debt"], sector_include:[sector], geo_include: country? [country]:[], budget_total: amount*2 });
+      const slate = React.useMemo(()=>{ if(!showResults) return []; const inv = derivedInv(); const out=[]; for(const f of FIRMS){ const g=gate(inv,f); if(g.pass){ const fit=fitScore(inv,f); out.push({firm:f,fit}); } } out.sort((a,b)=> b.fit.total - a.fit.total); return out; },[sector,amount,country,showResults]);
+
+      return e('div',{className:'card lift'},
+        e(Stepper,{active:1,onJump:goTo}),
+        e('h2',{style:{margin:0}},'Step 1 — Quick Search'),
+        e('p',{className:'muted'},'Pick a sector, amount, and optional country. Hit Search to see matches immediately below.'),
+        e('div',{className:'row'},
+          e('div',{className:'col'}, e('label',{className:'label'},'Business type (sector)'), e('select',{className:'input',value:sector,onChange:ev=>setSector(ev.target.value)}, sectors.map(s=> e('option',{key:s,value:s},s)) )),
+          e('div',{className:'col'}, e('label',{className:'label'},'Investment amount (USD)'), e('input',{className:'input',type:'number',min:0,value:amount,onChange:ev=>setAmount(Number(ev.target.value||0))}), e('div',{className:'hint'},'We derive a ticket range around this amount.')),
+          e('div',{className:'col'}, e('label',{className:'label'},'Country (optional)'), e('select',{className:'input',value:country,onChange:ev=>setCountry(ev.target.value)}, countries.map(c=> e('option',{key:c,value:c}, c||'Any')) ))
+        ),
+        e('div',{className:'row',style:{marginTop:12,justifyContent:'space-between'}},
+          e('div',{className:'muted'},`Search ${sector}${country? ' in '+country:''} around ${fmtUSD(amount)}.`),
+          e('div',null, e('button',{className:'btn',onClick:()=>{ setShowResults(true); onNext(derivedInv()); }},'Search'))
+        ),
+        showResults ?
+          e('section',{className:'section','aria-live':'polite'},
+            e('div',{className:'row',style:{justifyContent:'space-between',alignItems:'baseline'}}, e('h2',null,'Results'), e('div',{className:'muted'},`Showing ${slate.length} of ${FIRMS.length}`)),
+            slate.length===0? e('div',{className:'card'},'No matches yet. Try a different sector, amount, or add/remove a country.') : e('ul',null, slate.map(({firm,fit})=> e(ResultCard,{key:firm.id,firm,fit})))
+          )
+        : null
+      );
+    }
+
+// ===== Step 2 =====
+    function Step2({value,onChange,onNext,onBack,goTo}){
+      const v = value; const set = (k,val)=> onChange(Object.assign({},v,{[k]:val}));
+      const SECTORS = [
+  "Agriculture & Food","Energy & Renewables","Fintech & Banking","Manufacturing","Healthcare & Biotech","Education","Logistics & Transport","Tourism & Hospitality","Media & Creative","Construction & Real Estate","Retail & E‑commerce","Water & Sanitation","Fisheries","ICT & Software","Mining & Materials","Textiles & Apparel"
+];
+const AFRICAN_COUNTRIES = [
+  "Algeria","Angola","Benin","Botswana","Burkina Faso","Burundi","Cabo Verde","Cameroon","Central African Republic","Chad","Comoros","Congo (Republic)","Congo (Democratic Republic)","Djibouti","Egypt","Equatorial Guinea","Eritrea","Eswatini","Ethiopia","Gabon","Gambia","Ghana","Guinea","Guinea-Bissau","Côte d’Ivoire","Kenya","Lesotho","Liberia","Libya","Madagascar","Malawi","Mali","Mauritania","Mauritius","Morocco","Mozambique","Namibia","Niger","Nigeria","Rwanda","São Tomé and Príncipe","Senegal","Seychelles","Sierra Leone","Somalia","South Africa","South Sudan","Sudan","Tanzania","Togo","Tunisia","Uganda","Zambia","Zimbabwe"
+];
+const SECT = SECTORS; const CNTRY = AFRICAN_COUNTRIES;
+      const INSTR = ["equity","revenue_share","PO_finance","debt"];
+      const slate = React.useMemo(()=>{ const out=[]; for(const f of FIRMS){ const g=gate(v,f); if(g.pass){ const fit=fitScore(v,f); out.push({firm:f,fit}); } } out.sort((a,b)=> b.fit.total - a.fit.total); return out; },[v]);
+
+      return e(React.Fragment,null,
+        e('div',{className:'card lift',style:{marginTop:22}},
+          e(Stepper,{active:2,onJump:goTo}),
+          e('h2',{style:{margin:0}},'Step 2 — Preferences & Matches'),
+          e('p',{className:'muted'},'Adjust if needed. We show bands only — no private scores.'),
+          e('div',{className:'row'},
+            e('div',{className:'col'}, e('label',{className:'label'},'Ticket — min'), e('input',{className:'input',type:'number',min:0,value:v.ticket_pref[0],onChange:ev=>set('ticket_pref',[Number(ev.target.value||0),v.ticket_pref[1]])})),
+            e('div',{className:'col'}, e('label',{className:'label'},'Ticket — max'), e('input',{className:'input',type:'number',min:0,value:v.ticket_pref[1],onChange:ev=>set('ticket_pref',[v.ticket_pref[0],Number(ev.target.value||0)])})),
+            e('div',{className:'col'}, e('label',{className:'label'},'Start timing (months window)'), e('div',{className:'row'}, e('input',{className:'input',style:{width:'120px'},type:'number',min:0,value:v.timing_pref[0],onChange:ev=>set('timing_pref',[Number(ev.target.value||0), v.timing_pref[1]])}), e('input',{className:'input',style:{width:'120px'},type:'number',min:0,value:v.timing_pref[1],onChange:ev=>set('timing_pref',[v.timing_pref[0], Number(ev.target.value||0)])}) ))
+          ),
+
+          // Instruments stay as chips; sectors & countries -> multi-select dropdowns
+          e('div',{className:'row',style:{marginTop:12}},
+            e(CheckboxChips,{label:'Funding instruments',options:INSTR,values:v.instrument_pref,onChange:vals=>set('instrument_pref',vals),name:'instruments'}),
+            e('div',{className:'col'},
+              e('label',{className:'label'},'Sectors (multi-select)'),
+              e('select',{className:'input',multiple:true,size:8,value:v.sector_include,onChange:ev=>{ const opts=[...ev.target.options].filter(o=>o.selected).map(o=>o.value); set('sector_include',opts); }}, SECT.map(s=> e('option',{key:s,value:s},s)))
+            ),
+            e('div',{className:'col'},
+              e('label',{className:'label'},'Countries (multi-select)'),
+              e('select',{className:'input',multiple:true,size:8,value:v.geo_include,onChange:ev=>{ const opts=[...ev.target.options].filter(o=>o.selected).map(o=>o.value); set('geo_include',opts); }}, CNTRY.map(c=> e('option',{key:c,value:c},c)))
+            )
+          ),
+
+          e('div',{className:'row',style:{marginTop:12,justifyContent:'space-between'}}, e('button',{className:'btn secondary',onClick:onBack},'Back'), e('button',{className:'btn',onClick:onNext},'Continue'))
+        ),
+
+        e('section',{className:'section','aria-live':'polite'},
+          e('div',{className:'row',style:{justifyContent:'space-between',alignItems:'baseline'}}, e('h2',null,'Matched businesses'), e('div',{className:'muted'},`Showing ${slate.length} of ${FIRMS.length}`)),
+          slate.length===0? e('div',{className:'card'},'Nothing matches yet. Try widening your ticket range, adding instruments, or removing a country/sector filter.') : e('ul',null, slate.map(({firm,fit})=> e(ResultCard,{key:firm.id,firm,fit})))
+        )
+      );
+    }
+
+    // ===== Step 3 =====
+    function Step3({value,onBack,goTo}){
+      const v = value;
+      const suggestions = React.useMemo(()=>{ const items=[]; for(const f of FIRMS){ const g = gate(v,f); const fit = fitScore(v,f); if(!g.pass || fit.total < 0.55){ items.push({firm:f, fit, passed:g.pass}); } } items.sort((a,b)=> a.passed===b.passed? (b.fit.total - a.fit.total) : (a.passed?1:-1)); return items.slice(0,8); },[v]);
+      return e(React.Fragment,null,
+        e('div',{className:'card lift',style:{marginTop:22}}, e(Stepper,{active:3,onJump:goTo}), e('h2',{style:{margin:0}},'Step 3 — Suggestions'), e('p',{className:'muted'},'Adjacent options if you loosen 1–2 constraints (ticket, timing, instrument, sector, or country).') ),
+        e('div',{className:'card',style:{marginTop:12}}, suggestions.length===0? e('div',{className:'muted'},'No adjacent opportunities right now.') : e('ul',null, suggestions.map(({firm,fit,passed})=>{ const band = bandFromScore(fit.total); return e('li',{key:firm.id,className:'biz card lift'}, e('div',{className:'row',style:{justifyContent:'space-between',alignItems:'baseline'}}, e('div',null, e('strong',null,firm.name), e('div',{className:'meta'},`${firm.country} • ${firm.sector}`)), e('span',{className:`pill fit ${band.cls}`},band.label) ), e('div',{className:'meta',style:{marginTop:6}}, passed? 'Passes gate but lower fit — try adjusting ticket or timing.' : 'Failed a gate — try widening sector/country, ticket, instrument, or timing.') ); })) ),
+        e('div',{className:'row',style:{justifyContent:'space-between',marginTop:12}}, e('button',{className:'btn secondary',onClick:onBack},'Back to preferences'), e('span',null))
+      );
+    }
+
+    // ===== App =====
+    function App(){
+      const [inv,setInv] = React.useState({ ticket_pref:[20000,60000], timing_pref:[0,6], time_horizon:12, instrument_pref:["revenue_share","PO_finance","equity","debt"], sector_include:["Agriculture & Food"], geo_include:[], budget_total:100000 });
+      const [phase,setPhase] = React.useState(1);
+      const goTo = (n)=> setPhase(n);
+      return e(React.Fragment,null,
+        phase===1 && e('section',{className:'section'}, e(Step1,{value:inv,onNext:(next)=>{ setInv(next); setPhase(2); },goTo})),
+        phase===2 && e('section',{className:'section'}, e(Step2,{value:inv,onChange:setInv,onNext:()=>setPhase(3),onBack:()=>setPhase(1),goTo})),
+        phase===3 && e('section',{className:'section'}, e(Step3,{value:inv,onBack:()=>setPhase(2),goTo}))
+      );
+    }
+
+    // Mount (runs after deferred React scripts)
+    ReactDOM.createRoot(document.getElementById('root')).render(e(App));
+  </script>
+</body>
+</html>

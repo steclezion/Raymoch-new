@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Raymoch • Companies</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<style>
+  :root{--brand-blue:#0A2A6B;--bg:#F7F7FB;--card:#fff;--ink:#0F1222;--muted:#6b7280;--border:#E8E8EE;--shadow:0 10px 30px rgba(10,42,107,.08);--radius:16px;--pill:999px;--maxw:1180px;--gutter:18px}
+  *{box-sizing:border-box} html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+  a{color:inherit;text-decoration:none}
+  header{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--border)}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 var(--gutter)}
+  .row1{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 8px; margin:15px}
+  .brand{display:flex;align-items:center;gap:10px;color:#0328aeed}
+  .brand-word{font-weight:900;font-size:1.4rem;color:#0328aeed}
+  .rightside{display:flex;align-items:center;gap:14px}
+  .search-box{min-width:160px;width:20vw;max-width:280px}
+  .search-box input{width:100%;height:40px;padding:0 14px;border:1px solid var(--border);border-radius:var(--pill)}
+  .btn{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-radius:var(--pill);border:1px solid var(--border);background:#fff;font-weight:700;cursor:pointer}
+  .btn.primary{background:var(--brand-blue);color:#fff;border-color:var(--brand-blue)}
+
+  main{padding:18px 0}
+  .filters{background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin:0 0 16px}
+  .grid{display:grid;grid-template-columns:1.6fr 1fr 1fr auto;gap:10px}
+  .input{height:44px;border:1px solid var(--border);border-radius:var(--pill);padding:0 14px}
+  select.input{appearance:auto;background:#fff}
+  .count{color:var(--muted);margin:8px 0}
+  .list{display:grid;gap:12px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);padding:14px}
+  .row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+  .meta h3{margin:0 0 4px;color:var(--brand-blue);font-size:1.1rem}
+  .meta .sub{color:var(--muted);font-size:.94rem}
+  footer{background:#0b1020;color:#cbd5e1;margin-top:26px}
+  footer .foot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #1f2937;margin-top:18px;padding:12px 0;font-size:.92rem}
+  @media(max-width:1000px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap row1">
+    <a class="brand" href="Entire.html" aria-label="Raymoch home">
+      <svg width="28" height="28" viewBox="0 0 200 200" aria-hidden="true">
+        <polygon fill="none" stroke="currentColor" stroke-width="10" points="100,18 172,59 172,141 100,182 28,141 28,59"/>
+        <text x="100" y="118" text-anchor="middle" style="fill:currentColor;font:700 105px Georgia">R</text>
+      </svg>
+      <span class="brand-word">Raymoch</span>
+    </a>
+    <div class="rightside">
+      <form class="search-box" action="search.html">
+        <input type="search" name="q" placeholder="Search companies, sectors, regions…"/>
+      </form>
+      <a class="btn" href="explore2.html">Explore</a>
+      <a class="btn primary" href="Services.html">Services</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1 style="margin:8px 0 12px">Companies</h1>
+
+  <!-- Filters -->
+  <div class="filters">
+    <div class="grid">
+      <input id="q" class="input" type="search" placeholder="Search name or summary…"/>
+      <select id="sector" class="input"></select>
+      <select id="country" class="input"></select>
+      <div style="display:flex;align-items:center;gap:8px">
+        <label style="display:flex;align-items:center;gap:6px;"><input id="verified" type="checkbox"/> Verified</label>
+        <button id="apply" class="btn primary" type="button">Apply</button>
+        <button id="clear" class="btn" type="button">Clear</button>
+      </div>
+    </div>
+    <div id="count" class="count"></div>
+  </div>
+
+  <!-- List -->
+  <div id="list" class="list"></div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:18px;padding:28px 0">
+      <div>
+        <div style="color:#fff;font-weight:800;font-size:1.2rem;margin-bottom:8px">Raymoch</div>
+        <div style="color:#94a3b8;max-width:360px">Connecting investors and entrepreneurs through trust, verified data, and actionable insights.</div>
+      </div>
+      <div><h5 style="color:#e5e7eb;margin:0 0 10px">Company</h5>
+        <a href="About.html" style="display:block;color:#cbd5e1;margin:6px 0">About</a>
+        <a href="contact.html" style="display:block;color:#cbd5e1;margin:6px 0">Contact</a>
+      </div>
+      <div><h5 style="color:#e5e7eb;margin:0 0 10px">Product</h5>
+        <a href="explore2.html" style="display:block;color:#cbd5e1;margin:6px 0">Explore Businesses</a>
+        <a href="verification.html" style="display:block;color:#cbd5e1;margin:6px 0">Verification</a>
+      </div>
+      <div><h5 style="color:#e5e7eb;margin:0 0 10px">Resources</h5>
+        <a href="help.html" style="display:block;color:#cbd5e1;margin:6px 0">Help Center</a>
+        <a href="status.html" style="display:block;color:#cbd5e1;margin:6px 0">Status</a>
+      </div>
+    </div>
+    <div class="foot">
+      <div>© <span id="y"></span> Raymoch</div>
+      <div><a href="privacy.html" style="color:#cbd5e1">Privacy</a></div>
+    </div>
+  </div>
+</footer>
+
+<!-- Inline fallback dataset so you can see results instantly -->
+<script type="application/json" id="companies-fallback">
+[
+  {"id":"c001","name":"Nile Agro","sector":"agriculture","country":"Ethiopia","verified":true,"summary":"Inputs + cold-chain for mid-sized farmers."},
+  {"id":"c002","name":"Mzansi Pay","sector":"fintech","country":"South Africa","verified":false,"summary":"Cross-border remittances for SADC corridor."},
+  {"id":"c003","name":"Solar Sahel","sector":"energy","country":"Mali","verified":true,"summary":"PAYGo solar for off-grid households."}
+]
+</script>
+
+<script>
+(() => {
+  const API = window.API_BASE || ""; // if using server.js at same origin, leave ""
+  const $ = s => document.querySelector(s);
+  const params = new URLSearchParams(location.search);
+  const qs = key => (params.get(key) || "").trim();
+
+  // 1) Read incoming filters from Explore (sector, country, q, verified)
+  const initial = {
+    sector: qs("sector"),           // expects lowercase keys like "fintech"
+    country: qs("country"),
+    q: qs("q"),
+    verified: ["1","true","yes"].includes(qs("verified").toLowerCase())
+  };
+
+  // 2) Load companies: API -> companies.json -> inline fallback
+  async function fetchJSON(url){
+    const r = await fetch(url, {cache:"no-store"});
+    if(!r.ok) throw new Error(await r.text());
+    return r.json();
+  }
+  async function loadCompanies(){
+    // Try server with filters first
+    try{
+      const p = new URLSearchParams({ page:"1", limit:"5000" });
+      if(initial.sector)  p.set("sector", initial.sector);
+      if(initial.country) p.set("country", initial.country);
+      if(initial.q)       p.set("q", initial.q);
+      if(initial.verified) p.set("verified","1");
+      const js = await fetchJSON(`${API}/companies?${p.toString()}`);
+      const data = js.data || js;
+      if(Array.isArray(data) && data.length) return data;
+    }catch(e){ /* fall through */ }
+
+    // Try static JSON next (adjust path if your file lives under /Data/)
+    try{
+      const data = await fetchJSON("./companies.json");
+      if(Array.isArray(data) && data.length) return data;
+      if(data && Array.isArray(data.data)) return data.data;
+    }catch(e){ /* fall through */ }
+
+    // Inline fallback for immediate visibility
+    try{
+      return JSON.parse($("#companies-fallback").textContent);
+    }catch(e){ return []; }
+  }
+
+  // 3) Populate filters from dataset values
+  function unique(arr){ return [...new Set(arr.filter(Boolean))].sort(); }
+  function fillSelect(el, values, placeholder){
+    el.innerHTML = `<option value="">${placeholder}</option>` + values.map(v=>`<option value="${v}">${v}</option>`).join("");
+  }
+
+  // 4) Render list
+  function render(rows){
+    const list = $("#list");
+    if(!rows.length){ list.innerHTML = `<div class="card">No companies match your filters.</div>`; return; }
+    list.innerHTML = rows.map(c=>{
+      const id = encodeURIComponent(c.company_code || c.id || c.slug || "");
+      const href = id ? `company.html?id=${id}` : `company.html`;
+      return `
+        <article class="card">
+          <div class="row">
+            <div class="meta">
+              <h3><a href="${href}">${c.name || "Unnamed Company"}</a> ${c.verified ? `<span style="border:1px solid var(--border);border-radius:999px;padding:2px 8px;font-size:.78rem;margin-left:6px;">Verified</span>` : ""}</h3>
+              <div class="sub">${(c.sector||"—")} • ${(c.country||"—")}</div>
+              ${c.summary ? `<p style="margin:.4rem 0 0">${c.summary}</p>` : ""}
+            </div>
+            <div>
+              <a class="btn" href="${href}">View Profile</a>
+            </div>
+          </div>
+        </article>`;
+    }).join("");
+  }
+
+  // 5) Apply filter logic (client-side + initial server-side try above)
+  function applyFilters(all){
+    const q = $("#q").value.trim().toLowerCase();
+    const sector = $("#sector").value;
+    const country = $("#country").value;
+    const verified = $("#verified").checked;
+
+    const filtered = all.filter(c=>{
+      const bySector = sector ? (String(c.sector||"").toLowerCase() === String(sector).toLowerCase()) : true;
+      const byCountry = country ? c.country === country : true;
+      const byQ = q ? ( (c.name||"").toLowerCase().includes(q) || (c.summary||"").toLowerCase().includes(q) ) : true;
+      const byV = verified ? !!c.verified : true;
+      return bySector && byCountry && byQ && byV;
+    });
+
+    $("#count").textContent = `${filtered.length} result${filtered.length===1?"":"s"}`;
+    render(filtered);
+  }
+
+  // 6) Wire up
+  (async function init(){
+    $("#y").textContent = new Date().getFullYear();
+
+    const all = await loadCompanies();
+
+    // Fill selects
+    const sectors = unique(all.map(x => (x.sector||"").toLowerCase()));
+    const countries = unique(all.map(x => x.country));
+    fillSelect($("#sector"), sectors, "Sector");
+    fillSelect($("#country"), countries, "Country");
+
+    // Preselect from URL
+    if(initial.sector) $("#sector").value = initial.sector.toLowerCase();
+    if(initial.country) $("#country").value = initial.country;
+    if(initial.q) $("#q").value = initial.q;
+    $("#verified").checked = !!initial.verified;
+
+    // First render (client-side filter to guarantee UX even if server filtered already)
+    applyFilters(all);
+
+    // Events
+    $("#apply").addEventListener("click", ()=> applyFilters(all));
+    $("#clear").addEventListener("click", ()=>{
+      $("#q").value=""; $("#sector").value=""; $("#country").value=""; $("#verified").checked=false; applyFilters(all);
+      history.replaceState({}, "", "companies.html"); // clear query string visually
+    });
+    // Enter to apply
+    $("#q").addEventListener("keydown", e=>{ if(e.key==="Enter") applyFilters(all); });
+
+    // If you want URL to reflect current filters when clicking Apply:
+    $("#apply").addEventListener("click", ()=>{
+      const p = new URLSearchParams();
+      if($("#sector").value) p.set("sector", $("#sector").value);
+      if($("#country").value) p.set("country", $("#country").value);
+      if($("#q").value.trim()) p.set("q", $("#q").value.trim());
+      if($("#verified").checked) p.set("verified","1");
+      const qs = p.toString();
+      history.replaceState({}, "", qs ? `?${qs}` : ""); // no reload
+    });
+  })();
+})();
+</script>
+</body>
+</html>

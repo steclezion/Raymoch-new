@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Raymoch • Admin Console</title>
+<style>
+  :root{--blue:#0328aeed;--blue7:#213bb1;--blue5:#041b64;--ink:#111;--muted:#3c4b69;--bg:#f6f7fb;--card:#fff;--border:#e8e8ee;--r:16px;--pill:999px;--sh:0 12px 40px rgba(10,42,107,.10)}
+  *{box-sizing:border-box} html,body{height:100%} body{margin:0;background:var(--bg);color:var(--ink);font:14.5px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Arial}
+  .top{display:flex;gap:12px;align-items:center;justify-content:space-between;background:linear-gradient(135deg,var(--blue7),var(--blue5));color:#fff;padding:12px 18px;box-shadow:0 6px 18px rgba(10,42,107,.08)}
+  .chip{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);padding:4px 10px;border-radius:var(--pill);font-size:12px}
+  .wrap{max-width:1400px;margin:16px auto;padding:0 18px}
+  .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+  .kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px;box-shadow:0 6px 18px rgba(10,42,107,.06)}
+  .kpi .label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.kpi .num{font-size:28px;font-weight:800}
+  .grid{display:grid;grid-template-columns:2fr 1.2fr;gap:18px;margin-top:16px}
+  @media (max-width:1100px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:0 6px 18px rgba(10,42,107,.06)}
+  .card-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
+  .card-body{padding:14px 16px}
+  .input{flex:1;border:1px solid var(--border);border-radius:12px;padding:10px 12px;background:#fff}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;border:1px solid var(--border);background:#fff;cursor:pointer}
+  .btn:hover{box-shadow:0 6px 18px rgba(10,42,107,.08)} .btn.primary{background:var(--blue);color:#fff;border-color:#0b2c93}
+  .btn.warn{background:#ffecec;border-color:#ffd5d5;color:#7a0000}
+  .entities{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  @media (max-width:1200px){.entities{grid-template-columns:1fr}}
+  .entity{padding:14px;border:1px solid var(--border);border-radius:14px;background:#fff}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .id{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f5f7ff;border:1px solid var(--border);padding:4px 8px;border-radius:10px;font-size:12px}
+  .status{font-size:12px;padding:4px 10px;border-radius:var(--pill);border:1px solid var(--border)}
+  .status.pending{background:#fff8e6}.status.active{background:#eafff0}.status.rejected{background:#ffecec}
+  .table-wrap{overflow:auto;max-height:62vh}
+  .table{width:100%;border-collapse:separate;border-spacing:0}
+  .table th{position:sticky;top:0;background:#fbfcff;text-align:left;font-size:12px;color:var(--muted);border-bottom:1px solid var(--border);padding:10px 8px}
+  .table td{padding:10px 8px;border-bottom:1px solid #f0f0f4}
+  /* slide-in details */
+  .panel{position:fixed;top:0;right:0;bottom:0;width:min(700px,96vw);background:#fff;border-left:1px solid var(--border);box-shadow:var(--sh);transform:translateX(102%);transition:transform .25s;z-index:50;display:flex;flex-direction:column}
+  .panel.show{transform:translateX(0)} .ph{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border)}
+  .tabs{display:flex;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border)} .tab{padding:8px 12px;border-radius:999px;border:1px solid var(--border);cursor:pointer} .tab.active{background:#f4f7ff;border-color:#dfe6ff}
+  .pbody{padding:14px 16px;overflow:auto}
+  .range{width:100%}
+  /* modal preview */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:20px}
+  .modal.show{display:flex}
+  .mpanel{width:min(1100px,92vw);height:min(85vh,900px);background:#fff;border-radius:18px;box-shadow:var(--sh)}
+  .mp-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border)}
+  .mp-body{height:calc(100% - 57px)} .frame{width:100%;height:100%;border:0}
+  .toasts{position:fixed;right:16px;bottom:16px;display:grid;gap:8px;z-index:1000}
+  .toast{background:#111827;color:#fff;padding:10px 12px;border-radius:12px;box-shadow:0 6px 18px rgba(10,42,107,.08);font-size:13px}
+  .toast.ok{background:#0a7e32}.toast.err{background:#8b0000}
+</style>
+</head>
+<body>
+  <div class="top">
+    <strong>Raymoch Admin</strong>
+    <span class="chip" id="chip">checking…</span>
+  </div>
+
+  <div class="wrap">
+    <!-- KPIs -->
+    <section class="kpis">
+      <div class="kpi"><div class="label">Entities</div><div class="num" id="kpi-total">—</div></div>
+      <div class="kpi"><div class="label">Pending</div><div class="num" id="kpi-pending">—</div></div>
+      <div class="kpi"><div class="label">Active</div><div class="num" id="kpi-active">—</div></div>
+      <div class="kpi"><div class="label">Rejected</div><div class="num" id="kpi-rejected">—</div></div>
+    </section>
+
+    <div class="grid">
+      <!-- Entities list -->
+      <div class="card">
+        <div class="card-head" style="gap:8px">
+          <input id="q" class="input" placeholder="Search by ID or name…"/>
+          <button class="btn" id="btn-search">Search</button>
+          <button class="btn" id="btn-clear">Clear</button>
+          <div style="flex:1"></div>
+          <button class="btn" id="btn-refresh">Refresh</button>
+        </div>
+        <div class="card-body">
+          <div id="entities" class="entities"></div>
+          <div id="empty" style="display:none;color:var(--muted)">No entities.</div>
+        </div>
+      </div>
+
+      <!-- Docs quick view (changes when you click an entity) -->
+      <div class="card">
+        <div class="card-head"><strong>Documents</strong><span id="ctx" style="color:var(--muted)">Select an entity.</span></div>
+        <div class="card-body">
+          <div class="table-wrap">
+            <table class="table">
+              <thead><tr><th>Type</th><th>Filename</th><th>Status</th><th>Uploaded</th><th>Decision</th><th style="text-align:right">Actions</th></tr></thead>
+              <tbody id="docs"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide-in details -->
+  <aside class="panel" id="panel">
+    <div class="ph">
+      <div>
+        <div id="p-name" style="font-weight:800">—</div>
+        <div style="color:var(--muted)">ID: <span class="id" id="p-id">—</span> · Status: <span class="status" id="p-status">—</span></div>
+      </div>
+      <button class="btn" id="p-close">Close</button>
+    </div>
+    <div class="tabs">
+      <div class="tab active" data-tab="ov">Overview</div>
+      <div class="tab" data-tab="docs">Documents</div>
+      <div class="tab" data-tab="cti">CTI Tuning</div>
+    </div>
+    <div class="pbody" id="tab-ov">Loading…</div>
+    <div class="pbody" id="tab-docs" style="display:none">
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Type</th><th>Filename</th><th>Status</th><th>Uploaded</th><th>Decision</th><th style="text-align:right">Actions</th></tr></thead>
+          <tbody id="p-docs"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="pbody" id="tab-cti" style="display:none">
+      <div style="color:var(--muted);margin-bottom:8px">Adjust weights (auto-normalized). Preview doesn’t write; Apply persists.</div>
+      <label>Verification <input id="w-ver" class="range" type="range" min="0" max="1" step="0.01" value="0.45"/></label>
+      <label>Consistency  <input id="w-con" class="range" type="range" min="0" max="1" step="0.01" value="0.20"/></label>
+      <label>Network      <input id="w-net" class="range" type="range" min="0" max="1" step="0.01" value="0.20"/></label>
+      <label>Traction     <input id="w-tra" class="range" type="range" min="0" max="1" step="0.01" value="0.15"/></label>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+        <button class="btn" id="btn-preview">Preview</button>
+        <button class="btn primary" id="btn-apply">Apply</button>
+        <span id="w-note" style="color:var(--muted)">Sum auto-normalized</span>
+      </div>
+      <div style="margin-top:10px">
+        <div><strong>Preview:</strong> <span id="prev-score">—</span></div>
+        <div style="color:var(--muted)" id="prev-comp">—</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- File preview modal -->
+  <div class="modal" id="modal">
+    <div class="mpanel">
+      <div class="mp-head"><div id="m-title" class="id">Preview</div><button class="btn" id="m-close">Close</button></div>
+      <div class="mp-body"><iframe id="frame" class="frame"></iframe></div>
+    </div>
+  </div>
+
+  <div class="toasts" id="toasts"></div>
+
+<script>
+  const API = {
+    health:'/health',
+    entities:'/entities',
+    docs:(eid)=>`/verifications?entity_id=${encodeURIComponent(eid)}`,
+    setStatus:(vid)=>`/verifications/${encodeURIComponent(vid)}/status`,
+    fileForVerif:(vid)=>`/verifications/${encodeURIComponent(vid)}/file`,
+    cti:(eid)=>`/entities/${encodeURIComponent(eid)}/cti`,
+    preview:(eid)=>`/entities/${encodeURIComponent(eid)}/cti/preview`,
+    apply:(eid)=>`/entities/${encodeURIComponent(eid)}/cti/recompute`,
+  };
+
+  const $ = s => document.querySelector(s);
+  const toastBox = $('#toasts');
+  const toast = (m,t='') => { const d=document.createElement('div'); d.className=`toast ${t}`; d.textContent=m; toastBox.appendChild(d); setTimeout(()=>d.remove(),2500); };
+  const fmt = iso => iso ? new Date(iso).toLocaleString() : '—';
+  const sClass = s => (s||'pending').toLowerCase();
+
+  let ENT=[], FILTER='', CURRENT=null, CURRENT_NAME='';
+
+  async function jget(u){ const r=await fetch(u); if(!r.ok) throw new Error(`${r.status}`); return r.json(); }
+  async function jpost(u,b){ const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}); if(!r.ok) throw new Error(`${r.status}`); return r.json().catch(()=>({})); }
+
+  async function load(){
+    try{ const h=await jget(API.health); $('#chip').textContent=`OK ${h.version||''}` }catch{ $('#chip').textContent='API down?' }
+    ENT = await jget(API.entities).catch(()=>[]);
+    renderKPIs(ENT); renderEntities();
+    $('#docs').innerHTML=''; $('#ctx').textContent='Select an entity.';
+  }
+
+  function renderKPIs(rows){
+    const c={pending:0,active:0,rejected:0,other:0}; rows.forEach(r=>{const s=(r.status||'').toLowerCase(); c[s]!==undefined?c[s]++:c.other++});
+    $('#kpi-total').textContent=rows.length; $('#kpi-pending').textContent=c.pending; $('#kpi-active').textContent=c.active; $('#kpi-rejected').textContent=c.rejected;
+  }
+
+  function renderEntities(){
+    const q=FILTER.trim().toLowerCase();
+    const rows = ENT.filter(e => !q || (e.id?.toLowerCase().includes(q) || (e.name||'').toLowerCase().includes(q)));
+    $('#entities').innerHTML = rows.map(e => `
+      <div class="entity">
+        <div class="row">
+          <span class="id">${e.id}</span>
+          <span class="status ${sClass(e.status)}">${e.status||'pending'}</span>
+        </div>
+        <div style="font-weight:800;margin:8px 0 10px">${e.name||'(unnamed)'}</div>
+        <div class="row">
+          <button class="btn" onclick="openPanel('${e.id}', '${encodeURIComponent(e.name||'(unnamed)')}', '${e.status||'pending'}')">View</button>
+          <button class="btn primary" onclick="jget(API.cti('${e.id}')).then(()=>toast('CTI recomputed','ok')).catch(()=>toast('CTI failed','err'));">Recompute CTI</button>
+        </div>
+      </div>`
+    ).join('');
+    $('#empty').style.display = rows.length ? 'none' : '';
+  }
+
+  // Quick docs on the right card
+  async function loadDocsPreview(eid){
+    $('#ctx').textContent = `Entity: ${eid}`;
+    try{
+      const docs = await jget(API.docs(eid));
+      $('#docs').innerHTML = docs.map(d => docRow(d)).join('');
+    }catch{ $('#docs').innerHTML = `<tr><td colspan="6">No documents or endpoint not wired.</td></tr>`; }
+  }
+
+  function docRow(r){
+    const id = r.id ?? r.token_id ?? r.file_id ?? '';
+    const type = r.doc_type || r.type || 'document';
+    const fn = r.filename || '(unnamed)';
+    const st = (r.status||'pending').toLowerCase();
+    const up = r.uploaded_at || r.created_at || r.ts || null;
+    const dec = r.decided_at || null;
+    return `
+      <tr>
+        <td>${type}</td>
+        <td style="font-family:ui-monospace">${fn}</td>
+        <td><span class="status ${sClass(st)}">${st}</span></td>
+        <td>${fmt(up)}</td>
+        <td>${fmt(dec)}</td>
+        <td style="text-align:right">
+          <button class="btn" onclick="previewVerif('${id}','${fn.replace(/["'<>]/g,'')}')">Preview</button>
+          <button class="btn primary" onclick="setStatus('${id}','approved')">Approve</button>
+          <button class="btn warn" onclick="setStatus('${id}','rejected')">Reject</button>
+        </td>
+      </tr>`;
+  }
+
+  async function setStatus(id, status){
+    const notes = status==='rejected' ? (prompt('Reason for rejection:','') ?? '') : (prompt('Notes (optional):','') ?? '');
+    try{
+      await jpost(API.setStatus(id), {status, notes});
+      toast(status==='approved'?'Approved':'Rejected', status==='approved'?'ok':'err');
+      if(CURRENT){ loadPanelDocs(CURRENT); loadDocsPreview(CURRENT); }
+    }catch{ toast('Update failed','err'); }
+  }
+
+  // Slide-in panel
+  const panel = $('#panel');
+  function openPanel(id, encName, status){
+    CURRENT = id;
+    const name = decodeURIComponent(encName||'(unnamed)');
+    $('#p-id').textContent = id;
+    $('#p-name').textContent = name;
+    $('#p-status').textContent = status||'pending';
+    $('#p-status').className = `status ${sClass(status)}`;
+    panel.classList.add('show');
+    switchTab('ov');
+    loadPanelOverview();
+    loadPanelDocs(id);
+    loadDocsPreview(id);
+  }
+  $('#p-close').addEventListener('click', ()=> panel.classList.remove('show'));
+
+  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', ()=> switchTab(t.dataset.tab)));
+  function switchTab(name){
+    document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
+    $('#tab-ov').style.display = name==='ov' ? '' : 'none';
+    $('#tab-docs').style.display = name==='docs' ? '' : 'none';
+    $('#tab-cti').style.display = name==='cti' ? '' : 'none';
+  }
+
+  async function loadPanelOverview(){
+    $('#tab-ov').textContent = 'Loading…';
+    try{
+      const cur = await jget(API.cti(CURRENT));
+      const score = cur?.score ?? '—';
+      const comps = cur?.components || {};
+      $('#tab-ov').innerHTML =
+        `<div style="display:grid;gap:8px">
+           <div><strong>Current CTI:</strong> ${score}</div>
+           <div style="color:#566">${Object.entries(comps).map(([k,v])=>`${k}: ${v}`).join(', ')||'—'}</div>
+           <div><button class="btn primary" onclick="jget(API.cti(CURRENT)).then(()=>{toast('CTI recomputed','ok');loadPanelOverview();}).catch(()=>toast('CTI failed','err'));">Recompute now</button></div>
+         </div>`;
+    }catch{ $('#tab-ov').textContent = 'Could not load CTI.'; }
+  }
+
+  async function loadPanelDocs(eid){
+    try{
+      const docs = await jget(API.docs(eid));
+      $('#p-docs').innerHTML = docs.map(d => docRow(d)).join('');
+    }catch{
+      $('#p-docs').innerHTML = `<tr><td colspan="6">No documents or endpoint not wired.</td></tr>`;
+    }
+  }
+
+  // CTI tuning
+  const wVer=$('#w-ver'), wCon=$('#w-con'), wNet=$('#w-net'), wTra=$('#w-tra');
+  function readWeights(){
+    const raw = {verification:+wVer.value, consistency:+wCon.value, network:+wNet.value, traction:+wTra.value};
+    const sum = Object.values(raw).reduce((a,b)=>a+b,0) || 1;
+    const w = Object.fromEntries(Object.entries(raw).map(([k,v])=>[k, v/sum]));
+    $('#w-note').textContent = `Sum auto-normalized to ${(Object.values(w).reduce((a,b)=>a+b,0)).toFixed(2)}`;
+    return w;
+  }
+  $('#btn-preview').addEventListener('click', async ()=>{
+    try{
+      const out = await jpost(API.preview(CURRENT), {...readWeights(), version_tag:'v1.1-preview'});
+      const p = out?.preview || out;
+      $('#prev-score').textContent = p?.score ?? p?.preview?.score ?? '—';
+      const comps = p?.components || p?.preview?.components || {};
+      $('#prev-comp').textContent = Object.entries(comps).map(([k,v])=>`${k}: ${v}`).join(', ') || '—';
+      toast('Preview ready','ok');
+    }catch{ toast('Preview failed','err'); }
+  });
+  $('#btn-apply').addEventListener('click', async ()=>{
+    try{
+      await jpost(API.apply(CURRENT), {...readWeights(), version_tag:'v1.1-admin'});
+      toast('CTI applied','ok'); loadPanelOverview();
+    }catch{ toast('Apply failed','err'); }
+  });
+
+  // File preview
+  const modal = $('#modal'), frame = $('#frame');
+  function previewVerif(vid, name){
+    $('#m-title').textContent = name || 'Preview';
+    frame.src = API.fileForVerif(vid);
+    modal.classList.add('show');
+  }
+  $('#m-close').addEventListener('click', ()=>{ frame.src='about:blank'; modal.classList.remove('show'); });
+
+  // Search/refresh
+  $('#btn-search').addEventListener('click', ()=>{ FILTER=$('#q').value; renderEntities(); });
+  $('#btn-clear').addEventListener('click', ()=>{ FILTER=''; $('#q').value=''; renderEntities(); });
+  $('#btn-refresh').addEventListener('click', load);
+
+  document.addEventListener('DOMContentLoaded', load);
+</script>
+</body>
+</html>

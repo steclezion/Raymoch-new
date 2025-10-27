@@ -1,0 +1,20 @@
+2025-10-02T19:33:23.139688Z 0 [System] [MY-010116] [Server] /usr/local/mysql/bin/mysqld (mysqld 8.0.40) starting as process 14237
+2025-10-02T19:33:23.143828Z 0 [Warning] [MY-010159] [Server] Setting lower_case_table_names=2 because file system for /Users/elsarussom/Desktop/Raymoch-Project/Data/mysql-data/ is case insensitive
+2025-10-02T19:33:23.146669Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+2025-10-02T19:33:23.146712Z 1 [ERROR] [MY-012271] [InnoDB] The innodb_system data file 'ibdata1' must be writable
+2025-10-02T19:33:23.146724Z 1 [ERROR] [MY-012278] [InnoDB] The innodb_system data file 'ibdata1' must be writable
+2025-10-02T19:33:23.146736Z 1 [ERROR] [MY-010334] [Server] Failed to initialize DD Storage Engine
+2025-10-02T19:33:23.146765Z 0 [ERROR] [MY-010020] [Server] Data Dictionary initialization failed.
+2025-10-02T19:33:23.146782Z 0 [ERROR] [MY-010119] [Server] Aborting
+2025-10-02T19:33:23.146947Z 0 [System] [MY-010910] [Server] /usr/local/mysql/bin/mysqld: Shutdown complete (mysqld 8.0.40)  MySQL Community Server - GPL.
+2025-10-02T19:41:10.968370Z 0 [System] [MY-010116] [Server] /usr/local/mysql/bin/mysqld (mysqld 8.0.40) starting as process 14637
+2025-10-02T19:41:10.973113Z 0 [Warning] [MY-010159] [Server] Setting lower_case_table_names=2 because file system for /Users/elsarussom/Desktop/Raymoch-Project/Data/mysql-data/ is case insensitive
+2025-10-02T19:41:10.976531Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+2025-10-02T19:41:11.033282Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+2025-10-02T19:41:12.107285Z 0 [ERROR] [MY-011292] [Server] Plugin mysqlx reported: 'Preparation of I/O interfaces failed, X Protocol won't be accessible'
+2025-10-02T19:41:12.107558Z 0 [ERROR] [MY-011300] [Server] Plugin mysqlx reported: 'Setup of bind-address: '*' port: 33060 failed, `bind()` failed with error: Address already in use (48). Do you already have another mysqld server running with Mysqlx ?'
+2025-10-02T19:41:12.107609Z 0 [ERROR] [MY-013597] [Server] Plugin mysqlx reported: 'Value '*' set to `Mysqlx_bind_address`, X Plugin can't bind to it. Skipping this value.'
+2025-10-02T19:41:12.107676Z 0 [ERROR] [MY-011300] [Server] Plugin mysqlx reported: 'Setup of socket: '/tmp/mysqlx.sock' failed, can't open lock file /tmp/mysqlx.sock.lock'
+2025-10-02T19:41:12.180000Z 0 [Warning] [MY-010068] [Server] CA certificate ca.pem is self signed.
+2025-10-02T19:41:12.180030Z 0 [System] [MY-013602] [Server] Channel mysql_main configured to support TLS. Encrypted connections are now supported for this channel.
+2025-10-02T19:41:12.194721Z 0 [System] [MY-010931] [Server] /usr/local/mysql/bin/mysqld: ready for connections. Version: '8.0.40'  socket: '/Users/elsarussom/Desktop/Raymoch-Project/Data/mysql.sock'  port: 3308  MySQL Community Server - GPL.

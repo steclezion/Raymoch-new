@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Raymoch • Connecting Africa</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    /* ========= Brand + Design Tokens (coordinated palette) ========= */
+    :root{
+      --brand-blue:#023b9c; --brand-blue-700:#0320a2; --brand-blue-500:#415db8; --accent-gold:#DAA520;
+      --ink:#101114; --muted:#6b7280; --bg:#fafafa; --border:#e8e8ee; --card:#ffffff;
+      --radius:14px; --pill:999px; --shadow:0 6px 22px rgba(10,42,107,.08);
+      --maxw:1328px; --gutter:18px;
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+    body{background:var(--bg);color:var(--ink);line-height:1.5;min-height:100dvh;display:flex;flex-direction:column}
+    a{color:inherit;text-decoration:none}
+    img{max-width:100%;display:block}
+    .wrap{max-width:var(--maxw);margin:0 auto;padding:0 var(--gutter)}
+
+    /* ================= TWO–TIER HEADER (fixed layout) ================= */
+    .header{position:sticky;top:0;z-index:1000;background:#fff;border-bottom:1px solid var(--border)}
+    /* Tier 1 */
+    .row1{
+      display:flex;justify-content:space-between;align-items:center;gap:16px;
+      padding:12px 8px; max-width:none; margin:15px; box-shadow:0 1px 0 rgba(0,0,0,.05);
+    }
+    .brandrow{display:flex;align-items:center;gap:22px;float:none;margin-left:0}
+    .brand{display:flex;align-items:center;gap:10px}
+    .brand-word{font-weight:900;font-size:1.25rem;color:var(--brand-blue);letter-spacing:.2px}
+    .explore-link{display:flex;align-items:center;gap:8px;font-weight:800}
+    .dotgrid{width:18px;height:18px;display:inline-grid;grid-template-columns:repeat(3,1fr);gap:2px}
+    .dotgrid i{width:5px;height:5px;border-radius:2px;background:#101114}
+    .rightside{display:flex;align-items:center;gap:14px;margin-right:0}
+    .search-box{min-width:140px;width:18vw;max-width:260px}
+    .search-box input{width:100%;height:40px;padding:0 14px;border:1px solid var(--border);border-radius:var(--pill)}
+    .search-box input:focus{border-color:var(--brand-blue);outline:2px solid #cfe0ff}
+    .auth{display:flex;align-items:center;gap:10px}
+    .btn{height:40px;display:inline-flex;align-items:center;gap:8px;padding:0 16px;border-radius:var(--pill);font-weight:700;background:#fff;border:1px solid var(--border)}
+    .btn.primary{background:var(--brand-blue);color:#fff;border-color:var(--brand-blue)}
+
+    /* Tier 2 — all left (15px from left, smaller font/height) */
+    .row2{background:#f5f6f8;border-top:1px solid #eee;border-bottom:1px solid #e6e6e6;padding-left:15px}
+    .row2 .wrap{max-width:none;padding:0}
+    .row2 .links{display:flex;gap:18px;padding:8px 8px;margin:0;justify-content:flex-start;align-items:center}
+    .row2 a{font-weight:600;font-size:.92rem;padding:4px 6px;border-radius:4px}
+    .row2 a:hover{background:#eceff3}
+
+    @media (max-width:800px){
+      .search-box{width:34vw;max-width:300px}
+    }
+    @media (max-width:720px){
+      .row2{display:none}
+      .search-box{min-width:0;width:46vw}
+    }
+
+    /* ================= HERO ================= (LEAVE AS IS) */
+    .hero{color:#fff;position:relative;overflow:hidden;background:linear-gradient(135deg,var(--brand-blue-700),var(--brand-blue-500));border-bottom:1px solid var(--border)}
+    .hero::before{content:"";position:absolute;inset:0;opacity:.22;background-image:url('data:image/svg+xml;utf8,\
+        <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">\
+          <defs>\
+            <pattern id="d" width="40" height="40" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">\
+              <rect width="40" height="40" fill="none" />\
+              <path d="M0 20 H40 M20 0 V40" stroke="%23ffffff" stroke-opacity="0.7" stroke-width="1"/>\
+            </pattern>\
+          </defs>\
+          <rect width="100%" height="100%" fill="url(%23d)"/>\
+        </svg>');background-size:220px 220px}
+    .hero-inner{position:relative;display:block;min-height:66vh;padding:96px 8px;max-width:var(--maxw);margin:0 auto}
+    .hero h1{font-size:clamp(34px,6vw,64px);line-height:1.05;letter-spacing:-.5px;margin-bottom:12px;font-weight:800;background:linear-gradient(90deg,#fff,#e7efff);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .hero p{font-size:clamp(16px,2.2vw,22px);color:#DDEBFF;max-width:46ch}
+    .caption{margin-top:14px;font-size:14px;color:#CFE0FF;opacity:.9}
+    .cta{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
+    @media (max-width:980px){.hero-inner{min-height:58vh;padding:72px 8px}}
+
+    /* ================= BELOW-HERO ================= */
+
+    /* WHO WE ARE */
+    .about{padding:48px 0 28px}
+    .about .grid{display:grid;grid-template-columns:1.2fr 1fr;gap:22px}
+    @media (max-width:900px){.about .grid{grid-template-columns:1fr}}
+    .about .lead{font-size:1.1rem;line-height:1.65;color:#334155;max-width:58ch}
+    .about .card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:var(--shadow)}
+    .about ul{margin:8px 0 0 18px;color:#475569}
+    .about-stats{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px}
+    .stat{background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px 14px;box-shadow:var(--shadow);font-weight:800}
+    .stat small{display:block;color:#6b7280;font-weight:700}
+
+    /* WHAT WE DO */
+    .section{padding:48px 0}
+    .section h2{font-size:1.8rem;margin:0 0 14px}
+    .blocks{display:flex;flex-wrap:wrap}
+    .block{flex:1 1 33%;min-width:280px;text-align:center;padding:2.2rem 2rem;border-top:1px solid rgba(0,0,0,.06);transition:.12s transform,.12s box-shadow,.12s filter}
+    .block h3{margin-bottom:.6rem;font-size:1.3rem}
+    .block p{max-width:360px;margin:.15rem auto 0}
+    .block.blue{background:var(--brand-blue);color:#fff}
+    .block.gold{background:var(--accent-gold);color:#111}
+    .block.gray{background:#f3f4f6;color:#111}
+    .block:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,.08);filter:saturate(1.02)}
+
+    .subhead{margin:10px 0 8px;font-size:.9rem;letter-spacing:.04em;text-transform:uppercase;color:#475569;font-weight:800}
+
+    /* SIGNALS */
+    .signals{background:#fff;border-bottom:1px solid var(--border)}
+    .signals-inner{max-width:var(--maxw);margin:0 auto;padding:12px var(--gutter) 22px}
+    .ticker{position:relative;overflow:hidden;padding:6px 0;margin-bottom:8px}
+    .ticker .track{display:flex;gap:12px;align-items:center;will-change:transform;animation:ticker-scroll 36s linear infinite}
+    .ticker:hover .track{animation-play-state:paused}
+    @keyframes ticker-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+    .chip{white-space:nowrap;border:1px solid var(--border);background:#fff;padding:8px 12px;border-radius:var(--pill);box-shadow:0 1px 0 rgba(10,42,107,.04);font-weight:800;font-size:14px}
+
+    .signals-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:12px}
+    @media (max-width:980px){.signals-grid{grid-template-columns:1fr 1fr}}
+    @media (max-width:640px){.signals-grid{grid-template-columns:1fr}}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:var(--shadow);min-height:148px;display:flex;flex-direction:column}
+    .card:hover{transform:translateY(-2px);transition:transform .12s ease}
+    .card h4{margin:0 0 8px 0;font-size:16px}
+    .card p{margin:0 0 10px 0;color:var(--muted);font-size:14px}
+    .card a{margin-top:auto;font-weight:900;color:var(--brand-blue)}
+
+    /* SPECIAL REPORTS */
+    .reports-section{padding:64px 0}
+    .reports{display:grid;grid-template-columns:1.1fr 1.4fr 0.9fr;gap:22px;align-items:start}
+    .reports .blurb p{color:var(--muted)}
+    .cover{width:100%;aspect-ratio:16/9;border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);background:#fff center/cover no-repeat}
+    .rail{list-style:none;margin:0;padding:0;border:1px solid var(--border);border-radius:16px;background:var(--card)}
+    .rail li{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-bottom:1px solid var(--border)}
+    .rail li:last-child{border-bottom:0}
+    .chev{opacity:.55}
+    @media (max-width:980px){.reports{grid-template-columns:1fr;gap:14px}}
+
+    /* INVESTMENT PANEL */
+    .panel{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:14px}
+    .panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .pills{display:flex;gap:10px;flex-wrap:wrap}
+    .pill{display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border:1px solid #dfe3f0;border-radius:999px;background:#fff;cursor:pointer}
+    .pill.active{background:#e8f1ff;border-color:#cfe0ff}
+    .speed{display:flex;align-items:center;gap:8px;font-size:13px;color:#6b7280}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:10px}
+    .cardx{border:1px solid var(--border);border-radius:12px;padding:14px;background:var(--card)}
+    .kpis{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .kpi{border:1px solid var(--border);border-radius:12px;padding:12px}
+    .kpi .label{color:#6b7280;font-size:13px}
+    .kpi .value{font-size:22px;font-weight:800;transition:color .2s}
+    .donut-wrap{margin-top:10px;display:flex;justify-content:center}
+    .legend{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:10px;font-size:12px}
+    .legend span{display:inline-flex;align-items:center;gap:6px}
+    .swatch{width:10px;height:10px;border-radius:2px;display:inline-block}
+    .table-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+    .table{width:100%;border-collapse:collapse}
+    .table th,.table td{border-top:1px solid #e6e8f0;padding:10px 8px;font-size:14px;text-align:left}
+    .status{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid #dfe3f0;background:#eef2ff}
+    .status.exp{background:#eaeef2}
+    .search{height:36px;border:1px solid var(--border);border-radius:10px;padding:0 10px}
+    .live{display:inline-block;background:#2563eb;color:#fff;font-size:12px;padding:4px 6px;border-radius:6px;animation:blink 1.2s infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+
+    /* QUOTE */
+    .quote-block{background:#e8ecf5;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-top:40px;padding:56px 0}
+    .quote-inner{max-width:900px;margin:0 auto;padding:0 var(--gutter);text-align:center}
+    .quote-text{font-size:1.5rem;font-style:italic;color:#0f172a}
+    .quote-attr{margin-top:8px;color:#334155}
+    .quote-bio{max-width:840px;margin:18px auto 0;color:#475569}
+
+    /* FOOTER */
+    footer{margin-top:auto}
+  </style>
+</head>
+
+<body>
+
+  <!-- ================= HEADER (Tier1 + Tier2) ================= -->
+  <header class="header">
+    <!-- Tier 1 -->
+    <div class="row1">
+      <div class="brandrow">
+        <a class="brand" href="Entire.html" aria-label="Raymoch home">
+          <svg width="28" height="28" viewBox="0 0 200 200" aria-hidden="true">
+            <polygon fill="none" stroke="#023b9c" stroke-width="10" points="100,18 172,59 172,141 100,182 28,141 28,59"/>
+            <text x="100" y="118" text-anchor="middle" style="fill:#023b9c;font:700 105px Georgia">R</text>
+          </svg>
+          <span class="brand-word">Raymoch</span>
+        </a>
+
+        <a class="explore-link" href="explore2.html" id="exploreTop">
+          <span class="dotgrid" aria-hidden="true">
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          </span>
+          Explore Businesses
+        </a>
+      </div>
+
+      <div class="rightside">
+        <form class="search-box" action="search.html">
+          <input type="search" name="q" placeholder="Search companies, sectors, regions…" />
+        </form>
+        <div class="auth">
+          <a class="btn" href="login.html">Log in</a>
+          <a class="btn primary" href="signup.html">Sign up</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tier 2 (all left) -->
+    <div class="row2">
+      <div class="wrap">
+        <nav class="links" aria-label="Secondary">
+          <a href="Services.html">Services</a>
+          <a href="Market_Insight.html">Research &amp; Insights</a>
+          <a href="About.html">Who We Are</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= HERO (unchanged) ================= -->
+  <section class="hero" aria-label= " RAYMOCH: Redefining African Potential">
+    <div class="hero-inner">
+      <h1>Connecting Africa</h1>
+      <p>By connect investors and entrepreneurs through trust, verified data,
+         and actionable insights. Our mission is to unlock visibility and capital for businesses across Africa and beyond.</p>
+    </div>
+  </section>
+
+  <main class="wrap">
+
+    <!-- ========== WHO WE ARE (compact, coherent) ========== -->
+    <section class="about" id="about">
+      <div class="grid">
+        <div>
+          <h2 style="margin-bottom:8px">Who We Are</h2>
+          <p class="lead">
+            We build trust rails so capital can move with context. Verified company profiles, a Cultural Trust Index,
+            and market intelligence make it easier to discover credible African businesses and back them with confidence.
+          </p>
+          <div class="about-stats">
+            <div class="stat"><small>Companies Tracked</small>12,400+</div>
+            <div class="stat"><small>Active Sectors</small>24</div>
+            <div class="stat"><small>Countries Covered</small>55</div>
+          </div>
+        </div>
+        <div class="card">
+          <h3 style="margin:0 0 8px">How trust is earned</h3>
+          <ul>
+            <li>Multi-source verification (documents, references, public records)</li>
+            <li>CTI badges reflect completeness, integrity, and recency</li>
+            <li>Signals layer highlights policy changes and incentives</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== WHAT WE DO ========== -->
+    <section class="section" id="what-we-do">
+      <h2>What We Do</h2>
+      <div class="blocks">
+        <a class="block blue" href="Matching.html">
+          <h3>Trusted Matching</h3>
+          <p>Find and connect with businesses that align with your vision, using our Cultural Trust Index and verified data.</p>
+        </a>
+        <a class="block gold" href="Market_Insight.html">
+          <h3>Deep Insights</h3>
+          <p>Access market intelligence, sector reports, and regional briefs that help you make informed investment decisions.</p>
+        </a>
+        <a class="block gray" href="partner-programs.html">
+          <h3>Community &amp; Growth</h3>
+          <p>Partner programs and opportunities to expand networks and accelerate growth.</p>
+        </a>
+      </div>
+    </section>
+
+    <!-- ================= SIGNALS ================= -->
+    <section class="signals" aria-label="Policy & Incentives">
+      <div class="signals-inner">
+        <div class="ticker" id="signalsTicker" aria-label="Live incentives & policy signals"></div>
+        <h3 class="subhead">Policy &amp; Incentives</h3>
+        <div class="signals-grid">
+          <div class="card">
+            <h4>Latest Incentives</h4>
+            <p>Tax credits, grants, and concessional financing recently announced.</p>
+            <a href="incentives.html">Open incentives</a>
+          </div>
+          <div class="card">
+            <h4>Policy Changes</h4>
+            <p>Regulatory updates that unlock or constrain sectors and regions.</p>
+            <a href="policy.html">See policy tracker</a>
+          </div>
+          <div class="card">
+            <h4>Market News</h4>
+            <p>Signals from M&amp;A, funding rounds, and trade flows.</p>
+            <a href="Market_Insight.html">Read insights</a>
+          </div>
+          <div class="card">
+            <h4>Whitespace Map</h4>
+            <p>Data-led view of unmet demand by sector &amp; country.</p>
+            <a href="whitespace.html">View opportunities</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== SPECIAL REPORTS ========== -->
+    <section class="section reports-section" id="reports">
+      <h2>Special Reports</h2>
+      <div class="reports">
+        <div class="blurb">
+          <p>A changing world requires new analysis and practical insight. Explore cross-sector themes that connect capital, context, and growth.</p>
+          <p style="margin-top:10px"><a class="btn" href="Market_Insight.html">All reports</a></p>
+        </div>
+        <div class="cover" role="img" aria-label="Report cover placeholder"></div>
+        <ul class="rail" aria-label="Latest topics">
+          <li><a href="Market_Insight.html#renewables">Africa’s energy transition calls for innovative financing</a><span class="chev">›</span></li>
+          <li><a href="Market_Insight.html#genai">Generative AI and the workforce: redistribution over reduction</a><span class="chev">›</span></li>
+          <li><a href="Market_Insight.html#climate">Shining new light on climate change and transition</a><span class="chev">›</span></li>
+          <li><a href="Market_Insight.html#capital">Look Forward: Future of Capital Markets</a><span class="chev">›</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ========== AFRICA INVESTMENT PANEL (live simulator) ========== -->
+    <section class="section" aria-label="Africa Investment Panel">
+      <div class="panel">
+        <div class="panel-head">
+          <div style="display:flex;align-items:center;gap:10px">
+            <strong>Africa Investment Panel</strong>
+            <span class="live" id="liveTag">Live</span>
+          </div>
+          <div class="speed">Speed <input id="speed" type="range" min="0.6" max="2.0" value="1.2" step="0.1" /></div>
+        </div>
+
+        <div class="pills" id="countryPills"></div>
+
+        <div class="grid">
+          <div class="cardx">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <div id="countryLabel">🇳🇬 Nigeria</div>
+              <div id="updatedAt" style="color:#6b7280;font-size:13px"></div>
+            </div>
+
+            <div class="kpis">
+              <div class="kpi"><div class="label">Private companies</div><div class="value" id="kpiCompanies">9</div></div>
+              <div class="kpi"><div class="label">Total CAPEX (USD)</div><div class="value" id="kpiCapex">$ 650,000,000</div></div>
+              <div class="kpi"><div class="label">Projects</div><div class="value" id="kpiProjects">9</div></div>
+              <div class="kpi"><div class="label">New vs. Expansion</div><div class="value" id="kpiNE">5 / 4</div></div>
+            </div>
+
+            <div class="donut-wrap">
+              <svg id="donut" width="320" height="220" viewBox="0 0 320 220" aria-label="Sector distribution donut"></svg>
+            </div>
+            <div class="legend" id="legend"></div>
+          </div>
+
+          <div class="cardx">
+            <div class="table-head">
+              <strong>Private Investment Plans</strong>
+              <input class="search" id="tblSearch" placeholder="Search company/sector" />
+            </div>
+            <table class="table" id="planTable">
+              <thead><tr><th>Company</th><th>Sector</th><th>CAPEX (USD)</th><th>Status</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== QUOTE + BIO ========== -->
+    <section class="quote-block">
+      <div class="quote-inner">
+        <div class="quote-text">“It always seems impossible until it’s done.”</div>
+        <div class="quote-attr">— Nelson Mandela</div>
+        <p class="quote-bio">
+          Raymoch is building trusted digital rails for African entrepreneurship: verified company profiles,
+          a Cultural Trust Index, and market intelligence, so capital can find credible opportunities faster.
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer style="background:#0b1020;color:#cbd5e1;">
+    <div class="wrap" style="padding:32px var(--gutter)">
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:18px">
+        <div>
+          <div style="color:#fff;font-weight:800;font-size:1.2rem;margin-bottom:8px">Raymoch</div>
+          <div style="color:#94a3b8;max-width:360px">
+            Connecting investors and entrepreneurs through trust, verified data, and actionable insights.
+          </div>
+        </div>
+        <div>
+          <h5 style="margin-bottom:10px;color:#e5e7eb;font-size:.95rem">Company</h5>
+          <a href="About.html" style="display:block;color:#cbd5e1;margin:6px 0">About</a>
+          <a href="careers.html" style="display:block;color:#cbd5e1;margin:6px 0">Careers</a>
+          <a href="press.html" style="display:block;color:#cbd5e1;margin:6px 0">Press</a>
+          <a href="contact.html" style="display:block;color:#cbd5e1;margin:6px 0">Contact</a>
+        </div>
+        <div>
+          <h5 style="margin-bottom:10px;color:#e5e7eb;font-size:.95rem">Product</h5>
+          <a href="explore2.html" style="display:block;color:#cbd5e1;margin:6px 0">Explore Businesses</a>
+          <a href="Market_Insight.html" style="display:block;color:#cbd5e1;margin:6px 0">Market Insights</a>
+          <a href="verification.html" style="display:block;color:#cbd5e1;margin:6px 0">Verification</a>
+          <a href="Services.html" style="display:block;color:#cbd5e1;margin:6px 0">Programs & Services</a>
+        </div>
+        <div>
+          <h5 style="margin-bottom:10px;color:#e5e7eb;font-size:.95rem">Resources</h5>
+          <a href="blog.html" style="display:block;color:#cbd5e1;margin:6px 0">Blog</a>
+          <a href="help.html" style="display:block;color:#cbd5e1;margin:6px 0">Help Center</a>
+          <a href="security.html" style="display:block;color:#cbd5e1;margin:6px 0">Security</a>
+          <a href="status.html" style="display:block;color:#cbd5e1;margin:6px 0">Status</a>
+        </div>
+      </div>
+      <div style="border-top:1px solid #1f2937;margin-top:22px;padding:12px 0;display:flex;justify-content:space-between;align-items:center;font-size:.92rem">
+        <div>© 2025 Raymoch. All rights reserved.</div>
+        <div>
+          <a href="privacy.html" style="color:#cbd5e1;margin-left:14px">Privacy</a>
+          <a href="terms.html" style="color:#cbd5e1;margin-left:14px">Terms</a>
+          <a href="cookies.html" style="color:#cbd5e1;margin-left:14px">Cookies</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ================= JS ================= -->
+  <script>
+    /* ===== Signals → marquee build (duplicated for seamless loop) ===== */
+    const signalsData = [
+      { tag:"Incentive", text:"Kenya: 10% VAT relief on solar mini-grid components announced." },
+      { tag:"Policy",    text:"Ghana: FX repatriation rules eased for exporters (pilot Q4)." },
+      { tag:"Grant",     text:"AfDB SME window expands to climate-adaptive agritech — $50m tranche." },
+      { tag:"Regulatory",text:"Egypt sandbox fast-track for healthtech devices (duty cut 5%)." }
+    ];
+    const ticker = document.getElementById('signalsTicker');
+    if (ticker){
+      const chips = signalsData.map(s => `<span class="chip">${s.tag} — ${s.text}</span>`).join("");
+      ticker.innerHTML = `<div class="track">${chips}${chips}</div>`;
+    }
+
+    /* ===== Live Panel Simulation ===== */
+    const DATA = {
+      "Nigeria": {flag:"🇳🇬",companies:9,capex:650_000_000,projects:9,new:5,expansion:4,
+        sectors:{Manufacturing:38,Finance:27,Telecom:18,Energy:15,Logistics:7},
+        plans:[["Telecom Corp 1","Telecom",38000000,"New"],["Finance Corp 2","Finance",97000000,"Expansion"],
+               ["Manufacturing Corp 3","Manufacturing",67000000,"Expansion"],["Finance Corp 4","Finance",55000000,"Expansion"],
+               ["Energy Corp 5","Energy",100000000,"Expansion"],["Manufacturing Corp 6","Manufacturing",108000000,"New"],
+               ["Telecom Corp 7","Telecom",73000000,"New"]]},
+      "Kenya": {flag:"🇰🇪",companies:7,capex:410_000_000,projects:8,new:4,expansion:4,
+        sectors:{Manufacturing:30,Finance:25,Telecom:20,Energy:15,Logistics:10},
+        plans:[["AgriTech A","Manufacturing",56000000,"Expansion"],["FinCo B","Finance",72000000,"New"],["TelCom C","Telecom",41000000,"New"],
+               ["Energy D","Energy",66000000,"Expansion"],["Logi E","Logistics",29000000,"Expansion"]]},
+      "Ghana": {flag:"🇬🇭",companies:6,capex:290_000_000,projects:6,new:3,expansion:3,
+        sectors:{Manufacturing:28,Finance:22,Telecom:21,Energy:18,Logistics:11},
+        plans:[["FinCo G1","Finance",42000000,"New"],["Mfg G2","Manufacturing",52000000,"Expansion"],["Tel G3","Telecom",33000000,"New"],
+               ["Energy G4","Energy",58000000,"Expansion"]]}
+    };
+    const COLORS={Manufacturing:"#60a5fa",Finance:"#f472b6",Telecom:"#fbbf24",Energy:"#f59e0b",Logistics:"#34d399"};
+    const nf=new Intl.NumberFormat('en-US'); const money=v=>'$ '+nf.format(v);
+
+    const pills=document.getElementById('countryPills'),countryLabel=document.getElementById('countryLabel'),
+      kpiCompanies=document.getElementById('kpiCompanies'),kpiCapex=document.getElementById('kpiCapex'),
+      kpiProjects=document.getElementById('kpiProjects'),kpiNE=document.getElementById('kpiNE'),
+      donut=document.getElementById('donut'),legend=document.getElementById('legend'),
+      tblBody=document.getElementById('planTable')?.querySelector('tbody'),
+      search=document.getElementById('tblSearch'),updatedAt=document.getElementById('updatedAt'),
+      speed=document.getElementById('speed'),liveTag=document.getElementById('liveTag');
+
+    Object.keys(DATA).forEach((name,i)=>{const b=document.createElement('button');b.className='pill'+(i===0?' active':'');b.textContent=`${DATA[name].flag} ${name}`;
+      b.onclick=()=>{document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));b.classList.add('active');render(name,true);};
+      pills.appendChild(b);});
+
+    function renderDonut(entries){
+      const cx=110,cy=110,r=80; donut.innerHTML='';
+      donut.innerHTML+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#e7edf7" stroke-width="28"></circle><circle cx="${cx}" cy="${cy}" r="50" fill="#fff"></circle>`;
+      const sum=Object.values(entries).reduce((a,b)=>a+b,0); let a=-Math.PI/2;
+      Object.entries(entries).forEach(([k,v])=>{
+        const f=v/sum,t=f*2*Math.PI;const x1=cx+r*Math.cos(a),y1=cy+r*Math.sin(a);a+=t;const x2=cx+r*Math.cos(a),y2=cy+r*Math.sin(a);
+        const large=f>0.5?1:0, col=COLORS[k]||'#9ca3af';
+        donut.innerHTML+=`<path d="M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z" fill="${col}" opacity=".9"></path>`;
+      });
+      legend.innerHTML='';
+      Object.keys(entries).forEach(k=>{
+        const s=document.createElement('span');s.innerHTML=`<i class="swatch" style="background:${COLORS[k]||'#9ca3af'}"></i>${k}`;legend.appendChild(s);
+      });
+    }
+    function renderTable(rows,q=''){
+      if(!tblBody) return; const qq=q.trim().toLowerCase();
+      const filtered=rows.filter(r=>r[0].toLowerCase().includes(qq)||r[1].toLowerCase().includes(qq));
+      tblBody.innerHTML=filtered.map(([c,s,cap,st])=>`<tr><td>${c}</td><td>${s}</td><td>${money(cap)}</td><td><span class="status ${st==='Expansion'?'exp':''}">${st}</span></td></tr>`).join('')
+        || `<tr><td colspan="4" style="color:#6b7280">No matches</td></tr>`;
+    }
+    let current="Nigeria";
+    function render(name,hard=false){
+      current=name||current;const d=DATA[current];countryLabel.textContent=`${d.flag} ${current}`;
+      kpiCompanies.textContent=d.companies;kpiCapex.textContent=money(d.capex);kpiProjects.textContent=d.projects;kpiNE.textContent=`${d.new} / ${d.expansion}`;
+      renderDonut(d.sectors);renderTable(d.plans,search?.value||'');updatedAt.textContent="Updated: "+new Date().toLocaleString();if(hard) lastTick=performance.now();
+    }
+    search?.addEventListener('input',()=>renderTable(DATA[current].plans,search.value));
+
+    let lastTick=performance.now();
+    function tick(now){
+      const d=DATA[current], s=parseFloat(speed.value);liveTag.style.animationDuration=(1.2/s)+'s';
+      if(now-lastTick>1400/s){lastTick=now;
+        d.capex=Math.max(0,d.capex+Math.round((Math.random()-0.48)*3_500_000));
+        d.projects=Math.max(1,d.projects+(Math.random()>0.75?1:0)-(Math.random()>0.9?1:0));
+        d.new=Math.max(0,d.new+(Math.random()>0.7?1:0)-(Math.random()>0.9?1:0)); d.expansion=Math.max(0,d.projects-d.new);
+        const keys=Object.keys(d.sectors), k=keys[Math.floor(Math.random()*keys.length)];
+        d.sectors[k]=Math.max(5,d.sectors[k]+(Math.random()>0.5?2:-2));
+        const total=keys.reduce((a,k)=>a+d.sectors[k],0);
+        keys.forEach(k2=>d.sectors[k2]=Math.max(5,Math.round(d.sectors[k2]*100/total)));
+        if(d.plans.length>1){
+          const i=Math.floor(Math.random()*d.plans.length), row=d.plans.splice(i,1)[0];
+          row[2]=Math.max(10_000_000,row[2]+Math.round((Math.random()-0.5)*5_000_000));
+          d.plans.unshift(row);
+        }
+        render();
+      }
+      requestAnimationFrame(tick);
+    }
+    render(current,true); requestAnimationFrame(tick);
+  </script>
+</body>
+</html>

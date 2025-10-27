@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Raymoch • Companies</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    :root{--brand-blue:#0A2A6B;--bg:#F7F7FB;--card:#fff;--ink:#0F1222;--muted:#6b7280;--border:#E8E8EE;--shadow:0 10px 30px rgba(10,42,107,.08);--radius:16px;--pill:999px;--maxw:1180px}
+    *{box-sizing:border-box} html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+    a{color:inherit;text-decoration:none}
+    header{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--border)}
+    .wrap{max-width:var(--maxw);margin:0 auto;padding:18px}
+    .h1{font-size:32px;font-weight:900;margin:0 0 4px;color:var(--brand-blue)}
+    .muted{color:var(--muted)}
+    .panel{background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:14px;margin:18px 0}
+    .grid{display:grid;grid-template-columns:1.6fr 1fr 1fr auto;gap:12px}
+    .input{width:100%;height:46px;border:1px solid var(--border);border-radius:999px;padding:0 14px}
+    .select{width:100%;height:46px;border:1px solid var(--border);border-radius:999px;padding:0 12px;background:#fff}
+    .btn{display:inline-flex;align-items:center;height:46px;padding:0 16px;border-radius:999px;border:1px solid var(--border);background:#fff;font-weight:700;cursor:pointer}
+    .btn.primary{background:var(--brand-blue);color:#fff;border-color:var(--brand-blue)}
+    .list{display:flex;flex-direction:column;gap:12px;margin:18px 0}
+    .card{background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:16px}
+    .row{display:flex;justify-content:space-between;gap:16px}
+    .logo{width:52px;height:52px;border-radius:16px;background:#eef3ff;display:grid;place-items:center;border:1px solid #e6e7f0;font-size:1.4rem}
+    .title{margin:0 0 4px;font-size:1.06rem;color:var(--brand-blue)}
+    .tag{display:inline-block;padding:2px 8px;border:1px solid var(--border);border-radius:999px;background:#fff;color:#374151;font-size:.78rem;margin-left:8px}
+    .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .footer{padding:24px 0;color:#8a93a3}
+    .error{background:#fff3f3;border:1px solid #ffd0d0;color:#7a2222;padding:12px;border-radius:12px;margin:16px 0}
+    .hint{background:#f3f7ff;border:1px solid #d9e4ff;color:#0a2a6b;padding:12px;border-radius:12px;margin:12px 0}
+    @media(max-width:1100px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap" style="display:flex;justify-content:space-between;align-items:center">
+      <a href="Entire.html" style="font-weight:900;color:#0A2A6B;font-size:20px;display:flex;align-items:center;gap:10px">
+        <span style="display:grid;place-items:center;width:28px;height:28px;border:2px solid #0A2A6B;border-radius:6px">R</span> Raymoch
+      </a>
+      <nav class="toolbar">
+        <a class="btn" href="explore2.html">← Explore</a>
+        <a class="btn" href="Services.html">Services</a>
+        <a class="btn" href="Market_Insight.html">Insights</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <h1 class="h1">All Companies</h1>
+    <div id="subtitle" class="muted">Browse everything. Filter to narrow down.</div>
+
+    <div id="diag" class="hint" style="display:none"></div>
+
+    <div class="panel">
+      <div class="grid">
+        <input id="q" class="input" placeholder="Search by name or summary"/>
+        <select id="country" class="select" aria-label="Country"></select>
+        <select id="sector" class="select" aria-label="Sector"></select>
+        <div style="display:flex;gap:8px;align-items:center;justify-content:flex-end">
+          <label style="display:flex;align-items:center;gap:8px"><input id="onlyV" type="checkbox"/> Verified only</label>
+          <button id="reset" class="btn" type="button">Reset</button>
+          <button id="run" class="btn primary" type="button">Search</button>
+        </div>
+      </div>
+      <div id="count" class="muted" style="margin-top:6px"></div>
+    </div>
+
+    <div id="list" class="list"></div>
+    <div class="footer">© <span id="y"></span> Raymoch</div>
+  </main>
+
+  <!-- 1) Prefer JS (works over file://), 2) fallback to JSON (needs http/https) -->
+  <script src="companies.js"></script>
+  <script>
+  (function(){
+    const diag = (msg)=>{ const el=document.getElementById('diag'); el.style.display='block'; el.innerHTML = msg; };
+
+    const sectorsDict = {
+      agriculture:{ icon:'🌱', title:'Agriculture & Food' },
+      fintech:{ icon:'💳', title:'Fintech & Banking' },
+      energy:{ icon:'⚡', title:'Energy & Renewables' },
+      healthcare:{ icon:'🏥', title:'Healthcare & Biotech' },
+      ict:{ icon:'📡', title:'ICT & Telecoms' },
+      retail:{ icon:'🛍️', title:'Wholesale & Retail' },
+      education:{ icon:'🎓', title:'Education & Training' },
+      manufacturing:{ icon:'🏭', title:'Manufacturing & Industry' },
+      logistics:{ icon:'🚚', title:'Logistics & Supply Chain' },
+      transport:{ icon:'🚌', title:'Transport & Mobility' },
+      realestate:{ icon:'🏗️', title:'Real Estate & Construction' },
+      water:{ icon:'🚰', title:'Water & Sanitation' },
+      tourism:{ icon:'🏝️', title:'Tourism & Hospitality' },
+      creative:{ icon:'🎬', title:'Media & Creative' },
+      food:{ icon:'🍽️', title:'Food & Beverage' }
+    };
+    const sIcon=(k)=> (sectorsDict[k]||{}).icon || '📦';
+    const sTitle=(k)=> (sectorsDict[k]||{}).title || k || 'Company';
+
+    function normalize(c){
+      const id = c.id ?? c.CompanyID ?? c.company_id ?? `c_${Math.random().toString(36).slice(2,10)}`;
+      const name = c.name ?? c.CompanyName ?? c.company_name ?? 'Company';
+      const sector = (c.sector ?? c.Sector ?? '').toString().trim().toLowerCase()
+        .replace(/\s*\/\s*/g,'-').replace(/\s+&\s+| & /g,'-').replace(/\s+/g,'')
+        .replace('ict-software','ict').replace('ictsoftware','ict')
+        .replace('constructionrealestate','realestate').replace('retaillecommerce','retail')
+        .replace('logisticsmobility','logistics');
+      const country = c.country ?? c.Country ?? '';
+      const verified = (c.verified ?? c.VerificationStatus ?? false) === true ||
+                       String(c.VerificationStatus||'').toLowerCase()==='verified';
+      const summary = c.summary ?? c.Description ?? c.description ?? '';
+      const stage = c.stage ?? c.Stage ?? '';
+      const tier = c.tier ?? c.CTI_Tier ?? c.cti_tier ?? '';
+      const snapshot = c.snapshot ?? {
+        'Employees': c.Employees ?? '',
+        'Annual Revenue (USD)': c.AnnualRevenueUSD ?? '',
+        'CTI Tier': tier || ''
+      };
+      return { id, name, sector, country, verified, summary, stage, tier, snapshot, overview: c.overview ?? summary };
+    }
+
+    function optionList(values, placeholder){
+      const uniq = Array.from(new Set(values.filter(Boolean))).sort((a,b)=>a.localeCompare(b));
+      return `<option value="">${placeholder}</option>` + uniq.map(v=>`<option>${v}</option>`).join('');
+    }
+
+    function card(c){
+      return `<div class="card">
+        <div class="row">
+          <div style="display:flex;gap:12px;align-items:flex-start">
+            <div class="logo">${sIcon(c.sector)}</div>
+            <div>
+              <h3 class="title">${c.name}${c.verified?'<span class="tag">Verified</span>':''}</h3>
+              <div class="muted">${sTitle(c.sector)} • ${c.country}${c.stage?` • ${c.stage}`:''}</div>
+              <div style="margin-top:6px">${c.summary||''}</div>
+            </div>
+          </div>
+          <div class="toolbar">
+            <a class="btn" href="explore2.html#/${c.sector?`sector/${encodeURIComponent(c.sector)}`:'home'}">View in Explore</a>
+            <a class="btn primary" href="companies.html?id=${encodeURIComponent(c.id)}">Open Profile</a>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    async function load(){
+      // 1) JS file (works on file://) — MUST set `window.COMPANIES`
+      if (Array.isArray(window.COMPANIES)) {
+        return { source:'companies.js', data: window.COMPANIES };
+      }
+
+      // 2) JSON fallback (needs http/https)
+      let jsonData = [];
+      let jsonErr = '';
+      try{
+        const res = await fetch('./companies.json', {cache:'no-store'});
+        if(res.ok){
+          const data = await res.json();
+          jsonData = Array.isArray(data) ? data : (data.companies||[]);
+        }else{
+          jsonErr = `companies.json fetch not OK (status ${res.status})`;
+        }
+      }catch(e){
+        jsonErr = e.message || 'fetch failed (likely file://)';
+      }
+
+      if(jsonData.length) return { source:'companies.json', data: jsonData };
+
+      // 3) Nothing found — report why
+      return { source:'none', data: [], error:
+        (!jsonErr ? 'No data detected.' :
+         `No data detected. If you opened this file via <b>file://</b>, the browser blocks fetching <code>companies.json</code>.<br>
+          Either run a local server OR ensure <code>companies.js</code> sets <code>window.COMPANIES</code>.<br>
+          JSON error: <code>${jsonErr}</code>`)
+      };
+    }
+
+    function bind(data){
+      const list = document.getElementById('list');
+      const render = ()=>{
+        const q = document.getElementById('q').value.trim().toLowerCase();
+        const country = document.getElementById('country').value;
+        const sector = document.getElementById('sector').value;
+        const onlyV = document.getElementById('onlyV').checked;
+
+        let rows = data.slice();
+        if(q) rows = rows.filter(c => c.name.toLowerCase().includes(q) || (c.summary||'').toLowerCase().includes(q));
+        if(country) rows = rows.filter(c => c.country===country);
+        if(sector) rows = rows.filter(c => c.sector===sector);
+        if(onlyV) rows = rows.filter(c => c.verified);
+
+        list.innerHTML = rows.map(card).join('') || `<div class="muted">No results.</div>`;
+        document.getElementById('count').textContent = `${rows.length} result${rows.length===1?'':'s'}`;
+      };
+
+      const countries = data.map(c=>c.country).filter(Boolean);
+      const sectors = data.map(c=>c.sector).filter(Boolean);
+      document.getElementById('country').innerHTML = optionList(countries, 'All countries');
+      document.getElementById('sector').innerHTML  = optionList(sectors, 'All sectors');
+
+      ['q','country','sector','onlyV'].forEach(id=>{
+        const el = document.getElementById(id);
+        el.addEventListener('input', render);
+        el.addEventListener('change', render);
+      });
+      document.getElementById('run').onclick = render;
+      document.getElementById('reset').onclick = ()=>{
+        document.getElementById('q').value='';
+        document.getElementById('country').value='';
+        document.getElementById('sector').value='';
+        document.getElementById('onlyV').checked=false;
+        render();
+      };
+      render();
+    }
+
+    window.addEventListener('DOMContentLoaded', async ()=>{
+      document.getElementById('y').textContent = new Date().getFullYear();
+
+      const {source, data, error} = await load();
+
+      if(!data.length){
+        document.getElementById('subtitle').innerHTML = 'No dataset loaded.';
+        document.getElementById('list').innerHTML = `<div class="error">
+          <b>Why it’s empty:</b><br>${error || 'Unknown issue.'}
+          <div class="hint" style="margin-top:10px">
+            ✅ Fix: Make sure <code>companies.js</code> includes <code>window.COMPANIES = [ ... ]</code> and sits beside this HTML.<br>
+            ✅ Optionally also include <code>companies.json</code> for server mode.<br>
+            ✅ Filenames are case-sensitive. Keep them exactly: <b>companies.js</b> and <b>companies.json</b>.
+          </div>
+        </div>`;
+        // Also dump what the page actually sees
+        diag(`Debug: window.COMPANIES = ${Array.isArray(window.COMPANIES)?'Array('+window.COMPANIES.length+')':'<i>undefined</i>'}`);
+        return;
+      }
+
+      diag(`Loaded <b>${data.length}</b> records from <b>${source}</b>.`);
+      const normalized = data.map(normalize);
+      bind(normalized);
+    });
+  })();
+  </script>
+</body>
+</html>

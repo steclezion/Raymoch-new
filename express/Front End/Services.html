@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Raymoch • Services</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+
+
+      /* Brand */
+      --brand-blue:#0A2A6B; --brand-gold:#DAA520;
+
+
+      /* Surfaces & text */
+      --bg:#F7F7FB; --card:#FFFFFF; --ink:#0F1222; --muted:#133c90; --border:#E8E8EE;
+
+
+
+      /* Effects & radii */
+      --shadow:0 10px 30px rgba(6,60,168,.08);
+      --radius:16px; --radius-pill:999px;
+
+      /* Shared header/footer layout */
+      --gutter:18px; --maxw:1328px;
+
+
+
+      /* Header palette (matching Matching.html) */
+      --nav-brand:#0328aeed; --nav-link:#0f172a; --nav-hover:#0a2a6b;
+      --nav-bg:#ffffff; --nav-fg:#101114; --border-soft:#e8e8ee;
+    }
+
+    *{box-sizing:border-box}
+    html,body{
+      margin:0;padding:0;background:var(--bg);color:var(--ink);
+      font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      height:100%;
+    }
+
+
+
+    /* Sticky footer layout */
+    body{display:flex;flex-direction:column;min-height:100vh}
+    main{flex:1}
+
+    /* Keep link styling from Matching: don't force blue in header/footer */
+    a{text-decoration:none}
+    main a{color:var(--brand-blue)}
+
+    .container{max-width:1100px;margin:0 auto;padding:24px}
+    .wrap{max-width:var(--maxw);margin:0 auto;padding:0 var(--gutter)}
+
+
+
+
+
+
+    /* ================= HEADER (identical to Matching.html) ================= */
+    .header{
+      background:var(--nav-bg); color:var(--nav-fg);
+      position:sticky; top:0; z-index:1000; border-bottom:1px solid var(--border-soft)
+    }
+    .row1{
+      display:flex;justify-content:space-between;align-items:center;gap:16px;
+      padding:12px 8px; margin:15px; box-shadow:0 1px 0 rgba(0,0,0,.05); position:relative;
+    }
+    .brandrow{display:flex;align-items:center;gap:22px}
+    .brand{display:flex;align-items:center;gap:10px;color:var(--nav-brand)}
+    .brand-word{font-weight:900;font-size:1.4rem;color:var(--nav-brand);letter-spacing:.2px}
+    .dotgrid{width:18px;height:18px;display:inline-grid;grid-template-columns:repeat(2,1fr);gap:2px}
+    .dotgrid i{width:5px;height:5px;border-radius:2px;background:#101114}
+    .rightside{display:flex;align-items:center;gap:14px}
+    .search-box{min-width:140px;width:18vw;max-width:260px}
+    .search-box input{width:100%;height:40px;padding:0 14px;border:1px solid var(--border-soft);border-radius:var(--radius-pill)}
+    .search-box input:focus{border-color:var(--nav-brand);outline:2px solid #cfe0ff}
+    .header .btn{height:40px;display:inline-flex;align-items:center;gap:8px;padding:0 16px;border-radius:var(--radius-pill);font-weight:700;background:#fff;border:1px solid var(--border-soft);cursor:pointer}
+    .header .btn.primary{background:var(--nav-brand);color:#fff;border-color:var(--nav-brand)}
+
+    .explore-toggle{
+      appearance:none;border:0;background:transparent;cursor:pointer;
+      display:flex;align-items:center;gap:8px;font-weight:800;color:var(--nav-link);
+      padding:6px 8px;border-radius:8px;font-size:1.1rem;
+    }
+    .explore-toggle:hover,
+    .explore-toggle[aria-expanded="true"]{ background:#eceff3;color:var(--nav-hover); }
+
+    .menu-panel{
+      position:absolute; top:calc(100% + 10px); left:15px; z-index:1100;
+      width:min(760px, calc(100vw - 40px));
+      background:#fff;border:1px solid var(--border-soft);border-radius:14px;box-shadow:0 6px 22px rgba(10,42,107,.08);
+      padding:14px;
+    }
+    .menu-panel[hidden]{ display:none; }
+    .menu-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .menu-head h4{margin:0;font-size:1rem}
+    .menu-grid{display:grid;grid-template-columns:repeat(2,minmax(240px,1fr));gap:12px}
+    .menu-item{display:block;padding:12px;border:1px solid var(--border-soft);border-radius:12px;background:#fff}
+    .menu-item:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(0,0,0,.06)}
+    .menu-item h5{margin:0 0 6px;font-size:.98rem}
+    .menu-item p{margin:0;color:#3c4b69;font-size:.92rem}
+
+    .row2{background:#f5f6f8;border-top:1px solid #eee;border-bottom:1px solid #e6e6e6;padding-left:15px}
+    .row2 .wrap{max-width:none;padding:0}
+    .row2 .links{display:flex;gap:18px;padding:8px 8px;margin:0;justify-content:flex-start;align-items:center}
+    .row2 a{font-weight:600;font-size:.92rem;padding:4px 6px;border-radius:4px;color:var(--nav-link)}
+    .row2 a:hover{background:#eceff3;color:var(--nav-hover)}
+    #site-header a.active{font-weight:600;text-decoration:underline}
+
+    @media (max-width:800px){ .search-box{width:34vw;max-width:300px} }
+    @media (max-width:720px){ .row2{display:none} .search-box{min-width:0;width:46vw} }
+
+
+
+
+
+
+    /* ===================== HERO (full-bleed, fun, responsive) ===================== */
+        /* ===================== HERO (fixed gradient, white text) ===================== */
+        .hero{
+      width:100%;
+      margin:0;
+      background:linear-gradient(135deg, #0A2A6B 0%, #1b3b9c 40%, #0591bb 80%, #0A2A6B 100%);
+      color:#fff;
+      padding:clamp(40px,4vw,80px) 0;
+      border:0; border-radius:0; box-shadow:none;
+      text-align:left;
+    }
+    .hero .wrap{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      padding:0 var(--gutter);
+      max-width:var(--maxw);
+      margin:0 auto;
+    }
+    .hero h2{
+      margin:0;
+      font-weight:900;
+      font-size:clamp(32px,5vw,52px);
+      letter-spacing:.2px;
+      color:#fff;
+      text-shadow:0 2px 8px rgba(0,0,0,.3);
+    }
+    .hero p{
+      margin:6px 0 0;
+      max-width:900px;
+      font-size:clamp(16px,2vw,20px);
+      color:#f9fafb;
+      text-shadow:0 1px 6px rgba(0,0,0,.3);
+    }
+
+
+
+    /* ================= SERVICES GRID ================= */
+    .svc-menu{
+      /* More space below the hero */
+      margin-top:clamp(28px,6vw,72px);
+      /* And more space above the footer */
+      margin-bottom:clamp(48px,10vw,128px);
+    }
+    .svc-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px} /* a touch more gap */
+    .svc-col-3{grid-column:span 3}
+    .svc-box{
+      display:block;border:1px solid var(--border);border-radius:20px;background:var(--card);
+      padding:28px 24px 24px;box-shadow:var(--shadow);text-decoration:none;color:inherit;
+      transition:transform .12s ease, box-shadow .12s ease;min-height:190px
+    }
+    .svc-box:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(6,60,168,.12)}
+    .svc-box h3{margin:0 0 6px;font-size:18px}
+    .svc-box p{margin:6px 0 0;color:#475569}
+
+    /* ================= FOOTER (identical to Matching.html) ================= */
+    .footer{background:#0b1020;color:#cbd5e1;}
+
+    /* Responsive */
+    @media (max-width: 900px){
+      .svc-grid{grid-template-columns:1fr}
+      .svc-col-3{grid-column:span 12}
+    }
+  </style>
+</head>
+<body>
+
+
+
+  <!-- ================= HEADER (from Matching.html) ================= -->
+  <header class="header" id="site-header">
+    <!-- Tier 1 -->
+    <div class="row1">
+      <div class="brandrow">
+        <a class="brand" href="Entire.html" aria-label="Raymoch home">
+          <svg width="28" height="28" viewBox="0 0 200 200" aria-hidden="true">
+            <polygon fill="none" stroke="currentColor" stroke-width="10" points="100,18 172,59 172,141 100,182 28,141 28,59"/>
+            <text x="100" y="118" text-anchor="middle" style="fill:currentColor;font:700 105px Georgia">R</text>
+          </svg>
+          <span class="brand-word">Raymoch</span>
+        </a>
+
+        <button class="explore-toggle" id="exploreToggle" aria-haspopup="true" aria-expanded="false">
+          <span class="dotgrid" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+          Explore
+        </button>
+
+        <div class="menu-panel" id="t1Menu" role="menu" aria-labelledby="exploreToggle" hidden>
+          <div class="menu-head"><h4>Explore services</h4></div>
+          <div class="menu-grid">
+            <a class="menu-item" href="Matching.html">
+              <h5>Trusted Matching</h5>
+              <p>Get paired with credible businesses using CTI & verification.</p>
+            </a>
+            <a class="menu-item" href="verification.html">
+              <h5>Verification</h5>
+              <p>CTI badges, document checks, and data provenance.</p>
+            </a>
+            <a class="menu-item" href="Market_Insight.html">
+              <h5>Research & Insights</h5>
+              <p>Sector reports, trends, and regional briefs.</p>
+            </a>
+            <a class="menu-item" href="Services.html">
+              <h5>Programs & Services</h5>
+              <p>Advisory, partner programs, and support options.</p>
+            </a>
+            <a class="menu-item" href="incentives.html">
+              <h5>Policy & Incentives</h5>
+              <p>Tax credits, grants, and regulatory signals.</p>
+            </a>
+            <a class="menu-item" href="whitespace.html">
+              <h5>Whitespace Map</h5>
+              <p>Where demand outpaces supply across sectors.</p>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="rightside">
+        <form class="search-box" action="search.html">
+          <input id="navSearch" type="search" name="q" placeholder="Search companies, sectors, regions…" />
+        </form>
+        <div class="auth">
+          <button class="btn" id="loginBtn" type="button">Log in</button>
+          <button class="btn primary" id="signupBtn" type="button">Sign up</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tier 2 -->
+    <div class="row2">
+      <div class="wrap">
+        <nav class="links" aria-label="Secondary">
+          <a href="explore2.html">Businesses</a>
+          <a href="Services.html">Services</a>
+          <a href="Market_Insight.html">Research &amp; Insights</a>
+          <a href="About.html">Who We Are</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================== HERO (full-width) ===================== -->
+    <!-- ===================== HERO (full-width) ===================== -->
+    <section class="hero">
+      <div class="wrap">
+        <h2>Services</h2>
+        <p>Build trust. Get seen. Partner smart.</p>
+      </div>
+    </section>
+  
+  <main>
+    <div class="container">
+      <!-- SERVICES MENU (no filter, extra spacing handled in CSS) -->
+      <section class="svc-menu" aria-labelledby="svcMenuTitle">
+        <h3 id="svcMenuTitle" style="margin:0 0 8px;color:var(--brand-blue)">Choose a service</h3>
+
+        <div class="svc-grid" id="svcGrid">
+          <a class="svc-box svc-col-3" href="Matching.html" id="boxMatching">
+            <h3>Matching</h3>
+            <p>Investor inputs → ranked SME matches.</p>
+          </a>
+          <a class="svc-box svc-col-3" href="partner-programs.html" id="boxPartners">
+            <h3>Partner Programs</h3>
+            <p>Accelerators & syndicates, plugged in.</p>
+          </a>
+          <a class="svc-box svc-col-3" href="verification.html" id="boxVerify">
+            <h3>Verification</h3>
+            <p>CTI checks: identity, ownership, basics.</p>
+          </a>
+          <a class="svc-box svc-col-3" href="visibility-listing.html" id="boxListing">
+            <h3>Visibility & Listing</h3>
+            <p>Get listed. Get discovered.</p>
+          </a>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- ================= FOOTER (from Matching.html) ================= -->
+  <footer class="footer" id="site-footer">
+    <div class="wrap" style="padding:32px var(--gutter)">
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:18px">
+        <div>
+          <div style="color:#fff;font-weight:800;font-size:1.2rem;margin-bottom:8px">Raymoch</div>
+          <div style="color:#94a3b8;max-width:360px">
+            Connecting investors and entrepreneurs through trust, verified data, and actionable insights.
+          </div>
+        </div>
+        <div>
+          <h5 style="margin-bottom:10px;color:#e5e7eb;font-size:.95rem">Company</h5>
+          <a href="About.html" style="display:block;color:#cbd5e1;margin:6px 0">About</a>
+          <a href="careers.html" style="display:block;color:#cbd5e1;margin:6px 0">Careers</a>
+          <a href="press.html" style="display:block;color:#cbd5e1;margin:6px 0">Press</a>
+          <a href="contact.html" style="display:block;color:#cbd5e1;margin:6px 0">Contact</a>
+        </div>
+        <div>
+          <h5 style="margin-bottom:10px;color:#e5e7eb;font-size:.95rem">Product</h5>
+          <a href="explore2.html" style="display:block;color:#cbd5e1;margin:6px 0">Explore Businesses</a>
+          <a href="Market_Insight.html" style="display:block;color:#cbd5e1;margin:6px 0">Market Insights</a>
+          <a href="verification.html" style="display:block;color:#cbd5e1;margin:6px 0">Verification</a>
+          <a href="Services.html" style="display:block;color:#cbd5e1;margin:6px 0">Programs & Services</a>
+        </div>
+        <div>
+          <h5 style="margin-bottom:10px;color:#e5e7eb;font-size:.95rem">Resources</h5>
+          <a href="blog.html" style="display:block;color:#cbd5e1;margin:6px 0">Blog</a>
+          <a href="help.html" style="display:block;color:#cbd5e1;margin:6px 0">Help Center</a>
+          <a href="security.html" style="display:block;color:#cbd5e1;margin:6px 0">Security</a>
+          <a href="status.html" style="display:block;color:#cbd5e1;margin:6px 0">Status</a>
+        </div>
+      </div>
+      <div style="border-top:1px solid #1f2937;margin-top:22px;padding:12px 0;display:flex;justify-content:space-between;align-items:center;font-size:.92rem">
+        <div>© <span id="footerYear"></span> Raymoch. All rights reserved.</div>
+        <div>
+          <a href="privacy.html" style="color:#cbd5e1;margin-left:14px">Privacy</a>
+          <a href="terms.html" style="color:#cbd5e1;margin-left:14px">Terms</a>
+          <a href="cookies.html" style="color:#cbd5e1;margin-left:14px">Cookies</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    /* =================== HEADER: Explore dropdown + active link =================== */
+    (function(){
+      const btn = document.getElementById('exploreToggle');
+      const menu = document.getElementById('t1Menu');
+      if(btn && menu){
+        const toggle = (open)=>{ btn.setAttribute('aria-expanded', open?'true':'false'); menu.hidden = !open; };
+        btn.addEventListener('click', e=>{ e.preventDefault(); toggle(menu.hidden); });
+        document.addEventListener('click', e=>{ if(!menu.hidden && !menu.contains(e.target) && !btn.contains(e.target)) toggle(false); });
+        document.addEventListener('keydown', e=>{ if(e.key==='Escape') toggle(false); });
+      }
+      const current = location.pathname.split('/').pop() || 'Entire.html';
+      document.querySelectorAll('#site-header a[href]').forEach(a=>{
+        const href = a.getAttribute('href'); if(href && href === current) a.classList.add('active');
+      });
+    })();
+
+    /* =================== FOOTER: dynamic year =================== */
+    (function(){
+      const y=document.getElementById('footerYear'); if(y) y.textContent = new Date().getFullYear();
+    })();
+
+    /* =================== Header auth button stubs =================== */
+    (function(){
+      const loginBtn = document.getElementById('loginBtn');
+      const signupBtn = document.getElementById('signupBtn');
+      if(loginBtn) loginBtn.addEventListener('click', ()=> alert('Log in flow (stub)'));
+      if(signupBtn) signupBtn.addEventListener('click', ()=> alert('Sign up flow (stub)'));
+    })();
+  </script>
+</body>
+</html>

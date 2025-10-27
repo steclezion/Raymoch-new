@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Raymoch • YEP</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root{
+    --brand-blue:#03368e; --brand-gold:#DAA520; --bg:#fafafa; --card:#fff;
+    --ink:#101114; --muted:#6b7280; --border:#e8e8ee;
+    --shadow:0 4px 20px rgba(10,42,107,.08); --radius:14px; --pill:999px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI', Roboto, Helvetica, Arial, sans-serif}
+  body{background:var(--bg);color:var(--ink);line-height:1.5}
+  a{color:inherit;text-decoration:none}
+
+  /* Header (from landing) */
+  nav{
+    position:sticky; top:0; left:0; right:0; z-index:1000;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:1.1rem 3rem; background:#fff; box-shadow:var(--shadow);
+    border-bottom:1px solid var(--border);
+  }
+  .nav-left,.nav-right{display:flex; align-items:center; gap:2rem}
+  .nav-left a,.nav-right a{ text-decoration:none; color:var(--ink); font-weight:600; font-size:1rem; opacity:.95 }
+  .nav-left a:hover,.nav-right a:hover{ color:var(--brand-blue) }
+  .nav-left a.logo{ font-size:1.6rem; font-weight:800; color:var(--brand-blue); letter-spacing:.4px; text-decoration:none; opacity:1 }
+  .nav-left a.logo:link,.nav-left a.logo:visited,.nav-left a.logo:hover{ color:var(--brand-blue) }
+  .search-box input{
+    height:42px; min-width:280px; padding:0 .9rem; border:1px solid var(--border); border-radius:999px; outline:none
+  }
+  .search-box input:focus{ border-color:var(--brand-blue) }
+  .btn-pill{ color:#fff; background:var(--brand-blue); padding:.55rem 1.1rem; border-radius:999px; font-weight:700 }
+
+  /* Layout */
+  .container{max-width:1120px;margin:0 auto;padding:32px 20px}
+  .hero{padding:64px 0 16px;text-align:center}
+  .hero h1{font-size:44px;color:var(--brand-blue);margin-bottom:8px}
+  .hero p{color:var(--muted)}
+
+  .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:18px;margin:26px 0 10px}
+  .card{background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:18px;transition:transform .12s ease}
+  .card:hover{transform:translateY(-2px)}
+  .card h3{font-size:18px;margin:0 0 6px;color:var(--brand-blue)}
+  .card p{color:var(--muted);margin:0}
+
+  .section{margin:26px 0}
+  .section h2{font-size:22px;color:var(--brand-blue);margin:0 0 12px}
+  .note{color:var(--muted);font-size:13px}
+  .pill{display:inline-block;padding:7px 12px;border:1px solid var(--border);border-radius:999px;font-size:13px;background:#fff;white-space:nowrap;margin:6px 6px 0 0}
+  .pill:hover{border-color:var(--brand-blue)}
+  .pill-row{display:flex;flex-wrap:wrap}
+
+  /* Companies list */
+  .list{display:flex;flex-direction:column;gap:10px}
+  .company{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px}
+  .company .meta{color:#6b7280;font-size:13px;margin-top:2px}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+  .toolbar input,.toolbar select{border:1px solid var(--border);border-radius:999px;padding:8px 12px;background:#fff}
+
+  /* Footer (from landing) */
+  footer{ background:#0b1020; color:#cbd5e1; margin-top:3rem }
+  .foot-wrap{ max-width:1120px; margin:0 auto; padding:32px 18px }
+  .foot-grid{ display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:18px }
+  @media (max-width:900px){ .foot-grid{ grid-template-columns:1fr 1fr } }
+  .foot-brand{ color:#fff; font-weight:800; font-size:1.2rem; margin-bottom:8px }
+  .foot-col h5{ margin-bottom:10px; color:#e5e7eb; font-size:.95rem }
+  .foot-col a{ display:block; color:#cbd5e1; text-decoration:none; margin:6px 0; opacity:.95 }
+  .foot-col a:hover{ text-decoration:underline }
+  .foot-bottom{ border-top:1px solid #1f2937; margin-top:22px; padding:12px 0; display:flex; justify-content:space-between; align-items:center; font-size:.92rem }
+  .foot-bottom a{ color:#cbd5e1; text-decoration:none; margin-left:14px; opacity:.95 }
+  .foot-bottom a:hover{ text-decoration:underline }
+
+  /* Responsive */
+  @media(max-width:1100px){.grid{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:740px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:480px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<nav>
+  <div class="nav-left">
+    <a class="logo" href="#/home" data-route>Raymoch</a>
+    <a href="#/explore" data-route>Explore Businesses</a>
+    <a href="#/insights" data-route>Market Insights</a>
+    <a href="#/services" data-route>Services</a>
+    <a href="#/about" data-route>Who We Are</a>
+  </div>
+  <div class="nav-right">
+    <div class="search-box">
+      <input type="text" id="globalSearch" placeholder="Search companies…" />
+    </div>
+    <a href="#/login" data-route>Log in</a>
+    <a class="btn-pill" href="#/signup" data-route>Sign up</a>
+  </div>
+</nav>
+
+<main class="container">
+  <!-- HOME -->
+  <section id="view-home" class="section">
+    <div class="hero">
+      <h1>What We Do & Who We Are</h1>
+      <p>Trusted matching, verified data, and actionable insights connecting investors and entrepreneurs.</p>
+    </div>
+    <div class="grid">
+      <a class="card" data-route href="#/insights"><h3>Market Insights</h3><p>Countries, sectors, themes.</p></a>
+      <a class="card" data-route href="#/companies"><h3>Company Directory</h3><p>Search & filter the dataset.</p></a>
+      <a class="card" data-route href="#/explore"><h3>Explore Businesses</h3><p>Browse opportunities.</p></a>
+      <a class="card" data-route href="#/services"><h3>Services</h3><p>Programs & verification.</p></a>
+      <a class="card" data-route href="#/about"><h3>Who We Are</h3><p>Mission & team.</p></a>
+      <a class="card" data-route href="#/visibility"><h3>Visibility & Listing</h3><p>Get discovered.</p></a>
+    </div>
+  </section>
+
+  <!-- INSIGHTS (uses live DB to build pills) -->
+  <section id="view-insights" class="section" hidden>
+    <h2>Market Insights</h2>
+    <p class="note">Click a pill to view the directory filtered in-place — still inside this file.</p>
+    <div style="margin-top:12px">
+      <h3 style="margin-bottom:6px;color:#03368e">Countries</h3>
+      <div id="countriesPills" class="pill-row"></div>
+      <div id="countriesStatus" class="note" style="margin-top:8px"></div>
+    </div>
+    <div style="margin-top:18px">
+      <h3 style="margin-bottom:6px;color:#03368e">Sectors</h3>
+      <div id="sectorsPills" class="pill-row"></div>
+      <div id="sectorsStatus" class="note" style="margin-top:8px"></div>
+    </div>
+  </section>
+
+  <!-- COMPANIES (directory view) -->
+  <section id="view-companies" class="section" hidden>
+    <h2>Companies</h2>
+    <div class="toolbar">
+      <input id="cmp-q" placeholder="Search…" />
+      <select id="cmp-country"><option value="">All countries</option></select>
+      <select id="cmp-sector"><option value="">All sectors</option></select>
+      <button id="cmp-apply" class="btn-pill" style="border:0">Apply</button>
+      <span id="cmp-count" class="note"></span>
+    </div>
+    <div id="cmp-list" class="list"></div>
+  </section>
+
+  <!-- OTHER SIMPLE VIEWS (content placeholders) -->
+  <section id="view-explore" class="section" hidden>
+    <h2>Explore Businesses</h2>
+    <p class="note">Hook this up later. For now, use <a href="#/companies" data-route>Companies</a> to browse the dataset.</p>
+  </section>
+
+  <section id="view-services" class="section" hidden>
+    <h2>Services</h2>
+    <ul class="note" style="margin-top:8px">
+      <li>Matching</li><li>Verification</li><li>Partner Programs</li><li>Visibility & Listing</li>
+    </ul>
+  </section>
+
+  <section id="view-about" class="section" hidden>
+    <h2>Who We Are</h2>
+    <p class="note">Raymoch is building trusted digital rails for African entrepreneurship.</p>
+  </section>
+
+  <section id="view-visibility" class="section" hidden>
+    <h2>Visibility & Listing</h2>
+    <p class="note">Get listed, be discoverable, grow faster.</p>
+  </section>
+
+  <section id="view-verification" class="section" hidden>
+    <h2>Verification</h2>
+    <p class="note">Due diligence and trust signals that travel.</p>
+  </section>
+
+  <section id="view-partner" class="section" hidden>
+    <h2>Partner Program</h2>
+    <p class="note">Ecosystem collabs and growth programs.</p>
+  </section>
+
+  <section id="view-login" class="section" hidden>
+    <h2>Log in</h2>
+    <p class="note">(Stub)</p>
+  </section>
+
+  <section id="view-signup" class="section" hidden>
+    <h2>Sign up</h2>
+    <p class="note">(Stub)</p>
+  </section>
+</main>
+
+<!-- Footer -->
+<footer>
+  <div class="foot-wrap">
+    <div class="foot-grid">
+      <div class="foot-col">
+        <div class="foot-brand">Raymoch</div>
+        <div style="color:#94a3b8; max-width:360px">
+          Connecting investors and entrepreneurs through trust, verified data, and actionable insights.
+        </div>
+      </div>
+      <div class="foot-col">
+        <h5>Company</h5>
+        <a href="#/about" data-route>About</a>
+        <a href="#/careers" data-route>Careers</a>
+        <a href="#/press" data-route>Press</a>
+        <a href="#/contact" data-route>Contact</a>
+      </div>
+      <div class="foot-col">
+        <h5>Product</h5>
+        <a href="#/explore" data-route>Explore Businesses</a>
+        <a href="#/insights" data-route>Market Insights</a>
+        <a href="#/verification" data-route>Verification</a>
+        <a href="#/services" data-route>Programs & Services</a>
+      </div>
+      <div class="foot-col">
+        <h5>Resources</h5>
+        <a href="#/blog" data-route>Blog</a>
+        <a href="#/help" data-route>Help Center</a>
+        <a href="#/security" data-route>Security</a>
+        <a href="#/status" data-route>Status</a>
+      </div>
+    </div>
+
+    <div class="foot-bottom">
+      <div>© <span id="yr"></span> Raymoch. All rights reserved.</div>
+      <div>
+        <a href="#/privacy" data-route>Privacy</a>
+        <a href="#/terms" data-route>Terms</a>
+        <a href="#/cookies" data-route>Cookies</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- Config: always HTTP, never file:// -->
+<script>
+(function(){
+  const origin = (location.origin && location.origin !== 'null') ? location.origin : 'http://localhost:3001';
+  window.RAYMOCH_API = origin;                           // e.g. http://localhost:3001
+  window.RAYMOCH_COMPANIES_JSON = origin + "/Data/companies.json";
+})();
+</script>
+
+<script>
+/* ===== Utilities & State ===== */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const yr = $('#yr'); if (yr) yr.textContent = new Date().getFullYear();
+
+let CACHE = { companies:null };
+
+function parseHash(){
+  const raw = (location.hash || '#/home').slice(1); // '/route?x=1'
+  const [path, qs] = raw.split('?');
+  const params = new URLSearchParams(qs || '');
+  return { path, params };
+}
+
+function pill(txt, href){
+  const a = document.createElement('a');
+  a.className='pill'; a.href=href; a.setAttribute('data-route','');
+  a.textContent = txt;
+  return a;
+}
+
+/* ===== Data access (API first, JSON fallback) ===== */
+async function fetchCompanies(){
+  if (CACHE.companies) return CACHE.companies;
+  const api = `${window.RAYMOCH_API.replace(/\/$/,'')}/companies?page=1&limit=5000&_=${Date.now()}`;
+  const alt = window.RAYMOCH_COMPANIES_JSON;
+
+  try{
+    const r = await fetch(api, {headers:{Accept:'application/json'}});
+    if(r.ok){
+      const js = await r.json();
+      const data = Array.isArray(js) ? js : js?.data;
+      if(Array.isArray(data)){ CACHE.companies = data; return data; }
+    }
+  }catch(_){}
+  const r2 = await fetch(alt, {headers:{Accept:'application/json'}});
+  if(!r2.ok) throw new Error('JSON fallback failed');
+  const data2 = await r2.json();
+  if(!Array.isArray(data2)) throw new Error('JSON must be an array');
+  CACHE.companies = data2;
+  return data2;
+}
+
+function uniqSorted(rows, key){
+  const m = new Map();
+  rows.forEach(r=>{
+    const k=(r?.[key]||'').toString().trim();
+    if(!k) return;
+    m.set(k,(m.get(k)||0)+1);
+  });
+  return [...m.entries()].sort((a,b)=>b[1]-a[1]);
+}
+
+/* ===== Renderers ===== */
+async function renderInsights(){
+  const mountC = $('#countriesPills'), statusC = $('#countriesStatus');
+  const mountS = $('#sectorsPills'),   statusS = $('#sectorsStatus');
+  mountC.innerHTML = ''; mountS.innerHTML=''; statusC.textContent='Loading…'; statusS.textContent='Loading…';
+  try{
+    const rows = await fetchCompanies();
+    const countries = uniqSorted(rows,'country');
+    const sectors   = uniqSorted(rows,'sector');
+    countries.forEach(([name,cnt])=> mountC.appendChild(pill(`${name} (${cnt})`, `#/companies?country=${encodeURIComponent(name)}`)));
+    sectors.forEach(([name,cnt])  => mountS.appendChild(pill(`${name} (${cnt})`,   `#/companies?sector=${encodeURIComponent(name)}`)));
+    statusC.textContent = `${countries.length} countries`; statusS.textContent = `${sectors.length} sectors`;
+  }catch(e){
+    statusC.innerHTML = statusS.innerHTML = `<span style="color:#b91c1c">Can’t load companies data.</span>`;
+  }
+}
+
+function companyCard(r){
+  const name = r.name || r.company || 'Unnamed';
+  const country = r.country || '—';
+  const sector  = r.sector || '—';
+  const desc = r.description || r.summary || '';
+  return `
+    <div class="company">
+      <strong style="color:#03368e">${name}</strong>
+      <div class="meta">${country} • ${sector}</div>
+      ${desc ? `<div style="margin-top:6px">${desc}</div>` : ``}
+    </div>`;
+}
+
+async function renderCompaniesList(params){
+  const mount = $('#cmp-list'), cnt = $('#cmp-count');
+  const selCountry = $('#cmp-country'), selSector = $('#cmp-sector'), qIn = $('#cmp-q');
+  mount.innerHTML = ''; cnt.textContent = 'Loading…';
+  const rows = await fetchCompanies();
+
+  // fill selects once
+  if (!selCountry.dataset.ready){
+    uniqSorted(rows,'country').map(([k])=>k).forEach(k=>{
+      const o = document.createElement('option'); o.value = k; o.textContent = k; selCountry.appendChild(o);
+    });
+    selCountry.dataset.ready = '1';
+  }
+  if (!selSector.dataset.ready){
+    uniqSorted(rows,'sector').map(([k])=>k).forEach(k=>{
+      const o = document.createElement('option'); o.value = k; o.textContent = k; selSector.appendChild(o);
+    });
+    selSector.dataset.ready = '1';
+  }
+
+  const q = (params.get('q')||'').toLowerCase().trim();
+  const c = (params.get('country')||'').toLowerCase().trim();
+  const s = (params.get('sector')||'').toLowerCase().trim();
+  qIn.value = params.get('q')||''; selCountry.value = params.get('country')||''; selSector.value = params.get('sector')||'';
+
+  let out = rows;
+  if (c) out = out.filter(r => (r.country||'').toLowerCase().trim() === c);
+  if (s) out = out.filter(r => (r.sector ||'').toLowerCase().trim() === s);
+  if (q) out = out.filter(r => JSON.stringify(r).toLowerCase().includes(q));
+
+  cnt.textContent = `${out.length} result${out.length===1?'':'s'}`;
+  mount.innerHTML = out.map(companyCard).join('') || `<div class="note">No results. Try changing filters.</div>`;
+}
+
+/* ===== Router ===== */
+function show(id){
+  ['home','insights','companies','explore','services','about','visibility','verification','partner','login','signup']
+    .forEach(v => { const el = document.getElementById('view-'+v); if (el) el.hidden = (v!==id); });
+  window.scrollTo({top:0,behavior:'instant'});
+}
+
+async function renderRoute(){
+  const { path, params } = parseHash(); // e.g. /companies?country=Kenya
+  switch (path.toLowerCase()){
+    case '/home':      show('home'); break;
+    case '/insights':  await renderInsights(); show('insights'); break;
+    case '/companies': await renderCompaniesList(params); show('companies'); break;
+    case '/explore':   show('explore'); break;
+    case '/services':  show('services'); break;
+    case '/about':     show('about'); break;
+    case '/visibility':show('visibility'); break;
+    case '/verification': show('verification'); break;
+    case '/partner':   show('partner'); break;
+    case '/login':     show('login'); break;
+    case '/signup':    show('signup'); break;
+    default:           location.hash = '#/home'; break;
+  }
+}
+
+/* ===== Wiring ===== */
+document.addEventListener('DOMContentLoaded', ()=>{
+  // hash links (header/footer/cards)
+  document.addEventListener('click', (e)=>{
+    const a = e.target.closest('a[data-route]');
+    if (!a) return;
+    // normal anchors with href="#/..." just work; this prevents full reloads on some setups
+    // e.preventDefault(); location.hash = a.getAttribute('href');
+  });
+
+  // global search routes into companies view
+  const g = document.getElementById('globalSearch');
+  if (g){
+    g.addEventListener('keydown', e=>{
+      if (e.key === 'Enter'){
+        const q = g.value.trim();
+        if (q) location.hash = `#/companies?q=${encodeURIComponent(q)}`;
+      }
+    });
+  }
+
+  // companies toolbar apply
+  document.getElementById('cmp-apply').addEventListener('click', ()=>{
+    const q = document.getElementById('cmp-q').value.trim();
+    const c = document.getElementById('cmp-country').value.trim();
+    const s = document.getElementById('cmp-sector').value.trim();
+    const sp = new URLSearchParams();
+    if(q) sp.set('q', q);
+    if(c) sp.set('country', c);
+    if(s) sp.set('sector', s);
+    location.hash = `#/companies${sp.toString() ? '?' + sp.toString() : ''}`;
+  });
+
+  if (!location.hash) location.hash = '#/home';
+  renderRoute();
+  window.addEventListener('hashchange', renderRoute);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Raymoch • Platform (Base Page)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --brand-blue:#0A2A6B; --brand-gold:#DAA520; --bg:#fafafa; --card:#fff;
+      --ink:#101114; --muted:#6b7280; --border:#e8e8ee;
+      --shadow:0 4px 20px rgba(10,42,107,0.08); --radius:14px; --radius-pill:999px;
+    }
+    *{box-sizing:border-box; margin:0; padding:0; font-family:'Segoe UI', Roboto, Helvetica, Arial, sans-serif;}
+    body{background:var(--bg); color:var(--ink); line-height:1.5;}
+
+    /* NAV */
+    nav{
+      position:sticky; top:0; left:0; right:0;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0.85rem 3rem; background:#fff; box-shadow:var(--shadow);
+      z-index:1000;
+    }
+    .nav-left, .nav-right{display:flex; align-items:center; gap:2rem;}
+    .nav-left a, .nav-right a{
+      text-decoration:none; color:var(--ink); font-weight:500; font-size:0.95rem;
+      transition:color 0.2s ease;
+    }
+    .nav-left a:hover, .nav-right a:hover{color:var(--brand-blue);}
+    .logo{font-size:1.4rem; font-weight:700; color:var(--brand-blue); letter-spacing:0.5px;}
+
+    /* Search */
+    .search-box{position:relative;}
+    .search-box input{
+      padding:0.45rem 1rem; border:1px solid var(--border);
+      border-radius:var(--radius-pill); outline:none; min-width:240px;
+      transition:border 0.2s ease;
+    }
+    .search-box input:focus{border:1px solid var(--brand-blue);}
+
+    /* HERO */
+    .hero{padding:5rem 2rem; text-align:center; max-width:900px; margin:0 auto;}
+    .hero h1{font-size:3rem; margin-bottom:1rem; color:var(--brand-blue); font-weight:800;}
+    .hero p{font-size:1.15rem; color:var(--muted); max-width:700px; margin:0 auto;}
+
+    /* INSIGHTS */
+    .insights{padding:2rem 3rem;}
+    .insights-grid{display:grid; grid-template-columns:1fr 2fr 1fr; gap:2rem;}
+
+    .insights-list .insight-item{margin-bottom:1rem;}
+    .insight-item .date{font-size:0.8rem; color:var(--muted); display:block; margin-bottom:0.3rem;}
+    .insight-item h4{font-size:0.95rem; line-height:1.3; cursor:pointer;}
+    .insight-item h4:hover{color:var(--brand-blue);}
+
+    .insight-feature img{width:100%; border-radius:var(--radius);}
+    .feature-content{padding:1rem 0;}
+    .feature-content .tag{font-size:0.75rem; color:var(--brand-blue); font-weight:600;}
+    .feature-content h2{font-size:1.6rem; margin:0.5rem 0; line-height:1.3;}
+    .feature-content p{color:var(--muted);}
+
+    .insights-side .card{background:#fff; padding:1rem; border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:1.5rem;}
+    .insights-side img{width:100%; border-radius:var(--radius);}
+    .explore-btn{margin-top:0.5rem; padding:0.4rem 0.9rem; border:none; background:var(--brand-blue); color:#fff; border-radius:var(--radius-pill); cursor:pointer;}
+    .explore-btn:hover{background:var(--brand-gold); color:var(--ink);}
+  </style>
+</head>
+<body>
+
+  <!-- NAVIGATION -->
+  <nav>
+    <div class="nav-left">
+      <div class="logo">Raymoch</div>
+      <a href="#explore">Explore Businesses</a>
+      <a href="#insights">Market Insights</a>
+      <a href="#services">Services</a>
+      <a href="#about">Who We Are</a>
+    </div>
+    <div class="nav-right">
+      <div class="search-box">
+        <input type="text" placeholder="Search..." />
+      </div>
+      <a href="#login">Log in</a>
+      <a href="#signup" style="color:#fff; background:var(--brand-blue); padding:0.45rem 1rem; border-radius:var(--radius-pill); font-weight:600;">Sign up</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <h1>Welcome to Raymoch</h1>
+    <p>Trusted platform to explore businesses, gain insights, and connect with opportunities across Africa and beyond.</p>
+  </section>
+
+  <!-- INSIGHTS SECTION -->
+  <section class="insights" id="insights">
+    <div class="insights-grid">
+      <!-- LEFT COLUMN -->
+      <aside class="insights-list">
+        <div class="insight-item">
+          <span class="date">31 Aug 2025 — Commodity Insights</span>
+          <h4>Sudan says field work at Haglig oil fields may have to be suspended after terrorist attack</h4>
+        </div>
+        <div class="insight-item">
+          <span class="date">29 Aug 2025 — Ratings</span>
+          <h4>Second Party Opinion: Parque Arauco S.A.'s Sustainable Financing Framework</h4>
+        </div>
+        <div class="insight-item">
+          <span class="date">29 Aug 2025 — Commodity Insights</span>
+          <h4>South African bunker group highlights concerns about new STS rules</h4>
+        </div>
+      </aside>
+
+      <!-- MAIN FEATURE -->
+      <article class="insight-feature">
+        <img src="featured-report.jpg" alt="Featured report" />
+        <div class="feature-content">
+          <span class="tag">LOOK FORWARD REPORT · Global Realignment</span>
+          <h2>Eritrea Inc. heads to Global South in the age of tariffs</h2>
+          <p>Facing rising US tariffs, Chinese firms are pivoting to the Global South, boosting trade with investment in the region...</p>
+        </div>
+      </article>
+
+      <!-- RIGHT COLUMN -->
+      <aside class="insights-side">
+        <div class="card">
+          <img src="side-report.jpg" alt="Side story" />
+          <button class="explore-btn">Explore →</button>
+        </div>
+        <div class="card events">
+          <h3>Events</h3>
+          <p><span class="date">31 Aug 2025 — Commodity Insights</span><br/>
+          Sudan says field work at Haglig oil fields may have to be suspended...</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+</body>
+</html>

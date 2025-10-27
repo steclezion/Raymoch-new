@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Raymoch • Explore Businesses</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- ===== MASTER TOKENS + GLOBAL (aligned with Entire.html) ===== -->
+  <style>
+    :root{
+      --brand-blue:#0328aeed;
+      --brand-blue-700:#213bb1;
+      --brand-blue-500:#041b64;
+      --accent-gold:#7a7797a8;
+
+      --ink:#101114;
+      --muted:#3c4b69;
+      --bg:#fafafa;
+      --border:#e8e8ee;
+      --card:#ffffff;
+
+      --radius:14px; --pill:999px;
+      --shadow:0 6px 22px rgba(10,42,107,.08);
+      --maxw:1328px; --gutter:18px;
+
+      --footer-bg:#0b1020; /* keep in sync with Entire.html */
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+
+    /* ===== Canvas + overscroll fixes (no white under footer) ===== */
+    html{ background:var(--footer-bg); height:100%; }
+    body{
+      color:var(--ink);
+      line-height:1.5;
+      min-height:100dvh;
+      display:flex; flex-direction:column;
+      overscroll-behavior-y:none;
+      background:
+        linear-gradient(to bottom,
+          var(--bg) 0%,
+          var(--bg) calc(100% - 240px),
+          var(--footer-bg) calc(100% - 240px),
+          var(--footer-bg) 100%);
+    }
+    body::after{
+      content:""; position:fixed; inset:auto 0 0 0;
+      height:env(safe-area-inset-bottom, 0);
+      background:var(--footer-bg); pointer-events:none; z-index:1;
+    }
+
+    a{color:inherit;text-decoration:none}
+    img{max-width:100%;display:block}
+    .wrap{max-width:var(--maxw);margin:0 auto;padding:0 var(--gutter)}
+    footer{margin-top:auto}
+    .header a:focus-visible, .header button:focus-visible, .btn:focus-visible { outline:2px solid #cfe0ff; outline-offset:2px; }
+    @media (max-width:860px){
+      footer .wrap > div[style*="grid-template-columns"]{
+        display:grid;grid-template-columns:1fr;gap:16px !important;
+      }
+    }
+  </style>
+
+  <!-- ===== FROZEN HEADER (from Entire.html) ===== -->
+  <style>
+    .header{
+      --nav-brand: var(--brand-blue);
+      --nav-link:  #0f172a;
+      --nav-hover: #0a2a6b;
+      --nav-bg:    #ffffff;
+      --nav-fg:    var(--ink);
+
+      background: var(--nav-bg); color: var(--nav-fg);
+      position:sticky;top:0;z-index:1000;border-bottom:1px solid var(--border)
+    }
+    .row1{
+      display:flex;justify-content:space-between;align-items:center;gap:16px;
+      padding:12px 8px; max-width:none; margin:15px; box-shadow:0 1px 0 rgba(0,0,0,.05);
+      position:relative;
+    }
+    .brandrow{display:flex;align-items:center;gap:22px}
+    .brand{display:flex;align-items:center;gap:10px;color:var(--nav-brand)}
+    .brand-word{font-weight:900;font-size:1.4rem;color:var(--nav-brand);letter-spacing:.2px}
+    .dotgrid{width:18px;height:18px;display:inline-grid;grid-template-columns:repeat(2,1fr);gap:2px}
+    .dotgrid i{width:5px;height:5px;border-radius:2px;background:#101114}
+    .rightside{display:flex;align-items:center;gap:14px;margin-right:0}
+    .search-box{min-width:140px;width:18vw;max-width:260px}
+    .search-box input{width:100%;height:40px;padding:0 14px;border:1px solid var(--border);border-radius:var(--pill)}
+    .search-box input:focus{border-color:var(--nav-brand);outline:2px solid #cfe0ff}
+    .auth{display:flex;align-items:center;gap:10px}
+    .btn{height:40px;display:inline-flex;align-items:center;gap:8px;padding:0 16px;border-radius:var(--pill);font-weight:700;background:#fff;border:1px solid var(--border);cursor:pointer}
+    .btn.primary{background:var(--nav-brand);color:#fff;border-color:var(--nav-brand)}
+    .explore-toggle{
+      appearance:none;border:0;background:transparent;cursor:pointer;
+      display:flex;align-items:center;gap:8px;
+      font-weight:800;color:var(--nav-link);padding:6px 8px;border-radius:8px;
+      font-size:1.1rem;
+    }
+    .explore-toggle:hover,
+    .explore-toggle[aria-expanded="true"]{ background:#eceff3;color:var(--nav-hover); }
+    .menu-panel{
+      position:absolute; top:calc(100% + 10px); left:15px; z-index:1100;
+      width:min(760px, calc(100vw - 40px));
+      background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);
+      padding:14px;
+    }
+    .menu-panel[hidden]{ display:none; }
+    .menu-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .menu-head h4{margin:0;font-size:1rem}
+    .menu-grid{display:grid;grid-template-columns:repeat(2,minmax(240px,1fr));gap:12px}
+    .menu-item{display:block;padding:12px;border:1px solid var(--border);border-radius:12px;background:#fff;}
+    .menu-item:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(0,0,0,.06)}
+    .menu-item h5{margin:0 0 6px;font-size:.98rem}
+    .menu-item p{margin:0;color:var(--muted);font-size:.92rem}
+    @media (max-width:560px){ .menu-grid{grid-template-columns:1fr} }
+
+    .row2{background:#f5f6f8;border-top:1px solid #eee;border-bottom:1px solid #e6e6e6;padding-left:15px}
+    .row2 .wrap{max-width:none;padding:0}
+    .row2 .links{display:flex;gap:18px;padding:8px 8px;margin:0;justify-content:flex-start;align-items:center}
+    .row2 a{font-weight:600;font-size:.92rem;padding:4px 6px;border-radius:4px;color:var(--nav-link)}
+    .row2 a:hover{background:#eceff3;color:var(--nav-hover)}
+    @media (max-width:800px){ .search-box{width:34vw;max-width:300px} }
+    @media (max-width:720px){ .row2{display:none} .search-box{min-width:0;width:46vw} }
+  </style>
+
+  <!-- ===== PAGE-SPECIFIC (Explore) ===== -->
+  <style>
+    .container{max-width:1180px;margin:0 auto;padding:24px 20px}
+    .explore-hero{text-align:center;padding:30px 12px}
+    .explore-hero h1{font-size:40px;line-height:1.06;font-weight:900;color:#0A2A6B;margin:0 0 6px}
+    .explore-hero p{color:#667085;margin:0}
+
+    .search-panel{margin:12px auto 18px;padding:14px;border-radius:20px;border:1px solid var(--border);background:#fff;box-shadow:var(--shadow)}
+    .tier{display:grid;gap:10px;align-items:center}
+    .tier-1{grid-template-columns:1fr}
+    .tier-2{grid-template-columns:1fr 1fr auto auto}
+    .tier-3{grid-template-columns:1fr;justify-items:center}
+
+    .input-wrap{position:relative}
+    .input-wrap .icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:.95rem;pointer-events:none;color:#94a3b8}
+    .input{
+      width:100%;height:44px;
+      padding:0 108px 0 36px;
+      border:1px solid var(--border);border-radius:var(--pill);font-size:.98rem;outline:none;background:#fff
+    }
+    .input:focus{border-color:#97b3ff;outline:3px solid #e5edff}
+    .clear-btn, .go-btn{
+      position:absolute; top:50%; transform:translateY(-50%);
+      height:34px; padding:0 10px; border-radius:999px; border:1px solid var(--border);
+      background:#fff; cursor:pointer; font-size:.95rem; line-height:32px;
+    }
+    .go-btn{
+      right:44px;
+      border-color:var(--brand-blue); background:var(--brand-blue); color:#fff; font-weight:800;
+      display:inline-flex; align-items:center; gap:6px; padding:0 12px;
+    }
+    .go-btn svg{width:16px;height:16px}
+    .clear-btn{ right:8px; color:#9aa3b2; background:#f8fafc; }
+
+    select.select{width:100%;height:44px;padding:0 14px;border:1px solid var(--border);border-radius:var(--pill);font-size:.98rem;outline:none;background:#fff}
+    select.select:focus{border-color:#97b3ff;outline:3px solid #e5edff}
+    .switch{display:flex;align-items:center;gap:8px;font-size:.96rem;color:#0f1222}
+    .switch input{appearance:none;width:46px;height:26px;border-radius:var(--pill);background:#e5e7eb;position:relative;cursor:pointer;transition:background .2s}
+    .switch input:checked{background:#0A2A6B}
+    .switch input::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:left .2s}
+    .switch input:checked::after{left:23px}
+
+    .sector-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+      gap:12px;padding:4px 2px;margin-bottom:10px
+    }
+    .sector-card{background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:14px;min-height:96px;transition:transform .16s ease,box-shadow .16s ease;cursor:pointer;text-align:left;display:block;width:100%}
+    .sector-card:hover{transform:translateY(-2px);box-shadow:0 14px 34px rgba(10,42,107,.10)}
+    .sector-card .icon{font-size:1.3rem;margin-bottom:.3rem;display:inline-block}
+    .sector-card h3{font-size:.98rem;color:#0A2A6B;margin:0 0 .08rem}
+    .sector-card p{font-size:.84rem;color:#6b7280;margin:0}
+    .sector-card:focus{outline:3px solid #c7d2fe;outline-offset:3px}
+
+    .msg{display:none;margin:8px 2px 0;padding:10px 12px;border-radius:12px;border:1px dashed #c7d2fe;background:#f8faff;color:#0a2a6b;font-weight:700}
+    .msg.show{display:block}
+  </style>
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header class="header" id="nav" data-version="HeaderFooter_v1.0">
+    <div class="row1">
+      <div class="brandrow">
+        <a class="brand" href="Entire.html" aria-label="Raymoch home">
+          <svg width="28" height="28" viewBox="0 0 200 200" aria-hidden="true">
+            <polygon fill="none" stroke="currentColor" stroke-width="10" points="100,18 172,59 172,141 100,182 28,141 28,59"/>
+            <text x="100" y="118" text-anchor="middle" style="fill:currentColor;font:700 105px Georgia">R</text>
+          </svg>
+          <span class="brand-word">Raymoch</span>
+        </a>
+
+        <button class="explore-toggle" id="exploreToggle" aria-haspopup="true" aria-expanded="false" aria-controls="t1Menu">
+          <span class="dotgrid" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+          Explore
+        </button>
+
+        <div class="menu-panel" id="t1Menu" role="menu" aria-labelledby="exploreToggle" hidden>
+          <div class="menu-head"><h4>Explore services</h4></div>
+          <div class="menu-grid">
+            <a class="menu-item" role="menuitem" href="Matching.html"><h5>Trusted Matching</h5><p>Get paired with credible businesses using CTI & verification.</p></a>
+            <a class="menu-item" role="menuitem" href="verification.html"><h5>Verification</h5><p>CTI badges, document checks, and data provenance.</p></a>
+            <a class="menu-item" role="menuitem" href="Market_Insight.html"><h5>Research & Insights</h5><p>Sector reports, trends, and regional briefs.</p></a>
+            <a class="menu-item" role="menuitem" href="Services.html"><h5>Programs & Services</h5><p>Advisory, partner programs, and support options.</p></a>
+            <a class="menu-item" role="menuitem" href="incentives.html"><h5>Policy & Incentives</h5><p>Tax credits, grants, and regulatory signals.</p></a>
+            <a class="menu-item" role="menuitem" href="whitespace.html"><h5>Whitespace Map</h5><p>Where demand outpaces supply across sectors.</p></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="rightside">
+        <form class="search-box" action="search.html">
+          <input type="search" name="q" placeholder="Search companies, sectors, regions…" />
+        </form>
+        <div class="auth">
+          <a class="btn" href="login.html">Log in</a>
+          <a class="btn primary" href="signup.html">Sign up</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="wrap">
+        <nav class="links" aria-label="Secondary">
+          <a href="explore2.html" aria-current="page">Businesses</a>
+          <a href="Services.html">Services</a>
+          <a href="Market_Insight.html">Research &amp; Insights</a>
+          <a href="About.html">Who We Are</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== PAGE ===== -->
+  <main>
+    <section class="container">
+      <div class="explore-hero">
+        <h1>Explore Businesses</h1>
+        <p>This is the front door. Pick a sector or search; we’ll show the right companies.</p>
+      </div>
+
+      <!-- Search panel -->
+      <form class="search-panel card" role="search" id="searchForm">
+        <div class="tier tier-1">
+          <div class="input-wrap">
+            <span class="icon">🔎</span>
+            <input id="f-search" class="input" name="q" type="search" placeholder="Search businesses…" autocomplete="off" />
+            <button id="go-search" class="go-btn" type="submit" aria-label="Search">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 21l-4.2-4.2m1.2-4.8a7 7 0 11-14 0 7 7 0 0114 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              <span>Search</span>
+            </button>
+            <button id="clear-search" class="clear-btn" aria-label="Clear search" type="button">✕</button>
+          </div>
+        </div>
+
+        <div class="tier tier-2" style="margin-top:8px">
+          <select id="f-country" class="select" aria-label="Country"></select>
+          <select id="f-sector" class="select" aria-label="Sector"></select>
+          <label class="switch" title="Show verified companies only">
+            <input id="f-verified" type="checkbox"/><span>Verified only</span>
+          </label>
+          <button id="do-search" class="btn primary" type="submit">Search</button>
+        </div>
+
+        <div class="tier tier-3" style="margin-top:6px">
+          <a class="btn" id="allCompaniesBtn" href="companies.html">All Companies</a>
+        </div>
+      </form>
+
+      <!-- Sector tiles -->
+      <div class="sector-grid" id="sector-grid"></div>
+      <div id="sectorMessage" class="msg" role="status" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer style="background:#0b1020;color:#cbd5e1;">
+    <div class="wrap" style="padding:32px var(--gutter)">
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:18px">
+        <div>
+          <div style="color:#fff;font-weight:800;font-size:1.2rem;margin-bottom:8px">Raymoch</div>
+          <div style="color:#94a3b8;max-width:360px">
+            Connecting investors and entrepreneurs through trust, verified data, and actionable insights.
+          </div>
+        </div>
+        <div>
+          <h5 style="margin-bottom:10px;color:#e5e7eb;font-size:.95rem">Company</h5>
+          <a href="About.html" style="display:block;color:#cbd5e1;margin:6px 0">About</a>
+          <a href="careers.html" style="display:block;color:#cbd5e1;margin:6px 0">Careers</a>
+          <a href="press.html" style="display:block;color:#cbd5e1;margin:6px 0">Press</a>
+          <a href="contact.html" style="display:block;color:#cbd5e1;margin:6px 0">Contact</a>
+        </div>
+        <div>
+          <h5 style="margin-bottom:10px;color:#e5e7eb;font-size:.95rem">Product</h5>
+          <a href="explore2.html" style="display:block;color:#cbd5e1;margin:6px 0">Explore Businesses</a>
+          <a href="Market_Insight.html" style="display:block;color:#cbd5e1;margin:6px 0">Market Insights</a>
+          <a href="verification.html" style="display:block;color:#cbd5e1;margin:6px 0">Verification</a>
+          <a href="Services.html" style="display:block;color:#cbd5e1;margin:6px 0">Programs & Services</a>
+        </div>
+        <div>
+          <h5 style="margin-bottom:10px;color:#e5e7eb;font-size:.95rem">Resources</h5>
+          <a href="blog.html" style="display:block;color:#cbd5e1;margin:6px 0">Blog</a>
+          <a href="help.html" style="display:block;color:#cbd5e1;margin:6px 0">Help Center</a>
+          <a href="security.html" style="display:block;color:#cbd5e1;margin:6px 0">Security</a>
+          <a href="status.html" style="display:block;color:#cbd5e1;margin:6px 0">Status</a>
+        </div>
+      </div>
+      <div style="border-top:1px solid #1f2937;margin-top:22px;padding:12px 0;display:flex;justify-content:space-between;align-items:center;font-size:.92rem">
+        <div>© 2025 Raymoch. All rights reserved.</div>
+        <div>
+          <a href="privacy.html" style="color:#cbd5e1;margin-left:14px">Privacy</a>
+          <a href="terms.html" style="color:#cbd5e1;margin-left:14px">Terms</a>
+          <a href="cookies.html" style="color:#cbd5e1;margin-left:14px">Cookies</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===== JS (menu + explore logic) ===== -->
+  <script>
+    /* Header menu */
+    (() => {
+      const btn = document.getElementById('exploreToggle');
+      const menu = document.getElementById('t1Menu');
+      if (!btn || !menu) return;
+
+      const openMenu = (on) => {
+        btn.setAttribute('aria-expanded', on ? 'true' : 'false');
+        menu.hidden = !on;
+      };
+
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const isOpen = btn.getAttribute('aria-expanded') === 'true';
+        openMenu(!isOpen);
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!menu.hidden && !menu.contains(e.target) && !btn.contains(e.target)) openMenu(false);
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') openMenu(false);
+      });
+    })();
+
+    /* Explore data + wiring */
+    const SECTORS = {
+      agriculture:{ title:"Agriculture", icon:"🌱", slug:"agriculture", desc:"Farming, processing, agri-tech." },
+      energyrenewables:{ title:"Energy & Renewables", icon:"⚡", slug:"energyrenewables", desc:"Solar, wind, off-grid." },
+      constructionrealestate:{ title:"Construction & Real Estate", icon:"🏗️", slug:"constructionrealestate", desc:"Commercial, housing, materials." },
+      manufacturing:{ title:"Manufacturing", icon:"🏭", slug:"manufacturing", desc:"Production & industrial services." },
+      retailecommerce:{ title:"Retail & Ecommerce", icon:"🛍️", slug:"retailecommerce", desc:"Consumer goods, distribution." },
+      logisticsmobility:{ title:"Logistics & Mobility", icon:"🚚", slug:"logisticsmobility", desc:"Transport, supply chain." },
+      fintech:{ title:"FinTech", icon:"💳", slug:"fintech", desc:"Payments, remittances, lending." },
+      ictsoftware:{ title:"ICT / Software", icon:"💻", slug:"ictsoftware", desc:"Software, cloud, IT services." },
+      education:{ title:"Education", icon:"🎓", slug:"education", desc:"Schools, ed-tech, training." },
+      healthcare:{ title:"Healthcare", icon:"🏥", slug:"healthcare", desc:"Clinics, telemedicine, medtech." },
+      foodbeverage:{ title:"Food & Beverage", icon:"🍲", slug:"foodbeverage", desc:"Food products, cafés, restaurants." },
+      tourismhospitality:{ title:"Tourism & Hospitality", icon:"🏝️", slug:"tourismhospitality", desc:"Hotels, travel tech." },
+      mediacreative:{ title:"Media & Creative", icon:"🎬", slug:"mediacreative", desc:"Studios, music, gaming." },
+      govnonprofit:{ title:"Government / Nonprofit", icon:"🏛️", slug:"govnonprofit", desc:"Civic, NGOs, public services." },
+      other:{ title:"Other", icon:"🧩", slug:"other", desc:"Unmapped or mixed." }
+    };
+    const CANONICAL = Object.keys(SECTORS).map(k => SECTORS[k].title);
+
+    const ISO_COUNTRIES = [
+      "Algeria","Angola","Benin","Botswana","Burkina Faso","Burundi","Cabo Verde","Cameroon","Central African Republic","Chad","Comoros","Congo","Côte d’Ivoire","DR Congo","Djibouti","Egypt","Equatorial Guinea","Eritrea","Eswatini","Ethiopia","Gabon","Gambia","Ghana","Guinea","Guinea-Bissau","Kenya","Lesotho","Liberia","Libya","Madagascar","Malawi","Mali","Mauritania","Mauritius","Morocco","Mozambique","Namibia","Niger","Nigeria","Rwanda","São Tomé and Príncipe","Senegal","Seychelles","Sierra Leone","Somalia","South Africa","South Sudan","Sudan","Tanzania","Togo","Tunisia","Uganda","Zambia","Zimbabwe","United States","United Kingdom"
+    ];
+    const optionList=(arr,placeholder)=>`<option value="">${placeholder}</option>`+arr.map(v=>`<option value="${v}">${v}</option>`).join('');
+
+    function buildParams(extra={}){
+      const q = (document.getElementById('f-search')?.value||'').trim();
+      const c = document.getElementById('f-country')?.value||'';
+      const s = document.getElementById('f-sector')?.value||'';
+      const v = document.getElementById('f-verified')?.checked;
+      const p = new URLSearchParams();
+      if (q){ p.set('q', q); p.set('search', q); }
+      if (c) p.set('country', c);
+      if (s) p.set('sector', s);
+      if (v) p.set('verified','1');
+      for (const [k,val] of Object.entries(extra)){ if (val!==undefined && val!==null && String(val).length) p.set(k, val); }
+      return p.toString();
+    }
+
+    function wireSearch(){
+      const qEl = document.getElementById('f-search');
+      const clearBtn = document.getElementById('clear-search');
+      const inlineBtn = document.getElementById('go-search');
+      const doBtn = document.getElementById('do-search');
+      const form = document.getElementById('searchForm');
+      const allBtn = document.getElementById('allCompaniesBtn');
+
+      const go = ()=>{
+        const qs = buildParams();
+        location.href = qs ? `companies.html?${qs}` : `companies.html`;
+      };
+
+      clearBtn.addEventListener('click', ()=>{ qEl.value=''; qEl.focus(); });
+      inlineBtn.addEventListener('click', (e)=>{ e.preventDefault(); go(); });
+      doBtn.addEventListener('click', (e)=>{ e.preventDefault(); go(); });
+      form.addEventListener('submit', (e)=>{ e.preventDefault(); go(); });
+
+      allBtn.addEventListener('click', (e)=>{
+        const qs = buildParams();
+        if (qs){ e.preventDefault(); location.href = `companies.html?${qs}`; }
+      });
+    }
+
+    /* ====== Robust sector link building ====== */
+    const API = location.origin;
+
+    function normKey(s){
+      return (s||"")
+        .toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+        .replace(/&|\/|and/g,"and")
+        .replace(/[^a-z0-9]+/g,"")
+        .trim();
+    }
+
+    function decorateSectorLabel(apiLabel){
+      const key = normKey(apiLabel);
+      const hit = Object.values(SECTORS).find(s => normKey(s.title) === key);
+      if (hit) return { title: hit.title, icon: hit.icon, desc: hit.desc, api: apiLabel };
+      return { title: apiLabel, icon: "🧩", desc: "Sector", api: apiLabel };
+    }
+
+    async function fetchAllSectorsFromAPI(){
+      try{
+        const res = await fetch(API + '/companies?page=1&limit=5000');
+        const js  = await res.json();
+        const list = Array.isArray(js?.data) ? js.data : (Array.isArray(js) ? js : []);
+        const seen = new Set(), sectors = [];
+        for (const row of list){
+          const s = (row?.sector ?? row?.Sector ?? "").toString().trim();
+          if (s && !seen.has(s)){ seen.add(s); sectors.push(s); }
+        }
+        sectors.sort((a,b)=>a.localeCompare(b));
+        return sectors;
+      }catch(err){
+        console.warn('[Explore] Sector fetch failed:', err);
+        return [];
+      }
+    }
+
+    function bestMatchFor(canonicalTitle, apiSectors){
+      const target = normKey(canonicalTitle);
+      // 1) exact normalized match
+      let hit = apiSectors.find(s => normKey(s) === target);
+      if (hit) return hit;
+      // 2) containment match
+      hit = apiSectors.find(s => {
+        const k = normKey(s);
+        return k.includes(target) || target.includes(k);
+      });
+      if (hit) return hit;
+      // 3) fallback to canonical (still show tile; link may yield empty state if API truly lacks it)
+      return canonicalTitle;
+    }
+
+    async function renderTiles(){
+      const grid = document.getElementById('sector-grid');
+      const msg  = document.getElementById('sectorMessage');
+      if (!grid) return;
+
+      grid.style.display = 'grid';
+      grid.innerHTML = '';
+      if (msg){ msg.classList.remove('show'); msg.textContent = ''; }
+
+      const apiSectors = await fetchAllSectorsFromAPI();
+
+      const frag = document.createDocumentFragment();
+      CANONICAL.forEach(canon => {
+        const matched = apiSectors.length ? bestMatchFor(canon, apiSectors) : canon;
+        const info = decorateSectorLabel(matched); // keeps pretty icon/title
+        const a = document.createElement('a');
+        a.className = 'sector-card';
+        a.href = `companies.html?sector=${encodeURIComponent(matched)}&from=explore`;
+        a.setAttribute('aria-label', `Open ${info.title} companies`);
+        a.innerHTML = `<span class="icon">${info.icon}</span>
+                       <h3>${info.title}</h3>
+                       <p>${info.desc}</p>`;
+        frag.appendChild(a);
+      });
+      grid.appendChild(frag);
+
+      // Optional: console debug for any sectors with no API match
+      if (apiSectors.length){
+        const missing = CANONICAL.filter(c => !apiSectors.some(s => normKey(s) === normKey(c)));
+        if (missing.length){
+          console.info('[Explore] Sectors not present in API (tiles still shown):', missing);
+        }
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', async ()=>{
+      document.querySelector('main').style.paddingBottom = '24px';
+      (function a11yMenuRoles(){
+        const menu = document.getElementById('t1Menu');
+        menu?.querySelectorAll('a.menu-item').forEach(a => a.setAttribute('role','menuitem'));
+      })();
+
+      // Populate filters + wire search
+      document.getElementById('f-country').innerHTML = optionList(ISO_COUNTRIES, 'Country');
+      document.getElementById('f-sector').innerHTML  = optionList(CANONICAL, 'Sector');
+      wireSearch();
+
+      // Render sector tiles (always show full set; map to API labels when available)
+      await renderTiles();
+    });
+  </script>
+</body>
+</html>

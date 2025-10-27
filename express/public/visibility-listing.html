@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Raymoch • Visibility & Listings</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root{
+      --brand-blue:#0328aeed;
+      --brand-blue-700:#213bb1;
+      --brand-blue-500:#041b64;
+      --accent-gold:#7a7797a8;
+      --ink:#101114;
+      --muted:#3c4b69;
+      --bg:#fafafa;
+      --border:#e8e8ee;
+      --card:#ffffff;
+      --radius:14px; --pill:999px;
+      --shadow:0 6px 22px rgba(10,42,107,.08);
+      --maxw:1328px; --gutter:18px;
+      --footer-bg:#0b1020;
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+    html{background:var(--footer-bg);height:100%;}
+    body{color:var(--ink);line-height:1.5;min-height:100dvh;display:flex;flex-direction:column;overscroll-behavior-y:none;background:linear-gradient(to bottom,var(--bg) 0%,var(--bg) calc(100% - 240px),var(--footer-bg) calc(100% - 240px),var(--footer-bg) 100%);} 
+    body::after{content:"";position:fixed;inset:auto 0 0 0;height:env(safe-area-inset-bottom, 0);background:var(--footer-bg);pointer-events:none;z-index:1;}
+    a{color:inherit;text-decoration:none}img{max-width:100%;display:block}
+    .wrap{max-width:var(--maxw);margin:0 auto;padding:0 var(--gutter)}
+
+    .header{--nav-brand: var(--brand-blue);--nav-link:#0f172a;--nav-hover:#0a2a6b;--nav-bg:#ffffff;--nav-fg:var(--ink);background:var(--nav-bg);color:var(--nav-fg);position:sticky;top:0;z-index:1000;border-bottom:1px solid var(--border)}
+    .row1{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 8px;margin:15px;box-shadow:0 1px 0 rgba(0,0,0,.05);position:relative;background:#fff;border-radius:12px;}
+    .brandrow{display:flex;align-items:center;gap:22px}
+    .brand{display:flex;align-items:center;gap:10px;color:var(--nav-brand)}
+    .brand-word{font-weight:900;font-size:1.4rem;color:var(--nav-brand);letter-spacing:.2px}
+    .dotgrid{width:18px;height:18px;display:inline-grid;grid-template-columns:repeat(2,1fr);gap:2px}
+    .dotgrid i{width:5px;height:5px;border-radius:2px;background:#101114}
+    .rightside{display:flex;align-items:center;gap:14px;margin-right:0}
+    .search-box{min-width:140px;width:18vw;max-width:260px}
+    .search-box input{width:100%;height:40px;padding:0 14px;border:1px solid var(--border);border-radius:var(--pill)}
+    .search-box input:focus{border-color:var(--nav-brand);outline:2px solid #cfe0ff}
+    .auth{display:flex;align-items:center;gap:10px}
+    .btn{height:40px;display:inline-flex;align-items:center;gap:8px;padding:0 16px;border-radius:var(--pill);font-weight:700;background:#fff;border:1px solid var(--border)}
+    .btn.primary{background:var(--nav-brand);color:#fff;border-color:var(--nav-brand)}
+    .explore-toggle{appearance:none;border:0;background:transparent;cursor:pointer;display:flex;align-items:center;gap:8px;font-weight:800;color:var(--nav-link);padding:6px 8px;border-radius:8px;font-size:1.1rem;}
+    .explore-toggle:hover,.explore-toggle[aria-expanded="true"]{background:#eceff3;color:var(--nav-hover);}
+    .menu-panel{position:absolute;top:calc(100% + 10px);left:15px;z-index:1100;width:min(760px,calc(100vw - 40px));background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:14px;}
+    .menu-panel[hidden]{display:none;}
+    .menu-grid{display:grid;grid-template-columns:repeat(2,minmax(240px,1fr));gap:12px}
+    .menu-item{display:block;padding:12px;border:1px solid var(--border);border-radius:12px;background:#fff;}
+    .menu-item:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(0,0,0,.06)}
+    .row2{background:#f5f6f8;border-top:1px solid #eee;border-bottom:1px solid #e6e6e6;padding-left:15px}
+    .row2 .wrap{max-width:none;padding:0}
+    .row2 .links{display:flex;gap:18px;padding:8px 8px;margin:0;justify-content:flex-start;align-items:center}
+    .row2 a{font-weight:600;font-size:.92rem;padding:4px 6px;border-radius:4px;color:var(--nav-link)}
+    .row2 a:hover{background:#eceff3;color:var(--nav-hover)}
+
+    .hero{--hero-a:var(--brand-blue-700);--hero-b:var(--brand-blue-500);--hero-fg:#ffffff;--hero-sub:#DDEBFF;color:var(--hero-fg);position:relative;overflow:hidden;background:linear-gradient(135deg,var(--hero-a),var(--hero-b));border-bottom:1px solid var(--border)}
+    .hero-inner{position:relative;display:block;padding:64px 8px;max-width:var(--maxw);margin:0 auto}
+    .hero h1{font-size:clamp(28px,5.6vw,48px);line-height:1.1;margin-bottom:8px;font-weight:800;background:linear-gradient(90deg,#fff,#e7efff);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .hero p{font-size:clamp(15px,2.2vw,19px);color:var(--hero-sub);max-width:62ch}
+
+    main.wrap{padding-bottom:24px;}
+    .container{max-width:1140px;margin:0 auto;padding:0 var(--gutter) clamp(72px,10vw,160px);}    
+    .grid{display:grid;grid-template-columns:7fr 5fr;gap:370px;margin-top:clamp(28px,5vw,94px);} /* increased gap */
+    .bullets{margin:8px 0 0;padding-left:18px}
+    .bullets li{margin:6px 0}
+    .actions{background:var(--card);border:1px solid var(--border);border-radius:22px;box-shadow:var(--shadow);padding:22px}
+    .stack{display:flex;flex-direction:column;gap:12px;margin-top:8px}
+    .cta{display:inline-block;border-radius:12px;background:var(--brand-blue);color:#fff;text-decoration:none;padding:12px 16px;font-weight:700}
+    .ghost{background:#fff;border:1px solid #e6e7ef;border-radius:12px;padding:12px 14px;font-weight:700;text-align:center;color:#0f172a;text-decoration:none}
+    .hint{font-size:12px;color:var(--muted);margin-top:6px}
+
+    footer{margin-top:auto;background:var(--footer-bg);color:#cbd5e1;}
+    @media (max-width:760px){.grid{grid-template-columns:1fr}}
+    @media (max-width:860px){footer .wrap>div[style*="grid-template-columns"]{display:grid;grid-template-columns:1fr;gap:16px!important;}}
+  </style>
+</head>
+<body>
+  <header class="header" id="nav" data-version="HeaderFooter_v1.0">
+    <div class="row1">
+      <div class="brandrow">
+        <a class="brand" href="Entire.html" aria-label="Raymoch home">
+          <svg width="28" height="28" viewBox="0 0 200 200" aria-hidden="true">
+            <polygon fill="none" stroke="currentColor" stroke-width="10" points="100,18 172,59 172,141 100,182 28,141 28,59"/>
+            <text x="100" y="118" text-anchor="middle" style="fill:currentColor;font:700 105px Georgia">R</text>
+          </svg>
+          <span class="brand-word">Raymoch</span>
+        </a>
+        <button class="explore-toggle" id="exploreToggle" aria-haspopup="true" aria-expanded="false" aria-controls="t1Menu">
+          <span class="dotgrid" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Explore
+        </button>
+      </div>
+      <div class="rightside">
+        <form class="search-box" action="search.html"><input type="search" name="q" placeholder="Search companies, sectors, regions…"/></form>
+        <div class="auth"><a class="btn" href="login.html">Log in</a><a class="btn primary" href="signup.html">Sign up</a></div>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="wrap">
+        <nav class="links" aria-label="Secondary"><a href="explore2.html">Businesses</a><a href="Services.html">Services</a><a href="Market_Insight.html">Research &amp; Insights</a><a href="About.html">Who We Are</a></nav>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero"><div class="hero-inner"><h1>Visibility &amp; Listings</h1><p>Get listed so customers and partners can find you. Keep your details accurate. Request updates anytime.</p></div></section>
+
+  <main class="container">
+    <div class="grid">
+      <div>
+        <h2>What this does</h2>
+        <ul class="bullets">
+          <li>Create a public business profile that’s easy to discover</li>
+          <li>Show sector, country, and trust signals (CTI)</li>
+          <li>Fix mistakes fast via a simple “Request an Update”</li>
+        </ul>
+        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap"><a class="cta" href="companies-vl.html?from=visibility">Find My Listing</a></div>
+      </div>
+      <aside>
+        <div class="actions"><h3 style="margin:5px 5px 15px">Quick links</h3><div class="stack"><a class="ghost" href="companies-vl.html?from=visibility&verified=1">Browse all listings</a><a class="ghost" href="companies-vl.html?from=visibility&action=update">Request an update</a></div></div>
+      </aside>
+    </div>
+    <p class="hint">Tip: Use the quick links — the dedicated listings pages handle search, filters, and updates.</p>
+  </main>
+
+  <footer>
+    <div class="wrap" style="padding:32px var(--gutter)">
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:18px">
+        <div><div style="color:#fff;font-weight:800;font-size:1.2rem;margin-bottom:8px">Raymoch</div><div style="color:#94a3b8;max-width:360px">Connecting investors and entrepreneurs through trust, verified data, and actionable insights.</div></div>
+        <div><h5 style="margin-bottom:10px;color:#e5e7eb;font-size:.95rem">Company</h5><a href="About.html" style="display:block;color:#cbd5e1;margin:6px 0">About</a><a href="careers.html" style="display:block;color:#cbd5e1;margin:6px 0">Careers</a><a href="press.html" style="display:block;color:#cbd5e1;margin:6px 0">Press</a><a href="contact.html" style="display:block;color:#cbd5e1;margin:6px 0">Contact</a></div>
+        <div><h5 style="margin-bottom:10px;color:#e5e7eb;font-size:.95rem">Product</h5><a href="explore2.html" style="display:block;color:#cbd5e1;margin:6px 0">Explore Businesses</a><a href="Market_Insight.html" style="display:block;color:#cbd5e1;margin:6px 0">Market Insights</a><a href="verification.html" style="display:block;color:#cbd5e1;margin:6px 0">Verification</a><a href="Services.html" style="display:block;color:#cbd5e1;margin:6px 0">Programs & Services</a></div>
+        <div><h5 style="margin-bottom:10px;color:#e5e7eb;font-size:.95rem">Resources</h5><a href="blog.html" style="display:block;color:#cbd5e1;margin:6px 0">Blog</a><a href="help.html" style="display:block;color:#cbd5e1;margin:6px 0">Help Center</a><a href="security.html" style="display:block;color:#cbd5e1;margin:6px 0">Security</a><a href="status.html" style="display:block;color:#cbd5e1;margin:6px 0">Status</a></div>
+      </div>
+      <div style="border-top:1px solid #1f2937;margin-top:22px;padding:12px 0;display:flex;justify-content:space-between;align-items:center;font-size:.92rem"><div>© 2025 Raymoch. All rights reserved.</div><div><a href="privacy.html" style="color:#cbd5e1;margin-left:14px">Privacy</a><a href="terms.html" style="color:#cbd5e1;margin-left:14px">Terms</a><a href="cookies.html" style="color:#cbd5e1;margin-left:14px">Cookies</a></div></div>
+    </div>
+  </footer>
+</body>
+</html>

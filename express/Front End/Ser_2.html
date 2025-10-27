@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Raymoch • Services (Integrated)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --brand-blue:#0A2A6B; --brand-gold:#DAA520;
+      --bg:#F7F7FB; --card:#FFFFFF; --ink:#0F1222; --muted:#133c90; --border:#E8E8EE;
+      --shadow:0 10px 30px rgba(6,60,168,.08);
+      --radius:16px; --radius-pill:999px;
+    }
+    *{box-sizing:border-box}
+    html,body{
+      margin:0;padding:0;background:var(--bg);color:var(--ink);
+      font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      height:100%;
+    }
+    /* Sticky footer layout */
+    body{display:flex;flex-direction:column;min-height:100vh}
+    main{flex:1}
+
+    a{color:var(--brand-blue);text-decoration:none}
+    .container{max-width:1100px;margin:0 auto;padding:24px}
+
+    /* NAV (exactly as your Services) */
+    .site-header{position:sticky; top:0; z-index:1000; width:100%; background:#f4efef; border-bottom:1px solid var(--border); box-shadow:0 2px 10px rgba(0,0,0,0.02)}
+    .nav{display:flex;align-items:center;gap:16px;justify-content:space-between; padding:12px 16px}
+    .brand{display:flex;gap:10px;align-items:center}
+    .brand .dot{width:12px;height:12px;border-radius:50%;background:var(--brand-gold)}
+    .brand h1{font-size:18px;margin:0;font-weight:700;color:var(--brand-blue)}
+    .menu{display:flex;gap:18px;font-weight:600}
+    .menu a{opacity:.9}
+    .menu a:hover{opacity:1}
+    .menu a.active{opacity:1; position:relative}
+    .menu a.active::after{content:""; position:absolute; left:0; right:0; bottom:-6px; height:2px; background:var(--brand-gold);}
+    .nav-actions{display:flex;gap:10px;align-items:center}
+    .btn{border:0;background:var(--brand-blue);color:#fff;border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer}
+    .btn.secondary{background:#fff;color:var(--brand-blue);border:1px solid var(--brand-blue)}
+
+    /* HERO (Services) */
+    .hero{background:#c4c4c7;color:var(--ink);border:1px solid var(--border);border-radius:var(--radius);padding:36px 32px;box-shadow:var(--shadow);margin-top:22px}
+    .hero h2{font-size:32px;margin:0 0 10px;font-weight:800;letter-spacing:.2px;color:var(--brand-blue)}
+    .hero p{opacity:.95;margin:0;max-width:820px}
+
+    /* SERVICES GRID */
+    .svc-menu{margin-top:18px}
+    .svc-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+    .svc-col-3{grid-column:span 3}
+    .svc-box{
+      display:block;border:1px solid var(--border);border-radius:20px;background:var(--card);
+      padding:28px 24px 24px;box-shadow:var(--shadow);text-decoration:none;color:inherit;
+      transition:transform .12s ease, box-shadow .12s ease;min-height:190px
+    }
+    .svc-box:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(6,60,168,.12)}
+    .svc-box h3{margin:0 0 6px;font-size:18px}
+    .svc-box p{margin:6px 0 0;color:#475569}
+
+    /* Section separators */
+    .section-title{margin:32px 0 10px;color:var(--brand-blue);scroll-margin-top:90px}
+
+    /* Footer */
+    footer{border-top:1px solid var(--border);padding:18px 0;color:var(--muted);font-size:14px}
+    footer .row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+    footer nav a{margin-right:14px}
+
+    /* Responsive */
+    @media (max-width: 900px){
+      .svc-grid{grid-template-columns:1fr}
+      .svc-col-3{grid-column:span 12}
+      .nav-actions{gap:8px}
+    }
+
+    /* --------------------------------------------- */
+    /* IN-PAGE: MATCHING (scoped to #matching)       */
+    /* --------------------------------------------- */
+    #matching .m-hero{
+      background:#c4c4c7;color:var(--ink);border:1px solid var(--border);
+      border-radius:var(--radius);padding:36px 32px;box-shadow:var(--shadow);margin-top:22px
+    }
+    #matching .m-hero h2{font-size:32px;margin:0 0 10px;font-weight:800;letter-spacing:.2px;color:var(--brand-blue)}
+    #matching .m-input, #matching select{
+      border:1px solid var(--border);background:#fff;border-radius:12px;padding:12px 14px;font-size:15px;min-width:180px
+    }
+    #matching .m-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    #matching .m-step{margin-top:22px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);scroll-margin-top:90px}
+    #matching .m-step header{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+    #matching .m-step header h3{margin:0;font-size:18px}
+    #matching .m-step .m-body{padding:18px}
+    #matching .m-actions{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-top:1px solid var(--border)}
+    #matching .m-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+    #matching .m-col-7{grid-column:span 7}
+    #matching .m-col-5{grid-column:span 5}
+    #matching .m-col-12{grid-column:span 12}
+    #matching .m-card{border:1px solid var(--border);border-radius:20px;background:#fff;padding:16px 18px;box-shadow:var(--shadow)}
+    #matching .m-biz-head{display:flex;justify-content:space-between;gap:10px}
+    #matching .m-biz-title{font-weight:800}
+    #matching .m-muted{color:var(--muted)}
+    #matching .m-badge{display:inline-block;border-radius:10px;padding:4px 8px;background:#F2F4F8;border:1px solid #E2E6EE;font-size:12px;margin-right:6px}
+    #matching .m-badge.green{background:#E8F7EF;border-color:#D2F0DE;color:#1A7F45}
+    #matching .m-mini .m-biz-title{font-weight:700;font-size:15px}
+    #matching .m-mini.m-card{cursor:pointer}
+    #matching .m-why{color:#475569;font-size:14px;margin-top:8px}
+    #matching .m-hint{color:var(--muted);font-size:13px}
+    #matching .m-count{font-weight:700}
+    #matching .m-hidden{display:none}
+    #matching .m-pill{display:inline-flex;gap:8px;align-items:center;border-radius:var(--radius-pill);padding:6px 10px;border:1px solid var(--border);background:#fff;font-size:13px}
+    #matching .m-seg{display:inline-flex;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    #matching .m-seg button{background:#fff;border:0;padding:8px 12px;cursor:pointer;font-weight:700}
+    #matching .m-seg button.active{background:var(--brand-blue);color:#fff}
+    #matching .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    @media (max-width: 900px){
+      #matching .m-grid{grid-template-columns:1fr}
+      #matching .m-col-7,#matching .m-col-5{grid-column:span 12}
+    }
+
+    /* --------------------------------------------- */
+    /* IN-PAGE: PARTNER PROGRAMS (scoped to #partner-programs) */
+    /* --------------------------------------------- */
+    #partner-programs .pp-hero{
+      background:#c4c4c7;color:var(--ink);border:1px solid var(--border);
+      border-radius:var(--radius);padding:36px 32px;box-shadow:var(--shadow);margin-top:22px
+    }
+    #partner-programs .pp-hero h2{font-size:32px;margin:0 0 10px;font-weight:800;letter-spacing:.2px;color:var(--brand-blue)}
+    #partner-programs .pp-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+    #partner-programs .pp-col-4{grid-column:span 4}
+    #partner-programs .pp-card{border:1px solid var(--border);border-radius:20px;background:var(--card);padding:20px;box-shadow:var(--shadow)}
+    #partner-programs .pp-card h3{margin:0 0 6px;font-size:18px;color:var(--brand-blue)}
+    #partner-programs .pp-card p{margin:6px 0 0;color:#475569}
+    #partner-programs .pp-card.click{cursor:pointer}
+    #partner-programs .pp-card.click:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(6,60,168,.12)}
+    #partner-programs .pp-meta{color:#6b7280;font-size:14px}
+    #partner-programs .pp-badge{display:inline-block;border:1px solid var(--border);border-radius:10px;padding:4px 8px;font-size:12px;margin-right:6px;background:#f9fafb}
+    #partner-programs .pp-route{display:none}
+    #partner-programs .pp-route.active{display:block}
+    #partner-programs .pp-filterbar{display:flex;gap:12px;align-items:center;margin:12px 0 14px;flex-wrap:wrap}
+    #partner-programs .pp-filterbar select,#partner-programs .pp-filterbar input{border:1px solid var(--border);border-radius:12px;padding:8px 12px;font-size:15px}
+    #partner-programs .pp-filterbar input{flex:1;min-width:200px}
+    #partner-programs .pp-filterbar .reset{border:0;background:#fff;border:1px solid var(--border);border-radius:12px;padding:8px 14px;font-weight:700;cursor:pointer}
+    @media (max-width: 900px){
+      #partner-programs .pp-grid{grid-template-columns:1fr}
+      #partner-programs .pp-col-4{grid-column:span 12}
+    }
+  </style>
+</head>
+<body>
+  <!-- NAV -->
+  <header class="site-header">
+    <div class="container nav">
+      <div class="brand"><span class="dot"></span><h1>Raymoch</h1></div>
+      <nav class="menu">
+        <a href="#" id="navBusinesses">Businesses</a>
+        <a href="#" id="navInsights">Insights</a>
+        <a href="#" id="navServices" class="active">Services</a>
+        <a href="#" id="navAbout">About</a>
+      </nav>
+      <div class="nav-actions">
+        <button class="btn secondary" id="loginBtn">Log in</button>
+        <button class="btn" id="signupBtn">Sign up</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- SERVICES LANDING -->
+    <div class="container" id="services">
+      <section class="hero">
+        <h2>Services</h2>
+        <p>Build trust. Get seen. Partner smart.</p>
+      </section>
+
+      <section class="svc-menu" aria-labelledby="svcMenuTitle">
+        <h3 id="svcMenuTitle" class="section-title" style="margin:0 0 8px">Choose a service</h3>
+        <div class="svc-grid">
+          <a class="svc-box svc-col-3" href="#matching">
+            <h3>Matching</h3>
+            <p>Investor inputs → ranked SME matches.</p>
+          </a>
+          <a class="svc-box svc-col-3" href="#partner-programs">
+            <h3>Partner Programs</h3>
+            <p>Accelerators & syndicates, plugged in.</p>
+          </a>
+          <a class="svc-box svc-col-3" href="#verification">
+            <h3>Verification</h3>
+            <p>CTI checks: identity, ownership, basics.</p>
+          </a>
+          <a class="svc-box svc-col-3" href="#visibility-listing">
+            <h3>Visibility & Listing</h3>
+            <p>Get listed. Get discovered.</p>
+          </a>
+        </div>
+      </section>
+    </div>
+
+    <!-- MATCHING (in-page) -->
+    <div class="container" id="matching">
+      <section class="m-hero">
+        <h2>Match With The Right African SMEs</h2>
+        <p class="m-hint"></p>
+      </section>
+
+      <!-- STEP: Search & Refine -->
+      <section class="m-step" id="m-searchStep">
+        <header>
+          <h3>Search & Refine</h3>
+          <span class="m-hint"><span class="m-count" id="m-matchCountTop" aria-live="polite">0</span> businesses match your current filters</span>
+        </header>
+        <div class="m-body">
+          <div class="m-grid">
+            <!-- Filters -->
+            <div class="m-col-7 m-card">
+              <h4 style="margin:0 0 10px">Filters</h4>
+              <div class="m-row">
+                <input id="m-q2" class="m-input" placeholder="Search by name, city, keyword…" aria-label="Keyword search" />
+                <select id="m-country2" class="m-input" aria-label="Country"></select>
+                <select id="m-sector2" class="m-input" aria-label="Sector">
+                  <option value="">All sectors</option>
+                  <option>Agriculture & Food</option><option>FinTech</option><option>Energy & Renewables</option>
+                  <option>Manufacturing</option><option>Health</option><option>Education</option>
+                  <option>Logistics</option><option>Retail</option><option>Tourism</option><option>Construction</option>
+                </select>
+              </div>
+              <div class="m-row" style="margin-top:10px">
+                <input id="m-min2" class="m-input" type="number" placeholder="Min ticket ($)" aria-label="Minimum ticket" />
+                <input id="m-max2" class="m-input" type="number" placeholder="Max ticket ($)" aria-label="Maximum ticket" />
+                <select id="m-cti" class="m-input" aria-label="CTI depth">
+                  <option value="">Any CTI depth</option>
+                  <option value="existence">Existence Only</option>
+                  <option value="verified">Verified</option>
+                  <option value="deep">Deep CTI</option>
+                </select>
+              </div>
+              <div id="m-rangeWarn" class="m-hint" aria-live="polite"></div>
+              <div class="m-row" style="margin-top:10px">
+                <label class="m-pill"><input type="checkbox" value="equity" class="m-instr" /> Equity</label>
+                <label class="m-pill"><input type="checkbox" value="revenue share" class="m-instr" /> Revenue share</label>
+                <label class="m-pill"><input type="checkbox" value="debt" class="m-instr" /> Debt</label>
+                <label class="m-pill"><input type="checkbox" value="grant" class="m-instr" /> Grant</label>
+              </div>
+              <div class="m-row" style="margin-top:12px">
+                <button class="btn" id="m-doMatch">Match</button>
+                <span class="m-hint">Preview updates live. Click a preview card to open the profile.</span>
+              </div>
+            </div>
+
+            <!-- Preview -->
+            <div class="m-col-5">
+              <div class="m-card">
+                <div class="m-row" style="justify-content:space-between;align-items:center">
+                  <h4 style="margin:0">Preview</h4>
+                  <div class="m-seg" role="tablist" aria-label="Preview mode">
+                    <button class="active" id="m-segSuggested" role="tab" aria-selected="true" aria-controls="m-miniPreview">Suggested</button>
+                    <button id="m-segLatest" role="tab" aria-selected="false" aria-controls="m-miniPreview">Latest</button>
+                  </div>
+                </div>
+                <div id="m-miniPreview" style="margin-top:6px"></div>
+                <div class="m-hint" style="margin-top:8px">You’ll see the full list on the next step.</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:16px" class="m-row">
+            <button class="btn secondary" id="m-toMatches">Continue</button>
+          </div>
+        </div>
+        <div class="m-actions">
+          <span class="m-hint">Preview: <span class="m-count" id="m-matchCountBottom" aria-live="polite">0</span> potential matches.</span>
+        </div>
+      </section>
+
+      <!-- STEP: Matches -->
+      <section class="m-step m-hidden" id="m-matchStep">
+        <header>
+          <h3>Matched businesses</h3>
+          <span class="m-hint" id="m-showingText" aria-live="polite">Showing 0 of 0</span>
+        </header>
+        <div class="m-body" id="m-results"></div>
+        <div class="m-actions">
+          <button class="btn secondary" id="m-backToSearch">Back</button>
+          <span style="flex:1"></span>
+          <button class="btn" id="m-continueCTA">Continue</button>
+        </div>
+      </section>
+
+      <!-- STEP: Company Profile -->
+      <section class="m-step m-hidden" id="m-profileStep">
+        <header>
+          <h3 id="m-profName">Company</h3>
+          <span class="m-hint" id="m-profMeta"></span>
+        </header>
+        <div class="m-body" id="m-profBody"></div>
+        <div class="m-actions">
+          <button class="btn secondary" id="m-backFromProfile">Back</button>
+          <span style="flex:1"></span>
+          <button class="btn" id="m-contactCTA">Contact</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- PARTNER PROGRAMS (in-page) -->
+    <div class="container" id="partner-programs">
+      <section class="pp-hero">
+        <h2>Partner Programs</h2>
+        <p>Discover official programs, subsidies, and opportunities for African businesses.</p>
+      </section>
+
+      <!-- STEP 1: CHOOSE PATH -->
+      <section class="pp-route active" data-route="programs" aria-labelledby="pp-chooseTitle" style="margin-top:18px">
+        <h3 id="pp-chooseTitle" class="section-title" style="margin:0 0 8px">Choose a partner path</h3>
+        <div class="pp-filterbar" id="pp-lpFilterbar" role="search" style="margin-top:8px">
+          <input id="pp-lpQuery" type="search" placeholder="Search by name, sponsor, sector" aria-label="Search programs on landing" />
+          <select id="pp-lpCategory" aria-label="Program type (landing)"></select>
+          <select id="pp-lpCountry" aria-label="Country (landing)"></select>
+          <button class="reset" id="pp-lpSearchBtn" type="button">Search</button>
+        </div>
+        <div class="pp-grid" style="margin-top:16px">
+          <article class="pp-card pp-col-4 click" data-type="accelerator" tabindex="0" role="button" aria-label="Accelerator Partner">
+            <h3>Accelerator Partner</h3>
+            <p class="pp-meta">Cohort pipelines • Verified profiles</p>
+          </article>
+          <article class="pp-card pp-col-4 click" data-type="syndicate" tabindex="0" role="button" aria-label="Syndicate Partner">
+            <h3>Syndicate Partner</h3>
+            <p class="pp-meta">Dealrooms • Referral tracking</p>
+          </article>
+          <article class="pp-card pp-col-4 click" data-type="ecosystem" tabindex="0" role="button" aria-label="Ecosystem Partner">
+            <h3>Ecosystem Partner</h3>
+            <p class="pp-meta">Directory sync • Member verification</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- STEP 2: CATALOG -->
+      <section class="pp-route" data-route="catalog" aria-labelledby="pp-catalogTitle">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin:18px 0 10px">
+          <h3 id="pp-catalogTitle" style="color:var(--brand-blue);margin:0">Programs</h3>
+          <button class="btn secondary" id="pp-backToChoices" type="button" aria-label="Back to choices">← Back</button>
+        </div>
+
+        <div class="pp-filterbar" role="search">
+          <input id="pp-catQuery" type="search" placeholder="Search by name, sponsor, sector" aria-label="Search catalog" />
+          <select id="pp-catCategory" aria-label="Program type"></select>
+          <select id="pp-catCountry" aria-label="Country"></select>
+          <button class="reset" id="pp-catReset" type="button">Clear</button>
+        </div>
+
+        <div class="pp-grid" id="pp-cards" aria-live="polite"></div>
+        <div id="pp-emptyState" style="display:none;margin:24px 0;color:#6b7280">No programs match your filters.</div>
+      </section>
+
+      <!-- STEP 3: DETAILS -->
+      <section class="pp-route" data-route="details" aria-labelledby="pp-detailTitle">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin:18px 0 10px">
+          <h3 id="pp-detailTitle" style="color:var(--brand-blue);margin:0">Program Information</h3>
+          <div>
+            <button class="btn secondary" id="pp-backToCatalog" type="button">← Back to list</button>
+            <button class="btn" id="pp-toEligibility" type="button">Check eligibility</button>
+          </div>
+        </div>
+        <div id="pp-progDetail" class="pp-card"></div>
+      </section>
+
+      <!-- STEP 4: ELIGIBILITY -->
+      <section class="pp-route" data-route="eligibility" aria-labelledby="pp-eligTitle">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin:18px 0 10px">
+          <h3 id="pp-eligTitle" style="color:var(--brand-blue);margin:0">Eligibility</h3>
+          <button class="btn secondary" id="pp-backToDetails" type="button">← Back to program</button>
+        </div>
+
+        <form id="pp-eligForm" class="pp-card" novalidate>
+          <div class="pp-grid">
+            <div class="pp-col-4" style="grid-column:span 6">
+              <label>Organization Name
+                <input name="org" type="text" required
+                  style="padding:10px;border:1px solid var(--border);border-radius:12px;width:100%" />
+              </label>
+
+              <label>Contact Email
+                <input name="email" type="email" required
+                  style="padding:10px;border:1px solid var(--border);border-radius:12px;width:100%" />
+              </label>
+
+              <label>Country (AU 55)
+                <select name="country" required id="pp-eligCountry"
+                  style="padding:10px;border:1px solid var(--border);border-radius:12px;width:100%"></select>
+              </label>
+            </div>
+
+            <div class="pp-col-4" style="grid-column:span 6">
+              <label id="pp-typeSpecific1"></label>
+              <label id="pp-typeSpecific2"></label>
+              <label id="pp-typeSpecific3"></label>
+            </div>
+          </div>
+
+          <div style="margin-top:12px">
+            <button class="btn" type="submit">Submit Application</button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <!-- VERIFICATION & VISIBILITY stubs to complete the menu -->
+    <div class="container" id="verification">
+      <h3 class="section-title">Verification</h3>
+      <div class="svc-grid">
+        <div class="svc-col-3 svc-box">
+          <h3>CTI Basics</h3>
+          <p>Identity, ownership & existence checks.</p>
+        </div>
+        <div class="svc-col-3 svc-box">
+          <h3>Deep CTI</h3>
+          <p>Trade flows, counterparties, risk flags.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="container" id="visibility-listing">
+      <h3 class="section-title">Visibility & Listing</h3>
+      <div class="svc-grid">
+        <div class="svc-col-3 svc-box">
+          <h3>Listing Tiers</h3>
+          <p>Free, Featured, Spotlight.</p>
+        </div>
+        <div class="svc-col-3 svc-box">
+          <h3>Discovery</h3>
+          <p>Homepage, category, and search surfaces.</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="row">
+        <div>© <span id="y"></span> Raymoch: Trust-driven matching for African & diaspora SMEs.</div>
+        <nav>
+          <a href="#">Privacy</a>
+          <a href="#">Terms</a>
+          <a href="#">Contact</a>
+        </nav>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // ===== Shared bits
+    const $ = s => document.querySelector(s);
+    const $$ = s => Array.from(document.querySelectorAll(s));
+    const on = (sel, evt, fn) => { const el = (typeof sel==='string') ? $(sel) : sel; if(el) el.addEventListener(evt, fn); };
+    $('#y').textContent = new Date().getFullYear();
+
+    // Smooth scroll for in-page tiles
+    $$('.svc-box[href^="#"]').forEach(a=>{
+      a.addEventListener('click', (e)=>{
+        const id = a.getAttribute('href');
+        const target = document.querySelector(id);
+        if(target){
+          e.preventDefault();
+          target.scrollIntoView({behavior:'smooth', block:'start'});
+        }
+      });
+    });
+
+    /* ============================
+       MATCHING (scoped IDs: m-*)
+       ============================ */
+    // AU countries
+    const M_AU = [
+      "Algeria","Angola","Benin","Botswana","Burkina Faso","Burundi","Cabo Verde","Cameroon",
+      "Central African Republic","Chad","Comoros","Congo (Republic)","Congo (Democratic Republic)",
+      "Côte d’Ivoire","Djibouti","Egypt","Equatorial Guinea","Eritrea","Eswatini","Ethiopia","Gabon",
+      "Gambia","Ghana","Guinea","Guinea-Bissau","Kenya","Lesotho","Liberia","Libya","Madagascar",
+      "Malawi","Mali","Mauritania","Mauritius","Morocco","Mozambique","Namibia","Niger","Nigeria",
+      "Rwanda","Sahrawi Arab Democratic Republic","São Tomé and Príncipe","Senegal","Seychelles",
+      "Sierra Leone","Somalia","South Africa","South Sudan","Sudan","Tanzania","Togo","Tunisia",
+      "Uganda","Zambia","Zimbabwe"
+    ];
+    (function(){ const sel = $('#m-country2'); if(sel){ sel.innerHTML = `<option value="">All countries (${M_AU.length})</option>` + M_AU.map(c=>`<option>${c}</option>`).join(''); } })();
+
+    const M_DATA = [
+      { name:"Shashamane Agro Co.", country:"Ethiopia", sector:"Agriculture & Food",
+        min:15000, max:80000, accepts:["revenue share","equity"], cti:"verified",
+        freshnessDays:21, fit:"Great fit", why:["ticket aligned","instrument match","timing ok","preferred sector","ready soon"],
+        about:"Regional agro-processing firm focused on grain and oilseeds. Strong local supply relationships.",
+        needs:"Working capital + small-scale equipment upgrades.", links:{site:"#", deck:"#"} },
+      { name:"LipaLink", country:"Kenya", sector:"FinTech",
+        min:25000, max:120000, accepts:["equity","debt"], cti:"existence",
+        freshnessDays:14, fit:"Good fit", why:["ticket aligned","sector focus"],
+        about:"Payments aggregator for SMEs bridging mobile money and bank rails.",
+        needs:"Seed extension.", links:{site:"#", deck:"#"} },
+      { name:"SunBloom Energy", country:"Rwanda", sector:"Energy & Renewables",
+        min:50000, max:200000, accepts:["equity","revenue share"], cti:"deep",
+        freshnessDays:3, fit:"Great fit", why:["timing ok","impact aligned","CTI depth"],
+        about:"C&I solar EPC with recurring O&M contracts.",
+        needs:"Project finance for 1.2MW pipeline.", links:{site:"#", deck:"#"} },
+      { name:"Medura Clinics", country:"Ghana", sector:"Health",
+        min:10000, max:60000, accepts:["revenue share"], cti:"verified",
+        freshnessDays:33, fit:"Possible match", why:["early pipeline"],
+        about:"Primary care clinics expanding to peri-urban areas.",
+        needs:"Equipment leasing + short-term WC.", links:{site:"#", deck:"#"} }
+    ];
+    const moneyFmt = new Intl.NumberFormat(undefined,{style:'currency',currency:'USD',maximumFractionDigits:0});
+    const money = n => moneyFmt.format(n);
+    const debounce = (fn, ms=150) => { let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; };
+
+    function mGetFilters(){
+      const kw = ($('#m-q2')?.value || '').trim().toLowerCase();
+      const country = $('#m-country2')?.value || '';
+      const sector = $('#m-sector2')?.value || '';
+      let min = parseInt($('#m-min2')?.value || '0',10);
+      let max = parseInt($('#m-max2')?.value || '999999999',10);
+      if (Number.isNaN(min)) min = 0;
+      if (Number.isNaN(max)) max = 999999999;
+
+      const warn = $('#m-rangeWarn');
+      if (min > max){
+        [min,max] = [max,min];
+        if (warn) warn.textContent = 'Swapped ticket range to make sense.';
+      } else if (warn) warn.textContent = '';
+
+      const cti = $('#m-cti')?.value || '';
+      const instr = [...document.querySelectorAll('.m-instr:checked')].map(x=>x.value);
+      return {kw,country,sector,min,max,cti,instr};
+    }
+    function mPasses(d,f){
+      if (f.kw){
+        const hay = `${d.name} ${d.country} ${d.sector}`.toLowerCase();
+        if (!hay.includes(f.kw)) return false;
+      }
+      if (f.country && d.country!==f.country) return false;
+      if (f.sector && d.sector!==f.sector) return false;
+      if (d.max < f.min) return false;
+      if (d.min > f.max) return false;
+      if (f.cti && d.cti!==f.cti) return false;
+      if (f.instr.length && !f.instr.some(x=>d.accepts.includes(x))) return false;
+      return true;
+    }
+    function mCurrentMatches(){ const f=mGetFilters(); return M_DATA.filter(d=>mPasses(d,f)); }
+
+    let mPreviewMode = 'suggested';
+    const mUpdateSeg = () => {
+      const sug = $('#m-segSuggested'), lat = $('#m-segLatest');
+      const sugActive = mPreviewMode==='suggested';
+      if (sug){ sug.classList.toggle('active',sugActive); sug.setAttribute('aria-selected', String(sugActive)); }
+      if (lat){ lat.classList.toggle('active',!sugActive); lat.setAttribute('aria-selected', String(!sugActive)); }
+    };
+    on('#m-segSuggested','click', ()=>{ mPreviewMode='suggested'; mUpdateSeg(); mUpdateAll(); });
+    on('#m-segLatest','click', ()=>{ mPreviewMode='latest'; mUpdateSeg(); mUpdateAll(); });
+
+    function mUpdateAll(){
+      const list = mCurrentMatches();
+      $('#m-matchCountTop') && ($('#m-matchCountTop').textContent = list.length);
+      $('#m-matchCountBottom') && ($('#m-matchCountBottom').textContent = list.length);
+
+      const mini = $('#m-miniPreview'); if(!mini) return;
+      mini.innerHTML = '';
+
+      if(mPreviewMode === 'latest'){
+        const latest = [...M_DATA].sort((a,b)=> a.freshnessDays - b.freshnessDays).slice(0,3);
+        latest.forEach(d => mini.appendChild(mMakeMiniCard(d, {showFit:false, showFresh:true})));
+        return;
+      }
+      if(!list.length){
+        mini.innerHTML = `<div class="m-hint">No matches yet. Try broadening filters.</div>`;
+      }else{
+        list.slice(0,3).forEach(d => mini.appendChild(mMakeMiniCard(d, {showFit:true, showFresh:false})));
+      }
+    }
+    function mActivateOnKey(el, action){
+      el.addEventListener('keydown', (e)=>{
+        if (e.key==='Enter' || e.key===' '){ e.preventDefault(); action(); }
+      });
+    }
+    function mOpenProfile(d){
+      $('#m-profName') && ($('#m-profName').textContent = d.name);
+      $('#m-profMeta') && ($('#m-profMeta').textContent = `${d.country} · ${d.sector} • ${d.cti==='existence'?'Existence Only':d.cti==='verified'?'Verified':'Deep CTI'}`);
+      $('#m-profBody') && ($('#m-profBody').innerHTML = `
+        <div class="m-grid">
+          <div class="m-col-12 m-card">
+            <div class="m-biz-head">
+              <div>
+                <div class="m-muted">Ticket band</div>
+                <div style="font-weight:800">${money(d.min)} – ${money(d.max)}</div>
+                <div class="m-muted" style="margin-top:8px">Accepts</div>
+                <div>${d.accepts.join(', ')}</div>
+              </div>
+              <div style="text-align:right;min-width:220px">
+                <div class="m-badge green">${d.fit}</div>
+                <div class="m-badge">Verified ${d.freshnessDays}d ago</div>
+              </div>
+            </div>
+          </div>
+          <div class="m-col-12 m-card">
+            <h4 style="margin:0 0 6px">About</h4>
+            <p>${d.about}</p>
+            <h4 style="margin:12px 0 6px">Current need</h4>
+            <p>${d.needs}</p>
+            <div style="margin-top:10px">
+              <a class="m-badge" href="${d.links.site}">Website</a>
+              <a class="m-badge" href="${d.links.deck}">Deck</a>
+            </div>
+          </div>
+        </div>`);
+      $('#m-searchStep')?.classList.add('m-hidden');
+      $('#m-matchStep')?.classList.add('m-hidden');
+      $('#m-profileStep')?.classList.remove('m-hidden');
+      $('#m-profileStep')?.scrollIntoView({behavior:'smooth'});
+    }
+    function mMakeMiniCard(d, opts={showFit:true, showFresh:false}){
+      const div = document.createElement('div');
+      div.className = 'm-card m-mini';
+      div.style.marginTop = '10px';
+      div.setAttribute('role','button');
+      div.tabIndex = 0;
+      div.innerHTML = `
+        <div class="m-biz-head">
+          <div>
+            <div class="m-biz-title">${d.name}</div>
+            <div class="m-muted">${d.country} · ${d.sector}</div>
+            <div style="margin-top:6px">
+              <span class="m-badge">${d.cti==='existence'?'Existence Only':d.cti==='verified'?'Verified':'Deep CTI'}</span>
+              ${opts.showFit ? `<span class="m-badge green">${d.fit}</span>` : ``}
+              ${opts.showFresh ? `<span class="m-badge">Verified ${d.freshnessDays}d ago</span>` : ``}
+            </div>
+          </div>
+          <div style="text-align:right;min-width:160px">
+            <div class="m-muted">Ticket</div>
+            <div style="font-weight:800">${money(d.min)} – ${money(d.max)}</div>
+          </div>
+        </div>`;
+      const open = ()=> mOpenProfile(d);
+      div.addEventListener('click', open);
+      mActivateOnKey(div, open);
+      return div;
+    }
+    function mRenderResults(){
+      const list = mCurrentMatches();
+      const root = $('#m-results'); if(!root) return;
+      root.innerHTML = '';
+      if (!list.length){
+        root.innerHTML = `<div class="m-card"><strong>No matches (yet).</strong><div class="m-hint">Broaden ticket band, remove a constraint, or switch CTI depth.</div></div>`;
+      } else {
+        list.forEach(d=>{
+          const card = document.createElement('div');
+          card.className = 'm-card';
+          card.style.cursor = 'pointer';
+          card.setAttribute('role','button');
+          card.tabIndex = 0;
+          const open = ()=> mOpenProfile(d);
+          card.addEventListener('click', open);
+          mActivateOnKey(card, open);
+          card.innerHTML = `
+            <div class="m-biz-head">
+              <div>
+                <div class="m-biz-title">${d.name}</div>
+                <div class="m-muted">${d.country} · ${d.sector}</div>
+                <div style="margin-top:8px">
+                  <span class="m-badge">${d.cti==='existence'?'Existence Only':d.cti==='verified'?'Verified':'Deep CTI'}</span>
+                  <span class="m-badge">Verified ${d.freshnessDays}d ago</span>
+                  <span class="m-badge green">${d.fit}</span>
+                </div>
+                <div class="m-why">Why: ${d.why.join(' · ')}</div>
+              </div>
+              <div style="text-align:right;min-width:220px">
+                <div class="m-muted">Ticket band</div>
+                <div style="font-weight:800">${money(d.min)} – ${money(d.max)}</div>
+                <div class="m-muted" style="margin-top:8px">Accepts</div>
+                <div>${d.accepts.join(', ')}</div>
+              </div>
+            </div>`;
+          root.appendChild(card);
+        });
+      }
+      $('#m-showingText') && ($('#m-showingText').textContent = `Showing ${list.length} of ${list.length}`);
+    }
+    // Step nav
+    on('#m-toMatches','click', ()=>{ mRenderResults(); $('#m-searchStep')?.classList.add('m-hidden'); $('#m-matchStep')?.classList.remove('m-hidden'); $('#m-matchStep')?.scrollIntoView({behavior:'smooth'}); });
+    on('#m-backToSearch','click', ()=>{ $('#m-matchStep')?.classList.add('m-hidden'); $('#m-searchStep')?.classList.remove('m-hidden'); $('#m-searchStep')?.scrollIntoView({behavior:'smooth'}); });
+    on('#m-backFromProfile','click', ()=>{ $('#m-profileStep')?.classList.add('m-hidden'); $('#m-matchStep')?.classList.remove('m-hidden'); $('#m-matchStep')?.scrollIntoView({behavior:'smooth'}); });
+    on('#m-continueCTA','click', ()=> alert('Next: view details / contact / save (stub)'));
+    on('#m-doMatch','click', ()=>{ mRenderResults(); $('#m-searchStep')?.classList.add('m-hidden'); $('#m-matchStep')?.classList.remove('m-hidden'); $('#m-matchStep')?.scrollIntoView({behavior:'smooth'}); });
+
+    const mDebounced = debounce(mUpdateAll, 120);
+    ['#m-q2','#m-country2','#m-sector2','#m-min2','#m-max2','#m-cti'].forEach(sel=>{ on(sel,'input', mDebounced); on(sel,'change', mDebounced); });
+    document.querySelectorAll('.m-instr').forEach(cb=> on(cb,'change', mDebounced));
+    document.addEventListener('DOMContentLoaded', ()=>{ mUpdateAll(); });
+
+    /* =======================================
+       PARTNER PROGRAMS (scoped IDs: pp-*)
+       ======================================= */
+    const PP_PROGRAMS = [
+      {id:'undp-youth', name:'Youth Entrepreneurship', sponsor:'UNDP', type:'accelerator', category:'Youth', sector:'Multi-sector', country:'Ethiopia', deadline:'Jul 2024', info:'UNDP-backed program fostering youth-led startups with mentorship, stipends and market linkages.'},
+      {id:'green-founders', name:'Green Founders Bootcamp', sponsor:'Regional', type:'accelerator', category:'Green/Climate', sector:'Energy', country:'Kenya', deadline:'Nov 2025', info:'Bootcamp for climate-focused SMEs; includes verification fast-lane and pilot partners.'},
+      {id:'diaspora-co-invest', name:'Diaspora Co-Invest Window', sponsor:'Investor Syndicate', type:'syndicate', category:'Investment/Syndicate', sector:'Multi-sector', country:'Nigeria', deadline:'Rolling', info:'Co-invest vehicle for diaspora angels; thesis-aligned dealrooms and referral attribution.'},
+      {id:'afdb-export', name:'Small Business Export Support', sponsor:'African Development Bank', type:'syndicate', category:'Export Support', sector:'Manufacturing', country:'Kenya', deadline:'Mar 2026', info:'Export-readiness audits, certification support and buyer introductions.'},
+      {id:'ngr-agribiz', name:'Agribusiness Investment Grant', sponsor:'Government of Nigeria', type:'ecosystem', category:'Grant', sector:'Agriculture', country:'Nigeria', deadline:'May 2025', info:'Capital grants for agribusiness SMEs; paired with market linkages.'},
+      {id:'women-tech', name:'Women in Tech Initiative', sponsor:'NGO', type:'ecosystem', category:'Women', sector:'Technology', country:'Ghana', deadline:'Sep 2024', info:'Initiative to boost women participation and leadership in African tech.'},
+      {id:'sme-renew', name:'SME Renewable Energy Subsidy', sponsor:'Regional Program', type:'ecosystem', category:'Subsidy', sector:'Energy', country:'Multi-country', deadline:'Dec 2025', info:'Hardware/CapEx subsidy for SME solar adoption; fast verification path for partners.'}
+    ];
+    const PP_AU55 = [
+      "Algeria","Angola","Benin","Botswana","Burkina Faso","Burundi","Cabo Verde","Cameroon",
+      "Central African Republic","Chad","Comoros","Republic of the Congo","Côte d’Ivoire","Djibouti",
+      "Democratic Republic of the Congo","Egypt","Equatorial Guinea","Eritrea","Eswatini",
+      "Ethiopia","Gabon","Gambia","Ghana","Guinea","Guinea-Bissau","Kenya","Lesotho",
+      "Liberia","Libya","Madagascar","Malawi","Mali","Mauritania","Mauritius","Morocco",
+      "Mozambique","Namibia","Niger","Nigeria","Rwanda","Sahrawi Arab Democratic Republic",
+      "São Tomé and Príncipe","Senegal","Seychelles","Sierra Leone","Somalia","South Africa",
+      "South Sudan","Sudan","Tanzania","Togo","Tunisia","Uganda","Zambia","Zimbabwe"
+    ];
+
+    const ppState = { type:null, program:null };
+    function ppGo(route){
+      $$('#partner-programs .pp-route').forEach(x=>x.classList.remove('active'));
+      const target = document.querySelector(`#partner-programs .pp-route[data-route="${route}"]`);
+      if(target){ target.classList.add('active'); window.scrollTo({top:document.querySelector('#partner-programs').offsetTop-10, behavior:'instant'}); }
+    }
+    function ppEnsureFiltersOnce(){
+      const typeEl = $('#pp-catCategory'), ctryEl = $('#pp-catCountry');
+      const lpTypeEl = $('#pp-lpCategory'), lpCtryEl = $('#pp-lpCountry');
+
+      const computedCats = Array.from(new Set([...PP_PROGRAMS.map(p=>p.category), 'Women','Youth']))
+        .filter(Boolean).sort((a,b)=>a.localeCompare(b));
+      const catOptions = ['All program types', ...computedCats].map(x=>`<option>${x}</option>`).join('');
+
+      if(typeEl && !typeEl.options.length) typeEl.innerHTML = catOptions;
+      if(lpTypeEl && !lpTypeEl.options.length) lpTypeEl.innerHTML = catOptions;
+
+      const countryOptions = ['All countries (55)', ...PP_AU55].map(c=>`<option>${c}</option>`).join('');
+      if(ctryEl && !ctryEl.options.length) ctryEl.innerHTML = countryOptions;
+      if(lpCtryEl && !lpCtryEl.options.length) lpCtryEl.innerHTML = countryOptions;
+    }
+    function ppPopulatePathCards(){
+      ['accelerator','syndicate','ecosystem'].forEach(t=>{
+        const card = document.querySelector(`#partner-programs .pp-card.click[data-type="${t}"]`);
+        if(!card) return;
+        const items = PP_PROGRAMS.filter(p=>p.type===t).slice(0,2);
+        const count = PP_PROGRAMS.filter(p=>p.type===t).length;
+        if(!card.querySelector('ul')){
+          const ul = document.createElement('ul'); ul.className='pp-meta'; ul.style.marginTop='8px';
+          ul.innerHTML = items.map(p=>`<li>${p.name} <span class="pp-meta">• ${p.country}</span></li>`).join('') || '<li>No programs yet</li>';
+          card.appendChild(ul);
+          const b = document.createElement('div'); b.style.marginTop='8px'; b.innerHTML = `<span class="pp-badge">${count} program${count!==1?'s':''}</span>`;
+          card.appendChild(b);
+        }
+      });
+    }
+    function ppRenderCatalog(){
+      ppEnsureFiltersOnce();
+      $('#pp-catalogTitle').textContent = `${(ppState.type||'All').replace(/^./,c=>c.toUpperCase())} Programs`;
+
+      const q     = ($('#pp-catQuery').value||'').trim().toLowerCase();
+      const cat   = $('#pp-catCategory').value || 'All program types';
+      const ctry  = $('#pp-catCountry').value  || 'All countries (55)';
+
+      const root = $('#pp-cards'); root.innerHTML = '';
+      const result = PP_PROGRAMS.filter(p=>{
+        const matchesPath = !ppState.type || p.type === ppState.type;
+        const text = `${p.name} ${p.sponsor} ${p.category} ${p.sector} ${p.country}`.toLowerCase();
+        const hitsQuery = !q || text.includes(q);
+        const hitsType  = (cat === 'All program types') || p.category === cat;
+        const hitsCtry  = (ctry.startsWith('All countries')) || p.country === ctry || p.country === 'Multi-country';
+        return matchesPath && hitsQuery && hitsType && hitsCtry;
+      });
+
+      $('#pp-emptyState').style.display = result.length ? 'none' : 'block';
+
+      result.forEach(p=>{
+        const el = document.createElement('article');
+        el.className = 'pp-card pp-col-4 click';
+        el.innerHTML = `
+          <h3>${p.name}</h3>
+          <p class="pp-meta">${p.sponsor} • ${p.country}</p>
+          <span class="pp-badge">${p.category}</span>
+          <span class="pp-badge">${p.sector}</span>
+          <span class="pp-badge">Deadline: ${p.deadline}</span>`;
+        el.addEventListener('click', ()=>{ ppState.program = p; ppRenderDetails(); ppGo('details'); });
+        el.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); ppState.program = p; ppRenderDetails(); ppGo('details'); } });
+        root.appendChild(el);
+      });
+    }
+    function ppRenderDetails(){
+      if(!ppState.program) return;
+      $('#pp-detailTitle').textContent = ppState.program.name;
+      $('#pp-progDetail').innerHTML = `
+        <p class="pp-meta"><strong>Path:</strong> ${ppState.program.type.replace(/^./,c=>c.toUpperCase())} • <strong>Program type:</strong> ${ppState.program.category}</p>
+        <p class="pp-meta"><strong>Sponsor:</strong> ${ppState.program.sponsor} • <strong>Country:</strong> ${ppState.program.country} • <strong>Sector:</strong> ${ppState.program.sector}</p>
+        <p>${ppState.program.info}</p>
+        <p class="pp-meta">Deadline: ${ppState.program.deadline}</p>
+      `;
+      $('#pp-eligTitle').textContent = `Eligibility — ${ppState.program.name}`;
+    }
+    function ppRenderEligibility(){
+      const cSel = $('#pp-eligCountry');
+      if(cSel && !cSel.options.length){ cSel.innerHTML = PP_AU55.map(c=>`<option>${c}</option>`).join(''); }
+
+      const ts1 = $('#pp-typeSpecific1');
+      const ts2 = $('#pp-typeSpecific2');
+      const ts3 = $('#pp-typeSpecific3');
+      ts1.innerHTML = ts2.innerHTML = ts3.innerHTML = '';
+
+      const t = ppState.program?.type || ppState.type || 'ecosystem';
+      if(t === 'accelerator'){
+        ts1.innerHTML = 'Startups per year <input name="aCount" type="number" min="0" required style="padding:10px;border:1px solid var(--border);border-radius:12px;width:100%">';
+        ts2.innerHTML = 'Named program lead? <select name="aLead" required style="padding:10px;border:1px solid var(--border);border-radius:12px;width:100%"><option value="">Select</option><option>Yes</option><option>No</option></select>';
+        ts3.innerHTML = 'Data-sharing consent? <select name="aConsent" required style="padding:10px;border:1px solid var(--border);border-radius:12px;width:100%"><option value="">Select</option><option>Yes</option><option>No</option></select>';
+      } else if(t === 'syndicate'){
+        ts1.innerHTML = 'Active members <input name="sCount" type="number" min="0" required style="padding:10px;border:1px solid var(--border);border-radius:12px;width:100%">';
+        ts2.innerHTML = 'Compliance owner? <select name="sComp" required style="padding:10px;border:1px solid var(--border);border-radius:12px;width:100%"><option value="">Select</option><option>Yes</option><option>No</option></select>';
+        ts3.innerHTML = 'Documented thesis? <select name="sThesis" required style="padding:10px;border:1px solid var(--border);border-radius:12px;width:100%"><option value="">Select</option><option>Yes</option><option>No</option></select>';
+      } else {
+        ts1.innerHTML = 'Member businesses <input name="eCount" type="number" min="0" required style="padding:10px;border:1px solid var(--border);border-radius:12px;width:100%">';
+        ts2.innerHTML = 'Named coordinator? <select name="eCoord" required style="padding:10px;border:1px solid var(--border);border-radius:12px;width:100%"><option value="">Select</option><option>Yes</option><option>No</option></select>';
+        ts3.innerHTML = 'Roster CSV available? <select name="eRoster" required style="padding:10px;border:1px solid var(--border);border-radius:12px;width:100%"><option value="">Select</option><option>Yes</option><option>No</option></select>';
+      }
+    }
+
+    // Card handlers
+    $$('#partner-programs .pp-card.click[data-type]').forEach(card=>{
+      card.addEventListener('click', ()=>{ ppState.type = card.dataset.type; ppRenderCatalog(); ppGo('catalog'); });
+      card.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); ppState.type = card.dataset.type; ppRenderCatalog(); ppGo('catalog'); } });
+    });
+
+    // Init partner programs
+    ppEnsureFiltersOnce();
+    ppPopulatePathCards();
+
+    // Filter events
+    on('#pp-catQuery','input', ppRenderCatalog);
+    on('#pp-catCategory','change', ppRenderCatalog);
+    on('#pp-catCountry','change', ppRenderCatalog);
+    on('#pp-catReset','click', ()=>{ $('#pp-catQuery').value=''; $('#pp-catCategory').selectedIndex=0; $('#pp-catCountry').selectedIndex=0; ppRenderCatalog(); });
+
+    // Landing search → catalog
+    on('#pp-lpSearchBtn','click', ()=>{
+      ppState.type = null;
+      ppGo('catalog');
+      ppEnsureFiltersOnce();
+      $('#pp-catQuery').value = $('#pp-lpQuery').value || '';
+      $('#pp-catCategory').value = $('#pp-lpCategory').value || 'All program types';
+      $('#pp-catCountry').value = $('#pp-lpCountry').value || 'All countries (55)';
+      ppRenderCatalog();
+    });
+    on('#pp-lpQuery','keydown', (e)=>{
+      if(e.key==='Enter'){ e.preventDefault(); $('#pp-lpSearchBtn').click(); }
+    });
+
+    // Back buttons
+    on('#pp-backToChoices','click', ()=>{ ppState.type = null; ppGo('programs'); });
+    on('#pp-backToCatalog','click', ()=> ppGo('catalog'));
+    on('#pp-toEligibility','click', ()=>{ ppRenderEligibility(); ppGo('eligibility'); });
+    on('#pp-backToDetails','click', ()=> ppGo('details'));
+
+  </script>
+</body>
+</html>

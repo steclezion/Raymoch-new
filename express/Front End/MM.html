@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Raymoch • Market Insights</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+:root{
+  --brand-blue:#0A2A6B; --brand-gold:#DAA520; --bg:#f7f8fb; --card:#fff;
+  --ink:#101114; --muted:#6b7280; --border:#e5e7eb; --shadow:0 10px 30px rgba(10,42,107,.08);
+  --radius:16px; --pill:999px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 'Segoe UI',system-ui,-apple-system,Roboto,Arial}
+
+/* Footer */
+footer{margin-top:32px;border-top:1px solid var(--border);background:#181523;color:#e6e8ed}
+footer .foot{max-width:1100px;margin:0 auto;padding:50px 20px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:24px}
+footer .foot .col{flex:1 1 200px}
+footer .foot h4{margin:0 0 10px;color:#fff;font-size:16px}
+footer .foot a{display:block;margin:4px 0;color:#e6e8ed;text-decoration:none;font-size:14px}
+footer .foot a:hover{text-decoration:underline}
+footer .copyright{flex:1 1 100%;text-align:center;margin-top:20px;font-size:14px;color:#aaa}
+</style>
+</head>
+<body>
+
+<!-- Content above stays unchanged -->
+
+<footer>
+  <div class="foot">
+    <div class="col">
+      <h4>About Raymoch</h4>
+      <a href="#/about">Who We Are</a>
+      <a href="#">Our Mission</a>
+      <a href="#">Team</a>
+    </div>
+    <div class="col">
+      <h4>Services</h4>
+      <a href="#/services">Matching</a>
+      <a href="#/services">Partner Programs</a>
+      <a href="#/services">Verification</a>
+      <a href="#/services">Visibility & Listing</a>
+    </div>
+    <div class="col">
+      <h4>Resources</h4>
+      <a href="#/reports">Reports</a>
+      <a href="#/news">News & Deals</a>
+      <a href="#/data">Data Explorer</a>
+    </div>
+    <div class="col">
+      <h4>Support</h4>
+      <a href="#">Help Center</a>
+      <a href="#">Contact Us</a>
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+    </div>
+    <div class="copyright">© <span id="yr"></span> Raymoch • All rights reserved</div>
+  </div>
+</footer>
+
+<script>
+document.getElementById('yr').textContent = new Date().getFullYear();
+</script>
+</body>
+</html>

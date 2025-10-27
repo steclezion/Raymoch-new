@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Raymoch • Explore Businesses</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --brand-blue:#0A2A6B; --brand-gold:#DAA520;
+      --bg:#F7F7FB; --card:#fff; --ink:#0F1222; --muted:#6b7280; --border:#E8E8EE;
+      --shadow:0 10px 30px rgba(10,42,107,.08); --radius:16px; --pill:999px;
+      --gutter:18px; --maxw:1328px;
+      --nav-brand:#0328aeed; --nav-link:#0f172a; --nav-hover:#0a2a6b;
+      --nav-bg:#ffffff; --nav-fg:#101114; --border-soft:#e8e8ee;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+      font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;}
+    body{display:flex;flex-direction:column;min-height:100vh}
+    main{flex:1}
+    a{text-decoration:none;color:inherit}
+    .wrap{max-width:var(--maxw);margin:0 auto;padding:0 var(--gutter)}
+    .container{max-width:1180px;margin:0 auto;padding:24px 20px}
+
+    /* Header */
+    .header{background:var(--nav-bg); color:var(--nav-fg);
+      position:sticky; top:0; z-index:1000; border-bottom:1px solid var(--border-soft)}
+    .row1{display:flex;justify-content:space-between;align-items:center;gap:16px;
+      padding:12px 8px; margin:15px; box-shadow:0 1px 0 rgba(0,0,0,.05); position:relative;}
+    .brandrow{display:flex;align-items:center;gap:22px}
+    .brand{display:flex;align-items:center;gap:10px;color:var(--nav-brand)}
+    .brand-word{font-weight:900;font-size:1.4rem;color:var(--nav-brand);letter-spacing:.2px}
+    .dotgrid{width:18px;height:18px;display:inline-grid;grid-template-columns:repeat(2,1fr);gap:2px}
+    .dotgrid i{width:5px;height:5px;border-radius:2px;background:#101114}
+    .rightside{display:flex;align-items:center;gap:14px}
+    .search-box{min-width:160px;width:20vw;max-width:320px}
+    .search-box input{width:100%;height:40px;padding:0 14px;border:1px solid var(--border-soft);border-radius:var(--pill)}
+    .search-box input:focus{border-color:var(--nav-brand);outline:2px solid #cfe0ff}
+    .header .btn{height:40px;display:inline-flex;align-items:center;gap:8px;padding:0 16px;border-radius:var(--pill);font-weight:700;background:#fff;border:1px solid var(--border-soft);cursor:pointer}
+    .header .btn.primary{background:var(--nav-brand);color:#fff;border-color:var(--nav-brand)}
+
+    .btn{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 14px;border-radius:var(--pill);border:1px solid var(--border);background:#fff;font-weight:700;cursor:pointer}
+    .btn.primary{background:var(--brand-blue);color:#fff;border-color:var(--brand-blue)}
+    .btn.ghost{background:#fff;border:1px solid var(--border)}
+
+    .explore-toggle{
+      appearance:none;border:0;background:transparent;cursor:pointer;
+      display:flex;align-items:center;gap:8px;font-weight:800;color:var(--nav-link);
+      padding:6px 8px;border-radius:8px;font-size:1.1rem;
+    }
+    .explore-toggle:hover,
+    .explore-toggle[aria-expanded="true"]{ background:#eceff3;color:var(--nav-hover); }
+
+    .menu-panel{
+      position:absolute; top:calc(100% + 10px); left:15px; z-index:1100;
+      width:min(760px, calc(100vw - 40px));
+      background:#fff;border:1px solid var(--border-soft);border-radius:14px;box-shadow:0 6px 22px rgba(10,42,107,.08);
+      padding:14px;
+    }
+    .menu-panel[hidden]{ display:none; }
+    .menu-grid{display:grid;grid-template-columns:repeat(2,minmax(240px,1fr));gap:12px}
+    .menu-item{display:block;padding:12px;border:1px solid var(--border-soft);border-radius:12px;background:#fff}
+    .menu-item:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(0,0,0,.06)}
+    .menu-item h5{margin:0 0 6px;font-size:.98rem}
+    .menu-item p{margin:0;color:#3c4b69;font-size:.92rem}
+
+    .row2{background:#f5f6f8;border-top:1px solid #eee;border-bottom:1px solid #e6e6e6;padding-left:15px}
+    .row2 .wrap{max-width:none;padding:0}
+    .row2 .links{display:flex;gap:18px;padding:8px 8px;margin:0;justify-content:flex-start;align-items:center}
+    .row2 a{font-weight:600;font-size:.92rem;padding:4px 6px;border-radius:4px;color:var(--nav-link)}
+    .row2 a:hover{background:#eceff3;color:var(--nav-hover)}
+    .row2 a.active{background:#e7ecff;color:#031e90}
+
+    /* Page */
+    .explore-hero{text-align:center;padding:36px 12px}
+    .explore-hero h1{font-size:40px;font-weight:900;color:var(--brand-blue);margin:0 0 6px}
+    .explore-hero p{color:var(--muted);margin:0}
+
+    .search-panel{margin:12px auto 18px; padding:16px; border-radius:var(--radius); border:1px solid var(--border); background:#fff; box-shadow:var(--shadow)}
+    .search-grid{display:grid; grid-template-columns:1.8fr 1fr 1fr auto; gap:12px; align-items:center}
+    .input-wrap{position:relative}
+    .input-wrap .icon{position:absolute; left:12px; top:50%; transform:translateY(-50%); font-size:1rem; pointer-events:none; color:var(--muted)}
+    .input{width:100%; height:48px; padding:0 42px 0 40px; border:1px solid var(--border); border-radius:var(--pill); font-size:1rem; outline:none}
+    .input:focus{border-color:var(--brand-blue); outline:2px solid #cfe0ff}
+    .clear-btn{position:absolute; right:10px; top:50%; transform:translateY(-50%); border:none; background:transparent; font-size:1.1rem; color:var(--muted); cursor:pointer}
+    select.select{width:100%; height:48px; padding:0 12px; border:1px solid var(--border); border-radius:var(--pill); font-size:1rem; outline:none; background:#fff}
+    select.select:focus{border-color:var(--brand-blue); outline:2px solid #cfe0ff}
+    .switch{display:flex; align-items:center; gap:8px; font-size:.95rem; color:var(--ink)}
+    .switch input{appearance:none; width:46px; height:26px; border-radius:999px; background:#e5e7eb; position:relative; outline:none; cursor:pointer; transition:background .2s}
+    .switch input:checked{background:var(--brand-blue)}
+    .switch input::after{content:''; position:absolute; top:3px; left:3px; width:20px; height:20px; background:#fff; border-radius:50%; transition:left .2s}
+    .switch input:checked::after{left:23px}
+    .result-count{color:var(--muted); font-size:.95rem; margin-top:.2rem}
+
+    .sector-grid{
+      display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));
+      gap:22px; padding:4px 2px;
+    }
+    .sector-card{
+      background:#fff;border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);
+      padding:24px; min-height:180px; transition:transform .16s ease, box-shadow .16s ease;
+    }
+    .sector-card:hover{transform:translateY(-2px);box-shadow:0 14px 34px rgba(10,42,107,.10)}
+    .sector-card .icon{font-size:2rem;margin-bottom:.6rem;display:inline-block}
+    .sector-card h3{font-size:1.12rem;color:var(--brand-blue);margin:0 0 .25rem}
+    .sector-card p{font-size:.95rem;color:var(--muted);margin:0}
+
+    .company-list{display:flex;flex-direction:column;gap:14px;margin:18px auto;max-width:100%}
+    .card{background:#fff;border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow)}
+    .company-item{display:flex;justify-content:space-between;align-items:center;padding:16px 18px}
+    .company-meta{display:flex;gap:14px;align-items:flex-start}
+    .logo-dot{width:52px;height:52px;border-radius:16px;background:#eef3ff;display:grid;place-items:center;font-size:1.4rem;border:1px solid #e6e7f0}
+    .meta h4{font-size:1.06rem;color:var(--brand-blue);display:flex; align-items:center; gap:.5rem; margin:0}
+    .meta p{font-size:.92rem;color:var(--muted);margin:3px 0 0}
+
+    /* Profile */
+    .profile-head{display:flex;gap:16px;align-items:center;padding:18px 0;border-bottom:1px solid var(--border)}
+    .profile-head .logo-dot{width:56px;height:56px}
+    .profile-head h2{margin:0;color:var(--brand-blue);font-size:1.4rem}
+    .actions{display:flex;gap:8px}
+    .tabs{display:flex;gap:18px;border-bottom:1px solid var(--border);margin:10px 0 16px}
+    .tabs a{padding:8px 0;border-bottom:2px solid transparent;font-size:.95rem}
+    .tabs a.active{color:var(--brand-blue);border-color:var(--brand-blue)}
+    .grid{display:grid;grid-template-columns:2fr 1fr;gap:12px}
+    .grid .card{padding:16px}
+    .grid table{width:100%;border-collapse:collapse}
+    .grid table td{padding:6px 4px;border-bottom:1px solid var(--border)}
+
+    @media(max-width:1100px){.search-grid{grid-template-columns:1fr}}
+    @media(max-width:760px){.grid{grid-template-columns:1fr}}
+    .footer{background:#0b1020;color:#cbd5e1;}
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header" id="site-header">
+    <div class="row1">
+      <div class="brandrow">
+        <a class="brand" href="Entire.html" aria-label="Raymoch home">
+          <svg width="28" height="28" viewBox="0 0 200 200" aria-hidden="true">
+            <polygon fill="none" stroke="currentColor" stroke-width="10" points="100,18 172,59 172,141 100,182 28,141 28,59"/>
+            <text x="100" y="118" text-anchor="middle" style="fill:currentColor;font:700 105px Georgia">R</text>
+          </svg>
+          <span class="brand-word">Raymoch</span>
+        </a>
+
+        <button class="explore-toggle" id="exploreToggle" aria-haspopup="true" aria-expanded="false">
+          <span class="dotgrid" aria-hidden="true"><i></i><i></i><i></i><i></i></span> Explore
+        </button>
+
+        <div class="menu-panel" id="t1Menu" role="menu" aria-labelledby="exploreToggle" hidden>
+          <div class="menu-grid">
+            <a class="menu-item" href="explore2.html"><h5>Explore Businesses</h5><p>Browse verified companies by sector and country.</p></a>
+            <a class="menu-item" href="Matching.html"><h5>Trusted Matching</h5><p>Get paired with credible businesses using CTI & verification.</p></a>
+            <a class="menu-item" href="verification.html"><h5>Verification</h5><p>CTI badges, document checks, and data provenance.</p></a>
+            <a class="menu-item" href="Market_Insight.html"><h5>Research & Insights</h5><p>Sector reports, trends, and regional briefs.</p></a>
+            <a class="menu-item" href="Services.html"><h5>Programs & Services</h5><p>Advisory, partner programs, and support options.</p></a>
+            <a class="menu-item" href="About.html"><h5>Who We Are</h5><p>Mission, team, and what we stand for.</p></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="rightside">
+        <form class="search-box" action="search.html">
+          <input id="navSearch" type="search" name="q" placeholder="Search companies, sectors, regions…" />
+        </form>
+        <div class="auth">
+          <button class="btn" id="loginBtn" type="button">Log in</button>
+          <button class="btn primary" id="signupBtn" type="button">Sign up</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="wrap">
+        <nav class="links" aria-label="Secondary">
+          <a href="explore2.html" class="active">Businesses</a>
+          <a href="Services.html">Services</a>
+          <a href="Market_Insight.html">Research &amp; Insights</a>
+          <a href="About.html">Who We Are</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- PAGE: SECTORS GRID -->
+  <main>
+    <section id="view-sectors" class="container">
+      <div class="explore-hero">
+        <h1>Explore Businesses</h1>
+        <p>Discover verified opportunities across industries.</p>
+      </div>
+
+      <!-- Search panel -->
+      <div class="search-panel card" role="search">
+        <div class="search-grid">
+          <div class="input-wrap">
+            <span class="icon">🔎</span>
+            <input id="f-search" class="input" type="text" placeholder="Search businesses, keywords, or summaries..." />
+            <button id="clear-search" class="clear-btn" aria-label="Clear search" type="button">✕</button>
+          </div>
+          <select id="f-country" class="select" aria-label="Country"></select>
+          <select id="f-sector" class="select" aria-label="Sector"></select>
+          <div class="search-actions" style="display:flex;gap:8px;align-items:center;justify-content:flex-end">
+            <label class="switch"><input id="f-verified" type="checkbox" /><span>Verified only</span></label>
+            <a class="btn ghost" href="companies.html">All Companies</a>
+            <button id="do-search" class="btn primary" type="button">Search</button>
+          </div>
+        </div>
+        <div id="result-count" class="result-count"></div>
+      </div>
+
+      <div class="sector-grid" id="sector-grid"></div>
+    </section>
+
+    <!-- PAGE: SECTOR LISTING -->
+    <section id="view-sector" class="container" hidden>
+      <div class="back-row" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <button class="btn ghost" id="back-to-sectors" type="button">← All Sectors</button>
+        <span class="tag" id="sector-tag" style="display:inline-block;border:1px solid var(--border);border-radius:999px;padding:4px 10px;color:#374151;background:#fff;font-size:.86rem"></span>
+      </div>
+      <div class="sector-hero" style="text-align:center;padding:10px 10px 0">
+        <div style="font-size:2rem" id="sector-icon">🌱</div>
+        <h2 id="sector-title" style="margin:6px 0 4px;color:var(--brand-blue)"></h2>
+        <p id="sector-desc" style="color:var(--muted)"></p>
+      </div>
+
+      <div class="search-panel card" role="search" style="margin-top:12px">
+        <div class="search-grid">
+          <div class="input-wrap">
+            <span class="icon">🔎</span>
+            <input id="f-search-sec" class="input" type="text" placeholder="Search within this list..." />
+            <button id="clear-search-sec" class="clear-btn" aria-label="Clear search" type="button">✕</button>
+          </div>
+          <select id="f-country-sec" class="select" aria-label="Country"></select>
+          <select id="f-sector-sec" class="select" aria-label="Sector"></select>
+          <div class="search-actions" style="display:flex;gap:8px;align-items:center;justify-content:flex-end">
+            <label class="switch"><input id="f-verified-sec" type="checkbox" /><span>Verified only</span></label>
+            <a class="btn ghost" href="companies.html">All Companies</a>
+            <button id="do-search-sec" class="btn primary" type="button">Search</button>
+          </div>
+        </div>
+        <div id="result-count-sec" class="result-count"></div>
+      </div>
+
+      <div class="company-list" id="company-list"></div>
+    </section>
+
+    <!-- PAGE: COMPANY PROFILE -->
+    <section id="view-profile" class="container" hidden>
+      <div class="back-row" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <button class="btn ghost" id="back-to-sector" type="button">← Back to List</button>
+        <span class="tag" id="profile-breadcrumb" style="display:inline-block;border:1px solid var(--border);border-radius:999px;padding:4px 10px;color:#374151;background:#fff;font-size:.86rem"></span>
+      </div>
+      <div class="profile-head">
+        <div class="logo-dot" id="profile-logo">🌱</div>
+        <div style="flex:1">
+          <h2 id="profile-name">Company</h2>
+          <div class="muted" id="profile-meta" style="color:var(--muted)"></div>
+        </div>
+        <div class="actions">
+          <button class="btn ghost" type="button">Save</button>
+          <button class="btn ghost" type="button">Share</button>
+          <button class="btn primary" id="contact-company" type="button">Request Intro</button>
+        </div>
+      </div>
+      <div class="tabs">
+        <a href="#" class="active">Overview</a>
+        <a href="#">Financials</a>
+        <a href="#">Team</a>
+        <a href="#">Gallery</a>
+        <a href="#">Documents</a>
+        <a href="#">Contact</a>
+      </div>
+      <div class="grid">
+        <div class="card" id="profile-overview"></div>
+        <div class="card" id="profile-snapshot"></div>
+        <div class="card" id="profile-summary" style="grid-column:1 / span 2"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer" id="site-footer">
+    <div class="wrap" style="padding:32px var(--gutter)">
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:18px">
+        <div>
+          <div style="color:#fff;font-weight:800;font-size:1.2rem;margin-bottom:8px">Raymoch</div>
+          <div style="color:#94a3b8;max-width:360px">Connecting investors and entrepreneurs through trust, verified data, and actionable insights.</div>
+        </div>
+        <div>
+          <h5 style="margin-bottom:10px;color:#e5e7eb;font-size:.95rem">Company</h5>
+          <a href="About.html" style="display:block;color:#cbd5e1;margin:6px 0">About</a>
+          <a href="careers.html" style="display:block;color:#cbd5e1;margin:6px 0">Careers</a>
+          <a href="press.html" style="display:block;color:#cbd5e1;margin:6px 0">Press</a>
+          <a href="contact.html" style="display:block;color:#cbd5e1;margin:6px 0">Contact</a>
+        </div>
+        <div>
+          <h5 style="margin-bottom:10px;color:#e5e7eb;font-size:.95rem">Product</h5>
+          <a href="explore2.html" style="display:block;color:#cbd5e1;margin:6px 0">Explore Businesses</a>
+          <a href="Market_Insight.html" style="display:block;color:#cbd5e1;margin:6px 0">Market Insights</a>
+          <a href="verification.html" style="display:block;color:#cbd5e1;margin:6px 0">Verification</a>
+          <a href="Services.html" style="display:block;color:#cbd5e1;margin:6px 0">Programs & Services</a>
+        </div>
+        <div>
+          <h5 style="margin-bottom:10px;color:#e5e7eb;font-size:.95rem">Resources</h5>
+          <a href="blog.html" style="display:block;color:#cbd5e1;margin:6px 0">Blog</a>
+          <a href="help.html" style="display:block;color:#cbd5e1;margin:6px 0">Help Center</a>
+          <a href="security.html" style="display:block;color:#cbd5e1;margin:6px 0">Security</a>
+          <a href="status.html" style="display:block;color:#cbd5e1;margin:6px 0">Status</a>
+        </div>
+      </div>
+      <div style="border-top:1px solid #1f2937;margin-top:22px;padding:12px 0;display:flex;justify-content:space-between;align-items:center;font-size:.92rem">
+        <div>© <span id="footerYear"></span> Raymoch. All rights reserved.</div>
+        <div>
+          <a href="privacy.html" style="color:#cbd5e1;margin-left:14px">Privacy</a>
+          <a href="terms.html" style="color:#cbd5e1;margin-left:14px">Terms</a>
+          <a href="cookies.html" style="color:#cbd5e1;margin-left:14px">Cookies</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- prefer companies.js if present -->
+  <script src="companies.js" defer></script>
+
+  <!-- inline fallback so you SEE output even without files/server -->
+  <script type="application/json" id="companies-json">
+  [
+    {"id":"c001","name":"Nile Agro","sector":"agriculture","country":"Ethiopia","verified":true,"stage":"growth","summary":"Inputs + cold-chain for mid-sized farmers.","overview":"Seeds, irrigation, and cold-chain logistics for co-ops.","snapshot":{"Employees":"48","Revenue (est)":"$3.2M","CTI Tier":"CTI-2"}},
+    {"id":"c002","name":"Mzansi Pay","sector":"fintech","country":"South Africa","verified":false,"stage":"seed","summary":"Cross-border remittances for SADC corridor.","overview":"Low-cost remittances and agent network across SADC.","snapshot":{"Employees":"12","TPV (est)":"$18M","CTI Tier":"CTI-1"}},
+    {"id":"c003","name":"Solar Sahel","sector":"energy","country":"Mali","verified":true,"stage":"series-a","summary":"PAYGo solar for off-grid households.","overview":"Finances SHS with mobile money repayments.","snapshot":{"Customers":"25k","ARPU (mo)":"$6","CTI Tier":"CTI-3"}}
+  ]
+  </script>
+
+  <script>
+    /* ======= DATA + VIEWS ======= */
+
+    const AFRICAN_COUNTRIES = [
+      'Algeria','Angola','Benin','Botswana','Burkina Faso','Burundi','Cabo Verde','Cameroon','Central African Republic','Chad','Comoros',
+      'Congo (Republic)','Congo (Democratic Republic)','Côte d’Ivoire','Djibouti','Egypt','Equatorial Guinea','Eritrea','Eswatini','Ethiopia',
+      'Gabon','The Gambia','Ghana','Guinea','Guinea-Bissau','Kenya','Lesotho','Liberia','Libya','Madagascar','Malawi','Mali','Mauritania',
+      'Mauritius','Morocco','Mozambique','Namibia','Niger','Nigeria','Rwanda','Sahrawi Arab Democratic Republic','São Tomé and Príncipe',
+      'Senegal','Seychelles','Sierra Leone','Somalia','South Africa','South Sudan','Sudan','Tanzania','Togo','Tunisia','Uganda','Zambia','Zimbabwe'
+    ];
+
+    const sectors = {
+      agriculture:{ icon:'🌱', title:'Agriculture & Food', desc:'Farming, processing, and agri-tech solutions.' },
+      fintech:{ icon:'💳', title:'Fintech & Banking', desc:'Payments, remittances, lending platforms.' },
+      energy:{ icon:'⚡', title:'Energy & Renewables', desc:'Solar, wind, and off-grid solutions.' },
+      healthcare:{ icon:'🏥', title:'Healthcare & Biotech', desc:'Clinics, telemedicine, pharmaceuticals.' },
+      ict:{ icon:'📡', title:'ICT & Telecoms', desc:'Connectivity, software, digital services.' },
+      retail:{ icon:'🛍️', title:'Wholesale & Retail', desc:'Consumer goods, distribution, e-commerce.' },
+      education:{ icon:'🎓', title:'Education & Training', desc:'Schools, ed-tech, vocational services.' },
+      manufacturing:{ icon:'🏭', title:'Manufacturing & Industry', desc:'Factories, production, and services.' },
+      logistics:{ icon:'🚚', title:'Logistics & Supply Chain', desc:'Warehousing, cold-chain, fulfillment.' },
+      transport:{ icon:'🚌', title:'Transport & Mobility', desc:'Ride-hailing, EVs, micro-mobility, rail.' },
+      realestate:{ icon:'🏗️', title:'Real Estate & Construction', desc:'Commercial, housing, materials.' },
+      water:{ icon:'🚰', title:'Water & Sanitation', desc:'Treatment, distribution, metering.' },
+      tourism:{ icon:'🏝️', title:'Tourism & Hospitality', desc:'Hotels, destinations, travel tech.' },
+      creative:{ icon:'🎬', title:'Media & Creative', desc:'Studios, music, gaming, content.' }
+    };
+
+    function sectorOptions(placeholder='Sector'){
+      return `<option value="">${placeholder}</option>` +
+        Object.entries(sectors).map(([key, s]) => `<option value="${key}">${s.title}</option>`).join('');
+    }
+    function optionList(arr, placeholder){
+      return `<option value="">${placeholder}</option>` + arr.map(v=>`<option value="${v}">${v}</option>`).join('');
+    }
+    function iconFor(sector){return (sectors[sector]||{}).icon||'📦'}
+    function cap(s){return s? s.charAt(0).toUpperCase()+s.slice(1):''}
+
+    // Prefer companies.js → companies.json → inline fallback
+    async function loadCompanies(){
+      if (Array.isArray(window.COMPANIES)) return window.COMPANIES;
+      try{
+        const res = await fetch('./companies.json', {cache:'no-store'});
+        if(res.ok){
+          const data = await res.json();
+          return Array.isArray(data) ? data : (data.companies||[]);
+        }
+      }catch(_){/* likely file:// */}
+      try{
+        const el = document.getElementById('companies-json');
+        if(el && el.textContent.trim()){
+          const data = JSON.parse(el.textContent);
+          return Array.isArray(data) ? data : (data.companies||[]);
+        }
+      }catch(e){ console.warn('Inline JSON parse error', e); }
+      return [];
+    }
+
+    // Views
+    function show(id){
+      ['view-sectors','view-sector','view-profile'].forEach(v=>{
+        const el = document.getElementById(v);
+        if(el) el.hidden = (v!==id);
+      });
+      window.scrollTo({top:0,behavior:'instant'});
+    }
+
+    function renderSectors(){
+      show('view-sectors');
+      const grid = document.getElementById('sector-grid'); grid.innerHTML = '';
+      Object.entries(sectors).forEach(([key, s])=>{
+        const a = document.createElement('a');
+        a.className = 'card sector-card';
+        a.href = `#/sector/${key}`;
+        a.innerHTML = `<span class="icon">${s.icon}</span><h3>${s.title}</h3><p>${s.desc}</p>`;
+        grid.appendChild(a);
+      });
+      initFilters('');
+      updateResultCount();
+      history.replaceState({lastSector:null}, '', '#/home');
+    }
+
+    function initFilters(suffix = ''){
+      const countryEl = document.getElementById('f-country'+suffix);
+      const sectorEl  = document.getElementById('f-sector'+suffix);
+      if(countryEl) countryEl.innerHTML = optionList(AFRICAN_COUNTRIES, 'Country');
+      if(sectorEl)  sectorEl.innerHTML  = sectorOptions('Sector');
+      bindSearchHandlers(suffix);
+    }
+
+    function bindSearchHandlers(suffix = '', sectorKey = ''){
+      const q = document.getElementById('f-search'+suffix);
+      const country = document.getElementById('f-country'+suffix);
+      const sectorSel = document.getElementById('f-sector'+suffix);
+      const onlyV = document.getElementById('f-verified'+suffix);
+      const clearBtn = document.getElementById('clear-search'+suffix);
+      const searchBtn = document.getElementById('do-search'+suffix);
+
+      const trigger = ()=> {
+        if(sectorKey){ renderCompanyList(sectorKey); updateResultCount(sectorKey, suffix); }
+        else { updateResultCount('', suffix); }
+      };
+      [q,country,sectorSel,onlyV].forEach(el=>{
+        if(!el) return;
+        el.oninput = el.onchange = trigger;
+      });
+      if(clearBtn){ clearBtn.onclick = ()=>{ if(q){ q.value=''; } trigger(); q && q.focus(); }; }
+      if(searchBtn){ searchBtn.onclick = trigger; }
+    }
+
+    function updateResultCount(sectorKey = '', suffix = ''){
+      const q = (document.getElementById('f-search'+suffix)?.value||'').toLowerCase().trim();
+      const country = document.getElementById('f-country'+suffix)?.value || '';
+      const sectorSel = document.getElementById('f-sector'+suffix)?.value || '';
+      const onlyV = document.getElementById('f-verified'+suffix)?.checked || false;
+
+      let pool = window.__COMPANIES__ || [];
+      if (sectorKey) pool = pool.filter(c=>c.sector===sectorKey);
+      if (sectorSel) pool = pool.filter(c => c.sector === sectorSel);
+
+      const rows = pool
+        .filter(c=> !q || c.name.toLowerCase().includes(q) || (c.summary||'').toLowerCase().includes(q))
+        .filter(c=> !country || c.country===country)
+        .filter(c=> !onlyV || c.verified);
+
+      const el = document.getElementById(sectorKey ? 'result-count-sec' : 'result-count');
+      if(el) el.textContent = `${rows.length} result${rows.length===1?'':'s'}`;
+      return rows.length;
+    }
+
+    function companyRow(c){
+      return `
+      <div class="card company-item">
+        <div class="company-meta">
+          <div class="logo-dot">${iconFor(c.sector)}</div>
+          <div class="meta">
+            <h4>${c.name} ${c.verified?'<span class="tag" style="border:1px solid var(--border);border-radius:999px;padding:2px 8px;background:#fff;color:#374151;font-size:.78rem">Verified</span>':''}</h4>
+            <p>${c.country} • ${c.stage? cap(c.stage)+' stage' : (c.tier? c.tier : '')}</p>
+            <p>${c.summary||''}</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn primary" data-profile="${c.id}" type="button">View Profile</button>
+          <a class="btn ghost" href="companies.html?id=${encodeURIComponent(c.id)}" target="_blank" rel="noopener">Open Full Profile</a>
+        </div>
+      </div>`;
+    }
+
+    function renderCompanyList(key){
+      const q = (document.getElementById('f-search-sec').value||'').toLowerCase().trim();
+      const country = document.getElementById('f-country-sec').value;
+      const sectorSel = document.getElementById('f-sector-sec').value;
+      const onlyV = document.getElementById('f-verified-sec').checked;
+      const list = document.getElementById('company-list');
+
+      let rows = (window.__COMPANIES__||[]).filter(c=> key ? c.sector===key : true);
+      if (sectorSel) rows = rows.filter(c => c.sector===sectorSel);
+
+      rows = rows
+        .filter(c=> !q || c.name.toLowerCase().includes(q) || (c.summary||'').toLowerCase().includes(q))
+        .filter(c=> !country || c.country===country)
+        .filter(c=> !onlyV || c.verified);
+
+      list.innerHTML = rows.map(companyRow).join('') ||
+        `<div class="tag" style="display:inline-block;padding:4px 10px;border:1px solid var(--border);border-radius:999px;background:#fff;color:#374151">No results</div>`;
+
+      document.getElementById('result-count-sec').textContent = `${rows.length} result${rows.length===1?'':'s'}`;
+
+      list.querySelectorAll('[data-profile]').forEach(btn=>{
+        btn.addEventListener('click', e=>{
+          const id = e.currentTarget.getAttribute('data-profile');
+          location.hash = `#/profile/${id}`;
+        });
+      });
+    }
+
+    function renderSector(key){
+      const s = sectors[key]; if(!s){ renderSectors(); return; }
+      show('view-sector');
+      document.getElementById('sector-icon').textContent = s.icon;
+      document.getElementById('sector-title').textContent = s.title;
+      document.getElementById('sector-desc').textContent = s.desc;
+      document.getElementById('sector-tag').textContent = s.title;
+
+      initFilters('-sec');
+      bindSearchHandlers('-sec', key);
+      renderCompanyList(key);
+
+      document.getElementById('back-to-sectors').onclick = ()=>{ location.hash = '#/home'; };
+      history.replaceState({lastSector:key}, '', `#/sector/${key}`);
+    }
+
+    function renderProfile(id){
+      const c = (window.__COMPANIES__||[]).find(x=>x.id===id); if(!c){ renderSectors(); return; }
+      show('view-profile');
+      const sec = sectors[c.sector] || {title:'Company'};
+      document.getElementById('profile-breadcrumb').textContent = `${sec.title}`;
+      document.getElementById('profile-logo').textContent = iconFor(c.sector);
+      document.getElementById('profile-name').textContent = c.name;
+      document.getElementById('profile-meta').textContent =
+        `${sec.title.split(' & ')[0]} • ${c.country} ${c.verified?'• Verified':''}`;
+      document.getElementById('profile-overview').innerHTML = `<h3 style="margin-top:0;color:var(--brand-blue)">Overview</h3><p>${c.overview||''}</p>`;
+      document.getElementById('profile-summary').innerHTML = `<h3 style="margin-top:0;color:var(--brand-blue)">Summary</h3><p>${c.summary||''}</p>`;
+      const snap = c.snapshot||{};
+      const rows = Object.keys(snap).map(k=>`<tr><td style="color:var(--muted)">${k}</td><td>${snap[k]}</td></tr>`).join('');
+      document.getElementById('profile-snapshot').innerHTML =
+        `<h3 style="margin-top:0;color:var(--brand-blue)">Snapshot</h3><table>${rows}</table>`;
+      document.getElementById('back-to-sector').onclick = ()=> {
+        const back = history.state && history.state.lastSector ? history.state.lastSector : null;
+        if(back) location.hash = `#/sector/${back}`;
+        else location.hash = '#/home';
+      };
+      document.getElementById('contact-company').onclick = ()=>{ alert('Intro request recorded.'); };
+      history.replaceState({lastSector:(history.state && history.state.lastSector) || null}, '', `#/profile/${id}`);
+    }
+
+    function route(){
+      const hash = (location.hash||'#/home').replace(/^#\/?/, '');
+      const [view, arg] = hash.split('/');
+      if(view === 'sector' && arg){ renderSector(arg); }
+      else if(view === 'profile' && arg){ renderProfile(arg); }
+      else { renderSectors(); }
+    }
+
+    window.addEventListener('DOMContentLoaded', async ()=>{
+      // Footer year
+      const y=document.getElementById('footerYear'); if(y) y.textContent = new Date().getFullYear();
+
+      // Load data with graceful fallback
+      let companies = await loadCompanies();
+      if(!Array.isArray(companies) || !companies.length){
+        // use the inline fallback we shipped so you see cards immediately
+        try{
+          const el = document.getElementById('companies-json');
+          companies = JSON.parse(el.textContent);
+        }catch(e){
+          console.warn('No dataset found; you will still see sectors grid.');
+          companies = [];
+        }
+      }
+      // store globally for renderers
+      window.__COMPANIES__ = companies;
+
+      // Header behaviors
+      (function(){
+        const btn = document.getElementById('exploreToggle');
+        const menu = document.getElementById('t1Menu');
+        if(btn && menu){
+          const toggle = (open)=>{ btn.setAttribute('aria-expanded', open?'true':'false'); menu.hidden = !open; };
+          btn.addEventListener('click', e=>{ e.preventDefault(); toggle(menu.hidden); });
+          document.addEventListener('click', e=>{ if(!menu.hidden && !menu.contains(e.target) && !btn.contains(e.target)) toggle(false); });
+          document.addEventListener('keydown', e=>{ if(e.key==='Escape') toggle(false); });
+        }
+        const current = 'explore2.html';
+        document.querySelectorAll('#site-header .row2 a[href]').forEach(a=>{
+          const href = a.getAttribute('href'); if(href && href === current) a.classList.add('active');
+        });
+      })();
+
+      if(!location.hash) location.hash = '#/home';
+      route();
+      window.addEventListener('hashchange', route);
+    });
+  </script>
+</body>
+</html>

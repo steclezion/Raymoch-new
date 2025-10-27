@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Raymoch • Companies & Profile</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        <style>
+            /* =========================================================
+     RAYMOCH COLOR SYSTEM — same as Entire.html (frozen)
+     ========================================================= */
+            :root {
+                --brand-blue: #0328aeed;
+                --brand-blue-700: #213bb1;
+                --brand-blue-500: #041b64;
+                --accent-gold: #7a7797a8;
+
+                --ink: #101114;
+                --muted: #3c4b69;
+                --bg: #fafafa;
+                --border: #e8e8ee;
+                --card: #ffffff;
+
+                --radius: 14px;
+                --pill: 999px;
+                --shadow: 0 6px 22px rgba(10, 42, 107, 0.08);
+                --maxw: 1328px;
+                --gutter: 18px;
+            }
+
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+                font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            }
+            body {
+                background: var(--bg);
+                color: var(--ink);
+                line-height: 1.5;
+                min-height: 100dvh;
+                display: flex;
+                flex-direction: column;
+            }
+            a {
+                color: inherit;
+                text-decoration: none;
+            }
+            img {
+                max-width: 100%;
+                display: block;
+            }
+            .wrap {
+                max-width: var(--maxw);
+                margin: 0 auto;
+                padding: 0 var(--gutter);
+            }
+
+            /* =========================================================
+     FROZEN HEADER (EXACT COPY FROM Entire.html)
+     ========================================================= */
+            .header {
+                --nav-brand: var(--brand-blue);
+                --nav-link: #0f172a;
+                --nav-hover: #0a2a6b;
+                --nav-bg: #ffffff;
+                --nav-fg: var(--ink);
+                background: var(--nav-bg);
+                color: var(--nav-fg);
+                position: sticky;
+                top: 0;
+                z-index: 1000;
+                border-bottom: 1px solid var(--border);
+            }
+            .row1 {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 16px;
+                padding: 12px 8px;
+                max-width: none;
+                margin: 15px;
+                box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+                position: relative;
+            }
+            .brandrow {
+                display: flex;
+                align-items: center;
+                gap: 22px;
+            }
+            .brand {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                color: var(--nav-brand);
+            }
+            .brand-word {
+                font-weight: 900;
+                font-size: 1.4rem;
+                color: var(--nav-brand);
+                letter-spacing: 0.2px;
+            }
+            .dotgrid {
+                width: 18px;
+                height: 18px;
+                display: inline-grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 2px;
+            }
+            .dotgrid i {
+                width: 5px;
+                height: 5px;
+                border-radius: 2px;
+                background: #101114;
+            }
+            .rightside {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                margin-right: 0;
+            }
+            .search-box {
+                min-width: 140px;
+                width: 18vw;
+                max-width: 260px;
+            }
+            .search-box input {
+                width: 100%;
+                height: 40px;
+                padding: 0 14px;
+                border: 1px solid var(--border);
+                border-radius: var(--pill);
+            }
+            .search-box input:focus {
+                border-color: var(--nav-brand);
+                outline: 2px solid #cfe0ff;
+            }
+            .auth {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .btn {
+                height: 40px;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 0 16px;
+                border-radius: var(--pill);
+                font-weight: 700;
+                background: #fff;
+                border: 1px solid var(--border);
+            }
+            .btn.primary {
+                background: var(--nav-brand);
+                color: #fff;
+                border-color: var(--nav-brand);
+            }
+            .explore-toggle {
+                appearance: none;
+                border: 0;
+                background: transparent;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-weight: 800;
+                color: var(--nav-link);
+                padding: 6px 8px;
+                border-radius: 8px;
+                font-size: 1.1rem;
+            }
+            .explore-toggle:hover,
+            .explore-toggle[aria-expanded="true"] {
+                background: #eceff3;
+                color: var(--nav-hover);
+            }
+            .menu-panel {
+                position: absolute;
+                top: calc(100% + 10px);
+                left: 15px;
+                z-index: 1100;
+                width: min(760px, calc(100vw - 40px));
+                background: #fff;
+                border: 1px solid var(--border);
+                border-radius: 14px;
+                box-shadow: var(--shadow);
+                padding: 14px;
+            }
+            .menu-panel[hidden] {
+                display: none;
+            }
+            .menu-head {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 8px;
+            }
+            .menu-head h4 {
+                margin: 0;
+                font-size: 1rem;
+            }
+            .menu-grid {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(240px, 1fr));
+                gap: 12px;
+            }
+            .menu-item {
+                display: block;
+                padding: 12px;
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                background: #fff;
+            }
+            .menu-item:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+            }
+            .menu-item h5 {
+                margin: 0 0 6px;
+                font-size: 0.98rem;
+            }
+            .menu-item p {
+                margin: 0;
+                color: var(--muted);
+                font-size: 0.92rem;
+            }
+            @media (max-width: 560px) {
+                .menu-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+            .row2 {
+                background: #f5f6f8;
+                border-top: 1px solid #eee;
+                border-bottom: 1px solid #e6e6e6;
+                padding-left: 15px;
+            }
+            .row2 .wrap {
+                max-width: none;
+                padding: 0;
+            }
+            .row2 .links {
+                display: flex;
+                gap: 18px;
+                padding: 8px 8px;
+                margin: 0;
+                justify-content: flex-start;
+                align-items: center;
+            }
+            .row2 a {
+                font-weight: 600;
+                font-size: 0.92rem;
+                padding: 4px 6px;
+                border-radius: 4px;
+                color: var(--nav-link);
+            }
+            .row2 a:hover {
+                background: #eceff3;
+                color: var(--nav-hover);
+            }
+            @media (max-width: 800px) {
+                .search-box {
+                    width: 34vw;
+                    max-width: 300px;
+                }
+            }
+            @media (max-width: 720px) {
+                .row2 {
+                    display: none;
+                }
+                .search-box {
+                    min-width: 0;
+                    width: 46vw;
+                }
+            }
+            .header a:focus-visible,
+            .header button:focus-visible,
+            .btn:focus-visible {
+                outline: 2px solid #cfe0ff;
+                outline-offset: 2px;
+            }
+
+            /* =========================================================
+     COMPANIES / PROFILE PAGE (SCOPED)
+     ========================================================= */
+            main.companies {
+                padding: 28px 0;
+            }
+            main.companies .card {
+                background: var(--card);
+                border: 1px solid var(--border);
+                border-radius: 18px;
+                box-shadow: 0 10px 30px rgba(10, 42, 107, 0.08);
+                padding: 18px;
+            }
+            main.companies a {
+                color: var(--brand-blue);
+                text-decoration: none;
+            }
+            main.companies a:hover {
+                text-decoration: underline;
+            }
+            main.companies .muted {
+                color: var(--muted);
+            }
+            main.companies .small {
+                font-size: 13px;
+            }
+
+            /* LIST */
+            main.companies .bar {
+                display: grid;
+                grid-template-columns: 2fr 1fr 1fr auto;
+                gap: 10px;
+                margin-bottom: 16px;
+            }
+            @media (max-width: 900px) {
+                main.companies .bar {
+                    grid-template-columns: 1fr 1fr;
+                    grid-auto-rows: auto;
+                }
+            }
+            main.companies input,
+            main.companies select {
+                padding: 10px;
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                background: #fff;
+                height: 40px;
+            }
+            main.companies button {
+                padding: 10px 14px;
+                border-radius: 12px;
+                border: 1px solid var(--border);
+                background: #fff;
+                cursor: pointer;
+            }
+            main.companies button.primary {
+                background: var(--brand-blue);
+                color: #fff;
+                border-color: var(--brand-blue);
+            }
+            main.companies button[disabled] {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+            /* main.companies .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:900px){main.companies .grid{grid-template-columns:1fr}} */
+
+            .grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+                gap: 12px;
+                padding: 4px 2px;
+                margin-bottom: 10px;
+            }
+
+            main.companies .row {
+                display: flex;
+                gap: 14px;
+                align-items: flex-start;
+            }
+            main.companies .left {
+                flex: 1 1 auto;
+                min-width: 0;
+            }
+            main.companies .right {
+                flex: 0 0 auto;
+                display: flex;
+                flex-direction: column;
+                align-items: flex-end;
+                gap: 6px;
+            }
+            main.companies .name {
+                font-size: 18px;
+                font-weight: 800;
+                margin: 0 0 4px 0;
+            }
+            main.companies .sub {
+                color: var(--muted);
+                font-size: 14px;
+            }
+            main.companies .pills {
+                margin-top: 6px;
+                display: flex;
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+            main.companies .pill {
+                border: 1px solid var(--border);
+                border-radius: 999px;
+                padding: 4px 8px;
+                background: #fff;
+                font-size: 12px;
+            }
+            main.companies .kv {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px 16px;
+                margin-top: 10px;
+            }
+            main.companies .kv div {
+                display: flex;
+                justify-content: space-between;
+                border-bottom: 1px dashed var(--border);
+                padding: 4px 0;
+            }
+            main.companies .kv b {
+                font-weight: 600;
+            }
+            main.companies .dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+            }
+            main.companies .ok {
+                background: #16a34a;
+            }
+            .warn {
+                background: #f59e0b;
+            }
+            .off {
+                background: #9ca3af;
+            }
+            main.companies .tier {
+                padding: 4px 10px;
+                border-radius: 999px;
+                font-size: 12px;
+                border: 1px solid #e8e3c8;
+                background: linear-gradient(#fff8dc, #fff);
+            }
+            main.companies .tier.Gold {
+                background: #daa520;
+                color: #111;
+            }
+            main.companies .tier.Silver {
+                background: #c0c0c0;
+                color: #111;
+            }
+            main.companies .tier.Bronze {
+                background: #cd7f32;
+                color: #fff;
+            }
+            main.companies .tier.Platinum {
+                background: #e5e4e2;
+                color: #111;
+            }
+            main.companies .rowfoot {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 8px;
+                margin: 16px 0;
+            }
+            main.companies .rowfoot button {
+                min-width: 36px;
+                height: 36px;
+                border-radius: 999px;
+                padding: 0 12px;
+                font-weight: 600;
+            }
+
+            /* PROFILE */
+            main.companies .head {
+                display: flex;
+                align-items: flex-start;
+                gap: 18px;
+            }
+            main.companies .title {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            main.companies .h1 {
+                font-size: 30px;
+                line-height: 1.15;
+                margin: 0;
+                font-weight: 800;
+            }
+            main.companies .btns {
+                margin-left: auto;
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+            main.companies .btn {
+                border: none;
+                border-radius: 12px;
+                padding: 10px 14px;
+                background: var(--brand-blue);
+                color: #fff;
+                cursor: pointer;
+                font-weight: 600;
+            }
+            main.companies .btn.ghost {
+                background: #fff;
+                color: var(--brand-blue);
+                border: 1px solid var(--brand-blue);
+            }
+            main.companies .back {
+                border: 1px solid var(--border);
+                background: #fff;
+                color: var(--brand-blue);
+                border-radius: 12px;
+                padding: 9px 12px;
+                text-decoration: none;
+            }
+            main.companies .tabs.card {
+                margin-top: 12px;
+                padding: 0;
+            }
+            main.companies .tabbar {
+                display: flex;
+                gap: 28px;
+                align-items: center;
+                flex-wrap: wrap;
+                padding: 12px 16px;
+            }
+            main.companies .tab {
+                padding: 12px 4px;
+                border-bottom: 2px solid transparent;
+                color: var(--brand-blue);
+                text-decoration: none;
+                font-weight: 600;
+                position: relative;
+            }
+            main.companies .tab.active::after {
+                content: "";
+                position: absolute;
+                left: 6px;
+                right: 6px;
+                bottom: -1px;
+                height: 3px;
+                background: var(--accent-gold);
+                border-radius: 2px;
+            }
+            main.companies .section {
+                display: none;
+            }
+            main.companies .section.active {
+                display: block;
+            }
+            main.companies .gridProfile {
+                display: grid;
+                grid-template-columns: 2fr 1fr;
+                gap: 16px;
+                margin-top: 16px;
+            }
+            @media (max-width: 980px) {
+                main.companies .gridProfile {
+                    grid-template-columns: 1fr;
+                }
+            }
+            main.companies .footer-note {
+                margin: 20px 0 4px;
+                color: var(--muted);
+                font-size: 13px;
+            }
+            main.companies .err {
+                background: #fff3f3;
+                border: 1px solid #fca5a5;
+                color: #7f1d1d;
+                padding: 10px;
+                border-radius: 12px;
+                margin-bottom: 12px;
+                display: none;
+            }
+
+            /* Sticky translucent filter bar */
+            main.companies #listView .card:has(.bar) {
+                padding: 0;
+            }
+            main.companies .bar {
+                position: sticky;
+                top: 12px;
+                z-index: 5;
+                background: rgba(255, 255, 255, 0.92);
+                backdrop-filter: saturate(180%) blur(8px);
+                border: 1px solid #e7eaf0;
+                border-radius: 14px;
+                padding: 12px;
+                box-shadow: 0 6px 18px rgba(10, 42, 107, 0.06);
+                margin-bottom: 18px;
+            }
+
+            /* FOOTER (layout) */
+            footer {
+                margin-top: auto;
+            }
+        </style>
+    </head>
+    <body>
+        <!-- ================= HEADER (Frozen) ================= -->
+        <header class="header" id="nav" data-version="HeaderFooter_v1.0">
+            <div class="row1">
+                <div class="brandrow">
+                    <a
+                        class="brand"
+                        href="Entire.html"
+                        aria-label="Raymoch home"
+                    >
+                        <svg
+                            width="28"
+                            height="28"
+                            viewBox="0 0 200 200"
+                            aria-hidden="true"
+                        >
+                            <polygon
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="10"
+                                points="100,18 172,59 172,141 100,182 28,141 28,59"
+                            />
+                            <text
+                                x="100"
+                                y="118"
+                                text-anchor="middle"
+                                style="
+                                    fill: currentColor;
+                                    font: 700 105px Georgia;
+                                "
+                            >
+                                R
+                            </text>
+                        </svg>
+                        <span class="brand-word">Raymoch</span>
+                    </a>
+
+                    <button
+                        class="explore-toggle"
+                        id="exploreToggle"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                        aria-controls="t1Menu"
+                    >
+                        <span class="dotgrid" aria-hidden="true"
+                            ><i></i><i></i><i></i><i></i
+                        ></span>
+                        Explore
+                    </button>
+
+                    <div
+                        class="menu-panel"
+                        id="t1Menu"
+                        role="menu"
+                        aria-labelledby="exploreToggle"
+                        hidden
+                    >
+                        <div class="menu-head"><h4>Explore services</h4></div>
+                        <div class="menu-grid">
+                            <a
+                                class="menu-item"
+                                role="menuitem"
+                                href="Matching.html"
+                                ><h5>Trusted Matching</h5>
+                                <p>
+                                    Get paired with credible businesses using
+                                    CTI & verification.
+                                </p></a
+                            >
+                            <a
+                                class="menu-item"
+                                role="menuitem"
+                                href="verification.html"
+                                ><h5>Verification</h5>
+                                <p>
+                                    CTI badges, document checks, and data
+                                    provenance.
+                                </p></a
+                            >
+                            <a
+                                class="menu-item"
+                                role="menuitem"
+                                href="Market_Insight.html"
+                                ><h5>Research & Insights</h5>
+                                <p>
+                                    Sector reports, trends, and regional briefs.
+                                </p></a
+                            >
+                            <a
+                                class="menu-item"
+                                role="menuitem"
+                                href="Services.html"
+                                ><h5>Programs & Services</h5>
+                                <p>
+                                    Advisory, partner programs, and support
+                                    options.
+                                </p></a
+                            >
+                            <a
+                                class="menu-item"
+                                role="menuitem"
+                                href="incentives.html"
+                                ><h5>Policy & Incentives</h5>
+                                <p>
+                                    Tax credits, grants, and regulatory signals.
+                                </p></a
+                            >
+                            <a
+                                class="menu-item"
+                                role="menuitem"
+                                href="whitespace.html"
+                                ><h5>Whitespace Map</h5>
+                                <p>
+                                    Where demand outpaces supply across sectors.
+                                </p></a
+                            >
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rightside">
+                    <form class="search-box" action="search.html">
+                        <input
+                            type="search"
+                            name="q"
+                            placeholder="Search companies, sectors, regions…"
+                        />
+                    </form>
+                    <div class="auth">
+                        <a class="btn" href="login.html">Log in</a>
+                        <a class="btn primary" href="signup.html">Sign up</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row2">
+                <div class="wrap">
+                    <nav class="links" aria-label="Secondary">
+                        <a href="explore2.html">Businesses</a>
+                        <a href="Services.html">Services</a>
+                        <a href="Market_Insight.html"
+                            >Research &amp; Insights</a
+                        >
+                        <a href="About.html">Who We Are</a>
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+        <!-- ================= PAGE CONTENT ================= -->
+        <main class="wrap companies">
+            <div id="error" class="err"></div>
+
+            <!-- LIST VIEW -->
+            <div id="listView" style="display: none">
+                <h1>Companies</h1>
+                <div
+                    class="card"
+                    style="
+                        padding: 0;
+                        border: none;
+                        box-shadow: none;
+                        background: transparent;
+                    "
+                >
+                    <div class="bar">
+                        <input id="q" placeholder="Search name/description…" />
+                        <select id="sector">
+                            <option value="">All sectors</option>
+                        </select>
+
+                        <select id="country">
+                            <option value="">All countries</option>
+                            <option>Algeria</option>
+                            <option>Angola</option>
+                            <option>Benin</option>
+                            <option>Botswana</option>
+                            <option>Burkina Faso</option>
+                            <option>Burundi</option>
+                            <option>Cabo Verde</option>
+                            <option>Cameroon</option>
+                            <option>Central African Republic</option>
+                            <option>Chad</option>
+                            <option>Comoros</option>
+                            <option>Democratic Republic of the Congo</option>
+                            <option>Republic of the Congo</option>
+                            <option>Cote d'Ivoire</option>
+                            <option>Djibouti</option>
+                            <option>Egypt</option>
+                            <option>Equatorial Guinea</option>
+                            <option>Eritrea</option>
+                            <option>Eswatini</option>
+                            <option>Ethiopia</option>
+                            <option>Gabon</option>
+                            <option>Gambia</option>
+                            <option>Ghana</option>
+                            <option>Guinea</option>
+                            <option>Guinea-Bissau</option>
+                            <option>Kenya</option>
+                            <option>Lesotho</option>
+                            <option>Liberia</option>
+                            <option>Libya</option>
+                            <option>Madagascar</option>
+                            <option>Malawi</option>
+                            <option>Mali</option>
+                            <option>Mauritania</option>
+                            <option>Mauritius</option>
+                            <option>Morocco</option>
+                            <option>Mozambique</option>
+                            <option>Namibia</option>
+                            <option>Niger</option>
+                            <option>Nigeria</option>
+                            <option>Rwanda</option>
+                            <option>Sahrawi Arab Democratic Republic</option>
+                            <option>Sao Tome and Principe</option>
+                            <option>Senegal</option>
+                            <option>Seychelles</option>
+                            <option>Sierra Leone</option>
+                            <option>Somalia</option>
+                            <option>South Africa</option>
+                            <option>South Sudan</option>
+                            <option>Sudan</option>
+                            <option>Tanzania</option>
+                            <option>Togo</option>
+                            <option>Tunisia</option>
+                            <option>Uganda</option>
+                            <option>Zambia</option>
+                            <option>Zimbabwe</option>
+                        </select>
+
+                        <div style="text-align: right">
+                            <button id="clear">Clear</button>
+                            <button id="go" class="primary">Search</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="grid" class="grid">Loading…</div>
+                <div class="rowfoot">
+                    <button id="prev">Prev</button>
+                    <div id="pageInfo" class="muted"></div>
+                    <button id="next">Next</button>
+                </div>
+            </div>
+
+            <!-- PROFILE VIEW -->
+            <div id="profileView" style="display: none">
+                <div class="card">
+                    <div class="head">
+                        <div style="min-width: 0">
+                            <div class="title">
+                                <div
+                                    id="verDot"
+                                    class="dot off"
+                                    title="Unverified"
+                                ></div>
+                                <h1 class="h1" id="name">Loading…</h1>
+                            </div>
+                            <div class="muted small" id="subline">—</div>
+                            <div class="pills" id="pills"></div>
+                        </div>
+                        <div class="btns">
+                            <a class="back" href="companies.html">
+                                All Companies</a
+                            >
+                            <button class="btn" id="btnIntro">
+                                Request intro
+                            </button>
+                            <button class="btn ghost" id="btnSave">Save</button>
+                            <button class="btn ghost" id="btnShare">
+                                Share
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card tabs">
+                    <nav class="tabbar">
+                        <a href="#overview" class="tab" id="tab-overview"
+                            >Overview</a
+                        >
+                        <a href="#financials" class="tab" id="tab-financials"
+                            >Financials</a
+                        >
+                        <a href="#team" class="tab" id="tab-team">Team</a>
+                        <a href="#gallery" class="tab" id="tab-gallery"
+                            >Gallery</a
+                        >
+                        <a href="#documents" class="tab" id="tab-documents"
+                            >Documents</a
+                        >
+                        <a href="#contact" class="tab" id="tab-contact"
+                            >Contact</a
+                        >
+                    </nav>
+                </div>
+
+                <div class="gridProfile">
+                    <div class="card">
+                        <section id="overview" class="section active">
+                            <h3>Summary</h3>
+                            <p id="desc" class="muted">—</p>
+                            <h3 style="margin-top: 16px">Snapshot</h3>
+                            <div class="kv" id="snapshot"></div>
+                        </section>
+                        <section id="financials" class="section">
+                            <h3>Financials (latest)</h3>
+                            <div class="kv" id="fin"></div>
+                        </section>
+                        <section id="team" class="section">
+                            <h3>Team</h3>
+                            <p class="muted small">
+                                Claim this profile to add team members.
+                            </p>
+                        </section>
+                        <section id="gallery" class="section">
+                            <h3>Gallery</h3>
+                            <p class="muted small">No media yet.</p>
+                        </section>
+                        <section id="documents" class="section">
+                            <h3>Documents</h3>
+                            <p class="muted small">No documents uploaded.</p>
+                        </section>
+                    </div>
+
+                    <div class="card">
+                        <h3>Trust & Verification</h3>
+                        <div class="pills" id="flags"></div>
+                        <div
+                            style="
+                                margin: 10px 0;
+                                display: flex;
+                                gap: 10px;
+                                align-items: center;
+                            "
+                        >
+                            <div class="tier" id="ctiTier">—</div>
+                            <div class="small" id="ctiScore">CTI: —</div>
+                        </div>
+
+                        <h3 id="contact" style="margin-top: 18px">Contact</h3>
+                        <div class="kv" id="contactKv"></div>
+
+                        <div class="footer-note" id="meta">
+                            Last updated — • Sources —
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- ================= FOOTER (Frozen) ================= -->
+        <footer style="background: #0b1020; color: #cbd5e1">
+            <div class="wrap" style="padding: 32px var(--gutter)">
+                <div
+                    style="
+                        display: grid;
+                        grid-template-columns: 2fr 1fr 1fr 1fr;
+                        gap: 18px;
+                    "
+                >
+                    <div>
+                        <div
+                            style="
+                                color: #fff;
+                                font-weight: 800;
+                                font-size: 1.2rem;
+                                margin-bottom: 8px;
+                            "
+                        >
+                            Raymoch
+                        </div>
+                        <div style="color: #94a3b8; max-width: 360px">
+                            Connecting investors and entrepreneurs through
+                            trust, verified data, and actionable insights.
+                        </div>
+                    </div>
+                    <div>
+                        <h5
+                            style="
+                                margin-bottom: 10px;
+                                color: #e5e7eb;
+                                font-size: 0.95rem;
+                            "
+                        >
+                            Company
+                        </h5>
+                        <a
+                            href="About.html"
+                            style="
+                                display: block;
+                                color: #cbd5e1;
+                                margin: 6px 0;
+                            "
+                            >About</a
+                        >
+                        <a
+                            href="careers.html"
+                            style="
+                                display: block;
+                                color: #cbd5e1;
+                                margin: 6px 0;
+                            "
+                            >Careers</a
+                        >
+                        <a
+                            href="press.html"
+                            style="
+                                display: block;
+                                color: #cbd5e1;
+                                margin: 6px 0;
+                            "
+                            >Press</a
+                        >
+                        <a
+                            href="contact.html"
+                            style="
+                                display: block;
+                                color: #cbd5e1;
+                                margin: 6px 0;
+                            "
+                            >Contact</a
+                        >
+                    </div>
+                    <div>
+                        <h5
+                            style="
+                                margin-bottom: 10px;
+                                color: #e5e7eb;
+                                font-size: 0.95rem;
+                            "
+                        >
+                            Product
+                        </h5>
+                        <a
+                            href="explore2.html"
+                            style="
+                                display: block;
+                                color: #cbd5e1;
+                                margin: 6px 0;
+                            "
+                            >Explore Businesses</a
+                        >
+                        <a
+                            href="Market_Insight.html"
+                            style="
+                                display: block;
+                                color: #cbd5e1;
+                                margin: 6px 0;
+                            "
+                            >Market Insights</a
+                        >
+                        <a
+                            href="verification.html"
+                            style="
+                                display: block;
+                                color: #cbd5e1;
+                                margin: 6px 0;
+                            "
+                            >Verification</a
+                        >
+                        <a
+                            href="Services.html"
+                            style="
+                                display: block;
+                                color: #cbd5e1;
+                                margin: 6px 0;
+                            "
+                            >Programs & Services</a
+                        >
+                    </div>
+                    <div>
+                        <h5
+                            style="
+                                margin-bottom: 10px;
+                                color: #e5e7eb;
+                                font-size: 0.95rem;
+                            "
+                        >
+                            Resources
+                        </h5>
+                        <a
+                            href="blog.html"
+                            style="
+                                display: block;
+                                color: #cbd5e1;
+                                margin: 6px 0;
+                            "
+                            >Blog</a
+                        >
+                        <a
+                            href="help.html"
+                            style="
+                                display: block;
+                                color: #cbd5e1;
+                                margin: 6px 0;
+                            "
+                            >Help Center</a
+                        >
+                        <a
+                            href="security.html"
+                            style="
+                                display: block;
+                                color: #cbd5e1;
+                                margin: 6px 0;
+                            "
+                            >Security</a
+                        >
+                        <a
+                            href="status.html"
+                            style="
+                                display: block;
+                                color: #cbd5e1;
+                                margin: 6px 0;
+                            "
+                            >Status</a
+                        >
+                    </div>
+                </div>
+                <div
+                    style="
+                        border-top: 1px solid #1f2937;
+                        margin-top: 22px;
+                        padding: 12px 0;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        font-size: 0.92rem;
+                    "
+                >
+                    <div>© 2025 Raymoch. All rights reserved.</div>
+                    <div>
+                        <a
+                            href="privacy.html"
+                            style="color: #cbd5e1; margin-left: 14px"
+                            >Privacy</a
+                        >
+                        <a
+                            href="terms.html"
+                            style="color: #cbd5e1; margin-left: 14px"
+                            >Terms</a
+                        >
+                        <a
+                            href="cookies.html"
+                            style="color: #cbd5e1; margin-left: 14px"
+                            >Cookies</a
+                        >
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+        <!-- ================= JS ================= -->
+        <script>
+            /* ===== Frozen header menu wiring ===== */
+            (() => {
+                const btn = document.getElementById("exploreToggle");
+                const menu = document.getElementById("t1Menu");
+                if (!btn || !menu) return;
+
+                const openMenu = (on) => {
+                    btn.setAttribute("aria-expanded", on ? "true" : "false");
+                    menu.hidden = !on;
+                };
+
+                btn.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    const isOpen = btn.getAttribute("aria-expanded") === "true";
+                    openMenu(!isOpen);
+                });
+
+                document.addEventListener("click", (e) => {
+                    if (
+                        !menu.hidden &&
+                        !menu.contains(e.target) &&
+                        !btn.contains(e.target)
+                    )
+                        openMenu(false);
+                });
+
+                document.addEventListener("keydown", (e) => {
+                    if (e.key === "Escape") openMenu(false);
+                });
+            })();
+
+            /* ===== A11y semantics (frozen) ===== */
+            (() => {
+                const btn = document.getElementById("exploreToggle");
+                const menu = document.getElementById("t1Menu");
+                if (!btn || !menu) return;
+                btn.setAttribute("aria-controls", "t1Menu");
+                menu.querySelectorAll("a.menu-item").forEach((a) =>
+                    a.setAttribute("role", "menuitem")
+                );
+            })();
+
+            /* ===== Companies/Profile logic (your code, unchanged except scoping) ===== */
+            const API = "http://localhost:3001";
+            const qs = new URLSearchParams(location.search);
+            const id = qs.get("id"); // if present → profile; else → list
+
+            const $ = (id) => document.getElementById(id);
+            const money = (n) =>
+                n == null ? "—" : "$" + Number(n).toLocaleString();
+            const verDotClass = (v) =>
+                ({ Verified: "ok", Pending: "warn", Unverified: "off" }[v] ||
+                "off");
+
+            /* ---------- LIST MODE ---------- */
+            let page = 1,
+                limit = 20;
+            function cardFromSummary(c) {
+                const flags = [];
+                if (c.cti?.tier) flags.push(`CTI: ${c.cti.tier}`);
+                if (c.verified) flags.push("Verified");
+                return `
+    <div class="card">
+      <div class="row">
+        <div class="left">
+          <a class="name" href="company.html?id=${encodeURIComponent(c.id)}">${
+                    c.name
+                }</a>
+          <div class="sub">${c.sector || "—"} • ${c.country || "—"}</div>
+          <div class="pills">
+            ${c.city ? `<span class="pill">${c.city}</span>` : ""}
+            ${c.stage ? `<span class="pill">Stage: ${c.stage}</span>` : ""}
+          </div>
+          <div class="kv">
+            <div><b>Founded</b><span>${c.founded ?? "—"}</span></div>
+            <div><b>Employees</b><span>${c.employees ?? "—"}</span></div>
+            <div><b>Revenue</b><span>${
+                c.revenueUSD != null ? money(c.revenueUSD) : "—"
+            }</span></div>
+            <div><b>CTI</b><span>${c.cti?.score ?? "—"}</span></div>
+          </div>
+        </div>
+        <div class="right">
+          <div class="dot ${c.verified ? "ok" : "off"}" title="${
+                    c.verified ? "Verified" : "Unverified"
+                }"></div>
+          <div class="tier ${c.cti?.tier || ""}">${c.cti?.tier || "—"}</div>
+        </div>
+      </div>
+    </div>`;
+            }
+            async function j(url) {
+                const r = await fetch(url);
+                if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                return r.json();
+            }
+
+            async function populateFilters() {
+                const js = await j(`${API}/companies?page=1&limit=5000`);
+                const data = js.data || js;
+                const sectors = [
+                    ...new Set(data.map((x) => x.sector).filter(Boolean)),
+                ].sort();
+                const countries = [
+                    ...new Set(data.map((x) => x.country).filter(Boolean)),
+                ].sort();
+                $("sector").insertAdjacentHTML(
+                    "beforeend",
+                    sectors.map((s) => `<option>${s}</option>`).join("")
+                );
+                $("country").insertAdjacentHTML(
+                    "beforeend",
+                    countries.map((s) => `<option>${s}</option>`).join("")
+                );
+            }
+
+            function syncQS() {
+                const p = new URLSearchParams();
+                if (page > 1) p.set("page", page);
+                history.replaceState(null, "", `?${p.toString()}`);
+            }
+            async function loadList() {
+                const q = $("q").value.trim(),
+                    sector = $("sector").value,
+                    country = $("country").value;
+                if (q || sector || country) {
+                    const sp = new URLSearchParams();
+                    if (q) sp.set("q", q);
+                    if (sector) sp.set("sector", sector);
+                    if (country) sp.set("country", country);
+                    const js = await j(
+                        `${API}/companies/search?${sp.toString()}`
+                    );
+                    const list = js.data;
+                    $("grid").innerHTML = list.length
+                        ? list
+                              .map((x) =>
+                                  cardFromSummary({
+                                      id: x.CompanyID,
+                                      name: x.CompanyName,
+                                      sector: x.Sector,
+                                      country: x.Country,
+                                      city: x.City,
+                                      stage: x.Stage,
+                                      verified:
+                                          x.VerificationStatus === "Verified",
+                                      cti: {
+                                          tier: x.CTI_Tier,
+                                          score: x.CTI_Score,
+                                      },
+                                      employees: x.Employees,
+                                      revenueUSD: x.AnnualRevenueUSD,
+                                      founded: x.FoundedYear,
+                                  })
+                              )
+                              .join("")
+                        : `<div class="muted">No results.</div>`;
+                    $("pageInfo").textContent = `Results: ${js.total}`;
+                    $("prev").disabled = true;
+                    $("next").disabled = true;
+                } else {
+                    const js = await j(
+                        `${API}/companies?page=${page}&limit=${limit}`
+                    );
+                    const list = js.data;
+                    $("grid").innerHTML = list.map(cardFromSummary).join("");
+                    $(
+                        "pageInfo"
+                    ).textContent = `Page ${js.page} / ${js.totalPages} • ${js.total} total`;
+                    $("prev").disabled = page <= 1;
+                    $("next").disabled = page >= js.totalPages;
+                    syncQS();
+                }
+            }
+
+            /* ---------- PROFILE MODE ---------- */
+            function setActiveTab() {
+                const h = (location.hash || "#overview").toLowerCase();
+                document
+                    .querySelectorAll(".tab")
+                    .forEach((a) => a.classList.remove("active"));
+                document
+                    .querySelectorAll(".section")
+                    .forEach((s) => s.classList.remove("active"));
+                const t = document.querySelector(`.tab[href='${h}']`),
+                    s = document.querySelector(h);
+                if (t) t.classList.add("active");
+                if (s) s.classList.add("active");
+            }
+            function setFlags(c) {
+                const out = [];
+                if (c.DiasporaOwned)
+                    out.push(`<span class="pill">Diaspora-owned</span>`);
+                if (c.WomenLed) out.push(`<span class="pill">Women-led</span>`);
+                if (c.YouthLed) out.push(`<span class="pill">Youth-led</span>`);
+                if (c.HasFinancials)
+                    out.push(`<span class="pill">Financials on file</span>`);
+                $("flags").innerHTML =
+                    out.join("") || `<span class="muted small">No flags</span>`;
+            }
+            function linkify(url) {
+                if (!url) return "—";
+                try {
+                    const u = new URL(url);
+                    return `<a href="${u.href}" target="_blank" rel="noopener">${u.hostname}</a>`;
+                } catch {
+                    return `<a href="${url}" target="_blank" rel="noopener">${url}</a>`;
+                }
+            }
+            function setupActions(c) {
+                $("btnIntro").disabled = !c.Email;
+                $("btnIntro").title = c.Email
+                    ? `Email: ${c.Email}`
+                    : "No intro channel";
+                $("btnSave").onclick = () => {
+                    const s = JSON.parse(
+                        localStorage.getItem("raymoch_saved") || "[]"
+                    );
+                    if (!s.includes(c.CompanyID)) s.push(c.CompanyID);
+                    localStorage.setItem("raymoch_saved", JSON.stringify(s));
+                    alert("Saved.");
+                };
+                $("btnShare").onclick = async () => {
+                    const url = location.href;
+                    try {
+                        await navigator.clipboard.writeText(url);
+                        alert("Link copied!");
+                    } catch {
+                        prompt("Copy this link:", url);
+                    }
+                };
+            }
+            async function loadProfile() {
+                const r = await fetch(
+                    `${API}/companies/${encodeURIComponent(id)}`
+                );
+                if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                const c = await r.json();
+                $("verDot").className =
+                    "dot " + verDotClass(c.VerificationStatus);
+                $("name").textContent = c.CompanyName || "—";
+                $("subline").textContent = `${c.Sector || "—"} • ${
+                    c.Country || "—"
+                }`;
+                $("pills").innerHTML = [c.City, c.Stage, c.ListingBucket]
+                    .filter(Boolean)
+                    .map((x) => `<span class="pill">${x}</span>`)
+                    .join("");
+                $("desc").textContent = c.Description || "—";
+                $("snapshot").innerHTML = [
+                    ["Founded", c.FoundedYear],
+                    ["Country", c.Country],
+                    ["City", c.City],
+                    ["Stage", c.Stage],
+                    ["Verification", c.VerificationStatus],
+                    ["Employees", c.Employees],
+                ]
+                    .map(
+                        ([k, v]) =>
+                            `<div><b>${k}</b><span>${v ?? "—"}</span></div>`
+                    )
+                    .join("");
+                $("fin").innerHTML = [
+                    ["Annual Revenue", money(c.AnnualRevenueUSD)],
+                    ["Total Funding", money(c.TotalFundingUSD)],
+                ]
+                    .map(([k, v]) => `<div><b>${k}</b><span>${v}</span></div>`)
+                    .join("");
+                $("ctiTier").textContent = c.CTI_Tier || "—";
+                $("ctiTier").className = "tier " + (c.CTI_Tier || "");
+                $("ctiScore").textContent = "CTI: " + (c.CTI_Score ?? "—");
+                setFlags(c);
+                $("contactKv").innerHTML = [
+                    ["Website", linkify(c.Website)],
+                    [
+                        "Email",
+                        c.Email
+                            ? `<a href="mailto:${c.Email}">${c.Email}</a>`
+                            : "—",
+                    ],
+                    ["Phone", c.Phone || "—"],
+                ]
+                    .map(([k, v]) => `<div><b>${k}</b><span>${v}</span></div>`)
+                    .join("");
+                $("meta").textContent = `Last updated ${
+                    c.LastUpdated || "—"
+                } • Sources ${c.DataSourcesCount ?? "—"}`;
+                setupActions(c);
+                setActiveTab();
+                window.addEventListener("hashchange", setActiveTab);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+
+            /* ---------- BOOT ---------- */
+            (async function () {
+                try {
+                    if (id) {
+                        // PROFILE
+                        document.getElementById("profileView").style.display =
+                            "block";
+                        await loadProfile();
+                    } else {
+                        // LIST
+                        document.getElementById("listView").style.display =
+                            "block";
+                        await populateFilters();
+                        await loadList();
+                        $("prev").onclick = () => {
+                            page = Math.max(1, page - 1);
+                            loadList();
+                        };
+                        $("next").onclick = () => {
+                            page = page + 1;
+                            loadList();
+                        };
+                        $("go").onclick = () => {
+                            page = 1;
+                            loadList();
+                        };
+                        $("clear").onclick = () => {
+                            $("q").value = "";
+                            $("sector").value = "";
+                            $("country").value = "";
+                            page = 1;
+                            loadList();
+                        };
+                        $("q").addEventListener("keydown", (e) => {
+                            if (e.key === "Enter") {
+                                page = 1;
+                                loadList();
+                            }
+                        });
+                    }
+                } catch (e) {
+                    const err = document.getElementById("error");
+                    err.style.display = "block";
+                    err.textContent =
+                        "Failed to load. " +
+                        e.message +
+                        " (Is the API at " +
+                        API +
+                        "?)";
+                    console.error(e);
+                }
+            })();
+        </script>
+    </body>
+</html>

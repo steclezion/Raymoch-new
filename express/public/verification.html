@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Raymoch • Verification</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- ===== RAYMOCH — MASTER TOKENS + CANVAS (keeps footer locked, no white gap) ===== -->
+  <style>
+    :root{
+      /* Global tokens — exactly from Services.html */
+      --brand-blue:#0328aeed;
+      --brand-blue-700:#213bb1;
+      --brand-blue-500:#041b64;
+      --accent-gold:#7a7797a8;
+
+      --ink:#101114;
+      --muted:#3c4b69;
+      --bg:#fafafa;
+      --border:#e8e8ee;
+      --card:#ffffff;
+
+      --radius:14px; --pill:999px;
+      --shadow:0 6px 22px rgba(10,42,107,.08);
+      --maxw:1328px; --gutter:18px;
+
+      --footer-bg:#0b1020; /* dark canvas & footer color */
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+
+    /* Canvas + overscroll fix (prevents white under footer on iOS/macOS bounce) */
+    html{ background:var(--footer-bg); height:100%; }
+    body{
+      color:var(--ink);
+      line-height:1.5;
+      min-height:100dvh;
+      display:flex; flex-direction:column; /* pins footer */
+      overscroll-behavior-y:none;
+
+      /* Page background fades to footer color near bottom */
+      background:
+        linear-gradient(to bottom,
+          var(--bg) 0%,
+          var(--bg) calc(100% - 240px),
+          var(--footer-bg) calc(100% - 240px),
+          var(--footer-bg) 100%);
+    }
+    body::after{ /* safe-area guard */
+      content:""; position:fixed; inset:auto 0 0 0;
+      height:env(safe-area-inset-bottom, 0);
+      background:var(--footer-bg); pointer-events:none; z-index:1;
+    }
+
+    a{color:inherit;text-decoration:none}
+    img{max-width:100%;display:block}
+    .wrap{max-width:var(--maxw);margin:0 auto;padding:0 var(--gutter)}
+    main{flex:1}
+
+    /* ===== HEADER (canonical, Tier1 + Tier2) ===== */
+    .header{
+      --nav-brand: var(--brand-blue);
+      --nav-link:  #0f172a;
+      --nav-hover: #0a2a6b;
+      --nav-bg:    #ffffff;
+      --nav-fg:    var(--ink);
+      background: var(--nav-bg); color: var(--nav-fg);
+      position:sticky; top:0; z-index:1000; border-bottom:1px solid var(--border)
+    }
+    .row1{
+      display:flex; justify-content:space-between; align-items:center; gap:16px;
+      padding:12px 8px; margin:15px; box-shadow:0 1px 0 rgba(0,0,0,.05);
+      position:relative; background:#fff; border-radius:12px;
+    }
+    .brandrow{display:flex;align-items:center;gap:22px}
+    .brand{display:flex;align-items:center;gap:10px;color:var(--nav-brand)}
+    .brand-word{font-weight:900;font-size:1.4rem;color:var(--nav-brand);letter-spacing:.2px}
+    .dotgrid{width:18px;height:18px;display:inline-grid;grid-template-columns:repeat(2,1fr);gap:2px}
+    .dotgrid i{width:5px;height:5px;border-radius:2px;background:#101114}
+    .rightside{display:flex;align-items:center;gap:14px;margin-right:0}
+    .search-box{min-width:140px;width:18vw;max-width:260px}
+    .search-box input{width:100%;height:40px;padding:0 14px;border:1px solid var(--border);border-radius:var(--pill)}
+    .search-box input:focus{border-color:var(--nav-brand);outline:2px solid #cfe0ff}
+    .auth{display:flex;align-items:center;gap:10px}
+    .btn{height:40px;display:inline-flex;align-items:center;gap:8px;padding:0 16px;border-radius:var(--pill);font-weight:700;background:#fff;border:1px solid var(--border)}
+    .btn.primary{background:var(--nav-brand);color:#fff;border-color:var(--nav-brand)}
+
+    .explore-toggle{
+      appearance:none;border:0;background:transparent;cursor:pointer;
+      display:flex;align-items:center;gap:8px;font-weight:800;color:var(--nav-link);padding:6px 8px;border-radius:8px;font-size:1.1rem;
+    }
+    .explore-toggle:hover,
+    .explore-toggle[aria-expanded="true"]{ background:#eceff3;color:var(--nav-hover); }
+
+    .menu-panel{
+      position:absolute; top:calc(100% + 10px); left:15px; z-index:1100;
+      width:min(760px, calc(100vw - 40px));
+      background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);
+      padding:14px;
+    }
+    .menu-panel[hidden]{ display:none; }
+    .menu-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .menu-head h4{margin:0;font-size:1rem}
+    .menu-grid{display:grid;grid-template-columns:repeat(2,minmax(240px,1fr));gap:12px}
+    .menu-item{display:block;padding:12px;border:1px solid var(--border);border-radius:12px;background:#fff;}
+    .menu-item:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(0,0,0,.06)}
+    .menu-item h5{margin:0 0 6px;font-size:.98rem}
+    .menu-item p{margin:0;color:var(--muted);font-size:.92rem}
+
+    .row2{background:#f5f6f8;border-top:1px solid #eee;border-bottom:1px solid #e6e6e6;padding-left:15px}
+    .row2 .wrap{max-width:none;padding:0}
+    .row2 .links{display:flex;gap:18px;padding:8px 8px;margin:0;justify-content:flex-start;align-items:center}
+    .row2 a{font-weight:600;font-size:.92rem;padding:4px 6px;border-radius:4px;color:var(--nav-link)}
+    .row2 a:hover{background:#eceff3;color:var(--nav-hover)}
+    @media (max-width:800px){ .search-box{width:34vw;max-width:300px} }
+    @media (max-width:720px){ .row2{display:none} .search-box{min-width:0;width:46vw} }
+
+    .header a:focus-visible, .header button:focus-visible, .btn:focus-visible {
+      outline: 2px solid #cfe0ff; outline-offset: 2px;
+    }
+
+    /* ===== FOOTER (canonical) ===== */
+    footer{margin-top:auto;background:var(--footer-bg);color:#cbd5e1;}
+    @media (max-width: 860px){
+      footer .wrap > div[style*="grid-template-columns"]{
+        display:grid;grid-template-columns:1fr;gap:16px !important;
+      }
+    }
+
+    /* ===== PAGE-SPECIFIC (Verification) ===== */
+    .container{max-width:1100px;margin:0 auto;padding:24px}
+    .hero{
+      border:1px solid var(--border);
+      border-radius:24px;
+      padding:32px;
+      box-shadow:var(--shadow);
+      margin-top:22px;
+      color:#ffffff;
+    }
+    .hero.gradient{
+      /* kept your original gradient palette */
+      --hero-start:#2b62d1; --hero-mid:#2f52ba; --hero-end:#21a2c9;
+      background:linear-gradient(135deg,var(--hero-start) 0%,var(--hero-mid) 50%,var(--hero-end) 100%);
+    }
+    .hero h2{margin:0 0 10px;font-size:34px;line-height:1.1;font-weight:900;letter-spacing:.2px;text-shadow:0 1px 6px rgba(0,0,0,.3)}
+    .hero p{margin:0;color:#f9fafb;opacity:.95;text-shadow:0 1px 6px rgba(0,0,0,.25)}
+    .crumbs{font-size:14px;color:#eaf2ff;margin-top:8px}
+    .crumbs .step{font-weight:800;color:#fff}
+    .progress{height:8px;background:#dbeafe;border-radius:6px;overflow:hidden;margin-top:14px}
+    .progress > span{display:block;height:100%;background:linear-gradient(90deg,#213c87,#2563eb);width:33%;transition:width .35s ease}
+
+    .grid{display:grid;grid-template-columns:2fr 1fr;gap:18px;margin-top:18px}
+    .card{background:#fff;border:1px solid var(--border);border-radius:22px;padding:20px;box-shadow:var(--shadow)}
+    .card h3{margin:0 0 10px;font-size:18px;font-weight:900;color:#0A2A6B}
+    .muted{color:#475569}
+
+    .flow{display:flex;align-items:center;justify-content:space-between;gap:22px;margin-top:12px;text-align:center}
+    .stepItem{flex:1;display:flex;flex-direction:column;align-items:center;gap:10px}
+    .s1-icon{width:64px;height:64px}
+    .s1-icon *{stroke:#0A2A6B;stroke-width:2;fill:none}
+    .s1-arrow{width:32px;height:32px}
+    .s1-arrow path{stroke:#0A2A6B;stroke-width:2;fill:none}
+
+    form .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    form .row-1{display:grid;grid-template-columns:1fr;gap:14px}
+    label{font-weight:700;font-size:14px;color:#24324a;display:block;margin-bottom:6px}
+    input[type="text"],input[type="email"],input[type="tel"],select,textarea{width:100%;padding:12px;border:1px solid var(--border);border-radius:12px;background:#fff}
+    textarea{min-height:110px;resize:vertical}
+    input:focus,select:focus,textarea:focus{outline:none;box-shadow:0 0 0 3px rgba(10,42,107,.25);border-color:var(--brand-blue)}
+    .files{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+    .file-pill{border:1px dashed #cbd5e1;border-radius:12px;padding:10px 12px;background:#fafafa;font-size:14px;display:inline-flex;align-items:center;gap:8px}
+    .file-pill .rm{border:0;background:#fff;color:#0f172a;border:1px solid var(--border);border-radius:999px;width:20px;height:20px;line-height:18px;text-align:center;cursor:pointer;font-weight:700}
+    .upload{display:flex;align-items:center;gap:10px;padding:12px;border:1px dashed var(--border);border-radius:12px;background:#fbfbff;cursor:pointer}
+    .upload input{display:none}
+    .inline{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .small{font-size:12px;color:#6b7280}
+    .tag{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:var(--pill);padding:8px 12px;background:#fff}
+
+    [data-step]{display:none}
+    [data-step].active{display:block}
+
+    .centerCard{border:1px solid var(--border);border-radius:22px;background:#fff;padding:28px;box-shadow:var(--shadow);margin-top:28px;text-align:center}
+    .checkwrap{display:inline-flex;align-items:center;justify-content:center;width:108px;height:108px;border-radius:50%;background:#ecf3ff;margin-bottom:12px}
+    .checkmark{width:72px;height:72px}
+    .checkmark path{stroke:#0A2A6B;stroke-width:6;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:110;stroke-dashoffset:110}
+    .animate .checkmark path{animation:draw 800ms ease-out forwards, thump 400ms ease-out 800ms both}
+    @keyframes draw{to{stroke-dashoffset:0}}
+    @keyframes thump{0%{transform:scale(1)}60%{transform:scale(1.08)}100%{transform:scale(1)}}
+
+    /* Content buttons */
+    main .btn{
+      display:inline-flex;align-items:center;justify-content:center;
+      height:46px; padding:0 20px; border-radius:999px;
+      font-weight:800; letter-spacing:.2px; line-height:1;
+      background:#2d4a9a; color:#fff; border:0; cursor:pointer;
+      transition:transform .12s ease, background-color .12s ease, box-shadow .12s ease;
+      text-align:center; min-width:160px;
+    }
+    main .btn:hover{ background:#274eb2; transform:translateY(-1px) }
+    main .btn:active{ background:#244aab; transform:translateY(0) }
+    main .btn:focus{ outline:none; box-shadow:0 0 0 3px rgba(37,99,235,.28) }
+    .btn-row{display:flex;gap:10px;flex-wrap:nowrap;align-items:center}
+    .btn-row .btn{flex:1 1 0}
+    @media (max-width:900px){ .grid{grid-template-columns:1fr} }
+    @media (max-width:520px){ .btn-row{flex-wrap:wrap} }
+  </style>
+</head>
+
+<body>
+
+  <!-- ===== HEADER (unchanged) ===== -->
+  <header class="header" id="nav" data-version="HeaderFooter_v1.0">
+    <div class="row1">
+      <div class="brandrow">
+        <a class="brand" href="Entire.html" aria-label="Raymoch home">
+          <svg width="28" height="28" viewBox="0 0 200 200" aria-hidden="true">
+            <polygon fill="none" stroke="currentColor" stroke-width="10" points="100,18 172,59 172,141 100,182 28,141 28,59"/>
+            <text x="100" y="118" text-anchor="middle" style="fill:currentColor;font:700 105px Georgia">R</text>
+          </svg>
+          <span class="brand-word">Raymoch</span>
+        </a>
+
+        <button class="explore-toggle" id="exploreToggle" aria-haspopup="true" aria-expanded="false" aria-controls="t1Menu">
+          <span class="dotgrid" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+          Explore
+        </button>
+
+        <div class="menu-panel" id="t1Menu" role="menu" aria-labelledby="exploreToggle" hidden>
+          <div class="menu-head"><h4>Explore services</h4></div>
+          <div class="menu-grid">
+            <a class="menu-item" role="menuitem" href="Matching.html"><h5>Trusted Matching</h5><p>Get paired with credible businesses using CTI & verification.</p></a>
+            <a class="menu-item" role="menuitem" href="verification.html"><h5>Verification</h5><p>CTI badges, document checks, and data provenance.</p></a>
+            <a class="menu-item" role="menuitem" href="Market_Insight.html"><h5>Research & Insights</h5><p>Sector reports, trends, and regional briefs.</p></a>
+            <a class="menu-item" role="menuitem" href="Services.html"><h5>Programs & Services</h5><p>Advisory, partner programs, and support options.</p></a>
+            <a class="menu-item" role="menuitem" href="incentives.html"><h5>Policy & Incentives</h5><p>Tax credits, grants, and regulatory signals.</p></a>
+            <a class="menu-item" role="menuitem" href="whitespace.html"><h5>Whitespace Map</h5><p>Where demand outpaces supply across sectors.</p></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="rightside">
+        <form class="search-box" action="search.html">
+          <input type="search" name="q" placeholder="Search companies, sectors, regions…" />
+        </form>
+        <div class="auth">
+          <a class="btn" href="login.html">Log in</a>
+          <a class="btn primary" href="signup.html">Sign up</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="wrap">
+        <nav class="links" aria-label="Secondary">
+          <a href="explore2.html">Businesses</a>
+          <a href="Services.html">Services</a>
+          <a href="Market_Insight.html">Research &amp; Insights</a>
+          <a href="About.html">Who We Are</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- ===== HERO ===== -->
+    <section id="hero" class="hero gradient">
+      <h2 id="heroTitle">Verification & Diligence</h2>
+      <p id="heroDesc">Ensuring trust through document checks and human validation.</p>
+      <div id="crumbs" class="crumbs"><span class="step">Step 1 of 3</span> — Overview & how it works</div>
+      <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+      <div id="heroBack" style="display:none"><a href="#" id="backLink">← Back</a></div>
+    </section>
+
+    <!-- ===== STEP 1 ===== -->
+    <section data-step="1" class="active">
+      <section class="grid">
+        <div>
+          <article class="card">
+            <h3>What it is</h3>
+            <p class="muted">We verify businesses through official documents, compliance checks, and direct validation.</p>
+          </article>
+
+          <article class="card" style="margin-top:16px">
+            <h3>How it works</h3>
+            <div class="flow" aria-label="Submission → Human review → Badge">
+              <div class="stepItem">
+                <svg class="s1-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M6 2h7l5 5v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/>
+                  <path d="M13 2v6h6"/>
+                  <line x1="8" y1="13" x2="16" y2="13"/>
+                  <line x1="8" y1="17" x2="16" y2="17"/>
+                </svg>
+                <p class="muted" style="margin:0">Submission of<br>business documents</p>
+              </div>
+              <svg class="s1-arrow" viewBox="0 0 64 64" aria-hidden="true">
+                <path d="M10 32h36"/><path d="M38 20l12 12-12 12"/>
+              </svg>
+              <div class="stepItem">
+                <svg class="s1-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="7" r="4"/>
+                  <path d="M5.5 21a6.5 6.5 0 0 1 13 0z"/>
+                </svg>
+                <p class="muted" style="margin:0">Human review &<br>compliance check</p>
+              </div>
+              <svg class="s1-arrow" viewBox="0 0 64 64" aria-hidden="true">
+                <path d="M10 32h36"/><path d="M38 20l12 12-12 12"/>
+              </svg>
+              <div class="stepItem">
+                <svg class="s1-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 2l3 2 3.5-.5 1.5 3.5L22 10l-2 3 1 3.5-3.5 1.5L16 22l-3-2-3 2-1.5-3.5L5 16.5 6 13 4 10l2-3 1.5-3.5L11 4l1-2z"/>
+                  <polyline points="9 12 11.5 14.5 15 10"/>
+                </svg>
+                <p class="muted" style="margin:0">Verification<br>badge issued</p>
+              </div>
+            </div>
+
+            <div class="btn-row" style="margin-top:16px">
+              <button id="toStep2" class="btn" type="button">Request Verification</button>
+              <a class="btn" href="Services.html">Back to Services</a>
+            </div>
+          </article>
+
+          <article class="card" style="margin-top:16px">
+            <h3>Why Raymoch?</h3>
+            <ul class="muted" style="margin:6px 0 0 18px;line-height:1.6">
+              <li>Trusted network</li>
+              <li>Diaspora-first focus</li>
+              <li>Human + digital verification</li>
+            </ul>
+          </article>
+        </div>
+
+        <aside class="card">
+          <h3>Key Highlights</h3>
+          <p class="muted">Average Time: 3–5 days</p>
+          <p class="muted">Scope: Africa-wide</p>
+          <p class="muted">Status: Available</p>
+          <div class="btn-row" style="margin-top:10px">
+            <button class="btn" type="button" id="toStep2B">Request Verification</button>
+            <a class="btn" href="Services.html">Back to Services</a>
+          </div>
+        </aside>
+      </section>
+    </section>
+
+    <!-- ===== STEP 2 ===== -->
+    <section data-step="2">
+      <section class="grid" aria-label="Request verification form">
+        <article class="card" role="form">
+          <h3>Business details</h3>
+          <form id="verifyForm" novalidate>
+            <div class="row">
+              <div>
+                <label for="bizName">Business name *</label>
+                <input id="bizName" name="bizName" type="text" required placeholder="Acme Holdings Ltd." />
+              </div>
+              <div>
+                <label for="regNo">Registration / License # *</label>
+                <input id="regNo" name="regNo" type="text" required placeholder="RC-123456" />
+              </div>
+            </div>
+
+            <div class="row">
+              <div>
+                <label for="country">Country (Africa) *</label>
+                <select id="country" name="country" required>
+                  <option value="">Select country…</option>
+                  <option>Algeria</option><option>Angola</option><option>Benin</option><option>Botswana</option>
+                  <option>Burkina Faso</option><option>Burundi</option><option>Cabo Verde</option><option>Cameroon</option>
+                  <option>Central African Republic</option><option>Chad</option><option>Comoros</option><option>DR Congo</option>
+                  <option>Republic of the Congo</option><option>Côte d’Ivoire</option><option>Djibouti</option><option>Egypt</option>
+                  <option>Equatorial Guinea</option><option>Eritrea</option><option>Eswatini</option><option>Ethiopia</option>
+                  <option>Gabon</option><option>Gambia</option><option>Ghana</option><option>Guinea</option>
+                  <option>Guinea-Bissau</option><option>Kenya</option><option>Lesotho</option><option>Liberia</option>
+                  <option>Libya</option><option>Madagascar</option><option>Malawi</option><option>Mali</option>
+                  <option>Mauritania</option><option>Mauritius</option><option>Morocco</option><option>Mozambique</option>
+                  <option>Namibia</option><option>Niger</option><option>Nigeria</option><option>Rwanda</option>
+                  <option>Sao Tome and Principe</option><option>Senegal</option><option>Seychelles</option><option>Sierra Leone</option>
+                  <option>Somalia</option><option>South Africa</option><option>South Sudan</option><option>Sudan</option>
+                  <option>Tanzania</option><option>Togo</option><option>Tunisia</option><option>Uganda</option>
+                  <option>Zambia</option><option>Zimbabwe</option>
+                </select>
+              </div>
+              <div>
+                <label for="sector">Sector</label>
+                <input id="sector" name="sector" type="text" placeholder="e.g., FinTech, Agri, Energy" />
+              </div>
+            </div>
+
+            <div class="row-1">
+              <div>
+                <label for="website">Website</label>
+                <input id="website" name="website" type="text" placeholder="https://example.com" />
+              </div>
+            </div>
+
+            <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
+
+            <h3>Documents</h3>
+            <div class="inline">
+              <label class="upload">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0A2A6B" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                <span>Upload documents (PDF/JPG/PNG)</span>
+                <input id="files" type="file" accept=".pdf,.jpg,.jpeg,.png" multiple />
+              </label>
+              <span class="small">Business license, tax certificate, ID of authorized officer, etc.</span>
+            </div>
+            <div id="fileList" class="files" aria-live="polite"></div>
+
+            <div class="inline" style="margin-top:10px">
+              <span class="tag">
+                <svg class="icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" fill="none" aria-hidden="true" style="width:80px;height:80px">
+                  <path d="M22 20c0-6 4.5-10 10-10s10 4 10 9c2 0 4 1.5 4 4 0 3-2.5 5-6 5" stroke="#0A2A6B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="32" cy="24" r="10" stroke="#0A2A6B" stroke-width="2"/>
+                  <circle cx="28.5" cy="23.5" r="1" fill="#0A2A6B"/><circle cx="35.5" cy="23.5" r="1" fill="#0A2A6B"/>
+                  <path d="M28 28c2.5 2 5.5 2 8 0" stroke="#0A2A6B" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M14 54c3-10 12-16 18-16s15 6 18 16" stroke="#0A2A6B" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                Human review + automated checks
+              </span>
+            </div>
+
+            <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
+
+            <h3>Contact</h3>
+            <div class="row">
+              <div>
+                <label for="contactName">Your full name *</label>
+                <input id="contactName" name="contactName" type="text" required placeholder="Jane Doe" />
+              </div>
+              <div>
+                <label for="email">Work email *</label>
+                <input id="email" name="email" type="email" required placeholder="jane@company.com" />
+              </div>
+            </div>
+
+            <div class="row">
+              <div>
+                <label for="phone">Phone</label>
+                <input id="phone" name="phone" type="tel" placeholder="+251 9 1234 5678" />
+              </div>
+              <div>
+                <label for="role">Role / Title</label>
+                <input id="role" name="role" type="text" placeholder="Founder / CFO / Legal Rep" />
+              </div>
+            </div>
+
+            <div style="margin:8px 0">
+              <input id="consent" type="checkbox" required />
+              <label for="consent">I confirm these documents are accurate and authorize Raymoch checks.</label>
+            </div>
+
+            <div class="btn-row" style="margin-top:10px">
+              <button class="btn" type="submit">Submit for Verification</button>
+              <button class="btn" type="button" id="backTo1">Back</button>
+            </div>
+            <p class="small">Average review time: 3–5 business days. You’ll receive status updates by email.</p>
+          </form>
+        </article>
+
+        <aside class="card">
+          <h3>What we check</h3>
+          <p class="small">Registration, identity/authority, sanctions/AML</p>
+        </aside>
+      </section>
+    </section>
+
+    <!-- ===== STEP 3 ===== -->
+    <section data-step="3">
+      <article id="confirmCard" class="centerCard">
+        <div class="checkwrap">
+          <svg class="checkmark" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M16 34 L28 46 L48 20"/>
+          </svg>
+        </div>
+        <h2 style="margin:0 0 6px;color:#0A2A6B">Submitted</h2>
+        <p style="margin:0 0 14px;color:#475569">Your verification request is in review. Expect an email update within 3–5 business days.</p>
+
+        <!-- Minimal, on-brand result block (hidden until we have data) -->
+        <div id="resultBlock" style="margin:10px 0;color:#475569;display:none">
+          <div><strong>Entity:</strong> <span id="resEntity"></span></div>
+          <div><strong>CTI:</strong> <span id="resCTI"></span></div>
+          <div><strong>Tier:</strong> <span id="resTier"></span></div>
+        </div>
+
+        <div class="btn-row" style="justify-content:center">
+          <button class="btn" type="button" id="again">Back to Step 1</button>
+          <a class="btn" href="Services.html">Return to Services</a>
+        </div>
+
+        <!-- Keep your original reference line; we just inject the value -->
+        <p style="margin-top:10px;color:#6b7280;font-size:12px">Ref: <span id="resRef">VRF-TEMP-DEMO</span></p>
+      </article>
+    </section>
+  </main>
+
+  <!-- ===== FOOTER (unchanged) ===== -->
+  <footer>
+    <div class="wrap" style="padding:32px var(--gutter)">
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:18px">
+        <div>
+          <div style="color:#fff;font-weight:800;font-size:1.2rem;margin-bottom:8px">Raymoch</div>
+          <div style="color:#94a3b8;max-width:360px">
+            Connecting investors and entrepreneurs through trust, verified data, and actionable insights.
+          </div>
+        </div>
+        <div>
+          <h5 style="margin-bottom:10px;color:#e5e7eb;font-size:.95rem">Company</h5>
+          <a href="About.html" style="display:block;color:#cbd5e1;margin:6px 0">About</a>
+          <a href="careers.html" style="display:block;color:#cbd5e1;margin:6px 0">Careers</a>
+          <a href="press.html" style="display:block;color:#cbd5e1;margin:6px 0">Press</a>
+          <a href="contact.html" style="display:block;color:#cbd5e1;margin:6px 0">Contact</a>
+        </div>
+        <div>
+          <h5 style="margin-bottom:10px;color:#e5e7eb;font-size:.95rem">Product</h5>
+          <a href="explore2.html" style="display:block;color:#cbd5e1;margin:6px 0">Explore Businesses</a>
+          <a href="Market_Insight.html" style="display:block;color:#cbd5e1;margin:6px 0">Market Insights</a>
+          <a href="verification.html" style="display:block;color:#cbd5e1;margin:6px 0">Verification</a>
+          <a href="Services.html" style="display:block;color:#cbd5e1;margin:6px 0">Programs & Services</a>
+        </div>
+        <div>
+          <h5 style="margin-bottom:10px;color:#e5e7eb;font-size:.95rem">Resources</h5>
+          <a href="blog.html" style="display:block;color:#cbd5e1;margin:6px 0">Blog</a>
+          <a href="help.html" style="display:block;color:#cbd5e1;margin:6px 0">Help Center</a>
+          <a href="security.html" style="display:block;color:#cbd5e1;margin:6px 0">Security</a>
+          <a href="status.html" style="display:block;color:#cbd5e1;margin:6px 0">Status</a>
+        </div>
+      </div>
+      <div style="border-top:1px solid #1f2937;margin-top:22px;padding:12px 0;display:flex;justify-content:space-between;align-items:center;font-size:.92rem">
+        <div>© 2025 Raymoch. All rights reserved.</div>
+        <div>
+          <a href="privacy.html" style="color:#cbd5e1;margin-left:14px">Privacy</a>
+          <a href="terms.html" style="color:#cbd5e1;margin-left:14px">Terms</a>
+          <a href="cookies.html" style="color:#cbd5e1;margin-left:14px">Cookies</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===== JS: header menu + page logic + backend integration ===== -->
+  <script>
+    // === Backend base URL (change if you deploy) ===
+    const BACKEND = "http://127.0.0.1:8000";
+
+    /* Tier-1 Explore menu toggle (canonical; unchanged) */
+    (() => {
+      const btn = document.getElementById('exploreToggle');
+      const menu = document.getElementById('t1Menu');
+      if (!btn || !menu) return;
+      const openMenu = (on) => { btn.setAttribute('aria-expanded', on ? 'true' : 'false'); menu.hidden = !on; };
+      btn.addEventListener('click', (e) => { e.preventDefault(); openMenu(btn.getAttribute('aria-expanded') !== 'true'); });
+      document.addEventListener('click', (e) => { if (!menu.hidden && !menu.contains(e.target) && !btn.contains(e.target)) openMenu(false); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') openMenu(false); });
+    })();
+
+    // ===== Utilities =====
+    const $  = s=>document.querySelector(s);
+    const $$ = s=>[...document.querySelectorAll(s)];
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    const slugify = s => (s||"")
+      .toString().toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'')
+      .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,64);
+
+    // ===== Step state (unchanged visuals) =====
+    const heroTitle=$('#heroTitle'), heroDesc=$('#heroDesc'), progress=$('#progressBar');
+    const heroBack=$('#heroBack'), backLink=$('#backLink'), crumbs=$('#crumbs');
+
+    const stepMeta={
+      1:{ title:'Verification & Diligence', desc:'Ensuring trust through document checks and human validation.', sub:'Step 1 of 3 — Overview & how it works', pct:33, back:false },
+      2:{ title:'Request Verification', desc:'Provide business details and upload documents for review.',       sub:'Step 2 of 3 — Submit details & documents', pct:66, back:true  },
+      3:{ title:'Verification Submitted', desc:'We’re reviewing your request and will email updates.',          sub:'Step 3 of 3 — Confirmation', pct:100, back:false }
+    };
+
+    function renderCrumbs(n){
+      const [head,tail]=stepMeta[n].sub.split(' — ');
+      crumbs.innerHTML = `<span class="step">${head}</span>${tail ? ' — ' + tail : ''}`;
+    }
+
+    function showStep(n){
+      n=Math.max(1,Math.min(3,n));
+      $$('[data-step]').forEach(x=>x.classList.remove('active'));
+      $(`[data-step="${n}"]`).classList.add('active');
+
+      heroTitle.textContent=stepMeta[n].title;
+      heroDesc.textContent =stepMeta[n].desc;
+      renderCrumbs(n);
+      progress.style.width=stepMeta[n].pct+'%';
+      heroBack.style.display=stepMeta[n].back?'block':'none';
+      if(stepMeta[n].back){
+        backLink.onclick=(e)=>{e.preventDefault();showStep(1);history.replaceState(null,'','#step1');};
+      }
+      if(n===3){ requestAnimationFrame(()=> $('#confirmCard').classList.add('animate')); }
+      else { $('#confirmCard')?.classList.remove('animate'); }
+      history.replaceState(null,'',`#step${n}`);
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+
+    // Buttons
+    $('#toStep2')?.addEventListener('click',()=>showStep(2));
+    $('#toStep2B')?.addEventListener('click',()=>showStep(2));
+    $('#backTo1')?.addEventListener('click',()=>showStep(1));
+    $('#again')?.addEventListener('click',()=>showStep(1));
+
+    // ===== File handling: add cancel per-file + size/type guard (no template changes) =====
+    const MAX_BYTES = 5 * 1024 * 1024; // 5 MB — matches backend
+    const ALLOWED_MIME = new Set(["application/pdf","image/png","image/jpeg"]);
+
+    const filesInput=$('#files'), fileList=$('#fileList');
+
+    function rebuildFileInput(keepIndices){
+      // Create a new DataTransfer with only the kept files
+      const dt = new DataTransfer();
+      const files = [...filesInput.files];
+      keepIndices.forEach(i => { if (files[i]) dt.items.add(files[i]); });
+      filesInput.files = dt.files;
+    }
+
+    function renderFiles(){
+      fileList.innerHTML = '';
+      const files = [...filesInput.files];
+
+      files.forEach((f, i)=>{
+        const pill=document.createElement('span');
+        pill.className='file-pill';
+        const kb = Math.ceil(f.size/1024);
+        pill.innerHTML = `
+          <span>${f.name} (${kb} KB)</span>
+          <button type="button" class="rm" aria-label="Remove ${f.name}" data-idx="${i}">×</button>
+        `;
+        fileList.appendChild(pill);
+      });
+
+      // Attach remove handlers
+      fileList.querySelectorAll('.rm').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const idx = Number(btn.getAttribute('data-idx'));
+          const keep = [...filesInput.files].map((_,i)=>i).filter(i=>i!==idx);
+          rebuildFileInput(keep);
+          renderFiles();
+        });
+      });
+    }
+
+    filesInput?.addEventListener('change', ()=>{
+      // Validate newly selected files (type/size). Keep only valid ones.
+      const current = [...filesInput.files];
+      const validIndices = [];
+      const messages = [];
+
+      current.forEach((f, i)=>{
+        const typeOk = ALLOWED_MIME.has(f.type);
+        const sizeOk = f.size > 0 && f.size <= MAX_BYTES;
+        if (!typeOk) messages.push(`“${f.name}” skipped: unsupported type (${f.type||'unknown'})`);
+        if (!sizeOk) messages.push(`“${f.name}” skipped: over 5 MB (${Math.ceil(f.size/1024)} KB)`);
+        if (typeOk && sizeOk) validIndices.push(i);
+      });
+
+      // Keep only valid files in the input
+      const dt = new DataTransfer();
+      validIndices.forEach(i => dt.items.add(current[i]));
+      filesInput.files = dt.files;
+
+      // Inline, polite warnings (no template change)
+      if (messages.length){
+        const warn = document.createElement('div');
+        warn.className = 'small';
+        warn.style.color = '#b91c1c';
+        warn.style.marginTop = '6px';
+        warn.textContent = messages.join(' • ');
+        fileList.innerHTML = '';
+        fileList.appendChild(warn);
+      }
+
+      renderFiles();
+    });
+
+    // ===== Backend integration (minimal; visuals untouched) =====
+    const form=$('#verifyForm');
+
+    function computeEntityId(){
+      const bizName = $('#bizName')?.value || '';
+      const regNo   = $('#regNo')?.value || '';
+      const country = $('#country')?.value || '';
+      const left = slugify(country);
+      const right = slugify(regNo) || slugify(bizName);
+      return `${left}-${right}`.replace(/^-+|-+$/g,'') || `entity-${Date.now()}`;
+    }
+
+    async function uploadOne(entityId, file){
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch(`${BACKEND}/submit/?entity_id=${encodeURIComponent(entityId)}`, {
+        method: 'POST',
+        body: fd
+      });
+      if (!res.ok) {
+        const txt = await res.text().catch(()=>res.statusText);
+        throw new Error(`Upload failed (${res.status}): ${txt}`);
+      }
+      return res.json();
+    }
+
+    async function fetchCTI(entityId){
+      const res = await fetch(`${BACKEND}/entities/${encodeURIComponent(entityId)}/cti`);
+      if (!res.ok) throw new Error(`CTI read failed (${res.status})`);
+      return res.json();
+    }
+
+    form?.addEventListener('submit', async (e)=>{
+      if(!form.checkValidity()){ e.preventDefault(); alert('Please complete required fields (marked with *).'); return; }
+      e.preventDefault();
+
+      const files = [...(filesInput?.files || [])];
+      if (files.length === 0) { alert('Please attach at least one document.'); return; }
+
+      // Final client-side guard (mirror backend)
+      for (const f of files){
+        if (!ALLOWED_MIME.has(f.type)) { alert(`Unsupported file type: ${f.name}`); return; }
+        if (f.size === 0 || f.size > MAX_BYTES) { alert(`File too large (max 5 MB): ${f.name}`); return; }
+      }
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      submitBtn.disabled = true; submitBtn.textContent = 'Uploading...';
+
+      const entityId = computeEntityId();
+      let lastTokenId = null;
+
+      try {
+        // Upload sequentially (clearer errors)
+        for (const f of files) {
+          const out = await uploadOne(entityId, f);
+          lastTokenId = out.token_id || (out.token && out.token.id) || lastTokenId;
+          await sleep(60);
+        }
+
+        const cti = await fetchCTI(entityId);
+        const block = $('#resultBlock');
+        $('#resEntity').textContent = entityId;
+        $('#resCTI').textContent    = cti.cti ?? '—';
+        $('#resTier').textContent   = cti.tier ?? '—';
+        $('#resRef').textContent    = lastTokenId || 'submitted';
+        block.style.display = 'block';
+
+        showStep(3);
+
+      } catch (err) {
+        console.error(err);
+        alert('Submission failed: ' + err.message);
+      } finally {
+        submitBtn.disabled = false; submitBtn.textContent = 'Submit for Verification';
+      }
+    });
+
+    // Hash routing
+    const startHash=(location.hash||'').toLowerCase();
+    const start = startHash.includes('step2') ? 2 : startHash.includes('step3') ? 3 : 1;
+    showStep(start);
+  </script>
+</body>
+</html>

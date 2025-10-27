@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Raymoch • Explore Businesses</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --brand-blue:#0A2A6B; --brand-gold:#DAA520; --bg:#fafafa; --card:#fff;
+      --ink:#101114; --muted:#6b7280; --border:#e8e8ee;
+      --shadow:0 4px 20px rgba(10,42,107,0.08); --radius:14px; --radius-pill:999px;
+    }
+    *{box-sizing:border-box; margin:0; padding:0; font-family:'Segoe UI', Roboto, Helvetica, Arial, sans-serif;}
+    body{background:var(--bg); color:var(--ink); line-height:1.5;}
+
+    nav{
+      position:sticky; top:0; left:0; right:0;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0.85rem 3rem; background:#fff; box-shadow:var(--shadow);
+      z-index:1000;
+    }
+    .nav-left, .nav-right{display:flex; align-items:center; gap:2rem;}
+    .nav-left a, .nav-right a{
+      text-decoration:none; color:var(--ink); font-weight:500; font-size:0.95rem;
+      transition:color 0.2s ease;
+    }
+    .nav-left a:hover, .nav-right a:hover{color:var(--brand-blue);}
+    .logo{font-size:1.4rem; font-weight:700; color:var(--brand-blue); letter-spacing:0.5px;}
+
+    .search-box input{
+      padding:0.45rem 1rem; border:1px solid var(--border);
+      border-radius:var(--radius-pill); outline:none; min-width:240px;
+      transition:border 0.2s ease;
+    }
+    .search-box input:focus{border:1px solid var(--brand-blue);}
+
+    .explore-hero{text-align:center; padding:4rem 2rem;}
+    .explore-hero h1{font-size:2.2rem; font-weight:700; margin-bottom:0.5rem; color:var(--brand-blue);}
+    .explore-hero p{color:var(--muted); margin-bottom:1.5rem;}
+    .search-filters{display:flex; justify-content:center; gap:0.5rem; flex-wrap:wrap;}
+    .search-filters input{padding:0.5rem 1rem; border:1px solid var(--border); border-radius:var(--radius-pill); min-width:200px;}
+    .search-filters button{padding:0.5rem 1.2rem; background:var(--brand-blue); color:#fff; border:none; border-radius:var(--radius-pill); cursor:pointer;}
+    .search-filters button:hover{background:var(--brand-gold); color:var(--ink);}
+
+    .sector-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:1.5rem; padding:2rem;}
+    .sector-card{background:#fff; border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:1.5rem; text-align:center; transition:transform 0.2s ease;}
+    .sector-card:hover{transform:translateY(-4px);}
+    .sector-card .icon{font-size:2rem; display:block; margin-bottom:0.75rem;}
+    .sector-card h3{font-size:1.1rem; margin-bottom:0.5rem; color:var(--brand-blue);}
+    .sector-card p{font-size:0.9rem; color:var(--muted);}
+
+    footer{background:#101114; color:#fff; padding:2rem; text-align:center; margin-top:3rem;}
+    footer p{font-size:0.9rem; color:#bbb;}
+  </style>
+</head>
+<body>
+
+  <!-- NAVIGATION -->
+  <nav>
+    <div class="nav-left">
+      <a href="home.html" class="logo">Raymoch</a>
+      <a href="home.html">Home</a>
+      <a href="#/home">Explore Businesses</a> <!-- keeps the in-page sectors flow -->
+      <a href="insights.html">Market Insights</a>
+      <a href="services.html">Services</a>
+      <a href="about.html">Who We Are</a>
+      
+    </div>
+    <div class="nav-right">
+      <div class="search-box"><input type="text" placeholder="Search..." /></div>
+      <a href="login.html">Log in</a>
+      <a href="signup.html" class="btn primary" style="color:#fff; background:var(--brand-blue); padding:0.45rem 1rem; border-radius:999px; font-weight:600;">Sign up</a>
+    </div>
+  </nav>
+  
+
+  <!-- HERO -->
+  <section class="explore-hero">
+    <h1>Explore Businesses</h1>
+    <p>Discover verified opportunities across industries.</p>
+    <div class="search-filters">
+      <input type="text" placeholder="Search businesses" />
+      <input type="text" placeholder="Country" />
+      <button>Search</button>
+    </div>
+  </section>
+
+  <!-- SECTOR GRID -->
+  <section class="sectors">
+    <div class="sector-grid">
+      <div class="sector-card">
+        <span class="icon">🌱</span>
+        <h3>Agriculture & Food</h3>
+        <p>Farming, processing, and agri-tech solutions.</p>
+      </div>
+      <div class="sector-card">
+        <span class="icon">💳</span>
+        <h3>Fintech & Banking</h3>
+        <p>Payments, remittances, lending platforms.</p>
+      </div>
+      <div class="sector-card">
+        <span class="icon">⚡</span>
+        <h3>Energy & Renewables</h3>
+        <p>Solar, wind, and off-grid id solutions.</p>
+      </div>
+      <div class="sector-card">
+        <span class="icon">🏥</span>
+        <h3>Healthcare & Biotech</h3>
+        <p>Clinics, telemedicine, pharmaceuticals.</p>
+      </div>
+      <div class="sector-card">
+        <span class="icon">📡</span>
+        <h3>ICT & Telecoms</h3>
+        <p>Connectivity, software, digital services.</p>
+      </div>
+      <div class="sector-card">
+        <span class="icon">🛍️</span>
+        <h3>Wholesale & Retail</h3>
+        <p>Consumer goods, distribution, e-commerce.</p>
+      </div>
+      <div class="sector-card">
+        <span class="icon">🎓</span>
+        <h3>Education & Training</h3>
+        <p>Schools, ed-tech, vocational services.</p>
+      </div>
+      <div class="sector-card">
+        <span class="icon">🏭</span>
+        <h3>Manufacturing & Industry</h3>
+        <p>Factories, production, and travel services.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>© 2025 Raymoch. All rights reserved.</p>
+  </footer>
+
+</body>
+</html>

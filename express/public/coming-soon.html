@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Raymoch • Coming Soon</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    /* =========================================================
+       RAYMOCH COLOR SYSTEM — MASTER TOKENS (GLOBAL DEFAULTS)
+       (unchanged from your source)
+       ========================================================= */
+    :root{
+      --brand-blue:#0328aeed;
+      --brand-blue-700:#213bb1;
+      --brand-blue-500:#041b64;
+      --accent-gold:#7a7797a8;
+
+      --ink:#101114;
+      --muted:#3c4b69;
+      --bg:#fafafa;
+      --border:#e8e8ee;
+      --card:#ffffff;
+
+      --radius:14px; --pill:999px;
+      --shadow:0 6px 22px rgba(10,42,107,.08);
+      --maxw:1328px; --gutter:18px;
+
+      --footer-bg:#dedeeb;
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+
+
+
+
+    /* ========= Canvas + Overscroll fixes (no white under footer) ========= */
+    html{ background:var(--footer-bg); height:100%; }
+    body{
+      color:var(--ink);
+      line-height:1.5;
+      min-height:100dvh;
+      display:flex; flex-direction:column;
+      overscroll-behavior-y:none;
+      background:
+        linear-gradient(to bottom,
+          var(--bg) 0%,
+          var(--bg) calc(100% - 240px),
+          var(--footer-bg) calc(100% - 240px),
+          var(--footer-bg) 100%);
+    }
+    body::after{
+      content:""; position:fixed; inset:auto 0 0 0; height:env(safe-area-inset-bottom, 0);
+      background:var(--footer-bg); pointer-events:none; z-index:1;
+    }
+
+    a{color:inherit;text-decoration:none}
+    img{max-width:100%;display:block}
+    .wrap{max-width:var(--maxw);margin:0 auto;padding:0 var(--gutter)}
+
+
+
+
+
+    /* ===================== HEADER (from your file) ===================== */
+    .header{
+      --nav-brand: var(--brand-blue);
+      --nav-link:  #0e0f0e;
+      --nav-hover: #0a2a6b;
+      --nav-bg:    #ffffff;
+      --nav-fg:    var(--ink);
+      background: var(--nav-bg); color: var(--nav-fg);
+      position:sticky;top:0;z-index:1000;border-bottom:1px solid var(--border)
+    }
+    .row1{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 8px;margin:15px;box-shadow:0 1px 0 rgba(0,0,0,.05);position:relative;background:#fff;border-radius:12px}
+    .brandrow{display:flex;align-items:center;gap:22px}
+    .brand{display:flex;align-items:center;gap:10px;color:var(--nav-brand)}
+    .brand-word{font-weight:900;font-size:1.4rem;color:var(--nav-brand);letter-spacing:.2px}
+    .dotgrid{width:18px;height:18px;display:inline-grid;grid-template-columns:repeat(2,1fr);gap:2px}
+    .dotgrid i{width:5px;height:5px;border-radius:2px;background:#101114}
+    .rightside{display:flex;align-items:center;gap:14px;margin-right:0}
+    .search-box{min-width:140px;width:18vw;max-width:260px}
+    .search-box input{width:100%;height:40px;padding:0 14px;border:1px solid var(--border);border-radius:var(--pill)}
+    .search-box input:focus{border-color:var(--nav-brand);outline:2px solid #cfe0ff}
+    .auth{display:flex;align-items:center;gap:10px}
+    .btn{height:40px;display:inline-flex;align-items:center;gap:8px;padding:0 16px;border-radius:var(--pill);font-weight:700;background:#fff;border:1px solid var(--border)}
+    .btn.primary{background:var(--nav-brand);color:#fff;border-color:var(--nav-brand)}
+    .explore-toggle{appearance:none;border:0;background:transparent;cursor:pointer;display:flex;align-items:center;gap:8px;font-weight:800;color:var(--nav-link);padding:6px 8px;border-radius:8px;font-size:1.1rem}
+    .explore-toggle:hover,.explore-toggle[aria-expanded="true"]{ background:#eceff3;color:var(--nav-hover) }
+    .menu-panel{position:absolute;top:calc(100% + 10px);left:15px;z-index:1100;width:min(760px, calc(100vw - 40px));background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:14px}
+    .menu-panel[hidden]{display:none}
+    .menu-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .menu-head h4{margin:0;font-size:1rem}
+    .menu-grid{display:grid;grid-template-columns:repeat(2,minmax(240px,1fr));gap:12px}
+    .menu-item{display:block;padding:12px;border:1px solid var(--border);border-radius:12px;background:#fff}
+    .menu-item:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(0,0,0,.06)}
+    .menu-item h5{margin:0 0 6px;font-size:.98rem}
+    .menu-item p{margin:0;color:var(--muted);font-size:.92rem}
+    .row2{background:#f5f6f8;border-top:1px solid #eee;border-bottom:1px solid #e6e6e6;padding-left:15px}
+    .row2 .wrap{max-width:none;padding:0}
+    .row2 .links{display:flex;gap:18px;padding:8px 8px;margin:0;justify-content:flex-start;align-items:center}
+    .row2 a{font-weight:600;font-size:.92rem;padding:4px 6px;border-radius:4px;color:var(--nav-link)}
+    .row2 a:hover{background:#eceff3;color:var(--nav-hover)}
+    @media (max-width:800px){ .search-box{width:34vw;max-width:300px} }
+    @media (max-width:720px){ .row2{display:none} .search-box{min-width:0;width:46vw} }
+
+
+
+
+    /* ===================== HERO (from your file) ===================== */
+
+    .hero{
+         /* brand + new gradient tones */
+        --hero-a: var(--brand-blue-700);   /* deep base */
+        --hero-b: var(--brand-blue-500);   /* mid blue */
+        --hero-c: #434be7;                 /* new bright blue accent — tweak here */
+        --hero-fg: #447d17;
+        --hero-sub: #DDEBFF;
+
+        color: var(--hero-fg);
+        position: relative;
+        overflow: hidden;
+
+
+        /* richer 3-stop gradient */
+        background: linear-gradient(
+            135deg,
+            var(--hero-a) 0%,
+            var(--hero-b) 45%,
+            var(--hero-c) 100%
+        );
+
+        border-bottom: 1px solid var(--border);}
+
+
+
+
+
+    .hero::before{
+      content:""; position:absolute; inset:0; opacity:.22;
+      background-image:url('data:image/svg+xml;utf8,\
+        <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">\
+          <defs><pattern id="d" width="40" height="40" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">\
+            <rect width="40" height="40" fill="none" />\
+            <path d="M0 20 H40 M20 0 V40" stroke="%23ffffff" stroke-opacity="0.7" stroke-width="1"/></pattern></defs>\
+          <rect width="100%" height="100%" fill="url(%23d)"/></svg>');
+      background-size:220px 220px;
+    }
+    .hero-inner{position:relative;display:block;min-height:58vh;padding:96px 8px;max-width:var(--maxw);margin:0 auto}
+    .hero h1{
+      font-size:clamp(34px,6vw,64px); line-height:1.05; letter-spacing:-.5px; margin-bottom:12px; font-weight:800;
+      background:linear-gradient(90deg,#ffffff,#e7efff); -webkit-background-clip:text; background-clip:text; color:transparent;
+    }
+    .hero p{font-size:clamp(16px,2.2vw,22px); color:var(--hero-sub); max-width:46ch}
+    @media (max-width:980px){ .hero-inner{min-height:52vh;padding:72px 8px} }
+
+
+
+    /* ===================== COMING SOON CARD (new) ===================== */
+    .coming-wrap{position:relative; z-index:2; max-width:var(--maxw); margin:36px auto 24px; padding:10 var(--gutter)}
+    .coming-card{
+      background:#fff; border:1px solid var(--border); border-radius:22px; box-shadow:0 16px 54px rgba(10,42,107,.10);
+      padding:28px 24px;
+    }
+    .coming-card h2{margin:0 0 8px; font-size:clamp(22px,2.4vw,30px); letter-spacing:-.01em}
+    .coming-card p{margin:0; color:#4a5672}
+    .coming-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px}
+    .chip{border:1px solid var(--border); background:#fff; padding:6px 12px; border-radius:var(--pill); font-weight:600; color:#243150}
+    .chip.blue{background:rgba(3,40,174,.08); border-color:rgba(3,40,174,.18)}
+    .chip.gold{background:rgba(122,119,151,.10); border-color:rgba(122,119,151,.20)}
+
+
+
+
+    /* ===================== QUOTE BLOCK (from your file) ===================== */
+    .quote-block{background:#e8ecf5;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-top:40px;padding:56px 0;margin-bottom:48px}
+    .quote-inner{max-width:900px;margin:0 auto;padding:0 var(--gutter);text-align:center}
+    .quote-text{font-size:1.5rem;font-style:italic;color:#7d879e}
+    .quote-attr{margin-top:8px;color:#334155}
+    .quote-bio{max-width:840px;margin:18px auto 0;color:#475569}
+
+    /* ===================== FOOTER (from your file) ===================== */
+    footer{margin-top:auto;background:var(--footer-bg);color:#cbd5e1;}
+  </style>
+</head>
+
+<body>
+
+
+
+  <!-- ================= HEADER ================= -->
+  <header class="header" id="nav" data-version="HeaderFooter_v1.0">
+    <div class="row1">
+      <div class="brandrow">
+        <a class="brand" href="Entire.html" aria-label="Raymoch home">
+          <svg width="28" height="28" viewBox="0 0 200 200" aria-hidden="true">
+            <polygon fill="none" stroke="currentColor" stroke-width="10" points="100,18 172,59 172,141 100,182 28,141 28,59"/>
+            <text x="100" y="118" text-anchor="middle" style="fill:currentColor;font:700 105px Georgia">R</text>
+          </svg>
+          <span class="brand-word">Raymoch</span>
+        </a>
+
+        <button class="explore-toggle" id="exploreToggle" aria-haspopup="true" aria-expanded="false" aria-controls="t1Menu">
+          <span class="dotgrid" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+          Explore
+        </button>
+
+        <div class="menu-panel" id="t1Menu" role="menu" aria-labelledby="exploreToggle" hidden>
+          <div class="menu-head"><h4>Explore services</h4></div>
+          <div class="menu-grid">
+            <a class="menu-item" role="menuitem" href="Matching.html"><h5>Trusted Matching</h5><p>Get paired with credible businesses using CTI & verification.</p></a>
+            <a class="menu-item" role="menuitem" href="verification.html"><h5>Verification</h5><p>CTI badges, document checks, and data provenance.</p></a>
+            <a class="menu-item" role="menuitem" href="Market_Insight.html"><h5>Research & Insights</h5><p>Sector reports, trends, and regional briefs.</p></a>
+            <a class="menu-item" role="menuitem" href="Services.html"><h5>Programs & Services</h5><p>Advisory, partner programs, and support options.</p></a>
+            <a class="menu-item" role="menuitem" href="incentives.html"><h5>Policy & Incentives</h5><p>Tax credits, grants, and regulatory signals.</p></a>
+            <a class="menu-item" role="menuitem" href="whitespace.html"><h5>Whitespace Map</h5><p>Where demand outpaces supply across sectors.</p></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="rightside">
+        <form class="search-box" action="search.html">
+          <input type="search" name="q" placeholder="Search companies, sectors, regions…" />
+        </form>
+        <div class="auth">
+          <a class="btn" href="login.html">Log in</a>
+          <a class="btn primary" href="signup.html">Sign up</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="wrap">
+        <nav class="links" aria-label="Secondary">
+          <a href="explore2.html">Businesses</a>
+          <a href="Services.html">Services</a>
+          <a href="Market_Insight.html">Research &amp; Insights</a>
+          <a href="About.html">Who We Are</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+
+  
+
+  <!-- ================= HERO (kept intact) ================= -->
+  <section class="hero" id="hero" aria-label="RAYMOCH: Redefining African Potential">
+    <div class="hero-inner">
+      <h1>Redefining African Potential</h1>
+      <p>At Raymoch, we connect investors and entrepreneurs through trust, verified data, and actionable insights.
+         Our mission is to unlock visibility and capital for businesses across Africa and beyond.</p>
+    </div>
+  </section>
+
+  <!-- ================= COMING SOON CARD ================= -->
+  <section class="coming-wrap" aria-label="Coming soon">
+    <article class="coming-card">
+      <h2>Coming Soon ...</h2>
+      <p>We’re finalizing a high-trust platform that helps investors discover credible African businesses and move from interest to investment with clarity. Early access opens shortly — previews include verification tiers, market lenses, and fast due-diligence profiles.</p>
+      <div class="coming-row" style="margin-top:14px">
+        <span class="chip blue">Trust</span>
+        <span class="chip">Confidence</span>
+        <span class="chip gold">Future</span>
+      </div>
+      <!-- Optional: wire this when your form is ready -->
+      <div style="margin-top:16px">
+        <a class="btn primary" href="https://example.com/waitlist">Request Early Access</a>
+      </div>
+    </article>
+  </section>
+
+  <!-- ================= QUOTE (kept intact) ================= -->
+  <section class="quote-block">
+    <div class="quote-inner">
+      <div class="quote-text">“It always seems impossible until it’s done.”</div>
+      <div class="quote-attr">— Nelson Mandela</div>
+      <p class="quote-bio">
+        Raymoch is building trusted digital rails for African entrepreneurship: verified company profiles,
+        a Cultural Trust Index, and market intelligence, so capital can find credible opportunities faster.
+      </p>
+    </div>
+  </section>
+
+
+<footer>
+  <div class="wrap" style="padding:32px var(--gutter)">
+    <!-- Top grid -->
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:18px">
+      <div>
+        <div style="color:#131212;font-weight:800;font-size:1.2rem;margin-bottom:8px">Raymoch</div>
+        <div style="color:#080808;max-width:360px">
+          Connecting investors and entrepreneurs through trust, verified data, and actionable insights.
+        </div>
+      </div>
+      <div>
+        <h5 style="margin-bottom:10px;color:#080808;font-size:.95rem">Company</h5>
+        <a href="About.html" style="display:block;color:#0c0c0c;margin:6px 0">About</a>
+        <a href="careers.html" style="display:block;color:#0d0e0e;margin:6px 0">Careers</a>
+        <a href="press.html" style="display:block;color:#121213;margin:6px 0">Press</a>
+        <a href="contact.html" style="display:block;color:#0f0f0f;margin:6px 0">Contact</a>
+      </div>
+      <div>
+        <h5 style="margin-bottom:10px;color:#131314;font-size:.95rem">Product</h5>
+        <a href="explore2.html" style="display:block;color:#131415;margin:6px 0">Explore Businesses</a>
+        <a href="Market_Insight.html" style="display:block;color:#070808;margin:6px 0">Market Insights</a>
+        <a href="verification.html" style="display:block;color:#020202;margin:6px 0">Verification</a>
+        <a href="Services.html" style="display:block;color:#090909;margin:6px 0">Programs & Services</a>
+      </div>
+      <div>
+        <h5 style="margin-bottom:10px;color:#090909;font-size:.95rem">Resources</h5>
+        <a href="blog.html" style="display:block;color:#0d0d0e;margin:6px 0">Blog</a>
+        <a href="help.html" style="display:block;color:#0a0a0a;margin:6px 0">Help Center</a>
+        <a href="security.html" style="display:block;color:#0c0c0c;margin:6px 0">Security</a>
+        <a href="status.html" style="display:block;color:#090909;margin:6px 0">Status</a>
+      </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div style="border-top:1px solid #1f2937;
+                margin-top:22px;
+                padding:12px 0;
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                font-size:.92rem;">
+      <div style="color:#0b0b0a;">© 2025 Raymoch. All rights reserved.</div>
+      <div>
+        <a href="privacy.html" style="color:#0e0f0f;margin-left:14px">Privacy</a>
+        <a href="terms.html" style="color:#101111;margin-left:14px">Terms</a>
+        <a href="cookies.html" style="color:#080809;margin-left:14px">Cookies</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+
+
+  <!-- ================= JS: only what the header needs ================= -->
+  <script>
+    // Tier-1 Explore menu toggle (from your file)
+    (() => {
+      const btn = document.getElementById('exploreToggle');
+      const menu = document.getElementById('t1Menu');
+      if (!btn || !menu) return;
+      const openMenu = (on) => { btn.setAttribute('aria-expanded', on ? 'true' : 'false'); menu.hidden = !on; };
+      btn.addEventListener('click', (e) => { e.preventDefault(); openMenu(btn.getAttribute('aria-expanded') !== 'true'); });
+      document.addEventListener('click', (e) => { if (!menu.hidden && !menu.contains(e.target) && !btn.contains(e.target)) openMenu(false); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') openMenu(false); });
+    })();
+
+    // A11y role hinting for menu items
+    (() => {
+      const menu = document.getElementById('t1Menu');
+      menu?.querySelectorAll('a.menu-item').forEach(a => a.setAttribute('role','menuitem'));
+    })();
+  </script>
+</body>
+</html>

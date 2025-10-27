@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Raymoch • About</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<style>
+  :root{
+    --brand-blue:#0A2A6B; --brand-gold:#DAA520;
+    --bg:#F7F7FB; --card:#fff; --ink:#0F1222; --muted:#6b7280; --border:#E8E8EE;
+    --shadow:0 10px 30px rgba(10,42,107,.08); --radius:16px; --pill:999px;
+
+    /* Header palette (site-standard) */
+    --nav-brand:#0328aeed; --nav-link:#0f172a; --nav-hover:#0a2a6b;
+    --nav-bg:#ffffff; --nav-fg:#101114; --border-soft:#e8e8ee;
+
+    /* Hero */
+    --hero-bg: linear-gradient(180deg,#ffffff 0%, #fafafe 100%);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg);color:var(--ink);
+    font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+  }
+  a{color:inherit;text-decoration:none} /* ← no underlines anywhere */
+  .container{max-width:1140px;margin:0 auto;padding:0 20px}
+  .wrap{max-width:1328px;margin:0 auto;padding:0 18px}
+
+  /* ================= HEADER (site-standard) ================= */
+  .header{
+    background:var(--nav-bg); color:var(--nav-fg);
+    position:sticky; top:0; z-index:1000; border-bottom:1px solid var(--border-soft)
+  }
+  .row1{
+    display:flex;justify-content:space-between;align-items:center;gap:16px;
+    padding:12px 8px; margin:15px; box-shadow:0 1px 0 rgba(0,0,0,.05); position:relative;
+  }
+  .brandrow{display:flex;align-items:center;gap:22px}
+  .brand{display:flex;align-items:center;gap:10px;color:var(--nav-brand)}
+  .brand-word{font-weight:900;font-size:1.4rem;color:var(--nav-brand);letter-spacing:.2px}
+  .dotgrid{width:18px;height:18px;display:inline-grid;grid-template-columns:repeat(2,1fr);gap:2px}
+  .dotgrid i{width:5px;height:5px;border-radius:2px;background:#101114}
+
+  .rightside{display:flex;align-items:center;gap:14px}
+  .search-box{min-width:140px;width:18vw;max-width:260px}
+  .search-box input{width:100%;height:40px;padding:0 14px;border:1px solid var(--border-soft);border-radius:var(--pill)}
+  .search-box input:focus{border-color:var(--nav-brand);outline:2px solid #cfe0ff}
+
+  .header .btn{height:40px;display:inline-flex;align-items:center;gap:8px;padding:0 16px;border-radius:var(--pill);font-weight:700;background:#fff;border:1px solid var(--border-soft);cursor:pointer}
+  .header .btn.primary{background:var(--nav-brand);color:#fff;border-color:var(--nav-brand)}
+
+  .explore-toggle{
+    appearance:none;border:0;background:transparent;cursor:pointer;
+    display:flex;align-items:center;gap:8px;font-weight:800;color:var(--nav-link);
+    padding:6px 8px;border-radius:8px;font-size:1.1rem;
+  }
+  .explore-toggle:hover,
+  .explore-toggle[aria-expanded="true"]{ background:#eceff3;color:var(--nav-hover); }
+
+  .menu-panel{
+    position:absolute; top:calc(100% + 10px); left:15px; z-index:1100;
+    width:min(760px, calc(100vw - 40px));  /* ← standard width */
+    max-height:min(72vh,560px); overflow:auto; overscroll-behavior:contain;
+    background:#fff;border:1px solid var(--border-soft);border-radius:14px;box-shadow:0 6px 22px rgba(10,42,107,.08);
+    padding:14px;
+  }
+  .menu-panel[hidden]{ display:none; }
+  .menu-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(240px,1fr)); /* ← 2 columns (3 rows) */
+    gap:12px;
+  }
+  @media (max-width:560px){ .menu-grid{grid-template-columns:1fr} }
+  .menu-item{display:block;padding:12px;border:1px solid var(--border-soft);border-radius:12px;background:#fff}
+  .menu-item:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(0,0,0,.06)}
+  .menu-item h5{margin:0 0 6px;font-size:.98rem}
+  .menu-item p{margin:0;color:#3c4b69;font-size:.92rem}
+
+  .row2{background:#f5f6f8;border-top:1px solid #eee;border-bottom:1px solid #e6e6e6;padding-left:15px}
+  .row2 .wrap{max-width:none;padding:0}
+  .row2 .links{display:flex;gap:18px;padding:8px 8px;margin:0;justify-content:flex-start;align-items:center}
+  .row2 a{font-weight:600;font-size:.92rem;padding:4px 6px;border-radius:4px;color:var(--nav-link)}
+  .row2 a:hover{background:#eceff3;color:var(--nav-hover)}
+  .row2 a.active{background:#e7ecff;color:var(--nav-brand)}
+
+  /* ================= PAGE CONTENT ================= */
+
+  /* Hero: full-bleed, airy, two-column for reduced reading fatigue */
+  .hero{
+    position:relative; left:50%; right:50%; margin-left:-50vw; margin-right:-50vw; width:100vw;
+    background:var(--hero-bg);
+    padding:clamp(44px,7vw,96px) 0;  /* generous vertical space */
+    border:0; border-radius:0; box-shadow:none;
+  }
+  .hero .wrap{display:grid;grid-template-columns:1.3fr 1fr;gap:28px;align-items:center}
+  .hero h1{margin:0 0 10px;font-weight:900;letter-spacing:.2px;color:var(--brand-blue);
+           font-size:clamp(32px,5vw,44px)}
+  .hero p{margin:0;max-width:760px;font-size:clamp(14px,2.1vw,18px);color:#374151}
+  .links{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+  .chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);background:#fff;border-radius:var(--pill);padding:8px 12px;color:#0f172a;text-decoration:none;font-weight:700}
+
+  .hero-aside{
+    background:#fff;border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);
+    padding:18px;display:flex;flex-direction:column;gap:10px
+  }
+  .kv-mini{display:flex;justify-content:space-between;gap:12px;border:1px solid #eceff6;border-radius:12px;padding:10px 12px;background:#fbfbfe}
+  .kv-mini .k{color:#6b7280;font-size:12px}
+  .kv-mini .v{font-weight:800;color:#0a2a6b}
+
+  @media (max-width:900px){
+    .hero .wrap{grid-template-columns:1fr}
+  }
+
+  section.block{margin:22px 0}
+  .card{background:#fff;border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);padding:18px}
+  .grid-2{display:grid;grid-template-columns:1.5fr 1fr;gap:18px}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+
+  .timeline{position:relative;padding-left:24px}
+  .timeline::before{content:"";position:absolute;left:10px;top:0;bottom:0;width:2px;background:#e6e7ef;border-radius:2px}
+  .t-item{position:relative;margin:0 0 16px}
+  .t-item::before{content:"";position:absolute;left:-2px;top:.35em;width:10px;height:10px;border-radius:50%;background:var(--brand-gold);box-shadow:0 0 0 3px #fff}
+  .t-item h4{margin:0 0 4px;color:var(--brand-blue)}
+  .muted{color:var(--muted)}
+
+  .step{border:1px dashed #e6e7ef;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px}
+  .step h5{margin:0;color:var(--brand-blue)}
+  .arrow{display:grid;place-items:center}
+  .arrow::after{content:"→";font-size:22px;color:#9aa1b2}
+
+  .pill{display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid #e6e7ef;background:#fff;font-weight:600;font-size:14px;margin:6px 6px 0 0}
+  .list{margin:8px 0 0;padding-left:18px;line-height:1.6}
+
+  .avatar{width:64px;height:64px;border-radius:16px;border:1px solid #e6e7ef;background:#f7f7fb;display:grid;place-items:center;font-weight:800;color:var(--brand-blue)}
+  .member{display:flex;gap:12px;align-items:flex-start}
+  .member h5{margin:0;color:var(--brand-blue)}
+  .member .role{font-size:14px;color:var(--muted);margin:2px 0 6px}
+
+  .cta-banner{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+  .cta-banner h3{margin:0;color:var(--brand-blue)}
+  .cta{display:inline-block;border-radius:12px;background:var(--brand-blue);color:#fff;text-decoration:none;padding:12px 16px;font-weight:800}
+  .ghost{background:#fff;border:1px solid #e6e7ef;border-radius:12px;padding:12px 14px;font-weight:700;text-align:center;color:#0f172a;text-decoration:none}
+
+  /* ================= FOOTER (site-standard) ================= */
+  .footer{background:#0b1020;color:#cbd5e1;}
+
+  @media (max-width:1024px){
+    .grid-2{grid-template-columns:1fr}
+    .grid-4{grid-template-columns:repeat(2,1fr)}
+  }
+  @media (max-width:760px){
+    .grid-3{grid-template-columns:1fr}
+    .grid-4{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+  <!-- ================= HEADER ================= -->
+  <header class="header" id="site-header">
+    <!-- Tier 1 -->
+    <div class="row1">
+      <div class="brandrow">
+        <a class="brand" href="Entire.html" aria-label="Raymoch home">
+          <svg width="28" height="28" viewBox="0 0 200 200" aria-hidden="true">
+            <polygon fill="none" stroke="currentColor" stroke-width="10" points="100,18 172,59 172,141 100,182 28,141 28,59"/>
+            <text x="100" y="118" text-anchor="middle" style="fill:currentColor;font:700 105px Georgia">R</text>
+          </svg>
+          <span class="brand-word">Raymoch</span>
+        </a>
+
+        <button class="explore-toggle" id="exploreToggle" aria-haspopup="true" aria-expanded="false">
+          <span class="dotgrid" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+          Explore
+        </button>
+
+        <div class="menu-panel" id="t1Menu" role="menu" aria-labelledby="exploreToggle" hidden>
+          <div class="menu-grid">
+            <a class="menu-item" href="explore2.html">
+              <h5>Explore Businesses</h5>
+              <p>Browse verified companies by sector and country.</p>
+            </a>
+            <a class="menu-item" href="Matching.html">
+              <h5>Trusted Matching</h5>
+              <p>Get paired with credible businesses using CTI & verification.</p>
+            </a>
+            <a class="menu-item" href="verification.html">
+              <h5>Verification</h5>
+              <p>CTI badges, document checks, and data provenance.</p>
+            </a>
+            <a class="menu-item" href="Market_Insight.html">
+              <h5>Research & Insights</h5>
+              <p>Sector reports, trends, and regional briefs.</p>
+            </a>
+            <a class="menu-item" href="Services.html">
+              <h5>Programs & Services</h5>
+              <p>Advisory, partner programs, and support options.</p>
+            </a>
+            <a class="menu-item" href="About.html">
+              <h5>Who We Are</h5>
+              <p>Mission, team, and what we stand for.</p>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="rightside">
+        <form class="search-box" action="search.html">
+          <input id="navSearch" type="search" name="q" placeholder="Search companies, sectors, regions…" />
+        </form>
+        <div class="auth">
+          <button class="btn" id="loginBtn" type="button">Log in</button>
+          <button class="btn primary" id="signupBtn" type="button">Sign up</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tier 2 -->
+    <div class="row2">
+      <div class="wrap">
+        <nav class="links" aria-label="Secondary">
+          <a href="explore2.html">Businesses</a>
+          <a href="Services.html">Services</a>
+          <a href="Market_Insight.html">Research &amp; Insights</a>
+          <a href="About.html" class="active">Who We Are</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= HERO (full-bleed, less fatigue) ================= -->
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <h1>We build trust so capital can flow.</h1>
+        <p>Raymoch is a visibility + trust platform for African and diaspora-linked SMEs. We verify businesses, surface credible data, and make it easier for customers, partners, and investors to act with confidence.</p>
+        <div class="links">
+          <a class="chip" href="#story">📜 Our story</a>
+          <a class="chip" href="#roadmap">🧭 Roadmap</a>
+          <a class="chip" href="#principles">🧩 Principles</a>
+          <a class="chip" href="#team">👥 Team</a>
+          <a class="chip" href="#contact">✉️ Contact</a>
+        </div>
+      </div>
+      <aside class="hero-aside">
+        <div class="kv-mini"><span class="k">Focus</span><span class="v">Trust & Visibility</span></div>
+        <div class="kv-mini"><span class="k">Coverage</span><span class="v">50+ Countries</span></div>
+        <div class="kv-mini"><span class="k">Method</span><span class="v">CTI Verification</span></div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ================= PAGE BODY ================= -->
+  <main class="container">
+    <!-- STORY -->
+    <section id="story" class="block grid-2">
+      <div class="card">
+        <h2 style="margin:0 0 8px;color:var(--brand-blue)">The short version</h2>
+        <p class="muted">Africa’s SMEs are real, resilient, and under-seen. Diaspora capital is massive—but allergic to foggy signals. Raymoch clears the fog with verified profiles, a Cultural Trust Index (CTI), and clean routes from discovery to action.</p>
+        <div class="timeline" style="margin-top:10px">
+          <div class="t-item">
+            <h4>Ground truth first</h4>
+            <p class="muted">We start with facts you can check—ownership, operations, certifications, traction.</p>
+          </div>
+          <div class="t-item">
+            <h4>Trust becomes visible</h4>
+            <p class="muted">Signals roll up into CTI tiers (Basic → Verified → Showcase) so non-experts can read credibility at a glance.</p>
+          </div>
+          <div class="t-item">
+            <h4>Action gets simple</h4>
+            <p class="muted">Once trust is legible, matching, partnerships, and financing stop being a scavenger hunt.</p>
+          </div>
+        </div>
+      </div>
+      <aside class="card">
+        <h3 style="margin:0 0 8px;color:var(--brand-blue)">Name & meaning</h3>
+        <p class="muted">“Raymoch” hints at a beam through noise—clarity, signal, direction. It’s our job to make trustworthy businesses easy to find and easy to back.</p>
+        <h3 style="margin:16px 0 8px;color:var(--brand-blue)">What we ship</h3>
+        <ul class="list">
+          <li>Public listings with verified signals (CTI)</li>
+          <li>Matching workflows for partners/investors</li>
+          <li>Update/claim pipelines for businesses</li>
+          <li>Insight layers for sectors and countries</li>
+        </ul>
+      </aside>
+    </section>
+
+    <!-- ROADMAP -->
+    <section id="roadmap" class="block card">
+      <h2 style="margin:0 0 12px;color:var(--brand-blue)">Roadmap: from trust to rails</h2>
+      <div class="grid-4" style="align-items:stretch">
+        <div class="step">
+          <h5>1) Trust Layer</h5>
+          <p class="muted">Verified profiles, CTI scoring, transparent snapshots.</p>
+        </div>
+        <div class="arrow"></div>
+        <div class="step">
+          <h5>2) Capital Layer</h5>
+          <p class="muted">Matching + diligence surfaces; partner & program flows.</p>
+        </div>
+        <div class="arrow"></div>
+        <div class="step">
+          <h5>3) Financial Rails</h5>
+          <p class="muted">Standardized docs, payment/onboarding bridges.</p>
+        </div>
+        <div class="arrow"></div>
+        <div class="step">
+          <h5>4) Ecosystem Hub</h5>
+          <p class="muted">Data network effects: insights → discovery → growth.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRINCIPLES -->
+    <section id="principles" class="block card">
+      <h2 style="margin:0 8px 8px 0;color:var(--brand-blue)">Principles (how we work)</h2>
+      <div>
+        <span class="pill">Clarity over theater</span>
+        <span class="pill">Evidence beats vibes</span>
+        <span class="pill">Security by default</span>
+        <span class="pill">Local first, global ready</span>
+        <span class="pill">Minimal friction</span>
+        <span class="pill">Respect time & attention</span>
+      </div>
+      <ul class="list">
+        <li><strong>CTI is explainable.</strong> If a score moves, there’s a reason a human can read.</li>
+        <li><strong>Updates are fast.</strong> “Request an update” isn’t a form graveyard; it’s a workflow.</li>
+        <li><strong>Interoperable by design.</strong> Your data should travel well—APIs later, clean structure now.</li>
+      </ul>
+    </section>
+
+    <!-- TEAM -->
+    <section id="team" class="block card">
+      <h2 style="margin:0 0 12px;color:var(--brand-blue)">Team</h2>
+      <div class="grid-3">
+        <div class="member">
+          <div class="avatar">PR</div>
+          <div>
+            <h5>Peach Russom</h5>
+            <div class="role">Founder • Systems + Economics</div>
+            <p class="muted">Engineer-economist building the trust layer for SMEs. Obsessed with clean signals and practical rails.</p>
+          </div>
+        </div>
+        <div class="member">
+          <div class="avatar">DS</div>
+          <div>
+            <h5>Data Science (Advisory)</h5>
+            <div class="role">Modeling • CTI design</div>
+            <p class="muted">Bayesian priors meet messy reality: we make credibility legible without hiding the uncertainty.</p>
+          </div>
+        </div>
+        <div class="member">
+          <div class="avatar">PX</div>
+          <div>
+            <h5>Product & UX</h5>
+            <div class="role">Flows • Accessibility</div>
+            <p class="muted">Simple pages that earn trust. Fewer clicks, clearer decisions.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRESS / METRICS -->
+    <section class="block grid-3">
+      <div class="card">
+        <h3 style="margin:0 0 8px;color:var(--brand-blue)">Traction</h3>
+        <p class="muted">Listings growing monthly; early partners in fintech, agrifood, logistics.</p>
+      </div>
+      <div class="card">
+        <h3 style="margin:0 0 8px;color:var(--brand-blue)">Research Backbone</h3>
+        <p class="muted">We publish methods openly: CTI criteria, sampling, and verification playbooks.</p>
+      </div>
+      <div class="card">
+        <h3 style="margin:0 0 8px;color:var(--brand-blue)">Ecosystem</h3>
+        <p class="muted">Working with diaspora networks and operators to reduce diligence time.</p>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section id="contact" class="block card cta-banner">
+      <h3>Want to list, partner, or explore programs?</h3>
+      <div>
+        <a class="cta" href="verification.html">Request Verification</a>
+        <a class="ghost" href="Services.html">Explore Services</a>
+      </div>
+    </section>
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="footer" id="site-footer">
+    <div class="wrap" style="padding:32px var(--gutter,18px)">
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:18px">
+        <div>
+          <div style="color:#fff;font-weight:800;font-size:1.2rem;margin-bottom:8px">Raymoch</div>
+          <div style="color:#94a3b8;max-width:360px">
+            Connecting investors and entrepreneurs through trust, verified data, and actionable insights.
+          </div>
+        </div>
+        <div>
+          <h5 style="margin-bottom:10px;color:#e5e7eb;font-size:.95rem">Company</h5>
+          <a href="About.html" style="display:block;color:#cbd5e1;margin:6px 0">About</a>
+          <a href="careers.html" style="display:block;color:#cbd5e1;margin:6px 0">Careers</a>
+          <a href="press.html" style="display:block;color:#cbd5e1;margin:6px 0">Press</a>
+          <a href="contact.html" style="display:block;color:#cbd5e1;margin:6px 0">Contact</a>
+        </div>
+        <div>
+          <h5 style="margin-bottom:10px;color:#e5e7eb;font-size:.95rem">Product</h5>
+          <a href="explore2.html" style="display:block;color:#cbd5e1;margin:6px 0">Explore Businesses</a>
+          <a href="Market_Insight.html" style="display:block;color:#cbd5e1;margin:6px 0">Market Insights</a>
+          <a href="verification.html" style="display:block;color:#cbd5e1;margin:6px 0">Verification</a>
+          <a href="Services.html" style="display:block;color:#cbd5e1;margin:6px 0">Programs & Services</a>
+        </div>
+        <div>
+          <h5 style="margin-bottom:10px;color:#e5e7eb;font-size:.95rem">Resources</h5>
+          <a href="blog.html" style="display:block;color:#cbd5e1;margin:6px 0">Blog</a>
+          <a href="help.html" style="display:block;color:#cbd5e1;margin:6px 0">Help Center</a>
+          <a href="security.html" style="display:block;color:#cbd5e1;margin:6px 0">Security</a>
+          <a href="status.html" style="display:block;color:#cbd5e1;margin:6px 0">Status</a>
+        </div>
+      </div>
+      <div style="border-top:1px solid #1f2937;margin-top:22px;padding:12px 0;display:flex;justify-content:space-between;align-items:center;font-size:.92rem">
+        <div>© <span id="footerYear"></span> Raymoch. All rights reserved.</div>
+        <div>
+          <a href="privacy.html" style="color:#cbd5e1;margin-left:14px">Privacy</a>
+          <a href="terms.html" style="color:#cbd5e1;margin-left:14px">Terms</a>
+          <a href="cookies.html" style="color:#cbd5e1;margin-left:14px">Cookies</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ================= SCRIPTS ================= -->
+  <script>
+    // Explore dropdown + active link
+    (function(){
+      const btn = document.getElementById('exploreToggle');
+      const menu = document.getElementById('t1Menu');
+      if(btn && menu){
+        const toggle = (open)=>{ btn.setAttribute('aria-expanded', open?'true':'false'); menu.hidden = !open; };
+        btn.addEventListener('click', e=>{ e.preventDefault(); toggle(menu.hidden); });
+        document.addEventListener('click', e=>{ if(!menu.hidden && !menu.contains(e.target) && !btn.contains(e.target)) toggle(false); });
+        document.addEventListener('keydown', e=>{ if(e.key==='Escape') toggle(false); });
+      }
+      // highlight current page in Tier-2
+      const current = 'About.html';
+      document.querySelectorAll('#site-header .row2 a[href]').forEach(a=>{
+        const href = a.getAttribute('href'); if(href && href === current) a.classList.add('active');
+      });
+    })();
+
+    // Footer year
+    (function(){
+      const y=document.getElementById('footerYear'); if(y) y.textContent = new Date().getFullYear();
+    })();
+
+    // Header auth stubs
+    (function(){
+      const loginBtn = document.getElementById('loginBtn');
+      const signupBtn = document.getElementById('signupBtn');
+      if(loginBtn) loginBtn.addEventListener('click', ()=> alert('Log in flow (stub)'));
+      if(signupBtn) signupBtn.addEventListener('click', ()=> alert('Sign up flow (stub)'));
+    })();
+  </script>
+</body>
+</html>

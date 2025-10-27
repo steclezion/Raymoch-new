@@ -1,0 +1,67 @@
+:root{
+  --bg-grad: linear-gradient(90deg,#d7eee4 0%, #e0eff5 35%, #dfe7f3 65%, #d7def1 100%);
+  --ink:#111827;
+  --muted:#6b7280;
+  --brand:#111827;
+  --btn:#4f6edb;        /* indigo/blue like the screenshot button */
+  --btn-text:#fff;
+  --field-border:#e5e7eb;
+  --card:#ffffff;
+  --focus:#9db5ff;
+  --link:#4f6edb;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--bg-grad);
+  display:flex;align-items:center;justify-content:center;color:var(--ink);
+}
+.logo{display:flex;align-items:center;justify-content:center;margin-bottom:18px}
+.logo span{
+  font-weight:800; font-size:28px; letter-spacing:.2px; color:#111827;
+}
+.logo .sparkle{
+  display:inline-block; width:12px; height:12px; margin-right:6px;
+  background: radial-gradient(circle at 50% 50%, #79a7ff 0 60%, transparent 61%);
+  transform: translateY(-6px) rotate(15deg);
+}
+
+.card{
+  width:min(92vw, 420px);
+  background:var(--card);
+  border-radius:22px;
+  padding:28px 26px 22px;
+  box-shadow: 0 6px 30px rgba(20,28,58,.12);
+}
+.title{font-weight:800; font-size:22px; text-align:center; margin:10px 0 18px}
+
+.label{display:block;font-weight:700;font-size:14px;margin:14px 0 6px}
+.input{
+  width:100%; height:44px; padding:0 14px;
+  border:1px solid var(--field-border); border-radius:12px; outline:none;
+  font-size:15px; background:#fff;
+}
+.input:focus{border-color:#c7d3ff; box-shadow:0 0 0 3px var(--focus)}
+
+.pass-wrap{position:relative}
+.eye{
+  position:absolute; right:10px; top:50%; transform:translateY(-50%);
+  border:0; background:transparent; cursor:pointer; padding:6px;
+}
+
+.row-end{display:flex;justify-content:flex-end;margin-top:8px}
+a.link{color:var(--link); text-decoration:none}
+a.link:hover{text-decoration:underline}
+
+.btn{
+  margin-top:18px; width:100%; height:50px; border-radius:28px;
+  border:0; background:var(--btn); color:var(--btn-text); font-weight:800; cursor:pointer;
+}
+.btn:disabled{opacity:.6; cursor:not-allowed}
+
+.small{font-size:14px; color:var(--muted); text-align:center; margin-top:14px}
+.small a{color:var(--link); text-decoration:underline}
+
+.helper{font-size:12px; color:#9ca3af; text-align:center; margin-top:18px}
+.error{background:#fff3f3; color:#7f1d1d; border:1px solid #fca5a5; padding:10px 12px; border-radius:12px; margin-bottom:10px}

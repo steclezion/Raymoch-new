@@ -5,6 +5,7 @@ use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\company_description;
 use App\Http\Controllers\company_description_type_controller;
 use App\Http\Controllers\CompanyClassificationController;
+use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CompanyInfosController;
 use App\Http\Controllers\ControlLayoutController;
 use App\Http\Controllers\ForgotPasswordController;
@@ -16,16 +17,21 @@ use App\Http\Controllers\OneTapController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\RoleController;
-use App\Http\Controllers\UserController;
 use App\Http\Controllers\searchcontroller;
+use App\Http\Controllers\UserController;
 use App\Mail\GoogleVerifyMail;
 use App\Mail\HelloMail;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TrialRequestController;
 
-// Route::get('/', function () { return view('raymoch.pages.index'); })->name('/');
 
-Route::get('/', [ControlLayoutController::class, 'index'])->name('/');
+Route::get('/', function () {
+    return view('raymoch.pages.index');
+})->name('/');
+// Route::view('/', 'pages.entire')->name('entire');
+
+// Route::get('/', [ControlLayoutController::class, 'index'])->name('/');
 Route::get('/bussiness_menu', [ControlLayoutController::class, 'Business_menus'])->name('bussiness_menu');
 
 Route::get('login', [AuthController::class, 'login'])->name('login');
@@ -42,7 +48,7 @@ Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleC
 Route::get('verify-email', [GoogleAuthController::class, 'verifyEmail'])->name('verify.email.link');
 Route::get('/send', function () {
     // return view('raymoch.pages.index');
-    Mail::to('steclezion@gmail.com')->send(new HelloMail());
+    Mail::to('steclezion@gmail.com')->send(new HelloMail);
 
     return 'Email sent!';
 });
@@ -130,7 +136,6 @@ Route::get('/feature-x', function () {
 
 Route::post('/auth/google/onetap', [OneTapController::class, 'login'])->name('onetap.login');
 
-
 Route::post('/search/businesses', [SearchController::class, 'businesses'])->name('search.businesses');
 
 Route::get('/debug/csrf', function (\Illuminate\Http\Request $req) {
@@ -141,3 +146,109 @@ Route::get('/debug/csrf', function (\Illuminate\Http\Request $req) {
         'has_cookie_laravel_session' => $req->hasCookie(config('session.cookie')),
     ]);
 });
+
+// About
+Route::view('/about', 'pages.about')->name('about');
+
+// Companies (and a backwards-compat alias for "campanies")
+// Route::view('/companies', 'pages.companies_vil')->name('companies');
+// Route::view('/campanies', 'pages.companies')->name('campanies.alias'); // optional
+
+// Explore (v1 + v2)
+Route::view('/explore', 'pages.explore')->name('explore');
+Route::view('/business', 'pages.business')->name('explore2');
+
+// Filtered results page
+Route::view('/filtered', 'pages.filtered')->name('filtered');
+
+// Page from 1.html
+Route::view('/one', 'pages.one')->name('one');
+
+Route::view('/', 'pages.entire')->name('entire');           // from Entire.html
+
+Route::view('/companies', 'pages.companies')->name('companies');    // main companies listing page
+
+Route::view('/companies/vl', 'pages.services.companies-vl')->name('companies.vl');
+
+// Route::middleware('guest')->group(function () {
+//     Route::post('/auth/login',  [\App\Http\Controllers\Auth\AuthController::class, 'login'])->name('auth.login');
+//     Route::post('/auth/register', [\App\Http\Controllers\Auth\AuthController::class, 'register'])->name('auth.register');
+// });
+
+// “Companies – view layer” pages
+// Route::get('/companies-vl-detail', [CompanyController::class, 'index'])->name('companies.browse');
+
+// This page uses query ?id=... and fetches JSON from /api/companies/{id}
+Route::get('/companies/vl/{id?}', function ($id = null) {
+    // If you want, you can pass $id down to Blade to prefill a data attribute
+    return view('pages.services.companies-vl', ['preloadId' => $id]);
+})->name('companies.vl');
+
+// LEGACY redirects that PRESERVE the query string
+Route::get('/companies.html', function () {
+    $qs = request()->getQueryString(); // e.g. sector=Agriculture&from=explore
+
+    return redirect()->to(route('companies') . ($qs ? ('?' . $qs) : ''));
+});
+
+Route::get('/explore2.html', function () {
+    $qs = request()->getQueryString();
+
+    return redirect()->to(route('explore') . ($qs ? ('?' . $qs) : ''));
+});
+
+Route::get('/companies-test', function () {
+    dd(request()->fullUrl(), request()->query()); // shows the full URL & query array
+});
+
+// Route::get('/companies.html', function () {
+//     $qs = request()->getQueryString();
+//     return redirect()->to('/companies' . ($qs ? ('?' . $qs) : ''));
+// });
+
+Route::view('/company', 'pages.company');     // detail view uses ?id=...
+
+// Static placeholders used in header/footer links (wire up later as you build them)
+Route::view('/services', 'pages.services')->name('services');     // temp → point to real page later
+Route::view('/insights', 'pages.entire')->name('insights');      // temp
+
+// services sub-pages
+Route::view('/partner-programs', 'pages.services.partner-programs')->name('partner-programs'); // partner programs page
+Route::view('/matching', 'pages.services.matching')->name('matching'); // matching page
+Route::view('/visibility-listing', 'pages.services.visibility-listing')->name('visibility-listing'); // visibility listing page
+Route::view('/verification', 'pages.services.verification')->name('verification'); // verification page
+
+Route::get('/companies/visibility', function () {
+    return view('pages.services.companies-vl', [
+        'from' => request('from'),
+        'verified' => request('verified'),
+    ]);
+})->name('companies.visibility');
+
+Route::view('/careers', 'pages.entire')->name('careers');        // temp
+Route::view('/press', 'pages.entire')->name('press');            // temp
+Route::view('/contact', 'pages.entire')->name('contact');        // temp
+Route::view('/blog', 'pages.entire')->name('blog');              // temp
+Route::view('/help', 'pages.entire')->name('help');              // temp
+Route::view('/security', 'pages.entire')->name('security');      // temp
+Route::view('/status', 'pages.entire')->name('status');          // temp
+Route::view('/privacy', 'pages.entire')->name('privacy');        // temp
+Route::view('/terms', 'pages.entire')->name('terms');            // temp
+Route::view('/Matching', 'pages.entire')->name('Matching');      // temp
+Route::view('/Market_Insight', 'pages.entire')->name('Market_Insight');            // temp
+Route::view('/incentives', 'pages.entire')->name('incentives');            // temp
+Route::view('/whitespace', 'pages.entire')->name('whitespace');            // temp
+
+// Auth placeholders referenced by header buttons
+Route::view('/login', 'pages.entire')->name('login');            // temp
+Route::view('/signup', 'pages.entire')->name('signup');          // temp
+Route::post('/trial-requests', [TrialRequestController::class, 'store'])->name('api.trial-requests.store');
+// routes/web.php
+Route::get('/request-trial', fn() => view('pages.auth.trial'))->name('trial.page');
+Route::post('trial-requests', [TrialRequestController::class, 'store'])->name('api.trial-requests.store');
+
+Route::post('trial-requests/check', [TrialRequestController::class, 'checkExisting'])->name('api.trial-requests.check');
+
+
+Route::view('/trial/verify', 'trial-verify')->name('trial.verify.page');
+Route::view('/trial/success', 'trial-success')->name('trial.success.page');
