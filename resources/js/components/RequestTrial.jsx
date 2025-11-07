@@ -88,11 +88,10 @@ export default function RequestTrial({ apiUrl, csrfToken }) {
 
       if (res.ok && json.ok) {
         // ✅ Navigate to verification page (server chooses where)
-        const to =
-          json.redirect ||
-          `/trial/verify?email=${encodeURIComponent(form.business_email)}`;
-        window.location.assign(to);
-      } else {
+        const to =  json.redirect || `/trial/verify?email=${encodeURIComponent(form.business_email)}`;
+                     window.location.assign(to);
+                      } 
+                else {
         let msg = "Please fix the highlighted fields.";
         if (json?.errors) {
           msg = Object.values(json.errors).flat().join(" ");

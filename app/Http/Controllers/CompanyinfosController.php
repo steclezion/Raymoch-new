@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 use Intervention\Image\ImageManager;
 
-class CompanyinfosController extends Controller
+class CompanyInfosController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -29,7 +29,6 @@ class CompanyinfosController extends Controller
             )
             ->get();
         return view('companyinfos.index', compact('companyinfos'));
-
     }
 
 
@@ -39,14 +38,13 @@ class CompanyinfosController extends Controller
     public function create()
     {
         $classifications = CompanyClassification::where('status', 'active')
-        ->select('*')
-        ->distinct()
-        ->get();
+            ->select('*')
+            ->distinct()
+            ->get();
 
         $countries = Country::orderBy('name')->get();
 
         return view('companyinfos.create', compact(['classifications', 'countries']));
-
     }
 
     /**
@@ -55,7 +53,7 @@ class CompanyinfosController extends Controller
 
     public function store(Request $request)
     {
-       // dd($request->all());
+        // dd($request->all());
 
         $request->validate([
             'company_title' => 'required|string|max:255',
@@ -91,7 +89,6 @@ class CompanyinfosController extends Controller
 
 
         return redirect()->route('companyinfos.index')->with('success', 'Company info created with classification and resized images!');
-
     }
 
     /**
@@ -108,9 +105,9 @@ class CompanyinfosController extends Controller
     public function edit(CompanyInfos $companyinfo)
     {
         $classifications = CompanyClassification::where('status', 'active')->orderBy('business_type')->get();
-    $countries = Country::orderBy('name')->get();
+        $countries = Country::orderBy('name')->get();
 
-    return view('companyinfos.edit', compact('companyinfo', 'classifications', 'countries'))->with('editing', true);
+        return view('companyinfos.edit', compact('companyinfo', 'classifications', 'countries'))->with('editing', true);
     }
     /**
      * Update the specified resource in storage.
@@ -180,72 +177,71 @@ class CompanyinfosController extends Controller
 
 
     public function search(Request $request)
-{
-    $query = CompanyInfos::query()
-    ->leftJoin('company_classifications', 'companyinfos.classification_id', '=', 'company_classifications.id')
-    ->select(
-        'companyinfos.*',
-        'company_classifications.industry',
-        'company_classifications.business_type',
-        'company_classifications.status as classification_status',
-        'company_classifications.id as classification_id'
-    );
+    {
+        $query = CompanyInfos::query()
+            ->leftJoin('company_classifications', 'companyinfos.classification_id', '=', 'company_classifications.id')
+            ->select(
+                'companyinfos.*',
+                'company_classifications.industry',
+                'company_classifications.business_type',
+                'company_classifications.status as classification_status',
+                'company_classifications.id as classification_id'
+            );
 
 
 
 
 
 
-    $classifications = CompanyClassification::select('industry', DB::raw('MIN(id) as id'))
-    ->groupBy('industry')
-    ->orderBy('industry')
-    ->get();
+        $classifications = CompanyClassification::select('industry', DB::raw('MIN(id) as id'))
+            ->groupBy('industry')
+            ->orderBy('industry')
+            ->get();
 
 
-    $classifications_query = CompanyClassification::select('*')
-    ->where('industry',$request->industry)
-    ->orderBy('industry')
-    ->get();
+        $classifications_query = CompanyClassification::select('*')
+            ->where('industry', $request->industry)
+            ->orderBy('industry')
+            ->get();
 
 
 
 
-    
-    // Basic search by company title
-    if ($request->filled('company_title')) {
-        $query->where('company_title', 'LIKE', '%' . $request->company_title . '%');
-    }
 
-    // Advanced search filters
-    if ($request->filled('website')) {
-        $query->where('website', 'LIKE', '%' . $request->website . '%');
-    }
-
-    if ($request->filled('founder_name')) {
-        $query->where('founder_name', 'LIKE', '%' . $request->founder_name . '%');
-    }
-
-    if ($request->filled('industry')) {
-
-        foreach($classifications_query as $classification) {
-            $query->orWhere('company_classifications.id', '=', $classification->id);
+        // Basic search by company title
+        if ($request->filled('company_title')) {
+            $query->where('company_title', 'LIKE', '%' . $request->company_title . '%');
         }
 
-    //    $query->where('classification_id', '=',  $request->industry );
-       
+        // Advanced search filters
+        if ($request->filled('website')) {
+            $query->where('website', 'LIKE', '%' . $request->website . '%');
+        }
 
-    }
+        if ($request->filled('founder_name')) {
+            $query->where('founder_name', 'LIKE', '%' . $request->founder_name . '%');
+        }
 
-    $results = $query->paginate(1)->withQueryString();
+        if ($request->filled('industry')) {
+
+            foreach ($classifications_query as $classification) {
+                $query->orWhere('company_classifications.id', '=', $classification->id);
+            }
+
+            //    $query->where('classification_id', '=',  $request->industry );
 
 
-    foreach($results as $company)
-    {
-        $imageUrl_ = asset('storage/' . $company->first_picture);
-        $imageUrl__ = asset('storage/' . $company->second_picture);
-        $imageUrl___ = asset('storage/' . $company->third_picture);
+        }
 
-   $product_result = "<section id='searched_content'>
+        $results = $query->paginate(1)->withQueryString();
+
+
+        foreach ($results as $company) {
+            $imageUrl_ = asset('storage/' . $company->first_picture);
+            $imageUrl__ = asset('storage/' . $company->second_picture);
+            $imageUrl___ = asset('storage/' . $company->third_picture);
+
+            $product_result = "<section id='searched_content'>
        <div class='container'>
            <div class='row g-4 gx-5'>
                <div class='col-lg-3'>
@@ -284,22 +280,21 @@ class CompanyinfosController extends Controller
 
                    <div class='spacer-double'></div>";
 
-                   $result_company_details = DB::table('companyinfos')
-                   ->join('company_descriptions', 'companyinfos.id', '=', 'company_descriptions.companyinfo_id')
-                   ->where('companyinfos.id', '=', $company->id)
-                   ->select('companyinfos.*', 'company_descriptions.*', 'company_descriptions.description_type as destype', 'company_descriptions.description as des')
-                   ->get();
+            $result_company_details = DB::table('companyinfos')
+                ->join('company_descriptions', 'companyinfos.id', '=', 'company_descriptions.companyinfo_id')
+                ->where('companyinfos.id', '=', $company->id)
+                ->select('companyinfos.*', 'company_descriptions.*', 'company_descriptions.description_type as destype', 'company_descriptions.description as des')
+                ->get();
 
 
 
 
-               $product_result .=  " <div class='row g-4'>
+            $product_result .=  " <div class='row g-4'>
                    <div class='col-lg-12'> <h2 class='mb-0'> <span class='id-color-2'>Infos...</span></h2> </div>";
 
-				 foreach($result_company_details as $details)
-                   {
+            foreach ($result_company_details as $details) {
 
-                          $product_result .=" <div class='col-lg-4 col-md-6 wow fadeInRight' data-wow-delay='.0s'>
+                $product_result .= " <div class='col-lg-4 col-md-6 wow fadeInRight' data-wow-delay='.0s'>
                                 <div class='relative h-100 bg-color text-light padding30 rounded-1'>
                                     <div>
                                         <h4>$details->destype</h4>
@@ -307,81 +302,76 @@ class CompanyinfosController extends Controller
                                     </div>
                                 </div>
                             </div>";
+            }
 
 
-	}
+            $product_result .= "</div>";
 
-
-$product_result .="</div>";
-
-                     $product_result .= "
+            $product_result .= "
 
            </div>
        </div>
    </section>";
+        }
 
-}
+        // Step 1: Get all industries for select filters (optional, you already do)
+        $classifications = CompanyClassification::select('industry')->distinct()->orderBy('industry')->get();
+        $countries = Country::orderBy('name')->get();
 
-   // Step 1: Get all industries for select filters (optional, you already do)
-   $classifications = CompanyClassification::select('industry')->distinct()->orderBy('industry')->get();
-   $countries = Country::orderBy('name')->get();
+        $no_results = $results->isEmpty();
 
-   $no_results = $results->isEmpty();
-
-   if ($results->isEmpty()) {
-    $product_result = "<div class='alert alert-warning text-center'>
+        if ($results->isEmpty()) {
+            $product_result = "<div class='alert alert-warning text-center'>
         <strong>No data found.</strong> Please try a different search.
     </div>";
-}
+        }
 
-return view('raymoch.pages.project_business', compact('product_result','results','classifications', 'countries','no_results'));
-
-}
-
-
-public function search_query(Request $request, $industry = null)
-{
-    $product_result = '';
-
-    // Step 1: Get all industries for select filters (optional, you already do)
-    $classifications = CompanyClassification::select('industry', DB::raw('MIN(id) as id'))
-    ->groupBy('industry')
-    ->orderBy('industry')
-    ->get();
-    
-    $countries = Country::orderBy('name')->get();
-
-    $query = CompanyInfos::query();
-    $companyinfos = $query->paginate(1); // 15 record per page for full viewing and navigation
+        return view('raymoch.pages.project_business', compact('product_result', 'results', 'classifications', 'countries', 'no_results'));
+    }
 
 
-if($industry == 'Natural+Resources-Environmental') {
-    $industry = $request->input('Natural Resources/Environmental');
- } // e.g., from a search form
-  
-
- if($industry == ' ConstructionUtilitiesContracting') {
-    $industry = $request->input(' Construction/Utilities/Contracting');
- } // e.g., from a search form
-  
-
-    $results = DB::table('companyinfos')
-        ->join('company_classifications', 'companyinfos.classification_id', '=', 'company_classifications.id')
-        ->where('company_classifications.industry', 'LIKE', "%{$industry}%")
-        ->select('companyinfos.*', 'company_classifications.industry')
-        ->paginate(1)
-        ->withQueryString();
-
-
-
-
-    foreach($results as $company)
+    public function search_query(Request $request, $industry = null)
     {
-        $imageUrl_ = asset('storage/' . $company->first_picture);
-        $imageUrl__ = asset('storage/' . $company->second_picture);
-        $imageUrl___ = asset('storage/' . $company->third_picture);
+        $product_result = '';
 
-   $product_result = "<section id='searched_content'>
+        // Step 1: Get all industries for select filters (optional, you already do)
+        $classifications = CompanyClassification::select('industry', DB::raw('MIN(id) as id'))
+            ->groupBy('industry')
+            ->orderBy('industry')
+            ->get();
+
+        $countries = Country::orderBy('name')->get();
+
+        $query = CompanyInfos::query();
+        $companyinfos = $query->paginate(1); // 15 record per page for full viewing and navigation
+
+
+        if ($industry == 'Natural+Resources-Environmental') {
+            $industry = $request->input('Natural Resources/Environmental');
+        } // e.g., from a search form
+
+
+        if ($industry == ' ConstructionUtilitiesContracting') {
+            $industry = $request->input(' Construction/Utilities/Contracting');
+        } // e.g., from a search form
+
+
+        $results = DB::table('companyinfos')
+            ->join('company_classifications', 'companyinfos.classification_id', '=', 'company_classifications.id')
+            ->where('company_classifications.industry', 'LIKE', "%{$industry}%")
+            ->select('companyinfos.*', 'company_classifications.industry')
+            ->paginate(1)
+            ->withQueryString();
+
+
+
+
+        foreach ($results as $company) {
+            $imageUrl_ = asset('storage/' . $company->first_picture);
+            $imageUrl__ = asset('storage/' . $company->second_picture);
+            $imageUrl___ = asset('storage/' . $company->third_picture);
+
+            $product_result = "<section id='searched_content'>
        <div class='container'>
            <div class='row g-4 gx-5'>
                <div class='col-lg-3'>
@@ -420,22 +410,21 @@ if($industry == 'Natural+Resources-Environmental') {
 
                    <div class='spacer-double'></div>";
 
-                   $result_company_details = DB::table('companyinfos')
-                   ->join('company_descriptions', 'companyinfos.id', '=', 'company_descriptions.companyinfo_id')
-                   ->where('companyinfos.id', '=', $company->id)
-                   ->select('companyinfos.*', 'company_descriptions.*', 'company_descriptions.description_type as destype', 'company_descriptions.description as des')
-                   ->get();
+            $result_company_details = DB::table('companyinfos')
+                ->join('company_descriptions', 'companyinfos.id', '=', 'company_descriptions.companyinfo_id')
+                ->where('companyinfos.id', '=', $company->id)
+                ->select('companyinfos.*', 'company_descriptions.*', 'company_descriptions.description_type as destype', 'company_descriptions.description as des')
+                ->get();
 
 
 
 
-               $product_result .=  " <div class='row g-4'>
+            $product_result .=  " <div class='row g-4'>
                    <div class='col-lg-12'> <h2 class='mb-0'> <span class='id-color-2'>Infos...</span></h2> </div>";
 
-				 foreach($result_company_details as $details)
-                   {
+            foreach ($result_company_details as $details) {
 
-                          $product_result .=" <div class='col-lg-4 col-md-6 wow fadeInRight' data-wow-delay='.0s'>
+                $product_result .= " <div class='col-lg-4 col-md-6 wow fadeInRight' data-wow-delay='.0s'>
                                 <div class='relative h-100 bg-color text-light padding30 rounded-1'>
                                     <div>
                                         <h4>$details->destype</h4>
@@ -443,33 +432,27 @@ if($industry == 'Natural+Resources-Environmental') {
                                     </div>
                                 </div>
                             </div>";
+            }
 
 
-	}
+            $product_result .= "</div>";
 
-
-$product_result .="</div>";
-
-                     $product_result .= "
+            $product_result .= "
 
            </div>
        </div>
    </section>";
+        }
 
-}
-
-if ($results->isEmpty()) {
-    $product_result = "<div class='alert alert-warning text-center'>
+        if ($results->isEmpty()) {
+            $product_result = "<div class='alert alert-warning text-center'>
         <strong>No data found.</strong> Please try a different search.
     </div>";
-}
+        }
 
 
-return view('raymoch.pages.project_business', compact('product_result','results','classifications', 'companyinfos', 'countries'));
-
-
-
-}
+        return view('raymoch.pages.project_business', compact('product_result', 'results', 'classifications', 'companyinfos', 'countries'));
+    }
 
 
 
@@ -487,41 +470,40 @@ return view('raymoch.pages.project_business', compact('product_result','results'
 
 
 
-public function power_generation(Request $request)
-{
-     $product_result = '';
-
-    // Step 1: Get all industries for select filters (optional, you already do)
-    $classifications = CompanyClassification::select('industry', DB::raw('MIN(id) as id'))
-    ->groupBy('industry')
-    ->orderBy('industry')
-    ->get();
-    
-    $countries = Country::orderBy('name')->get();
-
-    $query = CompanyInfos::query();
-    $companyinfos = $query->paginate(1); // 15 record per page for full viewing and navigation
-
-
-    $industry = $request->input('Natural Resources/Environmental'); // e.g., from a search form
-
-    $results = DB::table('companyinfos')
-        ->join('company_classifications', 'companyinfos.classification_id', '=', 'company_classifications.id')
-        ->where('company_classifications.industry', 'LIKE', "%{$industry}%")
-        ->select('companyinfos.*', 'company_classifications.industry')
-        ->paginate(1)
-        ->withQueryString();
-
-
-
-
-    foreach($results as $company)
+    public function power_generation(Request $request)
     {
-        $imageUrl_ = asset('storage/' . $company->first_picture);
-        $imageUrl__ = asset('storage/' . $company->second_picture);
-        $imageUrl___ = asset('storage/' . $company->third_picture);
+        $product_result = '';
 
-   $product_result = "<section id='searched_content'>
+        // Step 1: Get all industries for select filters (optional, you already do)
+        $classifications = CompanyClassification::select('industry', DB::raw('MIN(id) as id'))
+            ->groupBy('industry')
+            ->orderBy('industry')
+            ->get();
+
+        $countries = Country::orderBy('name')->get();
+
+        $query = CompanyInfos::query();
+        $companyinfos = $query->paginate(1); // 15 record per page for full viewing and navigation
+
+
+        $industry = $request->input('Natural Resources/Environmental'); // e.g., from a search form
+
+        $results = DB::table('companyinfos')
+            ->join('company_classifications', 'companyinfos.classification_id', '=', 'company_classifications.id')
+            ->where('company_classifications.industry', 'LIKE', "%{$industry}%")
+            ->select('companyinfos.*', 'company_classifications.industry')
+            ->paginate(1)
+            ->withQueryString();
+
+
+
+
+        foreach ($results as $company) {
+            $imageUrl_ = asset('storage/' . $company->first_picture);
+            $imageUrl__ = asset('storage/' . $company->second_picture);
+            $imageUrl___ = asset('storage/' . $company->third_picture);
+
+            $product_result = "<section id='searched_content'>
        <div class='container'>
            <div class='row g-4 gx-5'>
                <div class='col-lg-3'>
@@ -560,22 +542,21 @@ public function power_generation(Request $request)
 
                    <div class='spacer-double'></div>";
 
-                   $result_company_details = DB::table('companyinfos')
-                   ->join('company_descriptions', 'companyinfos.id', '=', 'company_descriptions.companyinfo_id')
-                   ->where('companyinfos.id', '=', $company->id)
-                   ->select('companyinfos.*', 'company_descriptions.*', 'company_descriptions.description_type as destype', 'company_descriptions.description as des')
-                   ->get();
+            $result_company_details = DB::table('companyinfos')
+                ->join('company_descriptions', 'companyinfos.id', '=', 'company_descriptions.companyinfo_id')
+                ->where('companyinfos.id', '=', $company->id)
+                ->select('companyinfos.*', 'company_descriptions.*', 'company_descriptions.description_type as destype', 'company_descriptions.description as des')
+                ->get();
 
 
 
 
-               $product_result .=  " <div class='row g-4'>
+            $product_result .=  " <div class='row g-4'>
                    <div class='col-lg-12'> <h2 class='mb-0'> <span class='id-color-2'>Infos...</span></h2> </div>";
 
-				 foreach($result_company_details as $details)
-                   {
+            foreach ($result_company_details as $details) {
 
-                          $product_result .=" <div class='col-lg-4 col-md-6 wow fadeInRight' data-wow-delay='.0s'>
+                $product_result .= " <div class='col-lg-4 col-md-6 wow fadeInRight' data-wow-delay='.0s'>
                                 <div class='relative h-100 bg-color text-light padding30 rounded-1'>
                                     <div>
                                         <h4>$details->destype</h4>
@@ -583,29 +564,19 @@ public function power_generation(Request $request)
                                     </div>
                                 </div>
                             </div>";
+            }
 
 
-	}
+            $product_result .= "</div>";
 
-
-$product_result .="</div>";
-
-                     $product_result .= "
+            $product_result .= "
 
            </div>
        </div>
    </section>";
+        }
 
+
+        return view('raymoch.pages.project_business', compact('product_result', 'results', 'classifications', 'companyinfos', 'countries'));
+    }
 }
-
-
-return view('raymoch.pages.project_business', compact('product_result','results','classifications', 'companyinfos', 'countries'));
-}
-
-
-
-
-
-
-}
-

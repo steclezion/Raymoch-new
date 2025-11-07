@@ -24,6 +24,12 @@ use App\Mail\HelloMail;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TrialRequestController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\SignupController;
+use App\Http\Controllers\PolicyController; // example for privacy/terms/cookies
+use App\Http\Controllers\RequestTrialController;
+use App\Http\Controllers\PremiumSignupController;
+use App\Http\Controllers\PaymentController;
 
 
 Route::get('/', function () {
@@ -241,7 +247,7 @@ Route::view('/whitespace', 'pages.entire')->name('whitespace');            // te
 
 // Auth placeholders referenced by header buttons
 Route::view('/login', 'pages.entire')->name('login');            // temp
-Route::view('/signup', 'pages.entire')->name('signup');          // temp
+// Route::view('/signup', 'pages.entire')->name('signup');
 Route::post('/trial-requests', [TrialRequestController::class, 'store'])->name('api.trial-requests.store');
 // routes/web.php
 Route::get('/request-trial', fn() => view('pages.auth.trial'))->name('trial.page');
@@ -250,5 +256,67 @@ Route::post('trial-requests', [TrialRequestController::class, 'store'])->name('a
 Route::post('trial-requests/check', [TrialRequestController::class, 'checkExisting'])->name('api.trial-requests.check');
 
 
-Route::view('/trial/verify', 'trial-verify')->name('trial.verify.page');
-Route::view('/trial/success', 'trial-success')->name('trial.success.page');
+Route::view('/trial/verify', 'pages.auth.trial-verify')->name('trial.verify.page');
+
+Route::view('/trial/success', 'pages.auth.trial-success')->name('trial.success.page');
+
+Route::get('/signup', [SignupController::class, 'index'])->name('signup.index');
+
+Route::get('/signup/basic/create', [SignupController::class, 'createBasic'])->name('signup.basic.create');
+Route::get('/signup/business/create', [SignupController::class, 'createBusiness'])->name('signup.business.create');
+Route::get('/signup/investor/create', [SignupController::class, 'createInvestor'])->name('signup.investor.create');
+
+Route::get('/request', [RequestTrialController::class, 'show'])->name('request.show');
+
+Route::get('/password/reset', fn() => view('auth.passwords.email'))->name('password.request');
+
+Route::get('/privacy', [PolicyController::class, 'privacy'])->name('privacy');
+Route::get('/terms',   [PolicyController::class, 'terms'])->name('terms');
+Route::get('/cookies', [PolicyController::class, 'cookies'])->name('cookies');
+
+
+// Basic plan chooser page (this page)
+Route::get('/pricing/basic', fn() => view('pages.pricing.basic'))->name('pricing.basic');
+
+
+
+// Pricing page (chooses plan and then navigates to basic create)
+Route::get('/signup/basic/pricing', fn() => view('pages.auth.signup.basic.pricing'))->name('signup.basic.pricing');
+
+// Show the Basic create form (React page above)
+
+Route::get('/signup/basic/create/individual', [SignupController::class, 'showBasicCreate'])->name('signup.basic.create.individual');
+// Store the Basic account (JSON)
+
+Route::post('/signup/basic/store', [SignupController::class, 'individualAccountStore'])->name('signup.basic.store');
+
+
+// OTP flow for Basic signup
+Route::post('/signup/basic/send-otp',   [SignupController::class, 'sendOtp'])->name('signup.basic.send_otp');
+Route::post('/signup/basic/verify-otp', [SignupController::class, 'verifyOtp'])->name('signup.basic.verify_otp');
+
+
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [LoginController::class, 'showLogin'])->name('login');
+    Route::post('/login/json', [LoginController::class, 'loginJson'])->name('auth.login.json');
+});
+
+Route::middleware('auth')->group(function () {
+    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+    Route::get('/dashboard', fn() => view('pages.dashboard')); // placeholder
+});
+
+Route::get('/signup/premium', fn() => view('app')) // your SPA host page
+    ->name('signup.premium');
+
+// OTP (Premium)
+Route::post('/signup/premium/send-otp', [PremiumSignupController::class, 'sendOtp'])->name('signup.premium.send_otp');
+Route::post('/signup/premium/verify-otp', [PremiumSignupController::class, 'verifyOtp'])->name('signup.premium.verify_otp');
+
+// Payment (Stripe)
+Route::post('/payment/create-setup-intent', [PaymentController::class, 'createSetupIntent'])->name('payment.create_setup_intent');
+Route::post('/payment/create-subscription', [PaymentController::class, 'createSubscription'])->name('payment.create_subscription');
+
+// Stripe webhook (remember to add to Stripe dashboard)
+// Consider adding to routes/api.php if you prefer.
+Route::post('/webhooks/stripe', [PaymentController::class, 'webhook'])->name('webhooks.stripe');

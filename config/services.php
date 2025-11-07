@@ -47,4 +47,10 @@ return [
     ],
 
 
+    'stripe' => [
+        'secret' => env('STRIPE_SECRET'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+        'premium_price_id' => env('STRIPE_PREMIUM_PRICE_ID'), // e.g. price_123
+    ],
+
 ];

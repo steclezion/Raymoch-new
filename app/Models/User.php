@@ -25,6 +25,13 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'display_name',
+        'phone',
+        'company_name',
+        'type_of_account',
+        'is_active',
+        'trial_ends_at',
+        'deactivated_at',
     ];
 
     /**
@@ -46,7 +53,9 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'trial_ends_at' => 'datetime',
+            'deactivated_at' => 'datetime',
+            'is_active' => 'boolean',
         ];
     }
 }

@@ -29,15 +29,14 @@
     
   </style>
 
-  @viteReactRefresh
-  @vite('resources/js/app.jsx')
 
-  <script>
+@viteReactRefresh
+@vite('resources/js/app.jsx')
+<script>
   window.APP = {
-    apiTrial:  "{{ route('api.trial-requests.store') }}",
-    apiCheck:  "{{ route('api.trial-requests.check') }}",
-    csrf:      "{{ csrf_token() }}",
-  };
+    apiTrial: "{{ route('api.trial-requests.store') }}",
+    csrf: "{{ csrf_token() }}"
+  }
 </script>
 
 

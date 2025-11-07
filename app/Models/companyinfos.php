@@ -9,7 +9,7 @@ use App\Models\Country;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class companyinfos extends Model
+class CompanyInfos extends Model
 {
     //
     use HasFactory;
@@ -39,17 +39,15 @@ class companyinfos extends Model
     }
 
 
-      // If you have a relation to descriptions (like one-to-many)
+    // If you have a relation to descriptions (like one-to-many)
 
-public function classification()
-{
-    return $this->belongsTo(CompanyClassification::class, 'classification_id');
-}
+    public function classification()
+    {
+        return $this->belongsTo(CompanyClassification::class, 'classification_id');
+    }
 
-public function country()
-{
-    return $this->belongsTo(Country::class);
-}
-
-
+    public function country()
+    {
+        return $this->belongsTo(Country::class);
+    }
 }

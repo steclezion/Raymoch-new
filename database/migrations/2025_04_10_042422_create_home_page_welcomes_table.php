@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('home_page_welcomes', function (Blueprint $table) {
             $table->id();
-            $table->string('title')->default('Untitled Project');
-            $table->longText('description')->default('As part of the Eritrean Enterprise Hub, you are now connected to');
+            $table->string('title');;
+            $table->longText('description');
             $table->longText('first_picture')->nullable();
             $table->string('second_picture')->nullable();
             $table->string('status')->default('active');

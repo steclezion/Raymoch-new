@@ -90,7 +90,7 @@
     .search-box input:focus{border-color:var(--nav-brand);outline:2px solid #cfe0ff}
     .auth{display:flex;align-items:center;gap:10px}
     .btn{height:40px;display:inline-flex;align-items:center;gap:8px;padding:0 16px;border-radius:var(--pill);font-weight:700;background:#fff;border:1px solid var(--border)}
-    .btn.primary{background:var(--nav-brand);color:#fff;border-color:var(--nav-brand)}
+    /* .btn.primary{background:var(--nav-brand);color:#fff;border-color:var(--nav-brand)} */
     /* .btn.orange{background:var(--nav-brand);color:#fff;border-color:var(--nav-brand)} */
 
 .btn.orange {
@@ -101,6 +101,28 @@
 .btn.orange:hover {
   background: #ffa31a; /* slightly darker on hover */
   border-color: #ffa31a;
+}
+
+
+.btn.primary {
+  background: #1976d2; /* light orange */
+  color: #fff;
+  border-color: #0d6efd;
+}
+.btn.primary:hover {
+  background: #1976d2; /* slightly darker on hover */
+  border-color: #0d6efd;
+}
+
+
+.btn.success {
+  background: #198754; /* light orange */
+  color: #fff;
+  border-color: #28a745;
+}
+.btn.success:hover {
+  background: #198754;/* slightly darker on hover */
+  border-color: #28a745;
 }
 
 

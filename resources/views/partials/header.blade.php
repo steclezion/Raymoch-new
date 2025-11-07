@@ -35,8 +35,9 @@
         <input type="search" name="q" placeholder="Search companies, sectors, regions…"/>
       </form>
       <div class="auth">
-        <a class="btn orange" href="{{ route('trial.page') }}">Request a free trial</a>
-        <a class="btn primary" href="{{ route('signup') }}">Login</a>
+        <a class="btn orange" target="_blank" href="{{ route('trial.page') }}">Request a free trial</a>
+        <a class="btn primary" target="_blank"  href="{{ route('login') }}">Login</a>
+        <a class="btn success"  target="_blank" href="{{ route('signup.index') }}">Sign up</a>
       </div>
 
       
@@ -71,14 +72,16 @@
       <button class="close-btn" id="closePopup">&times;</button>
       <h2>Welcome to Raymoch</h2>
       <div class="popup-buttons">
-            <a class="btn" href="{{ route('login') }}">Log in</a>
-        <a  class="btn primary" href="{{ route('signup') }}">Sign up</a>
+         {{-- <a class="btn orange" href="{{ route('trial.page') }}">Request a free trial</a> --}}
+        <a class="btn primary" target="_blank" href="{{ route('login') }}">Login</a>
+        <a class="btn success" target="_blank" href="{{ route('signup.index') }}">Sign up</a>
       </div>
       <div class="popup-links">
         <a href="{{ route('explore2') }}">Businesses</a>
         <a href="{{ route('services') }}">Services</a>
         <a href="{{ route('insights') }}">Research &amp; Insights</a>
         <a href="{{ route('about') }}">Who We Are</a>
+           <a class="btn orange" href="{{ route('trial.page') }}">Request a free trial</a>
       </div>
     </div>
   </div>
