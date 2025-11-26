@@ -20,11 +20,10 @@ class GalleryFactory extends Factory
     {
         return [
             //
-return [
+
             'company_id' => Company::factory(),
             'image_url'  => $this->faker->imageUrl(800, 600, 'business', true, 'Raymoch'),
             'caption'    => $this->faker->sentence(6),
-        ];
         ];
     }
 }
