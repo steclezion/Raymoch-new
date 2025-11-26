@@ -92,6 +92,12 @@
             slug: "govnonprofit",
             desc: "Civic, NGOs, public services.",
         },
+         mediacreativess: {
+            title: "Media & Creative",
+            icon: "🎬",
+            slug: "mediacreative",
+            desc: "Studios, music, gaming.",
+        },
         other: {
             title: "Other",
             icon: "🧩",

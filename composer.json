@@ -7,6 +7,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "barryvdh/laravel-dompdf": "^3.1",
         "illuminate/mail": "*",
         "intervention/image": "^3.11",
         "laravel/framework": "^11.31",
@@ -19,10 +20,11 @@
         "openai-php/client": "^0.10.3",
         "openai-php/laravel": "^0.11.0",
         "spatie/laravel-permission": "^6.16",
-        "stripe/stripe-php": "^18.1",
+        "stripe/stripe-php": "^18.2",
         "yajra/laravel-datatables-oracle": "~11.0"
     },
     "require-dev": {
+        "beyondcode/laravel-er-diagram-generator": "^5.0",
         "fakerphp/faker": "^1.23",
         "laravel/pail": "^1.1",
         "laravel/pint": "^1.13",
@@ -68,7 +70,18 @@
     "extra": {
         "laravel": {
             "dont-discover": []
-        }
+        },
+        "raymoch": {
+      "countries": [
+        "Eritrea","Ethiopia","Kenya","Uganda","United States","United Kingdom"
+      ],
+      "sectors": [
+        "Agriculture","Energy & Renewables","Construction & Real Estate","Manufacturing",
+        "Retail & Ecommerce","Logistics & Mobility","FinTech","ICT / Software",
+        "Education","Healthcare","Food & Beverage","Tourism & Hospitality",
+        "Media & Creative","Government / Nonprofit","Other"
+      ]
+    }
     },
     "config": {
         "optimize-autoloader": true,

@@ -7,6 +7,8 @@ use Stripe\StripeClient;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 use Illuminate\Support\Str;
 
 class PaymentController extends Controller
@@ -265,5 +267,67 @@ class PaymentController extends Controller
         }
 
         return response('OK', 200);
+    }
+
+
+
+
+    /**
+     * POST /signup/premium/complete
+     * Body: name, email, display_name, company_name, password, plan('premium'), stripe_payment_intent
+     * Creates (or upgrades) the user to premium after successful $9 charge.
+     */
+    public function finalizePremiumSignup(Request $request)
+    {
+        $data = $request->validate([
+            'name'                  => ['required', 'string', 'max:255'],
+            'email'                 => ['required', 'email', 'max:255'],
+            'display_name'          => ['required', 'string', 'max:80'],
+            'company_name'          => ['nullable', 'string', 'max:191'],
+            'password'              => ['required', 'string', 'min:6'],
+            'plan'                  => ['required', 'in:premium'],
+            'stripe_payment_intent' => ['required', 'string'],
+        ]);
+
+        // Verify the PaymentIntent actually succeeded (defense-in-depth)
+        try {
+            $pi = \Stripe\PaymentIntent::retrieve($data['stripe_payment_intent']);
+            if ($pi->status !== 'succeeded') {
+                return response()->json(['ok' => false, 'message' => 'Payment not completed.'], 422);
+            }
+        } catch (\Throwable $e) {
+            return response()->json(['ok' => false, 'message' => 'Cannot verify payment: ' . $e->getMessage()], 422);
+        }
+
+        // Create or upgrade user
+        $user = User::where('email', $data['email'])->first();
+
+        if (!$user) {
+            // Create
+            $user = User::create([
+                'name'          => $data['name'],
+                'email'         => $data['email'],
+                'display_name'  => $data['display_name'],
+                'company_name'  => $data['company_name'] ?? null,
+                'password'      => Hash::make($data['password']),
+                'type_of_account' => 'premium',
+                'is_active'     => true,
+            ]);
+        } else {
+            // Upgrade
+            $user->type_of_account = 'premium';
+            $user->is_active = true;
+            $user->save();
+        }
+
+        // (Optional) Save Stripe payment reference on user or a separate payments table
+        // e.g. $user->last_payment_intent = $pi->id; $user->save();
+
+        Auth::login($user);
+
+        return response()->json([
+            'ok'       => true,
+            'redirect' => url('/dashboard'),
+        ]);
     }
 }

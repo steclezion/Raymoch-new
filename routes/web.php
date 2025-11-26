@@ -30,14 +30,42 @@ use App\Http\Controllers\PolicyController; // example for privacy/terms/cookies
 use App\Http\Controllers\RequestTrialController;
 use App\Http\Controllers\PremiumSignupController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\Auth\BusinessOtpController;
+use App\Http\Controllers\Auth\BusinessAccountController;
+use App\Http\Controllers\Billing\StripeWebhookController;
+use App\Http\Controllers\ExploreController;
+use App\Http\Controllers\RoutePdfController;
+use App\Http\Controllers\AllCompaniesController;
 
 
-Route::get('/', function () {
-    return view('raymoch.pages.index');
-})->name('/');
+
+// Route::get('/', function () {
+//     return view('raymoch.pages.index');
+// })->name('/');
+
+
 // Route::view('/', 'pages.entire')->name('entire');
 
 // Route::get('/', [ControlLayoutController::class, 'index'])->name('/');
+
+
+
+
+
+
+// Route::get('/companies', [AllCompaniesController::class, 'index'])
+//     ->name('companies.index');
+
+// // Optional (if you want an HTML/React detail page at /companies/{id})
+// Route::get('/companies/{company}', [AllCompaniesController::class, 'show'])
+//     ->name('companies.show');
+// Route::get('/companies', [AllCompaniesController::class, 'index'])->name('companies.index');
+// Route::get('/companies/{id}', [AllCompaniesController::class, 'show'])->name('companies.show');
+
+
+
+
+
 Route::get('/bussiness_menu', [ControlLayoutController::class, 'Business_menus'])->name('bussiness_menu');
 
 Route::get('login', [AuthController::class, 'login'])->name('login');
@@ -156,12 +184,6 @@ Route::get('/debug/csrf', function (\Illuminate\Http\Request $req) {
 // About
 Route::view('/about', 'pages.about')->name('about');
 
-// Companies (and a backwards-compat alias for "campanies")
-// Route::view('/companies', 'pages.companies_vil')->name('companies');
-// Route::view('/campanies', 'pages.companies')->name('campanies.alias'); // optional
-
-// Explore (v1 + v2)
-Route::view('/explore', 'pages.explore')->name('explore');
 Route::view('/business', 'pages.business')->name('explore2');
 
 // Filtered results page
@@ -172,30 +194,24 @@ Route::view('/one', 'pages.one')->name('one');
 
 Route::view('/', 'pages.entire')->name('entire');           // from Entire.html
 
-Route::view('/companies', 'pages.companies')->name('companies');    // main companies listing page
 
-Route::view('/companies/vl', 'pages.services.companies-vl')->name('companies.vl');
-
-// Route::middleware('guest')->group(function () {
-//     Route::post('/auth/login',  [\App\Http\Controllers\Auth\AuthController::class, 'login'])->name('auth.login');
-//     Route::post('/auth/register', [\App\Http\Controllers\Auth\AuthController::class, 'register'])->name('auth.register');
-// });
-
-// “Companies – view layer” pages
-// Route::get('/companies-vl-detail', [CompanyController::class, 'index'])->name('companies.browse');
 
 // This page uses query ?id=... and fetches JSON from /api/companies/{id}
-Route::get('/companies/vl/{id?}', function ($id = null) {
-    // If you want, you can pass $id down to Blade to prefill a data attribute
-    return view('pages.services.companies-vl', ['preloadId' => $id]);
-})->name('companies.vl');
+
+
+
+
+// Route::get('/companies/vl/{id?}', function ($id = null) {
+//     // If you want, you can pass $id down to Blade to prefill a data attribute
+//     return view('pages.services.companies-vl', ['preloadId' => $id]);
+// })->name('companies.vl');
 
 // LEGACY redirects that PRESERVE the query string
-Route::get('/companies.html', function () {
-    $qs = request()->getQueryString(); // e.g. sector=Agriculture&from=explore
+// Route::get('/companies.html', function () {
+//     $qs = request()->getQueryString(); // e.g. sector=Agriculture&from=explore
 
-    return redirect()->to(route('companies') . ($qs ? ('?' . $qs) : ''));
-});
+//     return redirect()->to(route('companies') . ($qs ? ('?' . $qs) : ''));
+// });
 
 Route::get('/explore2.html', function () {
     $qs = request()->getQueryString();
@@ -207,12 +223,20 @@ Route::get('/companies-test', function () {
     dd(request()->fullUrl(), request()->query()); // shows the full URL & query array
 });
 
-// Route::get('/companies.html', function () {
-//     $qs = request()->getQueryString();
-//     return redirect()->to('/companies' . ($qs ? ('?' . $qs) : ''));
-// });
+Route::view('/companies', 'pages.companies')->name('companies');    // main companies listing page
 
-Route::view('/company', 'pages.company');     // detail view uses ?id=...
+// Route::view('/companies/vl', 'pages.services.companies-vl')->name('companies.vl');
+// Route::view('/company', 'pages.company');     // detail view uses ?id=...
+
+// Route::get('/companies/visibility', function () {
+//     return view('pages.services.companies-vl', [
+//         'from' => request('from'),
+//         'verified' => request('verified'),
+//     ]);
+// })->name('companies.visibility');
+
+
+
 
 // Static placeholders used in header/footer links (wire up later as you build them)
 Route::view('/services', 'pages.services')->name('services');     // temp → point to real page later
@@ -224,12 +248,6 @@ Route::view('/matching', 'pages.services.matching')->name('matching'); // matchi
 Route::view('/visibility-listing', 'pages.services.visibility-listing')->name('visibility-listing'); // visibility listing page
 Route::view('/verification', 'pages.services.verification')->name('verification'); // verification page
 
-Route::get('/companies/visibility', function () {
-    return view('pages.services.companies-vl', [
-        'from' => request('from'),
-        'verified' => request('verified'),
-    ]);
-})->name('companies.visibility');
 
 Route::view('/careers', 'pages.entire')->name('careers');        // temp
 Route::view('/press', 'pages.entire')->name('press');            // temp
@@ -251,6 +269,7 @@ Route::view('/login', 'pages.entire')->name('login');            // temp
 Route::post('/trial-requests', [TrialRequestController::class, 'store'])->name('api.trial-requests.store');
 // routes/web.php
 Route::get('/request-trial', fn() => view('pages.auth.trial'))->name('trial.page');
+
 Route::post('trial-requests', [TrialRequestController::class, 'store'])->name('api.trial-requests.store');
 
 Route::post('trial-requests/check', [TrialRequestController::class, 'checkExisting'])->name('api.trial-requests.check');
@@ -263,7 +282,6 @@ Route::view('/trial/success', 'pages.auth.trial-success')->name('trial.success.p
 Route::get('/signup', [SignupController::class, 'index'])->name('signup.index');
 
 Route::get('/signup/basic/create', [SignupController::class, 'createBasic'])->name('signup.basic.create');
-Route::get('/signup/business/create', [SignupController::class, 'createBusiness'])->name('signup.business.create');
 Route::get('/signup/investor/create', [SignupController::class, 'createInvestor'])->name('signup.investor.create');
 
 Route::get('/request', [RequestTrialController::class, 'show'])->name('request.show');
@@ -285,11 +303,13 @@ Route::get('/signup/basic/pricing', fn() => view('pages.auth.signup.basic.pricin
 
 // Show the Basic create form (React page above)
 
-Route::get('/signup/basic/create/individual', [SignupController::class, 'showBasicCreate'])->name('signup.basic.create.individual');
+Route::get('/signup/basic/create/individual', [SignupController::class, 'showPaymentPlansCreate'])->name('signup.basic.create.individual');
 // Store the Basic account (JSON)
 
-Route::post('/signup/basic/store', [SignupController::class, 'individualAccountStore'])->name('signup.basic.store');
+Route::get('/signup/premium/create/individual/', [SignupController::class, 'showPaymentPlansCreate'])->name('signup.premium.create.individual');
 
+
+Route::post('/signup/basic/store', [SignupController::class, 'individualAccountStore'])->name('signup.basic.store');
 
 // OTP flow for Basic signup
 Route::post('/signup/basic/send-otp',   [SignupController::class, 'sendOtp'])->name('signup.basic.send_otp');
@@ -306,8 +326,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', fn() => view('pages.dashboard')); // placeholder
 });
 
-Route::get('/signup/premium', fn() => view('app')) // your SPA host page
-    ->name('signup.premium');
 
 // OTP (Premium)
 Route::post('/signup/premium/send-otp', [PremiumSignupController::class, 'sendOtp'])->name('signup.premium.send_otp');
@@ -320,3 +338,34 @@ Route::post('/payment/create-subscription', [PaymentController::class, 'createSu
 // Stripe webhook (remember to add to Stripe dashboard)
 // Consider adding to routes/api.php if you prefer.
 Route::post('/webhooks/stripe', [PaymentController::class, 'webhook'])->name('webhooks.stripe');
+// Finalize premium after successful $9 payment
+Route::post('/signup/premium/complete', [PaymentController::class, 'finalizePremiumSignup'])->name('signup.premium.complete');
+
+
+/* Business signup routes */
+
+Route::post('/auth/check-email', BusinessAccountController::class)
+    ->name('auth.check-email');
+
+Route::get('/signup/business/create', [BusinessAccountController::class, 'createBusiness'])->name('signup.business.create');
+// OTP (separate controller)
+Route::post('/signup/business/send-otp', [BusinessOtpController::class, 'sendOtp']);
+Route::post('/signup/business/verify-otp', [BusinessOtpController::class, 'verifyOtp']);
+
+// Business account + subscription
+Route::post('/signup/business/complete', [BusinessAccountController::class, 'complete']);
+Route::post('/signup/business/finalize', [BusinessAccountController::class, 'finalize']);
+
+// Stripe webhook
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'h
+andle'])->name('stripe.webhook');
+
+// Example dashboard route
+Route::get('/dashboard', function () {
+    return view('dashboard'); // or Inertia/SPA
+})->name('dashboard')->middleware('auth');
+
+
+Route::get('/explore', [ExploreController::class, 'index'])->name('explore.index');
+Route::get('/explore/data', [ExploreController::class, 'data'])->name('explore.data');
+Route::get('/routes/pdf', [RoutePdfController::class, 'export']);

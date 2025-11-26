@@ -133,7 +133,7 @@
 
       <div class="reports">
         <div class="blurb">
-          <p>A changing world requires new analysis and practical insight. Explore cross-sector themes that connect capital, context, and growth.</p>
+          <p>A changing world requires new analysis and practical insight. cross-sector themes that connect capital, context, and growth.</p>
           <p style="margin-top:10px"><a class="btn" href="Market_Insight.html">All reports</a></p>
         </div>
 

@@ -8,7 +8,7 @@ export default function PricingBasic({ routes }) {
     console.log("[PricingBasic] routes prop:", routes); // must show your object
     const basicCreate = routes?.signup?.basic?.create.individual || "/signup/basic/create/individual";
     const premiumCreate =
-        routes?.signup?.basic?.create || "/signup/basic/create";
+        routes?.signup?.premium?.create || "/signup/premium/create/individual";
     const signupIndex = routes?.signup?.index || "/signup";
     return (
         <>

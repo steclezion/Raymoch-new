@@ -66,14 +66,22 @@ const formatCCOption = (o) => (
 const getOptionValue = (o) => `${o.iso2}-${o.value}`;
 const getOptionLabel = (o) => `${o.value} ${o.name}`;
 
+
+/* ================== Reusable Modal component ================== */
 function Modal({ title, open, onClose, children }) {
+  useEffect(() => {
+    const onEsc = (e) => { if (e.key === "Escape") onClose?.(); };
+    if (open) document.addEventListener("keydown", onEsc);
+    return () => document.removeEventListener("keydown", onEsc);
+  }, [open, onClose]);
+
   if (!open) return null;
   return (
-    <div className="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="m-title">
+    <div className="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div className="modalCard">
         <div className="modalHead">
-          <h3 id="m-title">{title}</h3>
-          <button className="modalClose" onClick={onClose} aria-label="Close">×</button>
+          <h3 id="modal-title">{title}</h3>
+          <button className="modalClose" aria-label="Close" onClick={onClose}>×</button>
         </div>
         <div className="modalBody">{children}</div>
         <div className="modalFoot">
@@ -83,6 +91,7 @@ function Modal({ title, open, onClose, children }) {
     </div>
   );
 }
+
 
 export default function SignupBasic({ routes }) {
   const R = routes || (typeof window !== "undefined" ? window.ROUTES : {});
@@ -328,6 +337,7 @@ export default function SignupBasic({ routes }) {
   return (
     <>
       <style>{css}</style>
+      <style>{modalCss}</style>
       <Header routes={R} />
       <ToastContainer position="top-right" />
 
@@ -426,7 +436,7 @@ export default function SignupBasic({ routes }) {
                       </button>
                     </div>
                   </div>
-                  
+
                 </div>
 
                 {/* Confirm password + phone with country code */}
@@ -594,37 +604,94 @@ export default function SignupBasic({ routes }) {
         </footer>
       </div>
 
-      {/* Terms Modal */}
+       {/* ======= Terms Modal (scrollable) ======= */}
       <Modal title="Terms of Service" open={showTerms} onClose={() => setShowTerms(false)}>
-        <div className="modalText">
-          <h4>1. Acceptance of Terms</h4>
-          <p>By creating an account or using Raymoch, you agree to abide by these Terms of Service. If you do not agree, you may not use or access our platform. We may update these Terms from time to time, and continued use after such updates constitutes acceptance of the revised Terms.</p>
-          <h4>2. Account Responsibility</h4>
-          <p>You agree to provide accurate information when registering and to keep your credentials secure. You are responsible for all activities under your account. Misuse of the platform—including unauthorized access, automated scraping, or sharing of restricted data—may result in suspension or termination.</p>
-          <h4>3. Service Access and Modifications</h4>
-          <p>Raymoch reserves the right to modify, suspend, or discontinue any service feature at any time without prior notice. We strive for continuous availability but do not guarantee uninterrupted access due to maintenance, system updates, or unforeseen technical issues.</p>
-          <h4>4. Limitation of Liability</h4>
-          <p>To the fullest extent permitted by law, Raymoch shall not be liable for any indirect, incidental, or consequential damages resulting from the use or inability to use our services. Your sole remedy for dissatisfaction is to stop using the platform.</p>
-          <h4>5. Governing Law</h4>
-          <p>These Terms are governed by and construed in accordance with the laws of the State of California, USA, without regard to conflict-of-law principles.</p>
-        </div>
+        <p><strong>Effective:</strong> January 1, 2025</p>
+        <h4>1) Acceptance of Terms</h4>
+        <p>
+          By creating an account or using Raymoch, you agree to these Terms of Service. If you do not agree,
+          you may not access or use the platform. We may update these Terms periodically; continued use after
+          updates constitutes acceptance.
+        </p>
+
+        <h4>2) Accounts & Responsibilities</h4>
+        <ul>
+          <li>Provide accurate registration information and keep credentials secure.</li>
+          <li>You are responsible for all activity under your account.</li>
+          <li>Misuse (e.g., unauthorized access, scraping, abuse) may result in suspension or termination.</li>
+        </ul>
+
+        <h4>3) Service Availability & Changes</h4>
+        <p>
+          We aim for high availability but do not guarantee uninterrupted service. We may modify, suspend, or
+          discontinue features at any time with or without notice.
+        </p>
+
+        <h4>4) Paid Plans, Billing & Taxes</h4>
+        <ul>
+          <li>Premium plans renew automatically until canceled.</li>
+          <li>Billing is handled by our payment provider; taxes may apply based on your region.</li>
+          <li>Failed or disputed charges may pause or terminate access.</li>
+        </ul>
+
+        <h4>5) Prohibited Conduct</h4>
+        <ul>
+          <li>Reverse engineering, automated scraping, or attempting to bypass security controls.</li>
+          <li>Uploading malicious code or content that violates law or third-party rights.</li>
+        </ul>
+
+        <h4>6) Intellectual Property</h4>
+        <p>
+          The Raymoch name, logos, and platform content are protected by copyright, trademark, and other laws.
+          You receive a limited, non-exclusive, non-transferable license to use the platform as intended.
+        </p>
+
+        <h4>7) Limitation of Liability</h4>
+        <p>
+          To the fullest extent permitted by law, Raymoch is not liable for indirect, incidental, special,
+          consequential, or exemplary damages. Your exclusive remedy is to stop using the service.
+        </p>
+
+        <h4>8) Governing Law</h4>
+        <p>These Terms are governed by the laws of California, USA, without regard to conflict-of-law rules.</p>
       </Modal>
 
-      {/* Privacy Modal */}
+      {/* ======= Privacy Modal (scrollable) ======= */}
       <Modal title="Privacy Policy" open={showPrivacy} onClose={() => setShowPrivacy(false)}>
-        <div className="modalText">
-          <h4>1. Information We Collect</h4>
-          <p>We collect personal information that you provide during registration—such as your name, email address, display name, and password. We may also collect limited analytics data (like browser type or usage frequency) to help improve your experience.</p>
-          <h4>2. How We Use Your Data</h4>
-          <p>Your information is used to create and maintain your Raymoch account, authenticate access, and deliver customized content. We may send you transactional or product-related communications but will never sell or rent your data to third parties.</p>
-          <h4>3. Data Protection and Retention</h4>
-          <p>We implement administrative and technical safeguards to protect your data from unauthorized access or disclosure. Passwords are stored in encrypted form, and sensitive data is transmitted over secure HTTPS connections. We retain your information only as long as necessary to provide our services or comply with legal obligations.</p>
-          <h4>4. Your Rights</h4>
-          <p>You can access, update, or request deletion of your data at any time by contacting our support team. If you reside in a jurisdiction with specific privacy laws (such as the GDPR or CCPA), you may exercise additional rights consistent with those laws.</p>
-          <h4>5. Contact</h4>
-          <p>For questions regarding these Terms or this Privacy Policy, please contact us at <a href="mailto:support@raymoch.com">support@raymoch.com</a>.</p>
-        </div>
+        <p><strong>Effective:</strong> January 1, 2025</p>
+        <h4>1) Data We Collect</h4>
+        <ul>
+          <li>Account data: name, email, display name, company; password stored using strong hashing.</li>
+          <li>Usage & device data (e.g., browser type, IP, timestamps) to improve reliability and security.</li>
+          <li>Payment data is processed by our PCI-compliant provider; we do not store full card numbers.</li>
+        </ul>
+
+        <h4>2) How We Use Data</h4>
+        <ul>
+          <li>Create and maintain your account, authenticate access, and deliver features.</li>
+          <li>Send transactional notices (verifications, receipts, security alerts).</li>
+          <li>Monitor platform health, prevent abuse, and comply with legal obligations.</li>
+        </ul>
+
+        <h4>3) Sharing</h4>
+        <p>
+          We don’t sell or rent personal data. We share with service providers (cloud hosting, email delivery,
+          payments) under contractual safeguards and only as needed to provide the service.
+        </p>
+
+        <h4>4) Security & Retention</h4>
+        <p>
+          We apply technical and organizational controls, store passwords using strong hashing, and retain data
+          only as long as necessary for the stated purposes or legal requirements.
+        </p>
+
+        <h4>5) Your Rights</h4>
+        <ul>
+          <li>Access, correct, export, or delete your personal data (subject to applicable law).</li>
+          <li>Contact: <a href="mailto:support@raymoch.com">support@raymoch.com</a></li>
+        </ul>
       </Modal>
+
     </>
   );
 }
@@ -755,3 +822,41 @@ button.cta.ghost{ background:#f5f8ff; color:#041b64; border:1px solid #d9e1ff; }
   .phoneGroup{ grid-template-columns: 1fr; }
 }
 `;
+
+/* ================== INLINE CSS (modal styles) ================== */
+const modalCss = `
+.modalOverlay{
+  position:fixed; inset:0; background:rgba(15,23,42,.55);
+  display:flex; align-items:center; justify-content:center; z-index:9999;
+}
+.modalCard{
+  width:min(860px, calc(100% - 28px));
+  background:#fff; border-radius:16px; border:1px solid #e8e8ee;
+  box-shadow:0 18px 40px rgba(2,6,23,.22);
+  overflow:hidden; display:flex; flex-direction:column; max-height:86vh;
+}
+.modalHead{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 16px; border-bottom:1px solid #eef0f6; background:#f9fafb;
+}
+.modalHead h3{ margin:0; font-size:1.05rem; font-weight:800; color:#041b64; }
+.modalClose{
+  background:transparent; border:0; font-size:22px; line-height:1; cursor:pointer;
+  color:#0f172a; border-radius:10px; padding:4px 8px;
+}
+.modalClose:hover{ background:#eef2ff; }
+.modalBody{
+  padding:18px; overflow:auto; color:#0f172a; line-height:1.55;
+}
+.modalBody h4{ margin:16px 0 8px; font-size:1.02rem; color:#041b64; }
+.modalBody p{ margin:6px 0 10px; color:#334155; }
+.modalBody ul{ padding-left:18px; margin:6px 0 12px; }
+.modalBody li{ margin:6px 0; color:#334155; }
+.modalFoot{
+  padding:12px 16px; border-top:1px solid #eef0f6; display:flex; justify-content:flex-end; gap:10px; background:#fff;
+}
+.modalFoot .cta.subtle{
+  background:#f5f8ff; color:#041b64; border:1px solid #d9e1ff; border-radius:10px; padding:10px 14px; font-weight:700; cursor:pointer;
+}
+`;
+// Country code options

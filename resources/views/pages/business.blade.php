@@ -10,9 +10,8 @@
     };
   </script>
  
-
-
  <script src="{{ asset('js/explore.js') }}"></script>
+ 
 <!-- Bootstrap CSS for Section 4 African Slides -->
 @section('title','Raymoch • Business Explorer')
 @section('content')

@@ -51,7 +51,7 @@ class PremiumSignupController extends Controller
 
         // send email (stub)
         try {
-            // Mail::to($data['email'])->send(new \App\Mail\OtpCodeMail($code));
+            Mail::to($data['email'])->send(new \App\Mail\OtpCodeMail($code));
         } catch (\Throwable $e) {
             return response()->json(['ok' => false, 'message' => 'Failed to send email'], 500);
         }

@@ -46,14 +46,14 @@ class SignupController extends Controller
         return view('pages.auth.signup.signup-basic'); // create this blade below
     }
 
-    /**
-     * GET /signup/business/create
-     * Show a Business account creation page/form.
-     */
     public function createBusiness()
     {
         return view('pages.auth.signup.signup-business'); // create this blade below
     }
+    /**
+     * GET /signup/business/create
+     * Show a Business account creation page/form.
+     */
 
     /**
      * GET /signup/investor/create
@@ -122,16 +122,22 @@ class SignupController extends Controller
     }
 
 
-    public function showBasicCreate(Request $request)
+    public function showPaymentPlansCreate(Request $request)
     {
         // Retrieve query string: ?plan=basic
         $plan = $request->query('plan', 'basic'); // default 'basic' if missing
+        // dd($plan);
         // Pass to the Blade or React view
-        return view('pages.auth.signup.basic.create', compact('plan'));
+        //  return view('pages.auth.signup.basic.create', compact('plan'));
 
-        if ($request->query('plan', 'basic') !== 'basic') {
+        if ($request->query('plan', 'basic') == 'basic') {
             // returns the Blade that mounts the React page
             return view('pages.auth.signup.basic.create', compact('plan'));
+        } else if ($request->query('plan', 'premium') == 'premium') {
+            // returns the Blade that mounts the React page
+            $plan = $request->query('plan', 'basic'); // default 'basic' if missing
+
+            return view('pages.auth.signup.premium.create', compact('plan'));
         }
     }
 

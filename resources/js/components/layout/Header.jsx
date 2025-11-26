@@ -48,8 +48,8 @@ export default function Header({ routes: routesProp, homeHref }) {
     };
   }, []);
 
-  return (
-    <header className="header">
+  return ( 
+    <header   className="header">
       <a className="brand" href={hrefs.home} aria-label="Raymoch home">
         <svg viewBox="0 0 200 200" aria-hidden="true">
           <polygon

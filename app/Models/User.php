@@ -52,10 +52,15 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'trial_ends_at' => 'datetime',
-            'deactivated_at' => 'datetime',
-            'is_active' => 'boolean',
+            'name',
+            'email',
+            'password',
+            'type_account',
+            'company_name',
+            'display_name',
+            'stripe_customer_id',
+            'stripe_subscription_id',
+            'email_verified_at'
         ];
     }
 }

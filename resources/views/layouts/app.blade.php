@@ -34,6 +34,14 @@
       @endif
 
       <main>
+        {{-- resources/views/layouts/app.blade.php --}}
+
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+
+
+
+
+
         @yield('content')
       </main>
     </div>

@@ -6,18 +6,61 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use App\Models\Company;
 
 class CompanyApiController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
+
+    // Example list payload (replace with DB)
     public function index(Request $request)
     {
-        // Example list payload (replace with DB)
+        $query = Company::query();
+
+        // --- SECTOR FILTER (from ?sector=Agriculture) ---
+        if ($request->filled('sector')) {
+            $sector = $request->input('sector');
+            $query->where(function ($q) use ($sector) {
+                $like = '%' . $sector . '%';
+                $q->whereRaw('LOWER(sector) = ?', [strtolower($sector)])
+                    ->orWhere('sector', 'like', $like);
+            });
+        }
+
+        // --- COUNTRY FILTER (?country=Kenya) ---
+        if ($request->filled('country')) {
+            $query->where('country', $request->country);
+        }
+
+        // --- VERIFIED FILTER (?verified=1) ---
+        if ($request->has('verified') && (string) $request->verified === '1') {
+            $query->where(function ($q) {
+                $q->where('verification_status', 'verified')
+                    ->orWhere('verified', true); // if you have a boolean column too
+            });
+        }
+
+        // --- SEARCH (?q=...) ---
+        if ($search = $request->input('q')) {
+            $like = '%' . $search . '%';
+            $query->where(function ($q) use ($like) {
+                $q->where('CompanyName', 'like', $like)   // if your column is CompanyName
+                    ->orWhere('Name', 'like', $like)
+                    ->orWhere('City', 'like', $like)
+                    ->orWhere('Stage', 'like', $like);
+                // add ->orWhere('description', 'like', $like) if you have that column
+            });
+        }
+
+        // --- ORDER + PAGINATE ---
+        $companies = $query
+            ->orderBy('CompanyName')   // or 'company_name' depending on your schema
+            ->paginate(20);
+
         return response()->json([
-            ['id' => 1, 'CompanyName' => 'BlueWave Solar'],
-            ['id' => 2, 'CompanyName' => 'GreenFoods'],
+            'data' => $companies,
         ]);
     }
 

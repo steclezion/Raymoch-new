@@ -1,0 +1,224 @@
+/* ====== Generic layout ====== */
+.header.responsive-header {
+  width: 100%;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.header .row1 {
+  max-width: 1220px;
+  margin: 0 auto;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.header .row2 {
+  border-top: 1px solid #f1f1f5;
+}
+
+.header .row2 .wrap {
+  max-width: 1220px;
+  margin: 0 auto;
+  padding: 6px 16px 10px;
+}
+
+/* Brand */
+.header .brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #111827;
+  text-decoration: none;
+}
+
+.header .brand-word {
+  font-weight: 700;
+  font-size: 20px;
+}
+
+/* Search */
+.header .search-box {
+  flex: 1;
+  max-width: 420px;
+}
+
+.header .search-box input[type="search"] {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+}
+
+/* Auth buttons (desktop) */
+.header .rightside {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.header .auth {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+}
+
+.header .btn.primary {
+  background: #1d4ed8;
+  color: #ffffff;
+}
+
+.header .btn.success {
+  background: #15803d;
+  color: #ffffff;
+}
+
+.header .btn.orange {
+  background: #f97316;
+  color: #ffffff;
+}
+
+/* Secondary nav links */
+.header .links {
+  display: flex;
+  gap: 22px;
+}
+
+.header .links a {
+  font-size: 14px;
+  color: #374151;
+  text-decoration: none;
+}
+
+.header .links a:hover {
+  color: #1d4ed8;
+}
+
+/* Desktop vs mobile visibility */
+.responsive-header .mobile-only {
+  display: none;
+}
+
+.responsive-header .desktop-only {
+  display: flex;
+}
+
+/* Hamburger (mobile) */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 8px;
+}
+
+.hamburger span {
+  width: 24px;
+  height: 3px;
+  background: #111827;
+  border-radius: 3px;
+}
+
+/* ====== Raymoch mobile SweetAlert modal ====== */
+
+.swal2-popup .rm-mobile-modal {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  text-align: center;
+}
+
+/* Login / signup buttons in modal */
+.rm-auth-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rm-btn {
+  display: inline-block;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+}
+
+.rm-btn-login {
+  background: #1d4ed8;
+  color: #ffffff;
+}
+
+.rm-btn-signup {
+  background: #15803d;
+  color: #ffffff;
+}
+
+.rm-btn-trial {
+  margin-top: 6px;
+  background: #f59e0b;
+  color: #ffffff;
+}
+
+/* Divider line */
+.rm-divider {
+  border: 0;
+  border-top: 1px solid #e5e7eb;
+  margin: 8px 0 4px;
+}
+
+/* Middle links */
+.rm-menu-links {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 15px;
+}
+
+.rm-menu-links a {
+  color: #1d4ed8;
+  text-decoration: none;
+}
+
+.rm-menu-links a:hover {
+  text-decoration: underline;
+}
+
+/* ====== Responsive ====== */
+@media (max-width: 768px) {
+  .responsive-header .desktop-only {
+    display: none;
+  }
+
+  .responsive-header .mobile-only {
+    display: flex;
+  }
+
+  .header .row1 {
+    padding-inline: 12px;
+  }
+
+  .hamburger {
+    display: flex;
+  }
+}
