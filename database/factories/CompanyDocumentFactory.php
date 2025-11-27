@@ -3,27 +3,18 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-
-use App\Models\Company_Financial;
 use App\Models\Company;
-use App\Models\CompanyDocument;
-use App\Models\Document;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\DocumentFactory>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\CompanyDocument>
  */
-class DocumentFactory extends Factory
+class CompanyDocumentFactory extends Factory
 {
-
-    protected $model = CompanyDocument::class;
     /**
      * Define the model's default state.
      *
      * @return array<string, mixed>
      */
-
-
-
     public function definition(): array
     {
 

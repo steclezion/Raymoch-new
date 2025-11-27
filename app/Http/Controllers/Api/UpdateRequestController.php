@@ -35,7 +35,7 @@ class UpdateRequestController extends Controller
             'country' => 'nullable|string|max:120',
             'email'   => 'required|email',
             'notes'   => 'nullable|string|max:5000',
-            'company_id' => 'nullable'
+            'id' => 'nullable'
         ]);
 
         if ($v->fails()) {

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 class CompanyGallery extends Model
 {
     //
-
+    use HasFactory;
     protected $guarded = [];
 
     protected $fillable = [
