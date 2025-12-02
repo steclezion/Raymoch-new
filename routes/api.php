@@ -16,62 +16,9 @@ use App\Http\Controllers\CompanyDetailController;
 
 Route::post('/company-search-logs', [CompanySearchLogController::class, 'store']);
 
-
-
 $base = rtrim(config('services.express.url'), '/'); // set in config/services.php
-
-
 Route::get('/ping', fn() => response()->json(['ok' => true]));
 Route::get('/companies', [AllCompaniesController::class, 'index']);
-
-// /api/companies
-// Route::get('/companies', function (Request $request) use ($base) {
-//     try {
-//         $target = rtrim($base, '/') . '/companies';
-//         $res = Http::timeout(10)->retry(1, 200)->acceptJson()
-//             ->get($target, $request->query());
-
-//         return response($res->body(), $res->status())
-//             ->header('Content-Type', $res->header('Content-Type', 'application/json'))
-//             ->header('X-Proxy-Target', $target . '?' . $request->getQueryString());
-//     } catch (\Throwable $e) {
-//         return response()->json(['error' => 'Express unavailable', 'detail' => $e->getMessage()], 502);
-//     }
-// });
-
-
-
-// // /api/companies/search
-// Route::get('/companies/search', function (Request $request) use ($base) {
-//     try {
-//         $res = Http::timeout(10)->retry(1, 200)->acceptJson()
-//             ->get("$base/companies/search", $request->query());
-//         return response($res->body(), $res->status())
-//             ->header('Content-Type', $res->header('Content-Type', 'application/json'));
-//     } catch (\Throwable $e) {
-//         return response()->json(['error' => 'Express unavailable', 'detail' => $e->getMessage()], 502);
-//     }
-// });
-
-
-
-
-// // /api/companies/{id}
-// Route::get('/companies/{id}', function (string $id) use ($base) {
-//     try {
-//         $res = Http::timeout(10)->retry(1, 200)->acceptJson()
-//             ->get("$base/companies/{$id}");
-//         return response($res->body(), $res->status())
-//             ->header('Content-Type', $res->header('Content-Type', 'application/json'));
-//     } catch (\Throwable $e) {
-//         return response()->json(['error' => 'Express unavailable', 'detail' => $e->getMessage()], 502);
-//     }
-// });
-
-
-// Route::get('/companies/{company}', [CompanyApiController::class, 'show'])->name('api.companies.show');
-
-// Optional list/search endpoint if you need it later
 
 
 // Receive “Request Update / Claim” form posts
@@ -107,4 +54,5 @@ Route::prefix('companies/{company}')->group(function () {
     Route::get('/gallery',    [CompanyDetailController::class, 'gallery']);
     Route::get('/documents',  [CompanyDetailController::class, 'documents']);
     Route::get('/contact',    [CompanyDetailController::class, 'contact']);
+    Route::get('/location',   [CompanyDetailController::class, 'location']); // 👈 NEW
 });

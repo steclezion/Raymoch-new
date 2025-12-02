@@ -32,7 +32,8 @@ class DatabaseSeeder extends Seeder
         $this->call(CountriesTableSeeder::class);
         $this->call(CountriesBusinessTableSeeder::class);
         $this->call(BusinessModelsTableSeeder::class);
-        // $this->call(CompaniesTableSeeder::class);
+        $this->call(CompaniesTableSeeder::class);
+        $this->call(ExistingCompaniesRelationsSeeder::class);
 
         Company::factory()
             ->count(30)

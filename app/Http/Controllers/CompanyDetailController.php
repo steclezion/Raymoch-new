@@ -1,5 +1,6 @@
 <?php
 
+
 namespace App\Http\Controllers;
 
 use App\Models\Company;
@@ -9,7 +10,9 @@ use App\Models\CompanyDocument;
 use App\Models\CompanyGallery;
 use App\Models\CompanyContact;
 use App\Models\CompanyLog;
+use App\Models\CompanyLocation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;   // <-- add this
 
 class CompanyDetailController extends Controller
 {
@@ -109,5 +112,104 @@ class CompanyDetailController extends Controller
         $rows = CompanyContact::where('company_id', $company->id)->get();
 
         return response()->json(['data' => $rows]);
+    }
+
+    /**
+     * NEW: Location / Map tab
+     * Uses latitude/longitude stored directly on companies table.
+     */
+
+
+    public function location(Request $request, Company $company)
+    {
+        $this->log($request, $company->id, 'tab_click', 'location');
+
+        // 1) Get this company's location from company_locations table
+        $loc = CompanyLocation::where('company_id', $company->id)->first();
+
+        if (!$loc || !$loc->latitude || !$loc->longitude) {
+            // If this company has no stored location, return empty nearby list
+            return response()->json([
+                'data' => [
+                    'company_id' => $company->id,
+                    'location'   => null,
+                    'nearby'     => [],
+                ],
+            ]);
+        }
+
+        $lat = (float) $loc->latitude;
+        $lng = (float) $loc->longitude;
+        $earthRadius = 3959; // miles
+
+        // 2) Build label & address (from location row, with company fallback)
+        $label = $loc->location_name
+            ?? $loc->address_line1
+            ?? $company->CompanyName;
+        // ?? $company->company_name;
+
+        $address = trim(implode(', ', array_filter([
+            $loc->address_line1 ?? null,
+            $loc->city ?? null,
+            $loc->state ?? null,
+            $loc->postal_code ?? null,
+            $loc->country ?? null,
+        ])));
+
+        // 3) Nearby companies using company_locations table
+        $nearby = CompanyLocation::query()
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->where('company_id', '!=', $company->id)
+            ->select([
+                'company_locations.*',
+                DB::raw("(
+                {$earthRadius} * acos(
+                    cos(radians(?)) *
+                    cos(radians(latitude)) *
+                    cos(radians(longitude) - radians(?)) +
+                    sin(radians(?)) *
+                    sin(radians(latitude))
+                )
+            ) as distance_miles"),
+            ])
+            ->setBindings([$lat, $lng, $lat], 'select')
+            ->with([
+                'company:id,CompanyName,city,country',
+            ])
+            ->orderBy('distance_miles')
+            ->limit(15)
+            ->get()
+            ->map(function (CompanyLocation $row) {
+                $co = $row->company;
+
+                $name    = $co->CompanyName ?? $co->company_name ?? 'Unknown';
+                $city    = $co->City ?? $co->city;
+                $country = $co->Country ?? $co->country;
+
+                return [
+                    'company_id'     => $co->id,
+                    'company_name'   => $name,
+                    'city'           => $city,
+                    'country'        => $country,
+                    'latitude'       => (float) $row->latitude,
+                    'longitude'      => (float) $row->longitude,
+                    'distance_miles' => round((float) $row->distance_miles, 1),
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'data' => [
+                'company_id' => $company->id,
+                'location'   => [
+                    'latitude'  => $lat,
+                    'longitude' => $lng,
+                    'label'     => $label,
+                    'address'   => $address,
+                ],
+                'nearby'     => $nearby,
+            ],
+        ]);
     }
 }

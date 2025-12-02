@@ -39,31 +39,6 @@ use App\Http\Controllers\AllCompaniesController;
 
 
 
-// Route::get('/', function () {
-//     return view('raymoch.pages.index');
-// })->name('/');
-
-
-// Route::view('/', 'pages.entire')->name('entire');
-
-// Route::get('/', [ControlLayoutController::class, 'index'])->name('/');
-
-
-
-
-
-
-// Route::get('/companies', [AllCompaniesController::class, 'index'])
-//     ->name('companies.index');
-
-// // Optional (if you want an HTML/React detail page at /companies/{id})
-// Route::get('/companies/{company}', [AllCompaniesController::class, 'show'])
-//     ->name('companies.show');
-// Route::get('/companies', [AllCompaniesController::class, 'index'])->name('companies.index');
-// Route::get('/companies/{id}', [AllCompaniesController::class, 'show'])->name('companies.show');
-
-
-
 
 
 Route::get('/bussiness_menu', [ControlLayoutController::class, 'Business_menus'])->name('bussiness_menu');

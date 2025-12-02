@@ -1,14 +1,5 @@
 // resources/js/pages/Companies.jsx
-// ---------------------------------------------------------------------------
-// This page renders the "Companies" experience for Raymoch:
-//  - Fetches companies from Laravel API with server-side filters & pagination
-//  - Groups companies by country/sector (with special behavior when filters are empty)
-//  - Shows detail dialog with tabs: Overview, Financials, Team, Gallery, Documents,
-//    Contact, Location (Google Maps with AdvancedMarkerElement)
-//  - Uses Material UI + Recharts for UI and visualization
-// ---------------------------------------------------------------------------
-
-import React, { useEffect, useMemo, useState, useRef } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 // Layout
 import Header from "../components/layout_master/Header.jsx";
@@ -36,37 +27,13 @@ import {
   Tabs,
   Tab,
   Divider,
-  Grow,
+  Slide,
   IconButton,
-  useTheme,
-  useMediaQuery,
 } from "@mui/material";
 
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import MapIcon from "@mui/icons-material/Map";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
-import BusinessIcon from "@mui/icons-material/Business";
-import ZoomInIcon from "@mui/icons-material/ZoomIn";
-import ZoomOutIcon from "@mui/icons-material/ZoomOut";
-import MyLocationIcon from "@mui/icons-material/MyLocation";
 
-// Recharts for overview pivot chart
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  Legend,
-} from "recharts";
-
-/* ------------------------------ GLOBAL CSS ------------------------------ */
-/**
- * We keep CSS as a string so we can inject it via <style>{css}</style>.
- * This controls the global layout, grid, cards, map markers, etc.
- */
+/* --------- SHARED CSS ---------- */
 const css = `
 :root{
   --brand-blue:#0328aeed;
@@ -132,6 +99,23 @@ const css = `
   border-radius:20px;
   padding:14px;
   margin:12px auto 18px;
+}
+.tier{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.tier-1{
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  gap:10px;
+  width:100%;
+}
+@media (max-width: 680px){
+  .tier-1{
+    flex-wrap:wrap;
+  }
 }
 
 /* GRID */
@@ -255,7 +239,7 @@ const css = `
   color:#1e3a8a;
 }
 
-/* Group heading (country or sector) */
+/* Country heading */
 .country-heading{
   font-weight:800;
   color:#0f172a;
@@ -277,138 +261,13 @@ const css = `
   color:#6b7280;
 }
 
-/* Dialog arrow wedge */
-.dialog-arrow{
-  position:absolute;
-  top:-14px;
-  left:50%;
-  transform:translateX(-50%) rotate(45deg);
-  width:26px;
-  height:26px;
-  background:#ffffff;
-  box-shadow:0 0 10px rgba(148,163,184,0.45);
-}
-
-/* --- Map marker custom styles --- */
-.company-marker {
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  padding:4px;
-  border-radius:999px;
-  background:rgba(15,23,42,0.96);
-  box-shadow:0 6px 14px rgba(15,23,42,0.35);
-  border:2px solid #3b82f6;
-}
-.company-marker-main {
-  transform:scale(1.0);
-}
-.company-marker-nearby {
-  opacity:0.92;
-  border-color:#f97316;
-}
-.company-marker-inner {
-  width:38px;
-  height:38px;
-  border-radius:999px;
-  overflow:hidden;
-  border:2px solid #e5e7eb;
-  background:#111827;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-.company-marker-inner img {
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
-.company-marker-badge {
-  position:absolute;
-  top:-6px;
-  right:-6px;
-  background:#22c55e;
-  color:white;
-  border-radius:999px;
-  font-size:9px;
-  padding:2px 4px;
-  box-shadow:0 0 6px rgba(34,197,94,0.7);
-}
-
-/* Small underline links in the distance list */
-.distance-link {
-  cursor:pointer;
-  text-decoration:underline;
-  text-decoration-style:dotted;
-}
-.distance-link:hover {
-  text-decoration-style:solid;
-}
-
 footer{
   margin-top:auto;
 }
 `;
 
-/* ----------------------------- CONSTANTS ----------------------------- */
-
-// Base path for Laravel API
+/* ------------------- HELPERS ------------------- */
 const API_BASE = "/api";
-
-// Google Maps key from Vite env
-const GOOGLE_MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY;
-
-// shared loader for Maps JS with marker library
-let googleMapsLoadingPromise = null;
-
-/**
- * loadGoogleMapsScript
- * --------------------
- * Loads the Google Maps JS API + marker library once and caches the Promise.
- * This prevents multiple script tags and ensures the map is ready when needed.
- */
-function loadGoogleMapsScript() {
-  // Already loaded?
-  if (window.google && window.google.maps && window.google.maps.marker) {
-    return Promise.resolve();
-  }
-  // In-flight?
-  if (googleMapsLoadingPromise) {
-    return googleMapsLoadingPromise;
-  }
-  // No key: fail fast (helps you debug env)
-  if (!GOOGLE_MAPS_KEY) {
-    return Promise.reject(
-      new Error("Missing VITE_GOOGLE_MAPS_KEY in .env file")
-    );
-  }
-
-  googleMapsLoadingPromise = new Promise((resolve, reject) => {
-    const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&libraries=marker`;
-    script.async = true;
-    script.defer = true;
-    script.onload = () => resolve();
-    script.onerror = () =>
-      reject(new Error("Failed to load Google Maps JavaScript API"));
-    document.head.appendChild(script);
-  });
-
-  return googleMapsLoadingPromise;
-}
-
-// Tab order used for mobile progress indicator
-const TAB_KEYS = [
-  "overview",
-  "financials",
-  "team",
-  "gallery",
-  "documents",
-  "contact",
-  "location",
-];
-
-/* ------------------- SMALL STRING / COUNTRY HELPERS ------------------- */
 
 function ascii(s) {
   return (s || "")
@@ -417,12 +276,10 @@ function ascii(s) {
     .replace(/’/g, "'")
     .trim();
 }
-
 function lowerAscii(s) {
   return ascii(s).toLowerCase();
 }
 
-// alias map for tricky country spellings
 const COUNTRY_ALIASES = new Map([
   ["côte d’ivoire", "Cote d'Ivoire"],
   ["cote d’ivoire", "Cote d'Ivoire"],
@@ -439,12 +296,6 @@ const COUNTRY_ALIASES = new Map([
   ["eswatini (swaziland)", "Eswatini"],
 ]);
 
-/**
- * canonicalizeCountry
- * -------------------
- * Normalizes a country string into a consistent "canonical" form.
- * Handles special cases (Côte d'Ivoire, DR Congo, etc.).
- */
 function canonicalizeCountry(input) {
   if (!input) return "";
   const key = lowerAscii(input);
@@ -452,19 +303,19 @@ function canonicalizeCountry(input) {
   return ascii(input);
 }
 
-/**
- * normalizeCompany
- * ----------------
- * Takes a raw company record from your API and returns a standard shape
- * used by the UI. This protects the React component from small schema changes.
- */
+/** Normalize Company record (matching companies table case) */
 function normalizeCompany(c) {
   if (!c) return {};
+
   const rawStatus =
     c.VerificationStatus ??
     c.verification_status ??
     "";
+
   const statusStr = String(rawStatus).trim().toLowerCase();
+
+  // Only treat it as verified if the word "verified" appears as a full word
+  // (e.g., "verified", "fully verified") but NOT "pending verification"
   const isVerified =
     /\bverified\b/.test(statusStr) || !!c.Verified;
 
@@ -481,27 +332,16 @@ function normalizeCompany(c) {
       tier: c.CTI_Tier ?? c.cti_tier ?? "",
       score: c.CTI_Score ?? c.cti_score ?? "",
     },
-    logo_url: c.logo_url ?? c.site_image_url ?? null,
   };
 }
 
-/**
- * fetchJSON
- * ---------
- * Wrapper for fetch() that:
- *  - sets Accept: application/json
- *  - throws on non-2xx status with a short snippet of the error body
- *  - ensures JSON parse errors are caught with a clear message
- */
 async function fetchJSON(url) {
   const res = await fetch(url, { headers: { Accept: "application/json" } });
   const text = await res.text();
-
   if (!res.ok) {
     const snippet = text ? text.slice(0, 160) : "";
     throw new Error(`HTTP ${res.status}${snippet ? ": " + snippet : ""}`);
   }
-
   try {
     return JSON.parse(text);
   } catch (e) {
@@ -510,114 +350,24 @@ async function fetchJSON(url) {
   }
 }
 
-/* ----------------------------- GROUP HELPERS ----------------------------- */
-
-/**
- * groupByCountry
- * --------------
- * Groups a list of companies into [country, companies[]] pairs.
- * Each country bucket and the companies inside are sorted alphabetically.
- */
 function groupByCountry(items) {
   const groups = new Map();
-
   items.forEach((x) => {
     const key =
       (x.country || "Unspecified country").trim() || "Unspecified country";
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(x);
   });
-
   const out = Array.from(groups.entries()).sort((a, b) =>
     a[0].localeCompare(b[0])
   );
-
-  out.forEach(([_, arr]) => {
+  out.forEach(([country, arr]) => {
     arr.sort((u, v) => (u.name || "").localeCompare(v.name || ""));
   });
-
   return out;
 }
 
-/**
- * groupBySector
- * -------------
- * Groups companies by sector and returns [sector, companies[]] pairs.
- */
-function groupBySector(items) {
-  const groups = new Map();
-
-  items.forEach((x) => {
-    const key =
-      (x.sector || "Unspecified sector").trim() || "Unspecified sector";
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(x);
-  });
-
-  const out = Array.from(groups.entries()).sort((a, b) =>
-    a[0].localeCompare(b[0])
-  );
-
-  out.forEach(([_, arr]) => {
-    arr.sort((u, v) => (u.name || "").localeCompare(v.name || ""));
-  });
-
-  return out;
-}
-
-/**
- * groupByCountryAndSector
- * -----------------------
- * Special nested grouping used when ALL filters are empty:
- *   Country -> Sector -> Companies[]
- * Ensures all company names are sorted A-Z inside each sector group.
- */
-function groupByCountryAndSector(items) {
-  const countryMap = new Map();
-
-  items.forEach((c) => {
-    const country =
-      (c.country || "Unspecified country").trim() || "Unspecified country";
-    const sector =
-      (c.sector || "Unspecified sector").trim() || "Unspecified sector";
-
-    if (!countryMap.has(country)) {
-      countryMap.set(country, new Map());
-    }
-    const sectorMap = countryMap.get(country);
-    if (!sectorMap.has(sector)) {
-      sectorMap.set(sector, []);
-    }
-    sectorMap.get(sector).push(c);
-  });
-
-  // Sort countries, sectors, and company names
-  const countries = Array.from(countryMap.entries()).sort((a, b) =>
-    a[0].localeCompare(b[0])
-  );
-
-  return countries.map(([countryName, sectorMap]) => {
-    const sectors = Array.from(sectorMap.entries())
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([sectorName, companies]) => ({
-        sector: sectorName,
-        companies: companies
-          .slice()
-          .sort((u, v) => (u.name || "").localeCompare(v.name || "")),
-      }));
-
-    return { country: countryName, sectors };
-  });
-}
-
-/* --------------------------- SESSION ID HELPER --------------------------- */
-
-/**
- * getSessionId
- * ------------
- * Creates a small local session ID used for logging / analytics on the backend.
- * Stored in localStorage to persist across refreshes.
- */
+/* Small local session ID used for logs */
 function getSessionId() {
   try {
     const key = "raymoch_company_detail_sid";
@@ -633,14 +383,7 @@ function getSessionId() {
   }
 }
 
-/* --------------------------- CARD COMPONENT --------------------------- */
-
-/**
- * CompanyCard
- * -----------
- * Small card used in the grid list to represent one company.
- * Shows name, sector, country, stage, city, and CTI tier.
- */
+/* ------------------- CARD COMPONENT ------------------- */
 function CompanyCard({ company, onOpen, showVerifiedBadge }) {
   const tier = company.cti?.tier || "";
   const tierLower = tier.toLowerCase();
@@ -656,6 +399,7 @@ function CompanyCard({ company, onOpen, showVerifiedBadge }) {
           <div className="verified-badge">V</div>
         </Tooltip>
       )}
+
       <h3>{company.name || "—"}</h3>
       <p>
         {company.sector || "—"} • {company.country || "—"}
@@ -673,422 +417,16 @@ function CompanyCard({ company, onOpen, showVerifiedBadge }) {
   );
 }
 
-/* ------------------------ DIALOG TRANSITION ------------------------ */
-/**
- * DialogTransition
- * ----------------
- * Used by MUI Dialog for a nicer enter/leave animation (Grow).
- */
+/* Transition for Dialog (animated on open) */
 const DialogTransition = React.forwardRef(function DialogTransition(
   props,
   ref
 ) {
-  return <Grow ref={ref} {...props} />;
+  return <Slide direction="up" ref={ref} {...props} />;
 });
 
-/* ------------------------- LOCATION / MAP TAB ------------------------- */
-/**
- * LocationMap
- * -----------
- * Renders the Google Map for the "Location" tab:
- *  - loads Google Maps JS API (with AdvancedMarkerElement)
- *  - shows main company marker with image badge
- *  - shows nearby companies as separate markers + polylines
- *  - includes zoom + recenter controls and a distance list
- */
-function LocationMap({ data, company }) {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
-  const containerRef = useRef(null); // <div> container for the map
-  const mapRef = useRef(null);       // google.maps.Map instance
-  const centerRef = useRef(null);    // center coordinates
-
-  const [loadingMap, setLoadingMap] = useState(true);
-  const [loadError, setLoadError] = useState("");
-
-  const nearby = data?.nearby || [];
-
-  // No location data: show a gentle message
-  if (!data || !data.location) {
-    return (
-      <Typography variant="body2" color="text.secondary">
-        No location has been added for this company yet.
-      </Typography>
-    );
-  }
-
-  // If key is missing, we fail early with a clear message
-  if (!GOOGLE_MAPS_KEY) {
-    return (
-      <Alert severity="warning" sx={{ mt: 1.5 }}>
-        Google Maps API key is missing. Please set
-        <code style={{ margin: "0 4px" }}>VITE_GOOGLE_MAPS_KEY</code> in your
-        <strong>.env</strong> and restart Vite.
-      </Alert>
-    );
-  }
-
-  /**
-   * createMarkerContent
-   * -------------------
-   * Builds a DOM element used by AdvancedMarkerElement for a rich marker UI
-   * (image badge, HQ label, etc.).
-   */
-  function createMarkerContent({ imageUrl, isMain }) {
-    const wrapper = document.createElement("div");
-    wrapper.className =
-      "company-marker " +
-      (isMain ? "company-marker-main" : "company-marker-nearby");
-
-    const inner = document.createElement("div");
-    inner.className = "company-marker-inner";
-    const img = document.createElement("img");
-    img.src =
-      imageUrl ||
-      "https://via.placeholder.com/80x80.png?text=Site";
-    img.alt = "Company marker";
-
-    inner.appendChild(img);
-    wrapper.appendChild(inner);
-
-    if (isMain) {
-      const badge = document.createElement("div");
-      badge.className = "company-marker-badge";
-      badge.innerText = "HQ";
-      wrapper.appendChild(badge);
-    }
-
-    return wrapper;
-  }
-
-  // Initialize / cleanup map
-  useEffect(() => {
-    let markers = [];
-    let polylines = [];
-
-    async function initMap() {
-      try {
-        setLoadingMap(true);
-        setLoadError("");
-
-        await loadGoogleMapsScript();
-
-        const center = {
-          lat: Number(data.location.latitude),
-          lng: Number(data.location.longitude),
-        };
-        centerRef.current = center;
-
-        if (!containerRef.current) {
-          setLoadingMap(false);
-          return;
-        }
-
-        // Create map instance
-        const map = new window.google.maps.Map(containerRef.current, {
-          center,
-          zoom: 13,
-          mapTypeControl: false,
-          fullscreenControl: false,
-          streetViewControl: false,
-        });
-        mapRef.current = map;
-
-        const markerLib = window.google.maps.marker;
-        const AdvancedMarkerElement =
-          markerLib && markerLib.AdvancedMarkerElement;
-
-        // MAIN COMPANY MARKER (with image)
-        const mainImage =
-          data.location.image_url ||
-          data.location.company_image_url ||
-          company?.logo_url ||
-          company?.site_image_url ||
-          null;
-
-        if (AdvancedMarkerElement) {
-          const advMarker = new AdvancedMarkerElement({
-            map,
-            position: center,
-            title:
-              company?.name ||
-              company?.CompanyName ||
-              "Company location",
-            content: createMarkerContent({ imageUrl: mainImage, isMain: true }),
-          });
-          markers.push(advMarker);
-        } else {
-          const classicMarker = new window.google.maps.Marker({
-            map,
-            position: center,
-            title:
-              company?.name ||
-              company?.CompanyName ||
-              "Company location",
-          });
-          markers.push(classicMarker);
-        }
-
-        // NEARBY COMPANIES: markers + polylines
-        nearby.forEach((n) => {
-          const pos = {
-            lat: Number(n.latitude),
-            lng: Number(n.longitude),
-          };
-          const imgUrl =
-            n.image_url ||
-            n.company_logo_url ||
-            n.site_image_url ||
-            null;
-
-          if (AdvancedMarkerElement) {
-            const advMarker = new AdvancedMarkerElement({
-              map,
-              position: pos,
-              title: n.company_name,
-              content: createMarkerContent({
-                imageUrl: imgUrl,
-                isMain: false,
-              }),
-            });
-            markers.push(advMarker);
-          } else {
-            const classicMarker = new window.google.maps.Marker({
-              map,
-              position: pos,
-              title: n.company_name,
-            });
-            markers.push(classicMarker);
-          }
-
-          const polyline = new window.google.maps.Polyline({
-            path: [center, pos],
-            strokeColor: "#2563eb",
-            strokeOpacity: 0.8,
-            strokeWeight: 2,
-          });
-          polyline.setMap(map);
-          polylines.push(polyline);
-        });
-
-        setLoadingMap(false);
-      } catch (err) {
-        console.error("Map load error", err);
-        setLoadError(err.message || "Failed to load Google Maps.");
-        setLoadingMap(false);
-      }
-    }
-
-    initMap();
-
-    // Cleanup markers / polylines on unmount or dependency change
-    return () => {
-      markers.forEach((m) => {
-        if (m.setMap) m.setMap(null);
-        if (m.map) m.map = null;
-      });
-      polylines.forEach((p) => p.setMap && p.setMap(null));
-    };
-  }, [data, company?.id, nearby.length]);
-
-  // Zoom / recenter handlers
-  const handleZoomIn = () => {
-    const map = mapRef.current;
-    if (!map) return;
-    const currentZoom = map.getZoom() || 13;
-    map.setZoom(Math.min(currentZoom + 1, 18));
-  };
-
-  const handleZoomOut = () => {
-    const map = mapRef.current;
-    if (!map) return;
-    const currentZoom = map.getZoom() || 13;
-    map.setZoom(Math.max(currentZoom - 1, 3));
-  };
-
-  const handleRecenter = () => {
-    const map = mapRef.current;
-    const center = centerRef.current;
-    if (!map || !center) return;
-    map.panTo(center);
-    map.setZoom(13);
-  };
-
-  return (
-    <Box sx={{ position: "relative" }}>
-      {/* Map container */}
-      <Box
-        ref={containerRef}
-        sx={{
-          width: "100%",
-          height: 360,
-          borderRadius: 3,
-          overflow: "hidden",
-          border: "1px solid #e5e7eb",
-          bgcolor: "#f9fafb",
-        }}
-      />
-      {loadingMap && (
-        <Box
-          sx={{
-            position: "absolute",
-            inset: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            pointerEvents: "none",
-          }}
-        >
-          <Box
-            sx={{
-              px: 2,
-              py: 1.5,
-              bgcolor: "rgba(15,23,42,0.78)",
-              color: "white",
-              borderRadius: 2,
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-            }}
-          >
-            <CircularProgress size={18} sx={{ color: "white" }} />
-            <Typography variant="caption">Loading map…</Typography>
-          </Box>
-        </Box>
-      )}
-      {loadError && (
-        <Alert severity="error" sx={{ mt: 1.5 }}>
-          {loadError}
-        </Alert>
-      )}
-
-      {/* Floating controls (zoom in/out/recenter) */}
-      <Box
-        sx={{
-          position: "absolute",
-          top: 10,
-          right: 10,
-          display: "flex",
-          flexDirection: "column",
-          gap: 1,
-        }}
-      >
-        <Tooltip title="Zoom in" arrow>
-          <IconButton
-            size={isMobile ? "small" : "medium"}
-            sx={{ bgcolor: "white", boxShadow: 1 }}
-            onClick={handleZoomIn}
-          >
-            <ZoomInIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Zoom out" arrow>
-          <IconButton
-            size={isMobile ? "small" : "medium"}
-            sx={{ bgcolor: "white", boxShadow: 1 }}
-            onClick={handleZoomOut}
-          >
-            <ZoomOutIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Recenter on company" arrow>
-          <IconButton
-            size={isMobile ? "small" : "medium"}
-            sx={{ bgcolor: "white", boxShadow: 1 }}
-            onClick={handleRecenter}
-          >
-            <MyLocationIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      </Box>
-
-      {/* Legend */}
-      <Box
-        sx={{
-          position: "absolute",
-          bottom: 10,
-          left: "50%",
-          transform: "translateX(-50%)",
-          bgcolor: "rgba(15,23,42,0.88)",
-          color: "white",
-          px: 2,
-          py: 1,
-          borderRadius: 999,
-          display: "flex",
-          alignItems: "center",
-          gap: 2,
-          fontSize: 12,
-        }}
-      >
-        <Stack direction="row" alignItems="center" spacing={0.5}>
-          <LocationOnIcon sx={{ fontSize: 16, color: "#60a5fa" }} />
-          <span>Main company (image marker)</span>
-        </Stack>
-        <Stack direction="row" alignItems="center" spacing={0.5}>
-          <BusinessIcon sx={{ fontSize: 16, color: "#f97316" }} />
-          <span>Nearby companies</span>
-        </Stack>
-        <Stack direction="row" alignItems="center" spacing={0.5}>
-          <MapIcon sx={{ fontSize: 16, color: "#22c55e" }} />
-          <span>Lines show distance (miles)</span>
-        </Stack>
-      </Box>
-
-      {/* Distances list: clicking pans to the nearby company */}
-      <Box sx={{ mt: 2 }}>
-        {nearby.length === 0 ? (
-          <Typography variant="body2" color="text.secondary">
-            No nearby companies found around this location.
-          </Typography>
-        ) : (
-          <Stack spacing={0.5}>
-            {nearby.map((n) => (
-              <Tooltip
-                key={n.company_id}
-                title={`${n.company_name} — ${n.distance_miles} miles`}
-                arrow
-              >
-                <Typography
-                  variant="body2"
-                  color="primary"
-                  className="distance-link"
-                  onClick={() => {
-                    if (!mapRef.current) return;
-                    const pos = {
-                      lat: Number(n.latitude),
-                      lng: Number(n.longitude),
-                    };
-                    mapRef.current.panTo(pos);
-                    mapRef.current.setZoom(14);
-                  }}
-                >
-                  {n.company_name} — {n.distance_miles} miles away
-                </Typography>
-              </Tooltip>
-            ))}
-          </Stack>
-        )}
-      </Box>
-    </Box>
-  );
-}
-
-/* ============================= MAIN PAGE ============================= */
-/**
- * Companies
- * ---------
- * Main page component that:
- *  - Manages filters, pagination, list loading
- *  - Renders grid of companies (grouped logically)
- *  - Controls the detail dialog and all its tab data
- */
+/* ----------------------- MAIN PAGE ----------------------- */
 export default function Companies() {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
-  /* ----------------------------- ROUTES ----------------------------- */
-  // Static routes for Header / Footer navigation
   const ROUTES = useMemo(
     () => ({
       privacy: "/privacy",
@@ -1106,63 +444,45 @@ export default function Companies() {
     []
   );
 
-  /* ------------------------ FILTER / STATE ------------------------ */
+  // Filters
+  const [q, setQ] = useState("");
+  const [sector, setSector] = useState("");
+  const [country, setCountry] = useState("");
+  const [verified, setVerified] = useState(false);
 
-  // Server-side filters
-  const [q, setQ] = useState("");           // company name search
-  const [sector, setSector] = useState(""); // sector filter
-  const [country, setCountry] = useState(""); // country filter
-  const [verified, setVerified] = useState(false); // "Verified only" toggle
-
-  // Client-side filter applied AFTER server response (quick search)
-  const [localFilter, setLocalFilter] = useState("");
-
-  // List data and meta
+  // Data
   const [companies, setCompanies] = useState([]);
   const [sectorOptions, setSectorOptions] = useState([]);
   const [countryOptions, setCountryOptions] = useState([]);
 
-  // Pagination info from backend
+  // Pagination
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
 
-  // Loading / error flags for main list
+  // Loading / error
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(10);
   const [error, setError] = useState("");
-
-  // "from" param used to preserve navigation context (e.g. from /services, /insights, etc.)
   const [fromParam, setFromParam] = useState("");
 
-  /* ---------------------- DETAIL DIALOG STATE ---------------------- */
-
+  // Detail dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedCompany, setSelectedCompany] = useState(null);
-
-  // Per-tab loading + progress for the spinner inside the dialog
   const [tabLoading, setTabLoading] = useState({});
   const [tabProgress, setTabProgress] = useState({});
 
-  // Per-tab data
   const [overviewData, setOverviewData] = useState(null);
   const [financialData, setFinancialData] = useState([]);
   const [teamData, setTeamData] = useState([]);
   const [galleryData, setGalleryData] = useState([]);
   const [documentsData, setDocumentsData] = useState([]);
   const [contactData, setContactData] = useState([]);
-  const [locationData, setLocationData] = useState(null);
 
-  /* --------------------- INITIAL QUERY (URL) --------------------- */
-  /**
-   * Read URL query string on initial mount:
-   *  - q, sector, country, page, verified, from
-   * This allows deep links & preserving filters between pages.
-   */
+  /* -------- parse initial query ---------- */
   useEffect(() => {
     const qs = new URLSearchParams(window.location.search);
-
     const qParam = (qs.get("q") || qs.get("search") || "").trim();
     const sectorParam = (qs.get("sector") || "").trim();
     const countryParam = canonicalizeCountry(qs.get("country") || "");
@@ -1178,13 +498,9 @@ export default function Companies() {
     setFromParam(from);
   }, []);
 
-  /* ---------------------- FILTER OPTIONS LOAD ---------------------- */
-  /**
-   * Load sector and country options once from API for the Autocomplete fields.
-   */
+  /* -------- filter options ---------- */
   useEffect(() => {
     let cancelled = false;
-
     (async () => {
       try {
         const [sectorRes, countryRes] = await Promise.all([
@@ -1200,6 +516,7 @@ export default function Companies() {
             .sort();
           setSectorOptions(list);
         }
+
         if (countryRes && Array.isArray(countryRes.data)) {
           const list = countryRes.data
             .map((c) => c.country_name || c.name)
@@ -1211,18 +528,12 @@ export default function Companies() {
         console.error("Filter options error", e);
       }
     })();
-
     return () => {
       cancelled = true;
     };
   }, []);
 
-  /* ------------------- MAIN LOADING SPINNER PROGRESS ------------------- */
-  /**
-   * Fake progress bar for the main list spinner:
-   *  - while loading is true, slowly increases up to 90%
-   *  - when loading finishes, jumps to 100%
-   */
+  /* -------- spinner for list ---------- */
   useEffect(() => {
     if (!loading) {
       setProgress(100);
@@ -1236,27 +547,9 @@ export default function Companies() {
     return () => clearInterval(id);
   }, [loading]);
 
-  /* ---------------------- INPUTS-EMPTY FLAG ---------------------- */
-  /**
-   * isAllInputsEmpty
-   * ----------------
-   * Used only for grouping logic:
-   *  - When true: the grid uses Country -> Sector -> Companies nested grouping.
-   *  - When false: normal grouping behavior (by country or by sector).
-   *
-   * NOTE: The API call itself always uses server-side pagination.
-   */
-  const isAllInputsEmpty =
-    !q && !sector && !country && !verified && !localFilter.trim();
-
-  /* ------------------------ MAIN LIST FETCH ------------------------ */
-  /**
-   * Load the main list of companies from the backend whenever
-   * page/q/sector/country/verified/fromParam changes.
-   */
+  /* -------- main list load ---------- */
   useEffect(() => {
     let cancelled = false;
-
     async function load() {
       try {
         setLoading(true);
@@ -1276,21 +569,16 @@ export default function Companies() {
         let payload = js.data;
         let list = [];
 
-        // Laravel-style pagination: { data: { data: [...], current_page, ... } }
         if (payload && Array.isArray(payload.data)) {
           list = payload.data;
-        }
-        // Simpler array format from backend
-        else if (Array.isArray(payload)) {
+        } else if (Array.isArray(payload)) {
           list = payload;
           payload = {
             current_page: page,
             last_page: 1,
             total: payload.length,
           };
-        }
-        // Raw array at top level
-        else if (Array.isArray(js)) {
+        } else if (Array.isArray(js)) {
           list = js;
           payload = { current_page: page, last_page: 1, total: js.length };
         }
@@ -1301,7 +589,7 @@ export default function Companies() {
         setTotalPages(payload.last_page || 1);
         setTotal(payload.total || normalized.length || 0);
 
-        // Keep URL in sync with filters + page
+        // push filters to URL
         const qp = new URLSearchParams();
         if (page > 1) qp.set("page", String(page));
         if (q) qp.set("q", q);
@@ -1320,71 +608,27 @@ export default function Companies() {
         if (!cancelled) setLoading(false);
       }
     }
-
     load();
-
     return () => {
       cancelled = true;
     };
   }, [page, q, sector, country, verified, fromParam]);
 
-  /* ------------------------ VISIBLE COMPANIES ------------------------ */
-  /**
-   * visibleCompanies
-   * ----------------
-   * Derived list after:
-   *  - server filters (q, sector, country, verified) -> already applied
-   *  - client-side "Verified only" (safety)
-   *  - localFilter (client-side name search, only when q is empty)
-   */
+  // visible companies depending on toggle
   const visibleCompanies = useMemo(() => {
-    let list = companies;
-
     if (verified) {
-      list = list.filter((c) => c.verified);
+      // "Verified only" ON → show only verified companies
+      return companies.filter((c) => c.verified);
     }
+    // Default: show only pending/unverified
+    return companies.filter((c) => !c.verified);
+  }, [companies, verified]);
 
-    if (!q && localFilter.trim()) {
-      const term = localFilter.trim().toLowerCase();
-      list = list.filter((c) =>
-        (c.name || "").toLowerCase().includes(term)
-      );
-    }
-
-    return list;
-  }, [companies, verified, q, localFilter]);
-
-  // Should we group by sector instead of country? Only when:
-  //  - no search q
-  //  - a country is set
-  //  - no sector filter
-  //  - not in the "all inputs empty" special mode
-  const shouldGroupBySector = useMemo(
-    () => !q && !!country && !sector && !isAllInputsEmpty,
-    [q, country, sector, isAllInputsEmpty]
+  const grouped = useMemo(
+    () => groupByCountry(visibleCompanies),
+    [visibleCompanies]
   );
 
-  // Flat grouping: either [country -> companies] or [sector -> companies]
-  const flatGrouped = useMemo(
-    () =>
-      shouldGroupBySector
-        ? groupBySector(visibleCompanies)
-        : groupByCountry(visibleCompanies),
-    [visibleCompanies, shouldGroupBySector]
-  );
-
-  // Nested grouping Country -> Sector -> Companies when all inputs are empty
-  const nestedGrouped = useMemo(
-    () =>
-      isAllInputsEmpty ? groupByCountryAndSector(visibleCompanies) : [],
-    [isAllInputsEmpty, visibleCompanies]
-  );
-
-  const hasResults = isAllInputsEmpty
-    ? nestedGrouped.length > 0
-    : flatGrouped.length > 0;
-
-  /* ------------------------ PAGINATION HELPERS ------------------------ */
   const pageNumbers = useMemo(() => {
     const pages = [];
     const max = 7;
@@ -1400,48 +644,7 @@ export default function Companies() {
     return pages;
   }, [page, totalPages]);
 
-  /* ------------------- OVERVIEW SUMMARY CHART DATA ------------------- */
-  const summaryChartData = useMemo(
-    () => [
-      {
-        name: "Financial years",
-        value: financialData.length || 0,
-      },
-      {
-        name: "Team members",
-        value: teamData.length || 0,
-      },
-      {
-        name: "Gallery images",
-        value: galleryData.length || 0,
-      },
-      {
-        name: "Documents",
-        value: documentsData.length || 0,
-      },
-      {
-        name: "Contacts",
-        value: contactData.length || 0,
-      },
-      {
-        name: "Nearby companies",
-        value:
-          locationData && Array.isArray(locationData.nearby)
-            ? locationData.nearby.length
-            : 0,
-      },
-    ],
-    [
-      financialData,
-      teamData,
-      galleryData,
-      documentsData,
-      contactData,
-      locationData,
-    ]
-  );
-
-  /* ---------------------- BREADCRUMB / BACK LINK ---------------------- */
+  /* -------- back/breadcrumb ---------- */
   const { backHref } = useMemo(() => {
     function baseFor(from) {
       switch (from) {
@@ -1469,7 +672,6 @@ export default function Companies() {
     if (country) p.set("country", country);
     if (verified) p.set("verified", "1");
     const extra = p.toString();
-
     return {
       backHref: dest.href + (extra ? "?" + extra : ""),
     };
@@ -1477,38 +679,28 @@ export default function Companies() {
 
   const hasAnyFilter = !!(q || sector || country || verified);
 
-  /* -------------------------- LIST HANDLERS -------------------------- */
+  /* -------- list handlers ---------- */
   const onClear = () => {
     setQ("");
     setSector("");
     setCountry("");
     setVerified(false);
-    setLocalFilter("");
     setPage(1);
   };
   const goToPage = (n) => setPage(n);
   const goPrev = () => page > 1 && setPage(page - 1);
   const goNext = () => page < totalPages && setPage(page + 1);
 
-  /* ---------------------- DETAIL TAB LOAD HELPERS ---------------------- */
-
-  /**
-   * startTabLoading / stopTabLoading
-   * --------------------------------
-   * Manage per-tab spinner progress inside the detail dialog.
-   * Returns an interval ID used to slowly increase percentage.
-   */
+  /* -------- detail dialog load helpers ---------- */
   const startTabLoading = (tab) => {
     setTabLoading((prev) => ({ ...prev, [tab]: true }));
     setTabProgress((prev) => ({ ...prev, [tab]: 10 }));
-
     const id = window.setInterval(() => {
       setTabProgress((prev) => {
         const cur = prev[tab] ?? 10;
         return { ...prev, [tab]: cur < 90 ? cur + 10 : cur };
       });
     }, 130);
-
     return id;
   };
 
@@ -1518,20 +710,8 @@ export default function Companies() {
     setTabLoading((prev) => ({ ...prev, [tab]: false }));
   };
 
-  /**
-   * loadTabData
-   * -----------
-   * Lazy-loads data for the selected tab when the user opens it:
-   *  - overview: /companies/:id/overview
-   *  - financials: /companies/:id/financials
-   *  - team, gallery, documents, contact
-   *  - location: /companies/:id/location
-   *
-   * Uses session_id for log correlation where available.
-   */
   const loadTabData = async (tab, company) => {
     if (!company) return;
-
     const sid = getSessionId();
     const base = `${API_BASE}/companies/${company.id}`;
     const qs = sid ? `?session_id=${encodeURIComponent(sid)}` : "";
@@ -1556,14 +736,9 @@ export default function Companies() {
     } else if (tab === "contact") {
       already = contactData.length && selectedCompany?.id === company.id;
       url = `${base}/contact${qs}`;
-    } else if (tab === "location") {
-      already = locationData && selectedCompany?.id === company.id;
-      const baseLoc = `${API_BASE}/companies/${company.id}/location`;
-      url = sid ? `${baseLoc}?session_id=${encodeURIComponent(sid)}` : baseLoc;
     }
 
-    // Avoid re-fetch if data already loaded for this company + tab
-    if (!url || already) return;
+    if (already) return;
 
     const intervalId = startTabLoading(tab);
     try {
@@ -1574,7 +749,6 @@ export default function Companies() {
       if (tab === "gallery") setGalleryData(js.data || []);
       if (tab === "documents") setDocumentsData(js.data || []);
       if (tab === "contact") setContactData(js.data || []);
-      if (tab === "location") setLocationData(js.data || null);
     } catch (e) {
       console.error("Tab load error", tab, e);
     } finally {
@@ -1582,38 +756,19 @@ export default function Companies() {
     }
   };
 
-  /**
-   * openDetailDialog
-   * ----------------
-   * Called when a company card is clicked:
-   *  - sets selectedCompany
-   *  - opens dialog
-   *  - resets all tab data
-   *  - preloads Overview tab
-   */
   const openDetailDialog = (company) => {
     setSelectedCompany(company);
     setDialogOpen(true);
     setActiveTab("overview");
-
-    // Reset per-tab state
     setOverviewData(null);
     setFinancialData([]);
     setTeamData([]);
     setGalleryData([]);
     setDocumentsData([]);
     setContactData([]);
-    setLocationData(null);
-
     loadTabData("overview", company);
   };
 
-  /**
-   * handleTabChange
-   * ---------------
-   * Called when user changes tabs in the detail dialog.
-   * Triggers lazy-load for the newly active tab.
-   */
   const handleTabChange = (e, newValue) => {
     setActiveTab(newValue);
     if (selectedCompany) {
@@ -1621,35 +776,13 @@ export default function Companies() {
     }
   };
 
-  const activeTabIndex = TAB_KEYS.indexOf(activeTab);
-  const tabProgressRatio =
-    activeTabIndex <= 0
-      ? 0
-      : activeTabIndex >= TAB_KEYS.length - 1
-      ? 1
-      : activeTabIndex / (TAB_KEYS.length - 1);
-
-  /* ============================ RENDER ============================ */
-
+  /* ---------------- RENDER ---------------- */
   return (
     <div className="page">
       <style>{css}</style>
-
-      {/* Global header */}
       <Header routes={ROUTES} />
 
-      {/* Main container */}
-      <Box
-        className="container"
-        sx={{
-          width: "100%",
-          maxWidth: "1400px",
-          mx: "auto",
-          px: { xs: 1.5, sm: 2.5, md: 3 },
-          py: { xs: 2, sm: 3, md: 3.5 },
-        }}
-      >
-        {/* Breadcrumb / back navigation */}
+      <div className="container">
         <Box sx={{ mb: 1 }}>
           <Breadcrumbs aria-label="breadcrumb" separator="›">
             <MLink
@@ -1677,13 +810,11 @@ export default function Companies() {
           </Breadcrumbs>
         </Box>
 
-        {/* Hero heading */}
         <header className="explore-hero">
           <h1>Companies</h1>
           <p>Filter and browse companies by country, sector, and verification.</p>
         </header>
 
-        {/* Top-level error */}
         {error && (
           <Box sx={{ my: 1 }}>
             <Alert severity="error" variant="filled">
@@ -1692,128 +823,74 @@ export default function Companies() {
           </Box>
         )}
 
-        {/* ========================== FILTER PANEL ========================== */}
-        <Box className="panel">
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "1fr", // mobile: stacked
-                sm: "1fr 1fr", // small tablet: 2 columns
-                md: "2fr 1.3fr 1.3fr auto", // desktop: all in one row
-              },
-              columnGap: 1.5,
-              rowGap: 1.25,
-              alignItems: "center",
-            }}
-          >
-            {/* Company name search (server-side) */}
-            <Box sx={{ gridColumn: { xs: "1 / -1", sm: "1 / -1", md: "auto" } }}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Search companies..."
-                value={q}
-                onChange={(e) => {
-                  setQ(e.target.value);
-                  setPage(1);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    setPage(1);
-                  }
-                }}
-              />
-            </Box>
-
-            {/* Sector filter */}
-            <Box>
-              <Autocomplete
-                fullWidth
-                size="small"
-                options={sectorOptions}
-                value={sector || null}
-                onChange={(_, v) => {
-                  setSector(v || "");
-                  setPage(1);
-                }}
-                renderInput={(params) => (
-                  <TextField {...params} label="All sectors" fullWidth />
-                )}
-                clearOnEscape
-              />
-            </Box>
-
-            {/* Country filter */}
-            <Box>
-              <Autocomplete
-                fullWidth
-                size="small"
-                options={countryOptions}
-                value={country || null}
-                onChange={(_, v) => {
-                  setCountry(v || "");
-                  setPage(1);
-                }}
-                renderInput={(params) => (
-                  <TextField {...params} label="All countries" fullWidth />
-                )}
-                clearOnEscape
-              />
-            </Box>
-
-            {/* Verified toggle + Clear button */}
-            <Stack
-              direction="row"
-              spacing={1}
-              alignItems="center"
-              sx={{
-                width: "100%",
-                justifyContent: { xs: "space-between", md: "flex-end" },
+        {/* FILTER PANEL */}
+        <div className="panel">
+          <div className="tier tier-1">
+            <TextField
+              fullWidth
+              size="medium"
+              label="Search companies..."
+              value={q}
+              onChange={(e) => {
+                setQ(e.target.value);
+                setPage(1);
               }}
-            >
-              <Tooltip
-                title="Show only companies with a verified profile."
-                arrow
-              >
-                <FormControlLabel
-                  sx={{
-                    m: 0,
-                    ".MuiFormControlLabel-label": {
-                      fontSize: 13,
-                    },
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  setPage(1);
+                }
+              }}
+            />
+
+            <Autocomplete
+              fullWidth
+              size="medium"
+              options={sectorOptions}
+              value={sector || null}
+              onChange={(_, v) => {
+                setSector(v || "");
+                setPage(1);
+              }}
+              renderInput={(params) => (
+                <TextField {...params} label="All sectors" fullWidth />
+              )}
+              clearOnEscape
+            />
+
+            <Autocomplete
+              fullWidth
+              size="medium"
+              options={countryOptions}
+              value={country || null}
+              onChange={(_, v) => {
+                setCountry(v || "");
+                setPage(1);
+              }}
+              renderInput={(params) => (
+                <TextField {...params} label="All countries" fullWidth />
+              )}
+              clearOnEscape
+            />
+
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={verified}
+                  onChange={(e) => {
+                    setVerified(e.target.checked);
+                    setPage(1);
                   }}
-                  control={
-                    <Switch
-                      size="small"
-                      checked={verified}
-                      onChange={(e) => {
-                        setVerified(e.target.checked);
-                        setPage(1);
-                      }}
-                    />
-                  }
-                  label="Verified only"
                 />
-              </Tooltip>
+              }
+              label="Verified only"
+            />
 
-              <Tooltip
-                title="Reset all filters and show default results."
-                arrow
-              >
-                <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={onClear}
-                >
-                  Clear
-                </Button>
-              </Tooltip>
-            </Stack>
-          </Box>
+            <Button variant="outlined" size="small" onClick={onClear}>
+              Clear
+            </Button>
+          </div>
 
-          {/* Active filters summary chips */}
           {hasAnyFilter && (
             <Box
               sx={{
@@ -1836,7 +913,6 @@ export default function Companies() {
                 >
                   Active filters:
                 </Typography>
-
                 {q && (
                   <Chip
                     size="small"
@@ -1888,23 +964,9 @@ export default function Companies() {
               </Stack>
             </Box>
           )}
+        </div>
 
-          {/* Client-side quick filter, only when top q is empty */}
-          {!q && (
-            <Box sx={{ mt: 1.5 }}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Filter current results by company name…"
-                value={localFilter}
-                onChange={(e) => setLocalFilter(e.target.value)}
-                helperText="This filter applies on the currently loaded list without calling the server."
-              />
-            </Box>
-          )}
-        </Box>
-
-        {/* ====================== MAIN LIST LOADING ====================== */}
+        {/* LOADING SPINNER */}
         {loading && (
           <Box sx={{ my: 3, textAlign: "center" }}>
             <Box sx={{ position: "relative", display: "inline-flex" }}>
@@ -1929,10 +991,10 @@ export default function Companies() {
           </Box>
         )}
 
-        {/* ============================ GRID ============================ */}
+        {/* GRID */}
         {!loading && (
           <>
-            {!hasResults ? (
+            {grouped.length === 0 ? (
               <Typography
                 variant="body2"
                 color="text.secondary"
@@ -1940,53 +1002,10 @@ export default function Companies() {
               >
                 No results.
               </Typography>
-            ) : isAllInputsEmpty ? (
-              // Special nested grouping: Country -> Sector -> Companies
-              nestedGrouped.map((countryGroup) => (
-                <section key={countryGroup.country}>
-                  <h2 className="country-heading">{countryGroup.country}</h2>
-                  {countryGroup.sectors.map((sectorGroup) => (
-                    <Box key={sectorGroup.sector} sx={{ mb: 1.5 }}>
-                      <Typography
-                        variant="subtitle2"
-                        sx={{
-                          fontWeight: 600,
-                          mb: 0.5,
-                          color: "#475569",
-                        }}
-                      >
-                        Sector: {sectorGroup.sector}
-                      </Typography>
-                      <div className="grid">
-                        {sectorGroup.companies.map((c) => (
-                          <Tooltip
-                            key={c.id}
-                            title={c.name}
-                            arrow
-                            TransitionComponent={Fade}
-                            TransitionProps={{ timeout: 200 }}
-                          >
-                            <Box>
-                              <CompanyCard
-                                company={c}
-                                onOpen={openDetailDialog}
-                                showVerifiedBadge={verified}
-                              />
-                            </Box>
-                          </Tooltip>
-                        ))}
-                      </div>
-                    </Box>
-                  ))}
-                </section>
-              ))
             ) : (
-              // Normal grouping: by country or by sector
-              flatGrouped.map(([groupName, arr]) => (
-                <section key={groupName}>
-                  <h2 className="country-heading">
-                    {shouldGroupBySector ? `Sector: ${groupName}` : groupName}
-                  </h2>
+              grouped.map(([countryName, arr]) => (
+                <section key={countryName}>
+                  <h2 className="country-heading">{countryName}</h2>
                   <div className="grid">
                     {arr.map((c) => (
                       <Tooltip
@@ -2010,7 +1029,7 @@ export default function Companies() {
               ))
             )}
 
-            {/* Pagination (shows whenever there are multiple pages) */}
+            {/* Pagination */}
             {totalPages > 1 && (
               <Box sx={{ mt: 3, textAlign: "center" }}>
                 <Stack
@@ -2063,47 +1082,35 @@ export default function Companies() {
             )}
           </>
         )}
-      </Box>
+      </div>
 
-      {/* ======================== DETAIL DIALOG ======================== */}
+      {/* DETAIL DIALOG */}
       <Dialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
         fullWidth
         maxWidth="lg"
-        fullScreen={isMobile} // full-screen on small screens
         TransitionComponent={DialogTransition}
         PaperProps={{
           sx: {
-            // *** Rounded-edge dialog ***
-            borderRadius: isMobile ? 0 : 5, // 5 ≈ large radius; 0 for full-screen mobile
-            overflow: "hidden",             // ensures content respects rounded corners
-            border: "1px solid rgba(148,163,184,0.55)",
-            boxShadow: "0 18px 45px rgba(15,23,42,0.22)",
-            backgroundColor: "#ffffff",
+            borderRadius: 3,        // rounded edges
+            overflow: "hidden",     // keeps header/content nicely clipped
           },
         }}
       >
-        <DialogContent sx={{ p: 0, position: "relative" }}>
-          {/* Top arrow wedge (visual anchor to grid) */}
-          <Box className="dialog-arrow" />
-
-          {/* ====== Dialog header bar with title, actions, and help icon ====== */}
+        <DialogContent sx={{ p: 0 }}>
+          {/* Top header bar like screenshot */}
           <Box
             sx={{
-              px: { xs: 2, sm: 3 },
-              py: { xs: 1.5, sm: 2 },
+              px: 3,
+              py: 2,
               borderBottom: "1px solid #eef0f6",
               display: "flex",
-              flexDirection: { xs: "column", sm: "row" },
-              alignItems: { xs: "flex-start", sm: "center" },
+              alignItems: "center",
               justifyContent: "space-between",
-              rowGap: 1,
-              // Slight gradient to echo brand (optional, can be plain white)
-              background: "#ffffff",
+              bgcolor: "#ffffff",
             }}
           >
-            {/* Company name + mini meta */}
             <Box>
               <Typography
                 variant="h6"
@@ -2119,37 +1126,23 @@ export default function Companies() {
               </Typography>
             </Box>
 
-            {/* Action buttons on the right */}
-            <Stack
-              direction={{ xs: "row", sm: "row" }}
-              spacing={1}
-              alignItems="center"
-              flexWrap="wrap"
-              justifyContent={{ xs: "flex-start", sm: "flex-end" }}
-              sx={{ mt: { xs: 1, sm: 0 } }}
-            >
-              <Tooltip title="Back to all companies list" arrow>
-                <Button variant="outlined" size="small" onClick={() => setDialogOpen(false)}>
-                  All Companies
-                </Button>
-              </Tooltip>
-              <Tooltip title="Request a warm introduction to this company" arrow>
-                <Button variant="contained" size="small">
-                  Request intro
-                </Button>
-              </Tooltip>
-              <Tooltip title="Save this company to your watchlist" arrow>
-                <Button variant="outlined" size="small">
-                  Save
-                </Button>
-              </Tooltip>
-              <Tooltip title="Share this company profile" arrow>
-                <Button variant="outlined" size="small">
-                  Share
-                </Button>
-              </Tooltip>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Button variant="outlined" size="small">
+                All Companies
+              </Button>
+              <Button variant="contained" size="small">
+                Request intro
+              </Button>
+              <Button variant="outlined" size="small">
+                Save
+              </Button>
+              <Button variant="outlined" size="small">
+                Share
+              </Button>
+
+              {/* Info icon at top-right with hover tooltip */}
               <Tooltip
-                title="This panel shows detailed information about the selected company, including overview, financials, team, gallery, documents, contacts and location."
+                title="This panel shows detailed information about the selected company, including overview, financials, team, gallery, documents, and contact details."
                 arrow
                 placement="left"
               >
@@ -2167,79 +1160,29 @@ export default function Companies() {
             </Stack>
           </Box>
 
-          {/* ====== Tabs header (Overview, Financials, Team, etc.) ====== */}
-          <Box sx={{ position: "relative" }}>
-            <Tabs
-              value={activeTab}
-              onChange={handleTabChange}
-              variant="scrollable"
-              scrollButtons="auto"
-              sx={{
-                px: { xs: 1.5, sm: 3 },
-                borderBottom: "1px solid #eef0f6",
-                bgcolor: "#f8f9ff",
-              }}
-              TabIndicatorProps={{
-                sx: {
-                  height: 3,
-                  borderRadius: 999,
-                  background:
-                    "linear-gradient(90deg,#3b82f6,#22c55e,#f97316)",
-                },
-              }}
-            >
-              <Tab label="Overview" value="overview" />
-              <Tab label="Financials" value="financials" />
-              <Tab label="Team" value="team" />
-              <Tab label="Gallery" value="gallery" />
-              <Tab label="Documents" value="documents" />
-              <Tab label="Contact" value="contact" />
-              <Tab label="Location" value="location" />
-            </Tabs>
+          {/* Tabs */}
+          <Tabs
+            value={activeTab}
+            onChange={handleTabChange}
+            variant="scrollable"
+            scrollButtons="auto"
+            sx={{
+              px: 3,
+              borderBottom: "1px solid #eef0f6",
+              bgcolor: "#f8f9ff",
+            }}
+          >
+            <Tab label="Overview" value="overview" />
+            <Tab label="Financials" value="financials" />
+            <Tab label="Team" value="team" />
+            <Tab label="Gallery" value="gallery" />
+            <Tab label="Documents" value="documents" />
+            <Tab label="Contact" value="contact" />
+          </Tabs>
 
-            {/* Mobile hint: mini progress bar across tabs */}
-            {isMobile && (
-              <Box
-                sx={{
-                  px: { xs: 1.5, sm: 3 },
-                  pb: 0.5,
-                  pt: 0.5,
-                  bgcolor: "#f8f9ff",
-                }}
-              >
-                <Box
-                  sx={{
-                    height: 4,
-                    borderRadius: 999,
-                    bgcolor: "#e5e7eb",
-                    overflow: "hidden",
-                  }}
-                >
-                  <Box
-                    sx={{
-                      height: "100%",
-                      width: `${(tabProgressRatio || 0) * 100}%`,
-                      transition: "width 180ms ease-out",
-                      background:
-                        "linear-gradient(90deg,#3b82f6,#22c55e,#f97316)",
-                    }}
-                  />
-                </Box>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{ mt: 0.5, display: "block" }}
-                >
-                  Swipe / use arrows to move between Overview, Financials,
-                  Team, Gallery, Documents, Contact, Location.
-                </Typography>
-              </Box>
-            )}
-          </Box>
-
-          {/* ====== Tab content body ====== */}
-          <Box sx={{ p: { xs: 2, sm: 3 }, bgcolor: "#f5f6fb" }}>
-            {/* Per-tab spinner overlay */}
+          {/* Tab content */}
+          <Box sx={{ p: 3, bgcolor: "#f5f6fb" }}>
+            {/* Common spinner for tab */}
             {tabLoading[activeTab] && (
               <Box sx={{ textAlign: "center", my: 2 }}>
                 <Box sx={{ position: "relative", display: "inline-flex" }}>
@@ -2267,7 +1210,7 @@ export default function Companies() {
               </Box>
             )}
 
-            {/* ----------------------------- OVERVIEW TAB ----------------------------- */}
+            {/* OVERVIEW */}
             <Fade
               in={!tabLoading["overview"] && activeTab === "overview"}
               timeout={200}
@@ -2279,7 +1222,7 @@ export default function Companies() {
                   spacing={2}
                   alignItems="flex-start"
                 >
-                  {/* Summary + snapshot + chart */}
+                  {/* Left: Summary / Snapshot */}
                   <Box
                     sx={{
                       flex: 2,
@@ -2312,42 +1255,11 @@ export default function Companies() {
                       Snapshot
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      {overviewData?.Snapshot ||
-                        "Snapshot visualizations will appear here in a future version."}
+                      {overviewData?.Snapshot || "—"}
                     </Typography>
-
-                    <Divider sx={{ my: 1.5 }} />
-
-                    {/* Pivot chart using summary from all tables */}
-                    <Typography
-                      variant="subtitle1"
-                      sx={{ fontWeight: 700, mb: 1 }}
-                    >
-                      Key metrics overview
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ display: "block", mb: 1 }}
-                    >
-                      Live summary based on financials, team, gallery,
-                      documents, contacts, and nearby companies.
-                    </Typography>
-                    <Box sx={{ width: "100%", height: 260 }}>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={summaryChartData}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" />
-                          <YAxis allowDecimals={false} />
-                          <RechartsTooltip />
-                          <Legend />
-                          <Bar dataKey="value" />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </Box>
                   </Box>
 
-                  {/* Trust & Verification side card */}
+                  {/* Right: Trust & Verification / Contact mini */}
                   <Box
                     sx={{
                       flex: 1.3,
@@ -2363,6 +1275,7 @@ export default function Companies() {
                     >
                       Trust &amp; Verification
                     </Typography>
+
                     <Stack
                       direction="row"
                       alignItems="center"
@@ -2401,7 +1314,8 @@ export default function Companies() {
                       Contact
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Last updated — {overviewData?.LastUpdated || "—"} •{" "}
+                      Last updated — {overviewData?.LastUpdated || "—"} •
+                      {" "}
                       Sources {overviewData?.SourcesCount ?? "—"}
                     </Typography>
                   </Box>
@@ -2409,7 +1323,7 @@ export default function Companies() {
               </Box>
             </Fade>
 
-            {/* ----------------------------- FINANCIALS TAB ----------------------------- */}
+            {/* FINANCIALS */}
             <Fade
               in={!tabLoading["financials"] && activeTab === "financials"}
               timeout={200}
@@ -2462,7 +1376,7 @@ export default function Companies() {
               </Box>
             </Fade>
 
-            {/* ----------------------------- TEAM TAB ----------------------------- */}
+            {/* TEAM */}
             <Fade
               in={!tabLoading["team"] && activeTab === "team"}
               timeout={200}
@@ -2514,7 +1428,7 @@ export default function Companies() {
               </Box>
             </Fade>
 
-            {/* ----------------------------- GALLERY TAB ----------------------------- */}
+            {/* GALLERY */}
             <Fade
               in={!tabLoading["gallery"] && activeTab === "gallery"}
               timeout={200}
@@ -2586,7 +1500,7 @@ export default function Companies() {
               </Box>
             </Fade>
 
-            {/* ----------------------------- DOCUMENTS TAB ----------------------------- */}
+            {/* DOCUMENTS */}
             <Fade
               in={!tabLoading["documents"] && activeTab === "documents"}
               timeout={200}
@@ -2620,11 +1534,9 @@ export default function Companies() {
                             display: "flex",
                             justifyContent: "space-between",
                             alignItems: "center",
-                            gap: 1,
-                            flexWrap: "wrap",
                           }}
                         >
-                          <Box sx={{ minWidth: 0 }}>
+                          <Box>
                             <Typography sx={{ fontWeight: 600 }}>
                               {d.title}
                             </Typography>
@@ -2653,7 +1565,7 @@ export default function Companies() {
               </Box>
             </Fade>
 
-            {/* ----------------------------- CONTACT TAB ----------------------------- */}
+            {/* CONTACT */}
             <Fade
               in={!tabLoading["contact"] && activeTab === "contact"}
               timeout={200}
@@ -2714,56 +1626,10 @@ export default function Companies() {
                 </Box>
               </Box>
             </Fade>
-
-            {/* ----------------------------- LOCATION TAB ----------------------------- */}
-            <Fade
-              in={!tabLoading["location"] && activeTab === "location"}
-              timeout={200}
-              unmountOnExit
-            >
-              <Box hidden={activeTab !== "location"}>
-                <Box
-                  sx={{
-                    bgcolor: "#ffffff",
-                    borderRadius: 3,
-                    p: 2.2,
-                    boxShadow: "0 10px 30px rgba(17,24,39,.06)",
-                  }}
-                >
-                  <Stack
-                    direction={{ xs: "column", sm: "row" }}
-                    spacing={1}
-                    alignItems={{ xs: "flex-start", sm: "center" }}
-                    justifyContent="space-between"
-                    sx={{ mb: 1.5 }}
-                  >
-                    <Typography
-                      variant="subtitle1"
-                      sx={{ fontWeight: 700 }}
-                    >
-                      Location & Nearby Companies
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                    >
-                      Uses Google Maps{" "}
-                      <code>google.maps.marker.AdvancedMarkerElement</code> with
-                      company images on the map.
-                    </Typography>
-                  </Stack>
-                  <LocationMap
-                    data={locationData}
-                    company={selectedCompany}
-                  />
-                </Box>
-              </Box>
-            </Fade>
           </Box>
         </DialogContent>
       </Dialog>
 
-      {/* Global footer */}
       <Footer routes={ROUTES} />
     </div>
   );

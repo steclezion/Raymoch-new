@@ -99,7 +99,7 @@ export default function Header({ routes = {} }) {
       title: "Welcome to Raymoch",
       html: `
         <div style="display:flex;flex-direction:column;gap:14px;align-items:flex-start">
-          <a href="${routes.explore ?? "/explore-businesses"}" style="color:#1d4ed8;font-weight:700">Businesses</a>
+          <a href="${routes.explore ?? "/explore"}" style="color:#1d4ed8;font-weight:700">Businesses</a>
           <a href="${routes.services ?? "/services"}" style="color:#1d4ed8;font-weight:700">Services</a>
           <a href="${routes.insights ?? "/insights"}" style="color:#1d4ed8;font-weight:700">Research &amp; Insights</a>
           <a href="${routes.about ?? "/about"}" style="color:#1d4ed8;font-weight:700">Who We Are</a>

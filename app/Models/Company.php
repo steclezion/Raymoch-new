@@ -42,6 +42,9 @@ class Company extends Model
         'Employees_count',
         'Logo',
         'DataSourcesCount',
+        'location_name',
+        'latitude',
+        'longitude',
     ];
     public function financials()
     {
@@ -71,5 +74,10 @@ class Company extends Model
     public function logs()
     {
         return $this->hasMany(CompanyLog::class);
+    }
+
+    public function location()
+    {
+        return $this->hasOne(CompanyLocation::class);
     }
 }

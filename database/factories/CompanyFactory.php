@@ -142,6 +142,10 @@ class CompanyFactory extends Factory
             'CTI_Tier'            => $this->faker->randomElement($ctiTiers),
             'CTI_Score'           => $this->faker->numberBetween(50, 95),
 
+            'location_name' => $this->faker->city(),
+            'latitude'      => $this->faker->latitude(24, 49),   // USA-like range
+            'longitude'     => $this->faker->longitude(-125, -67),
+
             // timestamps if you use them
             'created_at'          => now()->subDays(rand(0, 365)),
             'updated_at'          => now(),

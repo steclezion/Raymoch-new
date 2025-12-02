@@ -20,8 +20,16 @@ class CompanyTeamMemberFactory extends Factory
      */
     public function definition(): array
     {
-        $roleTypes = ['Founder', 'Co-founder', 'Board', 'Executive', 'Advisor'];
-        $titles = ['CEO', 'CTO', 'COO', 'CFO', 'Head of Product', 'Head of Operations'];
+        $roleTypes = ['Founder', 'Co-founder', 'Executive', 'Board', 'Advisor'];
+        $titles = [
+            'Chief Executive Officer',
+            'Chief Technology Officer',
+            'Chief Operating Officer',
+            'Chief Financial Officer',
+            'Head of Product',
+            'Head of Operations',
+            'Head of Growth',
+        ];
 
         return [
             'company_id' => Company::factory(),
