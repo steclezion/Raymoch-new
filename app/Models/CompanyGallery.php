@@ -18,6 +18,7 @@ class CompanyGallery extends Model
         'caption',
         'sort_order',
         'is_primary',
+        'alt_text',
     ];
 
     public function company()

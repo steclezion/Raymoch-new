@@ -47,7 +47,7 @@
   <div class="row2">
     <div class="wrap">
       <nav class="links" aria-label="Secondary">
-        <a href="{{ route('explore2') }}">Businesses</a>
+        <a href="{{ route('explore.index') }}">Businesses</a>
         <a href="{{ route('services') }}">Services</a>
         <a href="{{ route('insights') }}">Research &amp; Insights</a>
         <a href="{{ route('about') }}">Who We Are</a>

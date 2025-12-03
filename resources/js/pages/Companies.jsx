@@ -1,20 +1,18 @@
 // resources/js/pages/Companies.jsx
-// ---------------------------------------------------------------------------
-// This page renders the "Companies" experience for Raymoch:
-//  - Fetches companies from Laravel API with server-side filters & pagination
-//  - Groups companies by country/sector (with special behavior when filters are empty)
-//  - Shows detail dialog with tabs: Overview, Financials, Team, Gallery, Documents,
-//    Contact, Location (Google Maps with AdvancedMarkerElement)
-//  - Uses Material UI + Recharts for UI and visualization
-// ---------------------------------------------------------------------------
+// ------------------------------------------------------------------
+// Raymoch "Companies" listing page:
+//  - Filter/search + pagination
+//  - Grouping: Country / Sector / Country→Sector nested
+//  - Opens CompanyDetailDialog for rich view
+// ------------------------------------------------------------------
 
-import React, { useEffect, useMemo, useState, useRef } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 // Layout
 import Header from "../components/layout_master/Header.jsx";
 import Footer from "../components/layout_master/Footer.jsx";
 
-// Material UI
+// MUI
 import {
   Box,
   Button,
@@ -31,385 +29,16 @@ import {
   Breadcrumbs,
   Link as MLink,
   Chip,
-  Dialog,
-  DialogContent,
-  Tabs,
-  Tab,
-  Divider,
-  Grow,
-  IconButton,
-  useTheme,
-  useMediaQuery,
 } from "@mui/material";
 
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import MapIcon from "@mui/icons-material/Map";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
-import BusinessIcon from "@mui/icons-material/Business";
-import ZoomInIcon from "@mui/icons-material/ZoomIn";
-import ZoomOutIcon from "@mui/icons-material/ZoomOut";
-import MyLocationIcon from "@mui/icons-material/MyLocation";
+// Local
 
-// Recharts for overview pivot chart
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  Legend,
-} from "recharts";
+import "../styles/companies.css";
+import CompanyDetailDialog from "../components/companies/CompanyDetailDialog.jsx";
+import { API_BASE, fetchJSON } from "../utils/api.js";
+/* ----------------------------- HELPERS ----------------------------- */
 
-/* ------------------------------ GLOBAL CSS ------------------------------ */
-/**
- * We keep CSS as a string so we can inject it via <style>{css}</style>.
- * This controls the global layout, grid, cards, map markers, etc.
- */
-const css = `
-:root{
-  --brand-blue:#0328aeed;
-  --brand-blue-700:#213bb1;
-  --brand-blue-500:#041b64;
-  --ink:#101114;
-  --muted:#3c4b69;
-  --bg:#fafafa;
-  --border:#e8e8ee;
-  --card:#fff;
-  --radius:14px;
-  --pill:999px;
-  --shadow:0 6px 22px rgba(10,42,107,.08);
-  --maxw: 1400px;
-}
-.page{
-  background:var(--bg);
-  min-height:100vh;
-  display:flex;
-  flex-direction:column;
-}
-.container{
-  width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 28px 22px;
-}
-@media (max-width: 768px){
-  .container{
-    max-width: 620px;
-    padding: 20px 14px;
-  }
-}
-@media (max-width: 480px){
-  .container{
-    max-width: 100%;
-    padding: 16px 12px;
-  }
-}
-
-/* HERO */
-.explore-hero{
-  text-align:center;
-  padding:22px 12px 16px;
-}
-.explore-hero h1{
-  font-size:36px;
-  font-weight:900;
-  line-height:1.06;
-  color:#0A2A6B;
-  margin:0 0 4px;
-}
-.explore-hero p{
-  color:#667085;
-  margin:0;
-}
-
-/* FILTER PANEL */
-.panel{
-  background:#fff;
-  border:1px solid var(--border);
-  box-shadow:var(--shadow);
-  border-radius:20px;
-  padding:14px;
-  margin:12px auto 18px;
-}
-
-/* GRID */
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit, minmax(260px,1fr));
-  gap:14px;
-  margin-top:10px;
-}
-
-/* CARD */
-.card{
-  background:#ffffff;
-  border:1px solid var(--border);
-  border-radius:16px;
-  box-shadow:var(--shadow);
-  padding:14px;
-  min-height:96px;
-  cursor:pointer;
-  text-align:left;
-  display:block;
-  position:relative;
-  transition:
-    transform .16s ease,
-    background-color .16s ease,
-    border-color .16s ease,
-    box-shadow .16s ease,
-    color .16s ease;
-}
-.card h3,.card p{
-  color:#0A2A6B;
-  transition: color .18s ease;
-}
-.card:hover{
-  animation: card-bounce 0.25s ease-out 1;
-  background:#1976d2;
-  border-color:#1565c0;
-  box-shadow:0 14px 34px rgba(21,101,192,.40);
-}
-.card:hover h3,.card:hover p{
-  color:#ffffff !important;
-}
-@keyframes card-bounce {
-  0%   { transform: translateY(0) scale(1); }
-  30%  { transform: translateY(-3px) scale(1.02); }
-  60%  { transform: translateY(1px) scale(1.01); }
-  100% { transform: translateY(0) scale(1); }
-}
-.card h3{
-  font-size:1rem;
-  font-weight:700;
-  margin:0 0 4px;
-}
-.card p{
-  font-size:.88rem;
-  color:#6b7280;
-  margin:0;
-}
-
-/* meta chips inside card */
-.meta{
-  margin-top:8px;
-  display:flex;
-  flex-wrap:wrap;
-  gap:6px;
-}
-.pill{
-  font-size:.78rem;
-  border-radius:999px;
-  padding:3px 10px;
-  border:1px solid var(--border);
-  background:#f9fafb;
-}
-.card:hover .pill{
-  border-color:rgba(255,255,255,.38);
-  background:rgba(15,23,42,.18);
-  color:#f9fafb;
-}
-
-/* CTI pill color variants */
-.cti-pill{
-  font-weight:600;
-}
-.cti-gold{
-  background:#fef3c7;
-  border-color:#facc15;
-  color:#92400e;
-}
-.cti-silver{
-  background:#e5e7eb;
-  border-color:#9ca3af;
-  color:#4b5563;
-}
-.cti-bronze{
-  background:#fce7dd;
-  border-color:#fb923c;
-  color:#7c2d12;
-}
-
-/* Verified badge in card top-right (BLUE) */
-.verified-badge{
-  position:absolute;
-  top:9px;
-  right:9px;
-  width:22px;
-  height:22px;
-  border-radius:999px;
-  border:2px solid #1d4ed8;
-  background:#eff6ff;
-  color:#1d4ed8;
-  font-size:12px;
-  font-weight:800;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  box-shadow:0 0 0 1px rgba(37,99,235,0.16);
-}
-.card:hover .verified-badge{
-  background:#dbeafe;
-  border-color:#1d4ed8;
-  color:#1e3a8a;
-}
-
-/* Group heading (country or sector) */
-.country-heading{
-  font-weight:800;
-  color:#0f172a;
-  margin:18px 0 8px;
-}
-
-/* Pagination */
-.pagination{
-  margin-top:18px;
-  display:flex;
-  justify-content:center;
-  gap:6px;
-  flex-wrap:wrap;
-}
-.page-info{
-  margin-top:4px;
-  text-align:center;
-  font-size:.82rem;
-  color:#6b7280;
-}
-
-/* Dialog arrow wedge */
-.dialog-arrow{
-  position:absolute;
-  top:-14px;
-  left:50%;
-  transform:translateX(-50%) rotate(45deg);
-  width:26px;
-  height:26px;
-  background:#ffffff;
-  box-shadow:0 0 10px rgba(148,163,184,0.45);
-}
-
-/* --- Map marker custom styles --- */
-.company-marker {
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  padding:4px;
-  border-radius:999px;
-  background:rgba(15,23,42,0.96);
-  box-shadow:0 6px 14px rgba(15,23,42,0.35);
-  border:2px solid #3b82f6;
-}
-.company-marker-main {
-  transform:scale(1.0);
-}
-.company-marker-nearby {
-  opacity:0.92;
-  border-color:#f97316;
-}
-.company-marker-inner {
-  width:38px;
-  height:38px;
-  border-radius:999px;
-  overflow:hidden;
-  border:2px solid #e5e7eb;
-  background:#111827;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-.company-marker-inner img {
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
-.company-marker-badge {
-  position:absolute;
-  top:-6px;
-  right:-6px;
-  background:#22c55e;
-  color:white;
-  border-radius:999px;
-  font-size:9px;
-  padding:2px 4px;
-  box-shadow:0 0 6px rgba(34,197,94,0.7);
-}
-
-/* Small underline links in the distance list */
-.distance-link {
-  cursor:pointer;
-  text-decoration:underline;
-  text-decoration-style:dotted;
-}
-.distance-link:hover {
-  text-decoration-style:solid;
-}
-
-footer{
-  margin-top:auto;
-}
-`;
-
-/* ----------------------------- CONSTANTS ----------------------------- */
-
-// Base path for Laravel API
-const API_BASE = "/api";
-
-// Google Maps key from Vite env
-const GOOGLE_MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY;
-
-// shared loader for Maps JS with marker library
-let googleMapsLoadingPromise = null;
-
-/**
- * loadGoogleMapsScript
- * --------------------
- * Loads the Google Maps JS API + marker library once and caches the Promise.
- * This prevents multiple script tags and ensures the map is ready when needed.
- */
-function loadGoogleMapsScript() {
-  // Already loaded?
-  if (window.google && window.google.maps && window.google.maps.marker) {
-    return Promise.resolve();
-  }
-  // In-flight?
-  if (googleMapsLoadingPromise) {
-    return googleMapsLoadingPromise;
-  }
-  // No key: fail fast (helps you debug env)
-  if (!GOOGLE_MAPS_KEY) {
-    return Promise.reject(
-      new Error("Missing VITE_GOOGLE_MAPS_KEY in .env file")
-    );
-  }
-
-  googleMapsLoadingPromise = new Promise((resolve, reject) => {
-    const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}&libraries=marker`;
-    script.async = true;
-    script.defer = true;
-    script.onload = () => resolve();
-    script.onerror = () =>
-      reject(new Error("Failed to load Google Maps JavaScript API"));
-    document.head.appendChild(script);
-  });
-
-  return googleMapsLoadingPromise;
-}
-
-// Tab order used for mobile progress indicator
-const TAB_KEYS = [
-  "overview",
-  "financials",
-  "team",
-  "gallery",
-  "documents",
-  "contact",
-  "location",
-];
-
-/* ------------------- SMALL STRING / COUNTRY HELPERS ------------------- */
-
+// Simple ASCII normalizer
 function ascii(s) {
   return (s || "")
     .normalize("NFD")
@@ -417,12 +46,11 @@ function ascii(s) {
     .replace(/’/g, "'")
     .trim();
 }
-
 function lowerAscii(s) {
   return ascii(s).toLowerCase();
 }
 
-// alias map for tricky country spellings
+// Country aliases for better grouping
 const COUNTRY_ALIASES = new Map([
   ["côte d’ivoire", "Cote d'Ivoire"],
   ["cote d’ivoire", "Cote d'Ivoire"],
@@ -439,12 +67,6 @@ const COUNTRY_ALIASES = new Map([
   ["eswatini (swaziland)", "Eswatini"],
 ]);
 
-/**
- * canonicalizeCountry
- * -------------------
- * Normalizes a country string into a consistent "canonical" form.
- * Handles special cases (Côte d'Ivoire, DR Congo, etc.).
- */
 function canonicalizeCountry(input) {
   if (!input) return "";
   const key = lowerAscii(input);
@@ -452,12 +74,7 @@ function canonicalizeCountry(input) {
   return ascii(input);
 }
 
-/**
- * normalizeCompany
- * ----------------
- * Takes a raw company record from your API and returns a standard shape
- * used by the UI. This protects the React component from small schema changes.
- */
+// Normalize company record to stable shape
 function normalizeCompany(c) {
   if (!c) return {};
   const rawStatus =
@@ -485,42 +102,9 @@ function normalizeCompany(c) {
   };
 }
 
-/**
- * fetchJSON
- * ---------
- * Wrapper for fetch() that:
- *  - sets Accept: application/json
- *  - throws on non-2xx status with a short snippet of the error body
- *  - ensures JSON parse errors are caught with a clear message
- */
-async function fetchJSON(url) {
-  const res = await fetch(url, { headers: { Accept: "application/json" } });
-  const text = await res.text();
-
-  if (!res.ok) {
-    const snippet = text ? text.slice(0, 160) : "";
-    throw new Error(`HTTP ${res.status}${snippet ? ": " + snippet : ""}`);
-  }
-
-  try {
-    return JSON.parse(text);
-  } catch (e) {
-    console.error("JSON parse error", url, e, text);
-    throw new Error("Bad JSON from server");
-  }
-}
-
-/* ----------------------------- GROUP HELPERS ----------------------------- */
-
-/**
- * groupByCountry
- * --------------
- * Groups a list of companies into [country, companies[]] pairs.
- * Each country bucket and the companies inside are sorted alphabetically.
- */
+// Grouping helpers
 function groupByCountry(items) {
   const groups = new Map();
-
   items.forEach((x) => {
     const key =
       (x.country || "Unspecified country").trim() || "Unspecified country";
@@ -531,22 +115,14 @@ function groupByCountry(items) {
   const out = Array.from(groups.entries()).sort((a, b) =>
     a[0].localeCompare(b[0])
   );
-
-  out.forEach(([_, arr]) => {
-    arr.sort((u, v) => (u.name || "").localeCompare(v.name || ""));
-  });
-
+  out.forEach(([_, arr]) =>
+    arr.sort((u, v) => (u.name || "").localeCompare(v.name || ""))
+  );
   return out;
 }
 
-/**
- * groupBySector
- * -------------
- * Groups companies by sector and returns [sector, companies[]] pairs.
- */
 function groupBySector(items) {
   const groups = new Map();
-
   items.forEach((x) => {
     const key =
       (x.sector || "Unspecified sector").trim() || "Unspecified sector";
@@ -557,20 +133,14 @@ function groupBySector(items) {
   const out = Array.from(groups.entries()).sort((a, b) =>
     a[0].localeCompare(b[0])
   );
-
-  out.forEach(([_, arr]) => {
-    arr.sort((u, v) => (u.name || "").localeCompare(v.name || ""));
-  });
-
+  out.forEach(([_, arr]) =>
+    arr.sort((u, v) => (u.name || "").localeCompare(v.name || ""))
+  );
   return out;
 }
 
 /**
- * groupByCountryAndSector
- * -----------------------
- * Special nested grouping used when ALL filters are empty:
- *   Country -> Sector -> Companies[]
- * Ensures all company names are sorted A-Z inside each sector group.
+ * All inputs empty → Country → Sector → Companies[]
  */
 function groupByCountryAndSector(items) {
   const countryMap = new Map();
@@ -591,7 +161,6 @@ function groupByCountryAndSector(items) {
     sectorMap.get(sector).push(c);
   });
 
-  // Sort countries, sectors, and company names
   const countries = Array.from(countryMap.entries()).sort((a, b) =>
     a[0].localeCompare(b[0])
   );
@@ -610,37 +179,8 @@ function groupByCountryAndSector(items) {
   });
 }
 
-/* --------------------------- SESSION ID HELPER --------------------------- */
+/* ---------------------------- UI COMPONENTS ---------------------------- */
 
-/**
- * getSessionId
- * ------------
- * Creates a small local session ID used for logging / analytics on the backend.
- * Stored in localStorage to persist across refreshes.
- */
-function getSessionId() {
-  try {
-    const key = "raymoch_company_detail_sid";
-    let sid = window.localStorage.getItem(key);
-    if (!sid) {
-      sid =
-        Math.random().toString(36).slice(2) + "-" + Date.now().toString(36);
-      window.localStorage.setItem(key, sid);
-    }
-    return sid;
-  } catch {
-    return null;
-  }
-}
-
-/* --------------------------- CARD COMPONENT --------------------------- */
-
-/**
- * CompanyCard
- * -----------
- * Small card used in the grid list to represent one company.
- * Shows name, sector, country, stage, city, and CTI tier.
- */
 function CompanyCard({ company, onOpen, showVerifiedBadge }) {
   const tier = company.cti?.tier || "";
   const tierLower = tier.toLowerCase();
@@ -673,422 +213,10 @@ function CompanyCard({ company, onOpen, showVerifiedBadge }) {
   );
 }
 
-/* ------------------------ DIALOG TRANSITION ------------------------ */
-/**
- * DialogTransition
- * ----------------
- * Used by MUI Dialog for a nicer enter/leave animation (Grow).
- */
-const DialogTransition = React.forwardRef(function DialogTransition(
-  props,
-  ref
-) {
-  return <Grow ref={ref} {...props} />;
-});
+/* ============================== MAIN PAGE ============================== */
 
-/* ------------------------- LOCATION / MAP TAB ------------------------- */
-/**
- * LocationMap
- * -----------
- * Renders the Google Map for the "Location" tab:
- *  - loads Google Maps JS API (with AdvancedMarkerElement)
- *  - shows main company marker with image badge
- *  - shows nearby companies as separate markers + polylines
- *  - includes zoom + recenter controls and a distance list
- */
-function LocationMap({ data, company }) {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
-  const containerRef = useRef(null); // <div> container for the map
-  const mapRef = useRef(null);       // google.maps.Map instance
-  const centerRef = useRef(null);    // center coordinates
-
-  const [loadingMap, setLoadingMap] = useState(true);
-  const [loadError, setLoadError] = useState("");
-
-  const nearby = data?.nearby || [];
-
-  // No location data: show a gentle message
-  if (!data || !data.location) {
-    return (
-      <Typography variant="body2" color="text.secondary">
-        No location has been added for this company yet.
-      </Typography>
-    );
-  }
-
-  // If key is missing, we fail early with a clear message
-  if (!GOOGLE_MAPS_KEY) {
-    return (
-      <Alert severity="warning" sx={{ mt: 1.5 }}>
-        Google Maps API key is missing. Please set
-        <code style={{ margin: "0 4px" }}>VITE_GOOGLE_MAPS_KEY</code> in your
-        <strong>.env</strong> and restart Vite.
-      </Alert>
-    );
-  }
-
-  /**
-   * createMarkerContent
-   * -------------------
-   * Builds a DOM element used by AdvancedMarkerElement for a rich marker UI
-   * (image badge, HQ label, etc.).
-   */
-  function createMarkerContent({ imageUrl, isMain }) {
-    const wrapper = document.createElement("div");
-    wrapper.className =
-      "company-marker " +
-      (isMain ? "company-marker-main" : "company-marker-nearby");
-
-    const inner = document.createElement("div");
-    inner.className = "company-marker-inner";
-    const img = document.createElement("img");
-    img.src =
-      imageUrl ||
-      "https://via.placeholder.com/80x80.png?text=Site";
-    img.alt = "Company marker";
-
-    inner.appendChild(img);
-    wrapper.appendChild(inner);
-
-    if (isMain) {
-      const badge = document.createElement("div");
-      badge.className = "company-marker-badge";
-      badge.innerText = "HQ";
-      wrapper.appendChild(badge);
-    }
-
-    return wrapper;
-  }
-
-  // Initialize / cleanup map
-  useEffect(() => {
-    let markers = [];
-    let polylines = [];
-
-    async function initMap() {
-      try {
-        setLoadingMap(true);
-        setLoadError("");
-
-        await loadGoogleMapsScript();
-
-        const center = {
-          lat: Number(data.location.latitude),
-          lng: Number(data.location.longitude),
-        };
-        centerRef.current = center;
-
-        if (!containerRef.current) {
-          setLoadingMap(false);
-          return;
-        }
-
-        // Create map instance
-        const map = new window.google.maps.Map(containerRef.current, {
-          center,
-          zoom: 13,
-          mapTypeControl: false,
-          fullscreenControl: false,
-          streetViewControl: false,
-        });
-        mapRef.current = map;
-
-        const markerLib = window.google.maps.marker;
-        const AdvancedMarkerElement =
-          markerLib && markerLib.AdvancedMarkerElement;
-
-        // MAIN COMPANY MARKER (with image)
-        const mainImage =
-          data.location.image_url ||
-          data.location.company_image_url ||
-          company?.logo_url ||
-          company?.site_image_url ||
-          null;
-
-        if (AdvancedMarkerElement) {
-          const advMarker = new AdvancedMarkerElement({
-            map,
-            position: center,
-            title:
-              company?.name ||
-              company?.CompanyName ||
-              "Company location",
-            content: createMarkerContent({ imageUrl: mainImage, isMain: true }),
-          });
-          markers.push(advMarker);
-        } else {
-          const classicMarker = new window.google.maps.Marker({
-            map,
-            position: center,
-            title:
-              company?.name ||
-              company?.CompanyName ||
-              "Company location",
-          });
-          markers.push(classicMarker);
-        }
-
-        // NEARBY COMPANIES: markers + polylines
-        nearby.forEach((n) => {
-          const pos = {
-            lat: Number(n.latitude),
-            lng: Number(n.longitude),
-          };
-          const imgUrl =
-            n.image_url ||
-            n.company_logo_url ||
-            n.site_image_url ||
-            null;
-
-          if (AdvancedMarkerElement) {
-            const advMarker = new AdvancedMarkerElement({
-              map,
-              position: pos,
-              title: n.company_name,
-              content: createMarkerContent({
-                imageUrl: imgUrl,
-                isMain: false,
-              }),
-            });
-            markers.push(advMarker);
-          } else {
-            const classicMarker = new window.google.maps.Marker({
-              map,
-              position: pos,
-              title: n.company_name,
-            });
-            markers.push(classicMarker);
-          }
-
-          const polyline = new window.google.maps.Polyline({
-            path: [center, pos],
-            strokeColor: "#2563eb",
-            strokeOpacity: 0.8,
-            strokeWeight: 2,
-          });
-          polyline.setMap(map);
-          polylines.push(polyline);
-        });
-
-        setLoadingMap(false);
-      } catch (err) {
-        console.error("Map load error", err);
-        setLoadError(err.message || "Failed to load Google Maps.");
-        setLoadingMap(false);
-      }
-    }
-
-    initMap();
-
-    // Cleanup markers / polylines on unmount or dependency change
-    return () => {
-      markers.forEach((m) => {
-        if (m.setMap) m.setMap(null);
-        if (m.map) m.map = null;
-      });
-      polylines.forEach((p) => p.setMap && p.setMap(null));
-    };
-  }, [data, company?.id, nearby.length]);
-
-  // Zoom / recenter handlers
-  const handleZoomIn = () => {
-    const map = mapRef.current;
-    if (!map) return;
-    const currentZoom = map.getZoom() || 13;
-    map.setZoom(Math.min(currentZoom + 1, 18));
-  };
-
-  const handleZoomOut = () => {
-    const map = mapRef.current;
-    if (!map) return;
-    const currentZoom = map.getZoom() || 13;
-    map.setZoom(Math.max(currentZoom - 1, 3));
-  };
-
-  const handleRecenter = () => {
-    const map = mapRef.current;
-    const center = centerRef.current;
-    if (!map || !center) return;
-    map.panTo(center);
-    map.setZoom(13);
-  };
-
-  return (
-    <Box sx={{ position: "relative" }}>
-      {/* Map container */}
-      <Box
-        ref={containerRef}
-        sx={{
-          width: "100%",
-          height: 360,
-          borderRadius: 3,
-          overflow: "hidden",
-          border: "1px solid #e5e7eb",
-          bgcolor: "#f9fafb",
-        }}
-      />
-      {loadingMap && (
-        <Box
-          sx={{
-            position: "absolute",
-            inset: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            pointerEvents: "none",
-          }}
-        >
-          <Box
-            sx={{
-              px: 2,
-              py: 1.5,
-              bgcolor: "rgba(15,23,42,0.78)",
-              color: "white",
-              borderRadius: 2,
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-            }}
-          >
-            <CircularProgress size={18} sx={{ color: "white" }} />
-            <Typography variant="caption">Loading map…</Typography>
-          </Box>
-        </Box>
-      )}
-      {loadError && (
-        <Alert severity="error" sx={{ mt: 1.5 }}>
-          {loadError}
-        </Alert>
-      )}
-
-      {/* Floating controls (zoom in/out/recenter) */}
-      <Box
-        sx={{
-          position: "absolute",
-          top: 10,
-          right: 10,
-          display: "flex",
-          flexDirection: "column",
-          gap: 1,
-        }}
-      >
-        <Tooltip title="Zoom in" arrow>
-          <IconButton
-            size={isMobile ? "small" : "medium"}
-            sx={{ bgcolor: "white", boxShadow: 1 }}
-            onClick={handleZoomIn}
-          >
-            <ZoomInIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Zoom out" arrow>
-          <IconButton
-            size={isMobile ? "small" : "medium"}
-            sx={{ bgcolor: "white", boxShadow: 1 }}
-            onClick={handleZoomOut}
-          >
-            <ZoomOutIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Recenter on company" arrow>
-          <IconButton
-            size={isMobile ? "small" : "medium"}
-            sx={{ bgcolor: "white", boxShadow: 1 }}
-            onClick={handleRecenter}
-          >
-            <MyLocationIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      </Box>
-
-      {/* Legend */}
-      <Box
-        sx={{
-          position: "absolute",
-          bottom: 10,
-          left: "50%",
-          transform: "translateX(-50%)",
-          bgcolor: "rgba(15,23,42,0.88)",
-          color: "white",
-          px: 2,
-          py: 1,
-          borderRadius: 999,
-          display: "flex",
-          alignItems: "center",
-          gap: 2,
-          fontSize: 12,
-        }}
-      >
-        <Stack direction="row" alignItems="center" spacing={0.5}>
-          <LocationOnIcon sx={{ fontSize: 16, color: "#60a5fa" }} />
-          <span>Main company (image marker)</span>
-        </Stack>
-        <Stack direction="row" alignItems="center" spacing={0.5}>
-          <BusinessIcon sx={{ fontSize: 16, color: "#f97316" }} />
-          <span>Nearby companies</span>
-        </Stack>
-        <Stack direction="row" alignItems="center" spacing={0.5}>
-          <MapIcon sx={{ fontSize: 16, color: "#22c55e" }} />
-          <span>Lines show distance (miles)</span>
-        </Stack>
-      </Box>
-
-      {/* Distances list: clicking pans to the nearby company */}
-      <Box sx={{ mt: 2 }}>
-        {nearby.length === 0 ? (
-          <Typography variant="body2" color="text.secondary">
-            No nearby companies found around this location.
-          </Typography>
-        ) : (
-          <Stack spacing={0.5}>
-            {nearby.map((n) => (
-              <Tooltip
-                key={n.company_id}
-                title={`${n.company_name} — ${n.distance_miles} miles`}
-                arrow
-              >
-                <Typography
-                  variant="body2"
-                  color="primary"
-                  className="distance-link"
-                  onClick={() => {
-                    if (!mapRef.current) return;
-                    const pos = {
-                      lat: Number(n.latitude),
-                      lng: Number(n.longitude),
-                    };
-                    mapRef.current.panTo(pos);
-                    mapRef.current.setZoom(14);
-                  }}
-                >
-                  {n.company_name} — {n.distance_miles} miles away
-                </Typography>
-              </Tooltip>
-            ))}
-          </Stack>
-        )}
-      </Box>
-    </Box>
-  );
-}
-
-/* ============================= MAIN PAGE ============================= */
-/**
- * Companies
- * ---------
- * Main page component that:
- *  - Manages filters, pagination, list loading
- *  - Renders grid of companies (grouped logically)
- *  - Controls the detail dialog and all its tab data
- */
 export default function Companies() {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
-  /* ----------------------------- ROUTES ----------------------------- */
-  // Static routes for Header / Footer navigation
+  /* --------------- ROUTES (can be centralized later if needed) --------------- */
   const ROUTES = useMemo(
     () => ({
       privacy: "/privacy",
@@ -1096,7 +224,7 @@ export default function Companies() {
       cookies: "/cookies",
       signup: "/signup",
       login: "/login",
-      explore: "/explore-businesses",
+      explore: "/explore",
       services: "/services",
       insights: "/insights",
       about: "/about",
@@ -1106,60 +234,36 @@ export default function Companies() {
     []
   );
 
-  /* ------------------------ FILTER / STATE ------------------------ */
+  /* ---------------------------- FILTER STATE ---------------------------- */
 
-  // Server-side filters
-  const [q, setQ] = useState("");           // company name search
-  const [sector, setSector] = useState(""); // sector filter
-  const [country, setCountry] = useState(""); // country filter
-  const [verified, setVerified] = useState(false); // "Verified only" toggle
+  const [q, setQ] = useState("");
+  const [sector, setSector] = useState("");
+  const [country, setCountry] = useState("");
+  const [verified, setVerified] = useState(false);
 
-  // Client-side filter applied AFTER server response (quick search)
   const [localFilter, setLocalFilter] = useState("");
 
-  // List data and meta
   const [companies, setCompanies] = useState([]);
   const [sectorOptions, setSectorOptions] = useState([]);
   const [countryOptions, setCountryOptions] = useState([]);
 
-  // Pagination info from backend
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
 
-  // Loading / error flags for main list
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(10);
   const [error, setError] = useState("");
 
-  // "from" param used to preserve navigation context (e.g. from /services, /insights, etc.)
   const [fromParam, setFromParam] = useState("");
 
-  /* ---------------------- DETAIL DIALOG STATE ---------------------- */
+  /* ------------------------- DETAIL DIALOG STATE ------------------------- */
 
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("overview");
   const [selectedCompany, setSelectedCompany] = useState(null);
 
-  // Per-tab loading + progress for the spinner inside the dialog
-  const [tabLoading, setTabLoading] = useState({});
-  const [tabProgress, setTabProgress] = useState({});
+  /* --------------------------- INIT FROM URL --------------------------- */
 
-  // Per-tab data
-  const [overviewData, setOverviewData] = useState(null);
-  const [financialData, setFinancialData] = useState([]);
-  const [teamData, setTeamData] = useState([]);
-  const [galleryData, setGalleryData] = useState([]);
-  const [documentsData, setDocumentsData] = useState([]);
-  const [contactData, setContactData] = useState([]);
-  const [locationData, setLocationData] = useState(null);
-
-  /* --------------------- INITIAL QUERY (URL) --------------------- */
-  /**
-   * Read URL query string on initial mount:
-   *  - q, sector, country, page, verified, from
-   * This allows deep links & preserving filters between pages.
-   */
   useEffect(() => {
     const qs = new URLSearchParams(window.location.search);
 
@@ -1178,10 +282,8 @@ export default function Companies() {
     setFromParam(from);
   }, []);
 
-  /* ---------------------- FILTER OPTIONS LOAD ---------------------- */
-  /**
-   * Load sector and country options once from API for the Autocomplete fields.
-   */
+  /* ------------------------ LOAD FILTER OPTIONS ------------------------ */
+
   useEffect(() => {
     let cancelled = false;
 
@@ -1217,12 +319,8 @@ export default function Companies() {
     };
   }, []);
 
-  /* ------------------- MAIN LOADING SPINNER PROGRESS ------------------- */
-  /**
-   * Fake progress bar for the main list spinner:
-   *  - while loading is true, slowly increases up to 90%
-   *  - when loading finishes, jumps to 100%
-   */
+  /* ------------------------- LOADING ANIMATION ------------------------- */
+
   useEffect(() => {
     if (!loading) {
       setProgress(100);
@@ -1236,24 +334,15 @@ export default function Companies() {
     return () => clearInterval(id);
   }, [loading]);
 
-  /* ---------------------- INPUTS-EMPTY FLAG ---------------------- */
-  /**
-   * isAllInputsEmpty
-   * ----------------
-   * Used only for grouping logic:
-   *  - When true: the grid uses Country -> Sector -> Companies nested grouping.
-   *  - When false: normal grouping behavior (by country or by sector).
-   *
-   * NOTE: The API call itself always uses server-side pagination.
-   */
+  /* ---------------------------- FLAGS / MODES ---------------------------- */
+
   const isAllInputsEmpty =
     !q && !sector && !country && !verified && !localFilter.trim();
 
-  /* ------------------------ MAIN LIST FETCH ------------------------ */
-  /**
-   * Load the main list of companies from the backend whenever
-   * page/q/sector/country/verified/fromParam changes.
-   */
+  const hasAnyFilter = !!(q || sector || country || verified);
+
+  /* --------------------------- MAIN LIST FETCH --------------------------- */
+
   useEffect(() => {
     let cancelled = false;
 
@@ -1276,21 +365,16 @@ export default function Companies() {
         let payload = js.data;
         let list = [];
 
-        // Laravel-style pagination: { data: { data: [...], current_page, ... } }
         if (payload && Array.isArray(payload.data)) {
           list = payload.data;
-        }
-        // Simpler array format from backend
-        else if (Array.isArray(payload)) {
+        } else if (Array.isArray(payload)) {
           list = payload;
           payload = {
             current_page: page,
             last_page: 1,
             total: payload.length,
           };
-        }
-        // Raw array at top level
-        else if (Array.isArray(js)) {
+        } else if (Array.isArray(js)) {
           list = js;
           payload = { current_page: page, last_page: 1, total: js.length };
         }
@@ -1301,7 +385,7 @@ export default function Companies() {
         setTotalPages(payload.last_page || 1);
         setTotal(payload.total || normalized.length || 0);
 
-        // Keep URL in sync with filters + page
+        // Keep URL in sync
         const qp = new URLSearchParams();
         if (page > 1) qp.set("page", String(page));
         if (q) qp.set("q", q);
@@ -1328,15 +412,8 @@ export default function Companies() {
     };
   }, [page, q, sector, country, verified, fromParam]);
 
-  /* ------------------------ VISIBLE COMPANIES ------------------------ */
-  /**
-   * visibleCompanies
-   * ----------------
-   * Derived list after:
-   *  - server filters (q, sector, country, verified) -> already applied
-   *  - client-side "Verified only" (safety)
-   *  - localFilter (client-side name search, only when q is empty)
-   */
+  /* -------------------------- DERIVED LISTS -------------------------- */
+
   const visibleCompanies = useMemo(() => {
     let list = companies;
 
@@ -1354,17 +431,11 @@ export default function Companies() {
     return list;
   }, [companies, verified, q, localFilter]);
 
-  // Should we group by sector instead of country? Only when:
-  //  - no search q
-  //  - a country is set
-  //  - no sector filter
-  //  - not in the "all inputs empty" special mode
   const shouldGroupBySector = useMemo(
     () => !q && !!country && !sector && !isAllInputsEmpty,
     [q, country, sector, isAllInputsEmpty]
   );
 
-  // Flat grouping: either [country -> companies] or [sector -> companies]
   const flatGrouped = useMemo(
     () =>
       shouldGroupBySector
@@ -1373,7 +444,6 @@ export default function Companies() {
     [visibleCompanies, shouldGroupBySector]
   );
 
-  // Nested grouping Country -> Sector -> Companies when all inputs are empty
   const nestedGrouped = useMemo(
     () =>
       isAllInputsEmpty ? groupByCountryAndSector(visibleCompanies) : [],
@@ -1384,7 +454,8 @@ export default function Companies() {
     ? nestedGrouped.length > 0
     : flatGrouped.length > 0;
 
-  /* ------------------------ PAGINATION HELPERS ------------------------ */
+  /* ----------------------------- PAGINATION ----------------------------- */
+
   const pageNumbers = useMemo(() => {
     const pages = [];
     const max = 7;
@@ -1400,48 +471,12 @@ export default function Companies() {
     return pages;
   }, [page, totalPages]);
 
-  /* ------------------- OVERVIEW SUMMARY CHART DATA ------------------- */
-  const summaryChartData = useMemo(
-    () => [
-      {
-        name: "Financial years",
-        value: financialData.length || 0,
-      },
-      {
-        name: "Team members",
-        value: teamData.length || 0,
-      },
-      {
-        name: "Gallery images",
-        value: galleryData.length || 0,
-      },
-      {
-        name: "Documents",
-        value: documentsData.length || 0,
-      },
-      {
-        name: "Contacts",
-        value: contactData.length || 0,
-      },
-      {
-        name: "Nearby companies",
-        value:
-          locationData && Array.isArray(locationData.nearby)
-            ? locationData.nearby.length
-            : 0,
-      },
-    ],
-    [
-      financialData,
-      teamData,
-      galleryData,
-      documentsData,
-      contactData,
-      locationData,
-    ]
-  );
+  const goToPage = (n) => setPage(n);
+  const goPrev = () => page > 1 && setPage(page - 1);
+  const goNext = () => page < totalPages && setPage(page + 1);
 
-  /* ---------------------- BREADCRUMB / BACK LINK ---------------------- */
+  /* --------------------------- BREADCRUMB LINK --------------------------- */
+
   const { backHref } = useMemo(() => {
     function baseFor(from) {
       switch (from) {
@@ -1459,7 +494,7 @@ export default function Companies() {
           return { href: "/whitespace" };
         case "explore":
         default:
-          return { href: "/explore-businesses" };
+          return { href: "/explore" };
       }
     }
     const dest = baseFor(fromParam || "explore");
@@ -1475,10 +510,9 @@ export default function Companies() {
     };
   }, [fromParam, q, sector, country, verified]);
 
-  const hasAnyFilter = !!(q || sector || country || verified);
+  /* ------------------------------ HANDLERS ------------------------------ */
 
-  /* -------------------------- LIST HANDLERS -------------------------- */
-  const onClear = () => {
+  const onClearFilters = () => {
     setQ("");
     setSector("");
     setCountry("");
@@ -1486,170 +520,20 @@ export default function Companies() {
     setLocalFilter("");
     setPage(1);
   };
-  const goToPage = (n) => setPage(n);
-  const goPrev = () => page > 1 && setPage(page - 1);
-  const goNext = () => page < totalPages && setPage(page + 1);
 
-  /* ---------------------- DETAIL TAB LOAD HELPERS ---------------------- */
-
-  /**
-   * startTabLoading / stopTabLoading
-   * --------------------------------
-   * Manage per-tab spinner progress inside the detail dialog.
-   * Returns an interval ID used to slowly increase percentage.
-   */
-  const startTabLoading = (tab) => {
-    setTabLoading((prev) => ({ ...prev, [tab]: true }));
-    setTabProgress((prev) => ({ ...prev, [tab]: 10 }));
-
-    const id = window.setInterval(() => {
-      setTabProgress((prev) => {
-        const cur = prev[tab] ?? 10;
-        return { ...prev, [tab]: cur < 90 ? cur + 10 : cur };
-      });
-    }, 130);
-
-    return id;
-  };
-
-  const stopTabLoading = (tab, intervalId) => {
-    window.clearInterval(intervalId);
-    setTabProgress((prev) => ({ ...prev, [tab]: 100 }));
-    setTabLoading((prev) => ({ ...prev, [tab]: false }));
-  };
-
-  /**
-   * loadTabData
-   * -----------
-   * Lazy-loads data for the selected tab when the user opens it:
-   *  - overview: /companies/:id/overview
-   *  - financials: /companies/:id/financials
-   *  - team, gallery, documents, contact
-   *  - location: /companies/:id/location
-   *
-   * Uses session_id for log correlation where available.
-   */
-  const loadTabData = async (tab, company) => {
-    if (!company) return;
-
-    const sid = getSessionId();
-    const base = `${API_BASE}/companies/${company.id}`;
-    const qs = sid ? `?session_id=${encodeURIComponent(sid)}` : "";
-    let url = "";
-    let already;
-
-    if (tab === "overview") {
-      already = overviewData && overviewData.id === company.id;
-      url = `${base}/overview${qs}`;
-    } else if (tab === "financials") {
-      already = financialData.length && selectedCompany?.id === company.id;
-      url = `${base}/financials${qs}`;
-    } else if (tab === "team") {
-      already = teamData.length && selectedCompany?.id === company.id;
-      url = `${base}/team${qs}`;
-    } else if (tab === "gallery") {
-      already = galleryData.length && selectedCompany?.id === company.id;
-      url = `${base}/gallery${qs}`;
-    } else if (tab === "documents") {
-      already = documentsData.length && selectedCompany?.id === company.id;
-      url = `${base}/documents${qs}`;
-    } else if (tab === "contact") {
-      already = contactData.length && selectedCompany?.id === company.id;
-      url = `${base}/contact${qs}`;
-    } else if (tab === "location") {
-      already = locationData && selectedCompany?.id === company.id;
-      const baseLoc = `${API_BASE}/companies/${company.id}/location`;
-      url = sid ? `${baseLoc}?session_id=${encodeURIComponent(sid)}` : baseLoc;
-    }
-
-    // Avoid re-fetch if data already loaded for this company + tab
-    if (!url || already) return;
-
-    const intervalId = startTabLoading(tab);
-    try {
-      const js = await fetchJSON(url);
-      if (tab === "overview") setOverviewData(js.data || null);
-      if (tab === "financials") setFinancialData(js.data || []);
-      if (tab === "team") setTeamData(js.data || []);
-      if (tab === "gallery") setGalleryData(js.data || []);
-      if (tab === "documents") setDocumentsData(js.data || []);
-      if (tab === "contact") setContactData(js.data || []);
-      if (tab === "location") setLocationData(js.data || null);
-    } catch (e) {
-      console.error("Tab load error", tab, e);
-    } finally {
-      stopTabLoading(tab, intervalId);
-    }
-  };
-
-  /**
-   * openDetailDialog
-   * ----------------
-   * Called when a company card is clicked:
-   *  - sets selectedCompany
-   *  - opens dialog
-   *  - resets all tab data
-   *  - preloads Overview tab
-   */
   const openDetailDialog = (company) => {
     setSelectedCompany(company);
     setDialogOpen(true);
-    setActiveTab("overview");
-
-    // Reset per-tab state
-    setOverviewData(null);
-    setFinancialData([]);
-    setTeamData([]);
-    setGalleryData([]);
-    setDocumentsData([]);
-    setContactData([]);
-    setLocationData(null);
-
-    loadTabData("overview", company);
   };
 
-  /**
-   * handleTabChange
-   * ---------------
-   * Called when user changes tabs in the detail dialog.
-   * Triggers lazy-load for the newly active tab.
-   */
-  const handleTabChange = (e, newValue) => {
-    setActiveTab(newValue);
-    if (selectedCompany) {
-      loadTabData(newValue, selectedCompany);
-    }
-  };
-
-  const activeTabIndex = TAB_KEYS.indexOf(activeTab);
-  const tabProgressRatio =
-    activeTabIndex <= 0
-      ? 0
-      : activeTabIndex >= TAB_KEYS.length - 1
-      ? 1
-      : activeTabIndex / (TAB_KEYS.length - 1);
-
-  /* ============================ RENDER ============================ */
+  /* ================================ UI ================================ */
 
   return (
     <div className="page">
-      <style>{css}</style>
-
-      {/* Global header */}
       <Header routes={ROUTES} />
 
-      {/* Main container */}
-      <Box
-        className="container"
-        sx={{
-          width: "100%",
-          maxWidth: "1400px",
-          mx: "auto",
-          px: { xs: 1.5, sm: 2.5, md: 3 },
-          py: { xs: 2, sm: 3, md: 3.5 },
-        }}
-      >
-        {/* Breadcrumb / back navigation */}
+      <Box className="container">
+        {/* Breadcrumb */}
         <Box sx={{ mb: 1 }}>
           <Breadcrumbs aria-label="breadcrumb" separator="›">
             <MLink
@@ -1677,13 +561,13 @@ export default function Companies() {
           </Breadcrumbs>
         </Box>
 
-        {/* Hero heading */}
+        {/* Hero */}
         <header className="explore-hero">
           <h1>Companies</h1>
           <p>Filter and browse companies by country, sector, and verification.</p>
         </header>
 
-        {/* Top-level error */}
+        {/* Error */}
         {error && (
           <Box sx={{ my: 1 }}>
             <Alert severity="error" variant="filled">
@@ -1692,22 +576,22 @@ export default function Companies() {
           </Box>
         )}
 
-        {/* ========================== FILTER PANEL ========================== */}
+        {/* ---------------------------- FILTER PANEL ---------------------------- */}
         <Box className="panel">
           <Box
             sx={{
               display: "grid",
               gridTemplateColumns: {
-                xs: "1fr", // mobile: stacked
-                sm: "1fr 1fr", // small tablet: 2 columns
-                md: "2fr 1.3fr 1.3fr auto", // desktop: all in one row
+                xs: "1fr",
+                sm: "1fr 1fr",
+                md: "2fr 1.3fr 1.3fr auto",
               },
               columnGap: 1.5,
               rowGap: 1.25,
               alignItems: "center",
             }}
           >
-            {/* Company name search (server-side) */}
+            {/* Server search */}
             <Box sx={{ gridColumn: { xs: "1 / -1", sm: "1 / -1", md: "auto" } }}>
               <TextField
                 fullWidth
@@ -1727,7 +611,7 @@ export default function Companies() {
               />
             </Box>
 
-            {/* Sector filter */}
+            {/* Sector */}
             <Box>
               <Autocomplete
                 fullWidth
@@ -1745,7 +629,7 @@ export default function Companies() {
               />
             </Box>
 
-            {/* Country filter */}
+            {/* Country */}
             <Box>
               <Autocomplete
                 fullWidth
@@ -1763,7 +647,7 @@ export default function Companies() {
               />
             </Box>
 
-            {/* Verified toggle + Clear button */}
+            {/* Verified + Clear */}
             <Stack
               direction="row"
               spacing={1}
@@ -1773,16 +657,11 @@ export default function Companies() {
                 justifyContent: { xs: "space-between", md: "flex-end" },
               }}
             >
-              <Tooltip
-                title="Show only companies with a verified profile."
-                arrow
-              >
+              <Tooltip title="Show only companies with a verified profile." arrow>
                 <FormControlLabel
                   sx={{
                     m: 0,
-                    ".MuiFormControlLabel-label": {
-                      fontSize: 13,
-                    },
+                    ".MuiFormControlLabel-label": { fontSize: 13 },
                   }}
                   control={
                     <Switch
@@ -1798,14 +677,11 @@ export default function Companies() {
                 />
               </Tooltip>
 
-              <Tooltip
-                title="Reset all filters and show default results."
-                arrow
-              >
+              <Tooltip title="Reset all filters and show default results." arrow>
                 <Button
                   variant="outlined"
                   size="small"
-                  onClick={onClear}
+                  onClick={onClearFilters}
                 >
                   Clear
                 </Button>
@@ -1813,7 +689,7 @@ export default function Companies() {
             </Stack>
           </Box>
 
-          {/* Active filters summary chips */}
+          {/* Active filter chips */}
           {hasAnyFilter && (
             <Box
               sx={{
@@ -1880,7 +756,7 @@ export default function Companies() {
                 <Button
                   size="small"
                   variant="text"
-                  onClick={onClear}
+                  onClick={onClearFilters}
                   sx={{ ml: 0.5, textTransform: "none" }}
                 >
                   Clear all
@@ -1889,7 +765,7 @@ export default function Companies() {
             </Box>
           )}
 
-          {/* Client-side quick filter, only when top q is empty */}
+          {/* Client-side filter (only when q empty) */}
           {!q && (
             <Box sx={{ mt: 1.5 }}>
               <TextField
@@ -1904,7 +780,7 @@ export default function Companies() {
           )}
         </Box>
 
-        {/* ====================== MAIN LIST LOADING ====================== */}
+        {/* ---------------------------- LOADING ---------------------------- */}
         {loading && (
           <Box sx={{ my: 3, textAlign: "center" }}>
             <Box sx={{ position: "relative", display: "inline-flex" }}>
@@ -1929,7 +805,7 @@ export default function Companies() {
           </Box>
         )}
 
-        {/* ============================ GRID ============================ */}
+        {/* ----------------------------- GRID ----------------------------- */}
         {!loading && (
           <>
             {!hasResults ? (
@@ -1941,7 +817,6 @@ export default function Companies() {
                 No results.
               </Typography>
             ) : isAllInputsEmpty ? (
-              // Special nested grouping: Country -> Sector -> Companies
               nestedGrouped.map((countryGroup) => (
                 <section key={countryGroup.country}>
                   <h2 className="country-heading">{countryGroup.country}</h2>
@@ -1981,7 +856,6 @@ export default function Companies() {
                 </section>
               ))
             ) : (
-              // Normal grouping: by country or by sector
               flatGrouped.map(([groupName, arr]) => (
                 <section key={groupName}>
                   <h2 className="country-heading">
@@ -2010,7 +884,7 @@ export default function Companies() {
               ))
             )}
 
-            {/* Pagination (shows whenever there are multiple pages) */}
+            {/* Pagination */}
             {totalPages > 1 && (
               <Box sx={{ mt: 3, textAlign: "center" }}>
                 <Stack
@@ -2065,705 +939,13 @@ export default function Companies() {
         )}
       </Box>
 
-      {/* ======================== DETAIL DIALOG ======================== */}
-      <Dialog
+      {/* Detail Dialog is fully independent & reusable */}
+      <CompanyDetailDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
-        fullWidth
-        maxWidth="lg"
-        fullScreen={isMobile} // full-screen on small screens
-        TransitionComponent={DialogTransition}
-        PaperProps={{
-          sx: {
-            // *** Rounded-edge dialog ***
-            borderRadius: isMobile ? 0 : 5, // 5 ≈ large radius; 0 for full-screen mobile
-            overflow: "hidden",             // ensures content respects rounded corners
-            border: "1px solid rgba(148,163,184,0.55)",
-            boxShadow: "0 18px 45px rgba(15,23,42,0.22)",
-            backgroundColor: "#ffffff",
-          },
-        }}
-      >
-        <DialogContent sx={{ p: 0, position: "relative" }}>
-          {/* Top arrow wedge (visual anchor to grid) */}
-          <Box className="dialog-arrow" />
+        company={selectedCompany}
+      />
 
-          {/* ====== Dialog header bar with title, actions, and help icon ====== */}
-          <Box
-            sx={{
-              px: { xs: 2, sm: 3 },
-              py: { xs: 1.5, sm: 2 },
-              borderBottom: "1px solid #eef0f6",
-              display: "flex",
-              flexDirection: { xs: "column", sm: "row" },
-              alignItems: { xs: "flex-start", sm: "center" },
-              justifyContent: "space-between",
-              rowGap: 1,
-              // Slight gradient to echo brand (optional, can be plain white)
-              background: "#ffffff",
-            }}
-          >
-            {/* Company name + mini meta */}
-            <Box>
-              <Typography
-                variant="h6"
-                sx={{ fontWeight: 900, display: "flex", alignItems: "center" }}
-              >
-                {overviewData?.CompanyName ||
-                  selectedCompany?.name ||
-                  "Loading..."}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {overviewData?.Sector || selectedCompany?.sector || "—"} •{" "}
-                {overviewData?.Country || selectedCompany?.country || "—"}
-              </Typography>
-            </Box>
-
-            {/* Action buttons on the right */}
-            <Stack
-              direction={{ xs: "row", sm: "row" }}
-              spacing={1}
-              alignItems="center"
-              flexWrap="wrap"
-              justifyContent={{ xs: "flex-start", sm: "flex-end" }}
-              sx={{ mt: { xs: 1, sm: 0 } }}
-            >
-              <Tooltip title="Back to all companies list" arrow>
-                <Button variant="outlined" size="small" onClick={() => setDialogOpen(false)}>
-                  All Companies
-                </Button>
-              </Tooltip>
-              <Tooltip title="Request a warm introduction to this company" arrow>
-                <Button variant="contained" size="small">
-                  Request intro
-                </Button>
-              </Tooltip>
-              <Tooltip title="Save this company to your watchlist" arrow>
-                <Button variant="outlined" size="small">
-                  Save
-                </Button>
-              </Tooltip>
-              <Tooltip title="Share this company profile" arrow>
-                <Button variant="outlined" size="small">
-                  Share
-                </Button>
-              </Tooltip>
-              <Tooltip
-                title="This panel shows detailed information about the selected company, including overview, financials, team, gallery, documents, contacts and location."
-                arrow
-                placement="left"
-              >
-                <IconButton
-                  size="small"
-                  sx={{
-                    ml: 0.5,
-                    color: "text.secondary",
-                    "&:hover": { color: "primary.main" },
-                  }}
-                >
-                  <InfoOutlinedIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            </Stack>
-          </Box>
-
-          {/* ====== Tabs header (Overview, Financials, Team, etc.) ====== */}
-          <Box sx={{ position: "relative" }}>
-            <Tabs
-              value={activeTab}
-              onChange={handleTabChange}
-              variant="scrollable"
-              scrollButtons="auto"
-              sx={{
-                px: { xs: 1.5, sm: 3 },
-                borderBottom: "1px solid #eef0f6",
-                bgcolor: "#f8f9ff",
-              }}
-              TabIndicatorProps={{
-                sx: {
-                  height: 3,
-                  borderRadius: 999,
-                  background:
-                    "linear-gradient(90deg,#3b82f6,#22c55e,#f97316)",
-                },
-              }}
-            >
-              <Tab label="Overview" value="overview" />
-              <Tab label="Financials" value="financials" />
-              <Tab label="Team" value="team" />
-              <Tab label="Gallery" value="gallery" />
-              <Tab label="Documents" value="documents" />
-              <Tab label="Contact" value="contact" />
-              <Tab label="Location" value="location" />
-            </Tabs>
-
-            {/* Mobile hint: mini progress bar across tabs */}
-            {isMobile && (
-              <Box
-                sx={{
-                  px: { xs: 1.5, sm: 3 },
-                  pb: 0.5,
-                  pt: 0.5,
-                  bgcolor: "#f8f9ff",
-                }}
-              >
-                <Box
-                  sx={{
-                    height: 4,
-                    borderRadius: 999,
-                    bgcolor: "#e5e7eb",
-                    overflow: "hidden",
-                  }}
-                >
-                  <Box
-                    sx={{
-                      height: "100%",
-                      width: `${(tabProgressRatio || 0) * 100}%`,
-                      transition: "width 180ms ease-out",
-                      background:
-                        "linear-gradient(90deg,#3b82f6,#22c55e,#f97316)",
-                    }}
-                  />
-                </Box>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{ mt: 0.5, display: "block" }}
-                >
-                  Swipe / use arrows to move between Overview, Financials,
-                  Team, Gallery, Documents, Contact, Location.
-                </Typography>
-              </Box>
-            )}
-          </Box>
-
-          {/* ====== Tab content body ====== */}
-          <Box sx={{ p: { xs: 2, sm: 3 }, bgcolor: "#f5f6fb" }}>
-            {/* Per-tab spinner overlay */}
-            {tabLoading[activeTab] && (
-              <Box sx={{ textAlign: "center", my: 2 }}>
-                <Box sx={{ position: "relative", display: "inline-flex" }}>
-                  <CircularProgress
-                    variant="determinate"
-                    value={tabProgress[activeTab] ?? 10}
-                  />
-                  <Box
-                    sx={{
-                      top: 0,
-                      left: 0,
-                      bottom: 0,
-                      right: 0,
-                      position: "absolute",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Typography variant="caption" component="div">
-                      {`${Math.round(tabProgress[activeTab] ?? 10)}%`}
-                    </Typography>
-                  </Box>
-                </Box>
-              </Box>
-            )}
-
-            {/* ----------------------------- OVERVIEW TAB ----------------------------- */}
-            <Fade
-              in={!tabLoading["overview"] && activeTab === "overview"}
-              timeout={200}
-              unmountOnExit
-            >
-              <Box hidden={activeTab !== "overview"}>
-                <Stack
-                  direction={{ xs: "column", md: "row" }}
-                  spacing={2}
-                  alignItems="flex-start"
-                >
-                  {/* Summary + snapshot + chart */}
-                  <Box
-                    sx={{
-                      flex: 2,
-                      bgcolor: "#ffffff",
-                      borderRadius: 3,
-                      p: 2.2,
-                      boxShadow: "0 10px 30px rgba(17,24,39,.06)",
-                    }}
-                  >
-                    <Typography
-                      variant="subtitle1"
-                      sx={{ fontWeight: 700, mb: 1 }}
-                    >
-                      Summary
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mb: 2 }}
-                    >
-                      {overviewData?.Summary || "—"}
-                    </Typography>
-
-                    <Divider sx={{ my: 1.5 }} />
-
-                    <Typography
-                      variant="subtitle1"
-                      sx={{ fontWeight: 700, mb: 1 }}
-                    >
-                      Snapshot
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {overviewData?.Snapshot ||
-                        "Snapshot visualizations will appear here in a future version."}
-                    </Typography>
-
-                    <Divider sx={{ my: 1.5 }} />
-
-                    {/* Pivot chart using summary from all tables */}
-                    <Typography
-                      variant="subtitle1"
-                      sx={{ fontWeight: 700, mb: 1 }}
-                    >
-                      Key metrics overview
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ display: "block", mb: 1 }}
-                    >
-                      Live summary based on financials, team, gallery,
-                      documents, contacts, and nearby companies.
-                    </Typography>
-                    <Box sx={{ width: "100%", height: 260 }}>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={summaryChartData}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" />
-                          <YAxis allowDecimals={false} />
-                          <RechartsTooltip />
-                          <Legend />
-                          <Bar dataKey="value" />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </Box>
-                  </Box>
-
-                  {/* Trust & Verification side card */}
-                  <Box
-                    sx={{
-                      flex: 1.3,
-                      bgcolor: "#ffffff",
-                      borderRadius: 3,
-                      p: 2.2,
-                      boxShadow: "0 10px 30px rgba(17,24,39,.06)",
-                    }}
-                  >
-                    <Typography
-                      variant="subtitle1"
-                      sx={{ fontWeight: 700, mb: 1 }}
-                    >
-                      Trust &amp; Verification
-                    </Typography>
-                    <Stack
-                      direction="row"
-                      alignItems="center"
-                      spacing={1.2}
-                      sx={{ mb: 2 }}
-                    >
-                      <Box
-                        sx={{
-                          width: 26,
-                          height: 26,
-                          borderRadius: "999px",
-                          bgcolor: "#fff7e6",
-                          border: "1px solid #fde68a",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: 13,
-                        }}
-                      >
-                        •
-                      </Box>
-                      <Typography variant="body2">
-                        CTI:&nbsp;
-                        {overviewData?.CTI_Tier ||
-                          selectedCompany?.cti?.tier ||
-                          "—"}
-                      </Typography>
-                    </Stack>
-
-                    <Divider sx={{ my: 1.5 }} />
-
-                    <Typography
-                      variant="subtitle1"
-                      sx={{ fontWeight: 700, mb: 1 }}
-                    >
-                      Contact
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Last updated — {overviewData?.LastUpdated || "—"} •{" "}
-                      Sources {overviewData?.SourcesCount ?? "—"}
-                    </Typography>
-                  </Box>
-                </Stack>
-              </Box>
-            </Fade>
-
-            {/* ----------------------------- FINANCIALS TAB ----------------------------- */}
-            <Fade
-              in={!tabLoading["financials"] && activeTab === "financials"}
-              timeout={200}
-              unmountOnExit
-            >
-              <Box hidden={activeTab !== "financials"}>
-                <Box
-                  sx={{
-                    bgcolor: "#ffffff",
-                    borderRadius: 3,
-                    p: 2.2,
-                    boxShadow: "0 10px 30px rgba(17,24,39,.06)",
-                  }}
-                >
-                  <Typography
-                    variant="subtitle1"
-                    sx={{ fontWeight: 700, mb: 1.5 }}
-                  >
-                    Financials
-                  </Typography>
-                  {financialData.length === 0 ? (
-                    <Typography variant="body2" color="text.secondary">
-                      No financial data available.
-                    </Typography>
-                  ) : (
-                    <Box component="table" sx={{ width: "100%", fontSize: 13 }}>
-                      <thead>
-                        <tr>
-                          <th align="left">Year</th>
-                          <th align="right">Revenue</th>
-                          <th align="right">EBITDA</th>
-                          <th align="right">Net income</th>
-                          <th align="right">Valuation</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {financialData.map((row) => (
-                          <tr key={row.id}>
-                            <td>{row.fiscal_year}</td>
-                            <td align="right">{row.revenue ?? "—"}</td>
-                            <td align="right">{row.ebitda ?? "—"}</td>
-                            <td align="right">{row.net_income ?? "—"}</td>
-                            <td align="right">{row.valuation ?? "—"}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </Box>
-                  )}
-                </Box>
-              </Box>
-            </Fade>
-
-            {/* ----------------------------- TEAM TAB ----------------------------- */}
-            <Fade
-              in={!tabLoading["team"] && activeTab === "team"}
-              timeout={200}
-              unmountOnExit
-            >
-              <Box hidden={activeTab !== "team"}>
-                <Box
-                  sx={{
-                    bgcolor: "#ffffff",
-                    borderRadius: 3,
-                    p: 2.2,
-                    boxShadow: "0 10px 30px rgba(17,24,39,.06)",
-                  }}
-                >
-                  <Typography
-                    variant="subtitle1"
-                    sx={{ fontWeight: 700, mb: 1.5 }}
-                  >
-                    Team
-                  </Typography>
-                  {teamData.length === 0 ? (
-                    <Typography variant="body2" color="text.secondary">
-                      No team members found.
-                    </Typography>
-                  ) : (
-                    <Stack spacing={1.5}>
-                      {teamData.map((m) => (
-                        <Box key={m.id}>
-                          <Typography sx={{ fontWeight: 600 }}>
-                            {m.full_name}
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{ mb: 0.5 }}
-                          >
-                            {m.title} {m.role_type ? `• ${m.role_type}` : ""}
-                          </Typography>
-                          {m.bio && (
-                            <Typography variant="body2" color="text.secondary">
-                              {m.bio}
-                            </Typography>
-                          )}
-                        </Box>
-                      ))}
-                    </Stack>
-                  )}
-                </Box>
-              </Box>
-            </Fade>
-
-            {/* ----------------------------- GALLERY TAB ----------------------------- */}
-            <Fade
-              in={!tabLoading["gallery"] && activeTab === "gallery"}
-              timeout={200}
-              unmountOnExit
-            >
-              <Box hidden={activeTab !== "gallery"}>
-                <Box
-                  sx={{
-                    bgcolor: "#ffffff",
-                    borderRadius: 3,
-                    p: 2.2,
-                    boxShadow: "0 10px 30px rgba(17,24,39,.06)",
-                  }}
-                >
-                  <Typography
-                    variant="subtitle1"
-                    sx={{ fontWeight: 700, mb: 1.5 }}
-                  >
-                    Gallery
-                  </Typography>
-                  {galleryData.length === 0 ? (
-                    <Typography variant="body2" color="text.secondary">
-                      No gallery items.
-                    </Typography>
-                  ) : (
-                    <Box
-                      sx={{
-                        display: "grid",
-                        gridTemplateColumns:
-                          "repeat(auto-fit, minmax(160px,1fr))",
-                        gap: 1.5,
-                      }}
-                    >
-                      {galleryData.map((g) => (
-                        <Box
-                          key={g.id}
-                          sx={{
-                            borderRadius: 2,
-                            overflow: "hidden",
-                            border: "1px solid #e5e7eb",
-                            bgcolor: "#f9fafb",
-                          }}
-                        >
-                          <img
-                            src={g.image_url}
-                            alt={g.caption || "Gallery image"}
-                            style={{
-                              display: "block",
-                              width: "100%",
-                              height: 130,
-                              objectFit: "cover",
-                            }}
-                          />
-                          {g.caption && (
-                            <Box sx={{ p: 0.75 }}>
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                              >
-                                {g.caption}
-                              </Typography>
-                            </Box>
-                          )}
-                        </Box>
-                      ))}
-                    </Box>
-                  )}
-                </Box>
-              </Box>
-            </Fade>
-
-            {/* ----------------------------- DOCUMENTS TAB ----------------------------- */}
-            <Fade
-              in={!tabLoading["documents"] && activeTab === "documents"}
-              timeout={200}
-              unmountOnExit
-            >
-              <Box hidden={activeTab !== "documents"}>
-                <Box
-                  sx={{
-                    bgcolor: "#ffffff",
-                    borderRadius: 3,
-                    p: 2.2,
-                    boxShadow: "0 10px 30px rgba(17,24,39,.06)",
-                  }}
-                >
-                  <Typography
-                    variant="subtitle1"
-                    sx={{ fontWeight: 700, mb: 1.5 }}
-                  >
-                    Documents
-                  </Typography>
-                  {documentsData.length === 0 ? (
-                    <Typography variant="body2" color="text.secondary">
-                      No documents uploaded.
-                    </Typography>
-                  ) : (
-                    <Stack spacing={1.2}>
-                      {documentsData.map((d) => (
-                        <Box
-                          key={d.id}
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            gap: 1,
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          <Box sx={{ minWidth: 0 }}>
-                            <Typography sx={{ fontWeight: 600 }}>
-                              {d.title}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              {d.document_type || "Document"} •{" "}
-                              {d.as_of_date || "—"}
-                            </Typography>
-                          </Box>
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            href={d.file_path}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            Open
-                          </Button>
-                        </Box>
-                      ))}
-                    </Stack>
-                  )}
-                </Box>
-              </Box>
-            </Fade>
-
-            {/* ----------------------------- CONTACT TAB ----------------------------- */}
-            <Fade
-              in={!tabLoading["contact"] && activeTab === "contact"}
-              timeout={200}
-              unmountOnExit
-            >
-              <Box hidden={activeTab !== "contact"}>
-                <Box
-                  sx={{
-                    bgcolor: "#ffffff",
-                    borderRadius: 3,
-                    p: 2.2,
-                    boxShadow: "0 10px 30px rgba(17,24,39,.06)",
-                  }}
-                >
-                  <Typography
-                    variant="subtitle1"
-                    sx={{ fontWeight: 700, mb: 1.5 }}
-                  >
-                    Contact
-                  </Typography>
-                  {contactData.length === 0 ? (
-                    <Typography variant="body2" color="text.secondary">
-                      No contact information available.
-                    </Typography>
-                  ) : (
-                    <Stack spacing={1.5}>
-                      {contactData.map((c) => (
-                        <Box key={c.id}>
-                          <Typography sx={{ fontWeight: 600 }}>
-                            {c.contact_name || "—"}
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{ mb: 0.5 }}
-                          >
-                            {c.role || "—"}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {c.email || "—"} {c.phone ? `• ${c.phone}` : ""}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {[
-                              c.address_line1,
-                              c.address_line2,
-                              c.city,
-                              c.state,
-                              c.postal_code,
-                              c.country,
-                            ]
-                              .filter(Boolean)
-                              .join(", ") || "—"}
-                          </Typography>
-                        </Box>
-                      ))}
-                    </Stack>
-                  )}
-                </Box>
-              </Box>
-            </Fade>
-
-            {/* ----------------------------- LOCATION TAB ----------------------------- */}
-            <Fade
-              in={!tabLoading["location"] && activeTab === "location"}
-              timeout={200}
-              unmountOnExit
-            >
-              <Box hidden={activeTab !== "location"}>
-                <Box
-                  sx={{
-                    bgcolor: "#ffffff",
-                    borderRadius: 3,
-                    p: 2.2,
-                    boxShadow: "0 10px 30px rgba(17,24,39,.06)",
-                  }}
-                >
-                  <Stack
-                    direction={{ xs: "column", sm: "row" }}
-                    spacing={1}
-                    alignItems={{ xs: "flex-start", sm: "center" }}
-                    justifyContent="space-between"
-                    sx={{ mb: 1.5 }}
-                  >
-                    <Typography
-                      variant="subtitle1"
-                      sx={{ fontWeight: 700 }}
-                    >
-                      Location & Nearby Companies
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                    >
-                      Uses Google Maps{" "}
-                      <code>google.maps.marker.AdvancedMarkerElement</code> with
-                      company images on the map.
-                    </Typography>
-                  </Stack>
-                  <LocationMap
-                    data={locationData}
-                    company={selectedCompany}
-                  />
-                </Box>
-              </Box>
-            </Fade>
-          </Box>
-        </DialogContent>
-      </Dialog>
-
-      {/* Global footer */}
       <Footer routes={ROUTES} />
     </div>
   );

@@ -11,8 +11,8 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
 
 // Layout
-import Header from "./components/layout_master/Header.jsx";
-import Footer from "./components/layout_master/Footer.jsx";
+import Header from "../components/layout_master/Header.jsx";
+import Footer from "../components/layout_master/Footer.jsx";
 
 // Material UI
 import {

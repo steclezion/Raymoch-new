@@ -197,7 +197,7 @@ export default function Header({ routes = {} }) {
 
         {/* Right side actions (hidden on mobile) */}
         <div className="rightside desktop-only">
-          <form className="search-box" action={routes.explore ?? "/explore-businesses"}>
+          <form className="search-box" action={routes.explore ?? "/explore"}>
             <input type="search" name="q" placeholder="Search companies, sectors, regions…" />
           </form>
           <div className="auth">
@@ -217,7 +217,7 @@ export default function Header({ routes = {} }) {
       <div className="row2 desktop-only">
         <div className="wrap">
           <nav className="links" aria-label="Secondary">
-            <SafeLink to={routes.explore ?? "/explore-businesses"}>Businesses</SafeLink>
+            <SafeLink to={routes.explore ?? "/explore"}>Businesses</SafeLink>
             <SafeLink to={routes.services ?? "/services"}>Services</SafeLink>
             <SafeLink to={routes.insights ?? "/insights"}>Research &amp; Insights</SafeLink>
             <SafeLink to={routes.about ?? "/about"}>Who We Are</SafeLink>

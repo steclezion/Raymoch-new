@@ -1,0 +1,232 @@
+/* resources/js/styles/companies.css */
+
+/* Root tokens (can be shared across pages) */
+:root {
+  --brand-blue: #0328aeed;
+  --brand-blue-700: #213bb1;
+  --brand-blue-500: #041b64;
+  --ink: #101114;
+  --muted: #3c4b69;
+  --bg: #fafafa;
+  --border: #e8e8ee;
+  --card: #fff;
+  --radius: 14px;
+  --pill: 999px;
+  --shadow: 0 6px 22px rgba(10, 42, 107, 0.08);
+  --maxw: 1400px;
+}
+
+.page {
+  background: var(--bg);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 28px 22px;
+}
+
+@media (max-width: 768px) {
+  .container {
+    max-width: 620px;
+    padding: 20px 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    max-width: 100%;
+    padding: 16px 12px;
+  }
+}
+
+/* Hero */
+.explore-hero {
+  text-align: center;
+  padding: 22px 12px 16px;
+}
+.explore-hero h1 {
+  font-size: 36px;
+  font-weight: 900;
+  line-height: 1.06;
+  color: #0a2a6b;
+  margin: 0 0 4px;
+}
+.explore-hero p {
+  color: #667085;
+  margin: 0;
+}
+
+/* Filter panel */
+.panel {
+  background: #fff;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  border-radius: 20px;
+  padding: 14px;
+  margin: 12px auto 18px;
+}
+
+/* Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  margin-top: 10px;
+}
+
+/* Card */
+.card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 14px;
+  min-height: 96px;
+  cursor: pointer;
+  text-align: left;
+  display: block;
+  position: relative;
+  transition:
+    transform 0.16s ease,
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    color 0.16s ease;
+}
+.card h3,
+.card p {
+  color: #0a2a6b;
+  transition: color 0.18s ease;
+}
+.card:hover {
+  animation: card-bounce 0.25s ease-out 1;
+  background: #1976d2;
+  border-color: #1565c0;
+  box-shadow: 0 14px 34px rgba(21, 101, 192, 0.4);
+}
+.card:hover h3,
+.card:hover p {
+  color: #ffffff !important;
+}
+
+@keyframes card-bounce {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  30% {
+    transform: translateY(-3px) scale(1.02);
+  }
+  60% {
+    transform: translateY(1px) scale(1.01);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+.card h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+.card p {
+  font-size: 0.88rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Meta pills */
+.meta {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.pill {
+  font-size: 0.78rem;
+  border-radius: 999px;
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  background: #f9fafb;
+}
+.card:hover .pill {
+  border-color: rgba(255, 255, 255, 0.38);
+  background: rgba(15, 23, 42, 0.18);
+  color: #f9fafb;
+}
+
+/* CTI tiers */
+.cti-pill {
+  font-weight: 600;
+}
+.cti-gold {
+  background: #fef3c7;
+  border-color: #facc15;
+  color: #92400e;
+}
+.cti-silver {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+  color: #4b5563;
+}
+.cti-bronze {
+  background: #fce7dd;
+  border-color: #fb923c;
+  color: #7c2d12;
+}
+
+/* Verified badge */
+.verified-badge {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 2px solid #1d4ed8;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.16);
+}
+.card:hover .verified-badge {
+  background: #dbeafe;
+  border-color: #1d4ed8;
+  color: #1e3a8a;
+}
+
+/* Group headings */
+.country-heading {
+  font-weight: 800;
+  color: #0f172a;
+  margin: 18px 0 8px;
+}
+
+/* Pagination */
+.pagination {
+  margin-top: 18px;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.page-info {
+  margin-top: 4px;
+  text-align: center;
+  font-size: 0.82rem;
+  color: #6b7280;
+}
+
+/* Footer push */
+footer {
+  margin-top: auto;
+}

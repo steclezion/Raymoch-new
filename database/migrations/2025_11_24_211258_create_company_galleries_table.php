@@ -11,11 +11,12 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
 
-            $table->string('image_url');          // CDN / storage URL
+            $table->string('image_url')->nullable();          // CDN / storage URL
             $table->string('caption')->nullable();
             $table->unsignedInteger('sort_order')->default(0);
             $table->boolean('is_primary')->default(false);
-
+            $table->string('alt_text')->nullable(); // Alternative text for the image
+            $table->text('image_base64')->nullable(); // Base64-encoded image data  
             $table->timestamps();
         });
     }

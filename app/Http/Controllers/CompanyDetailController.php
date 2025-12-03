@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Http\Controllers;
 
 use App\Models\Company;
@@ -12,7 +11,7 @@ use App\Models\CompanyContact;
 use App\Models\CompanyLog;
 use App\Models\CompanyLocation;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;   // <-- add this
+use Illuminate\Support\Facades\DB;   // already added
 
 class CompanyDetailController extends Controller
 {
@@ -62,8 +61,12 @@ class CompanyDetailController extends Controller
     {
         $this->log($request, $company->id, 'tab_click', 'financials');
 
-        $rows = CompanyFinancial::where('company_id', $company->id)
-            ->orderByDesc('fiscal_year')
+        // INNER JOIN companies
+        $rows = CompanyFinancial::query()
+            ->join('companies', 'company_financials.company_id', '=', 'companies.id')
+            ->where('company_financials.company_id', $company->id)
+            ->orderByDesc('company_financials.fiscal_year')
+            ->select('company_financials.*') // keep only financial columns in payload
             ->get();
 
         return response()->json(['data' => $rows]);
@@ -73,9 +76,13 @@ class CompanyDetailController extends Controller
     {
         $this->log($request, $company->id, 'tab_click', 'team');
 
-        $rows = CompanyTeamMember::where('company_id', $company->id)
-            ->orderBy('role_type')
-            ->orderBy('full_name')
+        // INNER JOIN companies
+        $rows = CompanyTeamMember::query()
+            ->join('companies', 'company_team_members.company_id', '=', 'companies.id')
+            ->where('company_team_members.company_id', $company->id)
+            ->orderBy('company_team_members.role_type')
+            ->orderBy('company_team_members.full_name')
+            ->select('company_team_members.*')
             ->get();
 
         return response()->json(['data' => $rows]);
@@ -85,9 +92,13 @@ class CompanyDetailController extends Controller
     {
         $this->log($request, $company->id, 'tab_click', 'gallery');
 
-        $rows = CompanyGallery::where('company_id', $company->id)
-            ->orderByDesc('is_primary')
-            ->orderBy('sort_order')
+        // INNER JOIN companies
+        $rows = CompanyGallery::query()
+            ->join('companies', 'company_galleries.company_id', '=', 'companies.id')
+            ->where('company_galleries.company_id', $company->id)
+            ->orderByDesc('company_galleries.is_primary')
+            ->orderBy('company_galleries.sort_order')
+            ->select('company_galleries.*')
             ->get();
 
         return response()->json(['data' => $rows]);
@@ -97,9 +108,19 @@ class CompanyDetailController extends Controller
     {
         $this->log($request, $company->id, 'tab_click', 'documents');
 
-        $rows = CompanyDocument::where('company_id', $company->id)
-            ->orderBy('document_type')
-            ->orderBy('title')
+        // SINGLE query using INNER JOIN companies
+        $rows = CompanyDocument::query()
+            ->join('companies', 'company_documents.company_id', '=', 'companies.id')
+            ->where('company_documents.company_id', $company->id)
+            ->select(
+                'company_documents.id',
+                'company_documents.title',
+                'company_documents.document_type',
+                'company_documents.file_path',
+                'company_documents.created_at'
+            )
+            ->orderBy('company_documents.document_type')
+            ->orderByDesc('company_documents.created_at')
             ->get();
 
         return response()->json(['data' => $rows]);
@@ -109,17 +130,21 @@ class CompanyDetailController extends Controller
     {
         $this->log($request, $company->id, 'tab_click', 'contact');
 
-        $rows = CompanyContact::where('company_id', $company->id)->get();
+        // INNER JOIN companies
+        $rows = CompanyContact::query()
+            ->join('companies', 'company_contacts.company_id', '=', 'companies.id')
+            ->where('company_contacts.company_id', $company->id)
+            ->select('company_contacts.*')
+            ->get();
 
         return response()->json(['data' => $rows]);
     }
 
     /**
      * NEW: Location / Map tab
-     * Uses latitude/longitude stored directly on companies table.
+     * Uses latitude/longitude stored on company_locations table,
+     * with INNER JOIN to companies for nearby list.
      */
-
-
     public function location(Request $request, Company $company)
     {
         $this->log($request, $company->id, 'tab_click', 'location');

@@ -36,6 +36,8 @@ use App\Http\Controllers\Billing\StripeWebhookController;
 use App\Http\Controllers\ExploreController;
 use App\Http\Controllers\RoutePdfController;
 use App\Http\Controllers\AllCompaniesController;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Response;
 
 
 
@@ -344,3 +346,19 @@ Route::get('/dashboard', function () {
 Route::get('/explore', [ExploreController::class, 'index'])->name('explore.index');
 Route::get('/explore/data', [ExploreController::class, 'data'])->name('explore.data');
 Route::get('/routes/pdf', [RoutePdfController::class, 'export']);
+
+
+
+
+Route::get('/documents/{filename}', function ($filename) {
+    $path = storage_path('app/public/documents/' . $filename);
+
+    if (! File::exists($path)) {
+        abort(404);
+    }
+
+    // Return the file inline (browser will open PDF)
+    return response()->file($path);
+    // If you want "Download" instead, use:
+    // return response()->download($path);
+})->where('filename', '.*');

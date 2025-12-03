@@ -434,7 +434,7 @@ export default function Companies() {
       cookies: "/cookies",
       signup: "/signup",
       login: "/login",
-      explore: "/explore-businesses",
+      explore: "/explore",
       services: "/services",
       insights: "/insights",
       about: "/about",
