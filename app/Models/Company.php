@@ -9,6 +9,9 @@ use App\Models\CompanyTeamMember;
 use App\Models\CompanyDocument;
 use App\Models\CompanyLog;
 use App\Models\CompanyContact;
+use App\Models\CompanyGallery;
+use App\Models\CompanyLocation;
+use App\Models\CompanyReaction;
 
 class Company extends Model
 {
@@ -79,5 +82,9 @@ class Company extends Model
     public function location()
     {
         return $this->hasOne(CompanyLocation::class);
+    }
+    public function reactions()
+    {
+        return $this->hasMany(CompanyReaction::class);
     }
 }

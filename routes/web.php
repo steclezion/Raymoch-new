@@ -171,6 +171,8 @@ Route::view('/one', 'pages.one')->name('one');
 
 Route::view('/', 'pages.entire')->name('entire');           // from Entire.html
 
+Route::view('/e', 'pages.entiree')->name('entire');
+
 
 
 // This page uses query ?id=... and fetches JSON from /api/companies/{id}

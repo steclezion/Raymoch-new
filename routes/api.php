@@ -10,6 +10,7 @@ use App\Http\Controllers\AllCompaniesController;
 use App\Http\Controllers\Api\DirectoryController;
 use App\Http\Controllers\Api\CompanySearchLogController;
 use App\Http\Controllers\CompanyDetailController;
+use App\Http\Controllers\CompanyReactionController;
 
 
 
@@ -55,4 +56,7 @@ Route::prefix('companies/{company}')->group(function () {
     Route::get('/documents',  [CompanyDetailController::class, 'documents']);
     Route::get('/contact',    [CompanyDetailController::class, 'contact']);
     Route::get('/location',   [CompanyDetailController::class, 'location']); // 👈 NEW
+    // Route::post('/reactions', [CompanyReactionController::class, 'index']);
+    // Route::post('/reactions', [CompanyReactionController::class, 'index'])->name('companies.reactions.index');
+    Route::post('/reactions', [CompanyReactionController::class, 'storeReaction']);
 });
