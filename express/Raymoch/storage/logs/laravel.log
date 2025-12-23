@@ -1,0 +1,8 @@
+[2025-09-29 03:15:16] local.ERROR: Namespace declaration statement has to be the very first statement or after any declare call in the script {"exception":"[object] (Symfony\\Component\\ErrorHandler\\Error\\FatalError(code: 0): Namespace declaration statement has to be the very first statement or after any declare call in the script at /Users/elsarussom/Desktop/Raymoch-Project/raymoch/app/Http/Controllers/MatchingController.php:4)
+[stacktrace]
+#0 {main}
+"} 
+[2025-09-29 03:16:51] local.ERROR: Namespace declaration statement has to be the very first statement or after any declare call in the script {"exception":"[object] (Symfony\\Component\\ErrorHandler\\Error\\FatalError(code: 0): Namespace declaration statement has to be the very first statement or after any declare call in the script at /Users/elsarussom/Desktop/Raymoch-Project/raymoch/app/Http/Controllers/MatchingController.php:4)
+[stacktrace]
+#0 {main}
+"} 

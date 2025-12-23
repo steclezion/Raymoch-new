@@ -1,0 +1,1 @@
+<?php /**PATH C:\Users\stecl\OneDrive\Documents\Raymoch\resources\views/layouts/style_entire.blade.php ENDPATH**/ ?>
