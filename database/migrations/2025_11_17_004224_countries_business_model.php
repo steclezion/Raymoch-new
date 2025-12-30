@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->string('country_name');          // "United States"
             $table->string('flag_icon', 8)->nullable(); // emoji flag or alias
             $table->timestamps();
-            $table->unique('country_code');
+            $table->string('name');
         });
     }
     public function down(): void

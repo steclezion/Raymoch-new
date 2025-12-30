@@ -53,6 +53,31 @@ export function getSessionId() {
   }
 }
 
+
+/**
+ * GET /api/sectors
+ * Expected: array (strings or {id,name}) depending on your backend
+ */
+export async function fetchSectors() {
+  return fetchJSON(`${API_BASE}/sectors`);
+}
+
+/**
+ * GET /api/companies?q=&country=&sector=
+ * Expected: array/paginated companies
+ */
+export async function fetchCompanies(filters = {}) {
+  const params = new URLSearchParams();
+
+  if (filters.q) params.set("q", filters.q);
+  if (filters.country) params.set("country", filters.country);
+  if (filters.sector) params.set("sector", filters.sector);
+
+  const qs = params.toString();
+  return fetchJSON(`${API_BASE}/companies${qs ? `?${qs}` : ""}`);
+}
+
+
 // ---------------------------------------------------------------------
 // Google Maps classic loader (NO Advanced Markers, NO map_id)
 //   - This is what removes your “Advanced Markers / Map ID” issues
@@ -90,3 +115,5 @@ export function loadGoogleMapsScript() {
 
   return googleMapsLoadingPromise;
 }
+
+

@@ -228,7 +228,7 @@ export default function Companies() {
       services: "/services",
       insights: "/insights",
       about: "/about",
-      trial: "/trial",
+      trial: "/request-trial",
       home: "/",
     }),
     []

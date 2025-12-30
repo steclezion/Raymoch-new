@@ -17,7 +17,7 @@ export default function Header({ routes: routesProp, homeHref }) {
     home: homeHref ?? routes.home ?? "/",
     login: routes.login ?? "/login",
     signupIndex: routes.signup?.index ?? "/signup",
-    requestShow: routes.request?.show ?? "/request",
+    requestShow: routes.request?.show ?? "/request-trial",
   };
 
   useEffect(() => {

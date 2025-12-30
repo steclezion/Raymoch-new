@@ -310,7 +310,7 @@ export default function ExploreBusinesses() {
       services: "/services",
       insights: "/insights",
       about: "/about",
-      trial: "/trial",
+      trial: "/request-trial",
       home: "/",
     }),
     []

@@ -1,0 +1,1 @@
+import{R as t,j as i}from"./Footer-BZchTVqk.js";import"./sweetalert2.esm.all-NNS-RXd7.js";import{G as a}from"./Grow-Dr1MH1Lh.js";import"./emotion-element-f0de968e.browser.esm-CdL0rxn0.js";t.forwardRef(function(r,o){return i.jsx(a,{ref:o,...r})});
