@@ -190,9 +190,8 @@ export default function Login({
       <style>{css}</style>
 
       <div className="page" >
-        <main className="main"  style={{
-    backgroundImage: `url(${africaMap})`,
-  }}>
+        <main className="main"  style={{ backgroundImage: `url(${africaMap})`}}>
+
           <section className="card" aria-label="Login card">
             <header className="head">
               <h1 className="title">Log In</h1>
