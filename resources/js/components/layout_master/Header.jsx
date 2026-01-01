@@ -107,7 +107,7 @@ export default function Header({ routes = {} }) {
           <div style="display:flex;flex-direction:column;gap:10px;width:100%">
             <a href="${routes.login ?? "/login"}" class="swal2-styled" style="display:inline-block;background:#2563eb">Login</a>
             <a href="${routes.signup ?? "/signup"}" class="swal2-styled" style="display:inline-block;background:#16a34a">Sign up</a>
-            <a href="${routes.trial ?? "/trial"}" class="swal2-styled" style="display:inline-block;background:#f59e0b">Request a free trial</a>
+            <a href="${routes.trial.page ?? "/request-trial"}" class="swal2-styled" style="display:inline-block;background:#f59e0b">Request a free trial</a>
           </div>
         </div>
       `,
@@ -201,7 +201,7 @@ export default function Header({ routes = {} }) {
             <input type="search" name="q" placeholder="Search companies, sectors, regions…" />
           </form>
           <div className="auth">
-            <a className="btn orange" target="_blank" href={routes.trial ?? "/trial"}>Request a free trial</a>
+            <a className="btn orange" target="_blank" href={routes.trial ?? "/request-trial"}>Request a free trial</a>
             <a className="btn primary" target="_blank" href={routes.login ?? "/login"}>Login</a>
             <a className="btn success" target="_blank" href={routes.signup ?? "/signup"}>Sign up</a>
           </div>
