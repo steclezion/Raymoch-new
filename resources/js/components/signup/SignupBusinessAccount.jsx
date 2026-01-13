@@ -593,8 +593,15 @@ function BusinessForm({ routes }) {
             )}
           </section>
         </main>
-
-        <footer className="ft">
+<footer className="ft">
+  <div>
+    © {new Date().getFullYear()} {routes.brandName || "Raymoch"}. All rights reserved.
+  </div>
+  <div>
+    <a href={routes.privacy}>Privacy</a>
+    <a href={routes.terms}>Terms</a>
+    <a href={routes.cookies}>Cookies</a>
+  </div>
           <div>© 2025 Raymoch. All rights reserved.</div>
           <div><a href={R.signup?.index ?? "/signup"}>Signup Options</a></div>
         </footer>

@@ -4,11 +4,15 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Header from "./Header.jsx";
 
+
+
 import Select from "react-select";
 import ReactCountryFlag from "react-country-flag";
 import { getCountries, getCountryCallingCode } from "libphonenumber-js";
 import countries from "i18n-iso-countries";
 import enLocale from "i18n-iso-countries/langs/en.json";
+
+
 
 // Register English country names
 countries.registerLocale(enLocale);
@@ -595,8 +599,11 @@ export default function SignupBasic({ routes }) {
           </section>
         </main>
 
-        <footer className="ft">
-          <div>© 2025 Raymoch. All rights reserved.</div>
+  <footer className="ft">
+  <div>
+    © {new Date().getFullYear()} {routes.brandName || "Raymoch"}. All rights reserved.
+  </div>
+ 
           <div>
             <a href="#" onClick={(e) => { e.preventDefault(); setShowPrivacy(true); }}>Privacy</a>
             <a href="#" onClick={(e) => { e.preventDefault(); setShowTerms(true); }}>Terms</a>
@@ -858,5 +865,21 @@ const modalCss = `
 .modalFoot .cta.subtle{
   background:#f5f8ff; color:#041b64; border:1px solid #d9e1ff; border-radius:10px; padding:10px 14px; font-weight:700; cursor:pointer;
 }
+  html, body { height: 100%; }
+
+.page{
+  min-height: 100dvh;   /* better than 100vh */
+  display: flex;
+  flex-direction: column;
+}
+
+.page > main{
+  flex: 1 1 auto;       /* main takes remaining space */
+}
+
+.ft{
+  margin-top: auto;     /* footer sticks to bottom */
+}
+
 `;
 // Country code options

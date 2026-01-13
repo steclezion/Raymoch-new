@@ -37,7 +37,6 @@ const HEADER_CSS = `
 .row2 .wrap { max-width:1328px; margin:0 auto; padding:0 16px; }
 .row2 .links { display:flex; gap:18px; padding:8px 8px; margin:0; align-items:center; flex-wrap:wrap; }
 .row2 a { font-weight:600; font-size:.92rem; padding:4px 6px; border-radius:4px; color:#0f172a; text-decoration:none; }
-.row2 a:hover { background:#eceff3; color:#0a2a6b; }
 
 .hamburger { display:none; flex-direction:column; gap:4px; background:none; border:none; padding:8px; border-radius:8px; }
 .hamburger span { width:24px; height:3px; background:#0f172a; border-radius:3px; }

@@ -67,7 +67,7 @@ export default function PlanCard({
                   width: `${progress}%`,
                   height: "100%",
                   background:
-                    "linear-gradient(90deg, #007BFF, #00BFFF, #007BFF)",
+                    "linear-gradient(90deg, #06080aff, #0b191dff, #171819ff)",
                   backgroundSize: "200% 100%",
                   borderRadius: "4px",
                   animation: "shine 1.2s linear infinite",

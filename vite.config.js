@@ -9,6 +9,7 @@ const reactEntries = fg.sync('resources/js/pages/**/*.{js,jsx,ts,tsx,css,scss,sa
   unique: true,
 }).filter(Boolean);
 
+
 const reactcomponents_pricing = fg.sync('resources/js/components/pricing/**/*.{js,jsx,ts,tsx}', {
   onlyFiles: true,
   unique: true,
@@ -30,6 +31,9 @@ const reactcomponents_layout_master = fg.sync('resources/js//**/*.{js,jsx,ts,tsx
 
 
 export default defineConfig({
+     build: {
+    chunkSizeWarningLimit: 1000, // 1 MB
+  },
     plugins: [
         laravel({
             input: ['resources/css/app.css', 
@@ -39,7 +43,7 @@ export default defineConfig({
                 'resources/js/styles/company-detail-dialog.css',
                 'resources/js/styles/companies.css', 
                 'resources/js/styles/company-detail-dialog.css',
-                
+
                 ...reactEntries,
                 ...reactcomponents_pricing,
             ...reactcomponents_signup,
@@ -50,3 +54,5 @@ export default defineConfig({
           react(),
     ],
 });
+
+

@@ -15,7 +15,7 @@ export default function PlanCard({
   selected = false,
 }) {
   return (
-    <article className="plan" id={id} data-plan={id} data-selected={String(selected)} aria-labelledby={`h-${id}`}>
+    <article className="plan" id ={id} data-plan={id} data-selected={String(selected)} aria-labelledby={`h-${id}`}>
       <h2 id={`h-${id}`}>
         {title} {badge ? <span className="badge">{badge}</span> : null}
       </h2>

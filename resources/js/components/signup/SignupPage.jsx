@@ -31,7 +31,7 @@ export default function SignupPage({ routes }) {
                 "Weekly sector updates",
                 "Private notes",
               ]}
-              ctaHref={routes.basicCreate}  // Laravel named route
+              ctaHref={routes.basicCreate}
             />
 
             <PlanCard
@@ -72,14 +72,17 @@ export default function SignupPage({ routes }) {
         </div>
       </main>
 
-      <footer className="ft">
-        <div>© 2025 {routes.brandName || "Raymoch"}. All rights reserved.</div>
-        <div>
-          <a href={routes.privacy}>Privacy</a>
-          <a href={routes.terms}>Terms</a>
-          <a href={routes.cookies}>Cookies</a>
-        </div>
-      </footer>
+<footer className="ft">
+  <div>
+    © {new Date().getFullYear()} {routes.brandName || "Raymoch"}. All rights reserved.
+  </div>
+  <div>
+    <a href={routes.privacy}>Privacy</a>
+    <a href={routes.terms}>Terms</a>
+    <a href={routes.cookies}>Cookies</a>
+  </div>
+</footer>
+
     </>
   );
 }
@@ -91,7 +94,8 @@ const styles = `
   --shadow:0 10px 30px rgba(10,42,107,.08); --footer-bg:#0b1020;
   --radius:24px; --cardH: clamp(540px, 75vh, 880px);
 }
-  /* ===== Header fixes (scoped to your Header.jsx markup) ===== */
+
+/* ===== Header fixes (scoped to your Header.jsx markup) ===== */
 .header{
   height:80px;
   background:#fff;
@@ -101,21 +105,20 @@ const styles = `
   justify-content:space-between;
   padding:0 24px;
   position:relative;
-  flex-shrink:0; /* don't let it compress */
+  flex-shrink:0;
 }
 .brand{ display:flex; align-items:center; gap:10px; color:var(--brand-blue); text-decoration:none; }
 .brand svg{ width:26px; height:26px; display:block; }
 .brand span{ font-weight:900; font-size:1.3rem; letter-spacing:.2px; color:var(--brand-blue); }
 
-
-
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
 body{min-height:100vh;display:flex;flex-direction:column;background:var(--bg);color:var(--ink)}
+
 .hdr{height:80px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:relative}
 .brand{display:flex;align-items:center;gap:10px;color:var(--brand-blue);text-decoration:none}
 .brand svg{width:26px;height:26px}
-
 .brand span{font-weight:900;font-size:1.3rem;letter-spacing:.2px;color:var(--brand-blue)}
+
 .iconbtn{background:transparent;border:0;cursor:pointer;padding:6px;border-radius:8px;display:flex;align-items:center;justify-content:center;position:relative}
 .iconbtn:hover{background:#f2f4ff}
 
@@ -132,7 +135,25 @@ body{min-height:100vh;display:flex;flex-direction:column;background:var(--bg);co
 main{flex:1;display:block}
 .wrap{width:100%;max-width:1320px;margin:0 auto;padding:24px}
 
-.grid{display:grid;gap:22px;grid-template-columns:repeat(3,minmax(0,1fr))}
+/* ===== GRID ===== */
+.grid{
+  display:grid;
+  gap:22px;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+
+/* ✅ HARD LOCK: grid must never change color on hover/focus */
+.grid,
+.grid:hover,
+.grid:focus,
+.grid:focus-within,
+.grid:active{
+  background-color: transparent !important;
+  color: inherit !important;
+  transition: none !important;
+}
+
+
 @media (max-width:1180px){.grid{grid-template-columns:1fr 1fr}}
 @media (max-width:780px){.grid{grid-template-columns:1fr}}
 
@@ -147,6 +168,12 @@ main{flex:1;display:block}
 }
 .card:hover{transform:translateY(-2px);border-color:#d8defa;box-shadow:0 12px 40px rgba(10,42,107,.12)}
 
+.card:hover{
+  transform:none !important;
+  border-color:var(--border) !important;
+  box-shadow:var(--shadow) !important;
+}
+  
 .card-body{padding:28px 26px 0 26px;display:flex;flex-direction:column;gap:14px}
 .card h3{font-size:1.5rem;font-weight:900}
 .price-row{display:flex;align-items:baseline;gap:8px}
@@ -158,6 +185,7 @@ main{flex:1;display:block}
 .features li{list-style:none;display:flex;gap:10px;align-items:flex-start;color:#162033}
 .features li:before{content:"✓";font-weight:900}
 .spacer{margin-top:auto}
+
 .planbar{
   margin-top:auto;padding:16px 18px;border-top:1px solid var(--border);
   background:linear-gradient(180deg,#ffffff 0%, #fbfbff 100%);
@@ -169,7 +197,108 @@ main{flex:1;display:block}
 .primary{background:linear-gradient(135deg,var(--brand-blue-700),var(--brand-blue-500));color:#fff;border:none}
 .primary:hover{filter:brightness(1.02)}
 
-.ft{background:#0b1020;color:#cbd5e1;font-size:.9rem;padding:10px 24px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #1f2937;margin-top:24px}
+.ft{
+  background:#0b1020;color:#cbd5e1;font-size:.9rem;padding:10px 24px;
+  display:flex;justify-content:space-between;align-items:center;
+  border-top:1px solid #1f2937;margin-top:24px
+}
 .ft a{color:#cbd5e1;margin-left:14px;text-decoration:none}
 .ft a:hover{text-decoration:underline}
+
+
+
+
+/* 🚫 BLOCK all hover/focus styling on the pricing area */
+.wrap,
+.wrap:hover,
+.wrap:focus,
+.wrap:focus-within,
+.wrap:active {
+  background: transparent !important;
+}
+
+.grid,
+.grid:hover,
+.grid:focus,
+.grid:focus-within,
+.grid:active {
+  background: transparent !important;
+}
+
+/* 🚫 Prevent ANY parent hover from affecting cards */
+.wrap:hover .card,
+.grid:hover .card,
+main:hover .card,
+body:hover .card {
+  background: var(--card) !important;
+  color: var(--ink) !important;
+  border-color: var(--border) !important;
+  box-shadow: var(--shadow) !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* 🚫 Kill ALL hover transforms */
+.card:hover,
+.card:focus,
+.card:active {
+  transform: none !important;
+  box-shadow: var(--shadow) !important;
+  border-color: var(--border) !important;
+}
+
+/* ✅ HARD LOCK PlanCard text colors (fixes "transparent on hover") */
+.card h3,
+.card .card-body h3 {
+  color: var(--ink) !important;
+  -webkit-text-fill-color: var(--ink) !important;
+  opacity: 1 !important;
+}
+
+.card p,
+.card .card-body p {
+  color: var(--muted) !important;
+  -webkit-text-fill-color: var(--muted) !important;
+  opacity: 1 !important;
+}
+
+.card .features,
+.card .features li {
+  color: #162033 !important;
+  -webkit-text-fill-color: #162033 !important;
+  opacity: 1 !important;
+}
+
+/* ✅ On hover/focus, keep text exactly the same */
+.card:hover h3,
+.card:hover p,
+.card:hover .features,
+.card:hover .features li,
+.card:focus-within h3,
+.card:focus-within p,
+.card:focus-within .features,
+.card:focus-within .features li {
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+  opacity: 1 !important;
+}
+
+/* ✅ If the whole card is inside an <a>, prevent link hover from affecting children */
+.card a,
+.card a:hover,
+.card a:focus,
+.card a:active {
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+  text-decoration: none !important;
+}
+
+/* ✅ Keep CTA button styling (don’t inherit) */
+.planbar a.primary,
+.planbar a.primary:hover,
+.planbar a.primary:focus {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
 `;

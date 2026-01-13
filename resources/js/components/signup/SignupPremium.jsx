@@ -869,12 +869,20 @@ function PremiumForm({ routes }) {
           </section>
         </main>
 
-        <footer className="ft">
-          <div>© 2025 Raymoch. All rights reserved.</div>
+<footer className="ft">
+  <div>
+    © {new Date().getFullYear()} {routes.brandName || "Raymoch"}. All rights reserved.
+  </div>
+  <div>
+    <a href={routes.privacy}>Privacy</a>
+    <a href={routes.terms}>Terms</a>
+    <a href={routes.cookies}>Cookies</a>
+  </div>
           <div>
             <a href={R.signup?.index ?? "/signup"}>Signup Options</a>
           </div>
         </footer>
+        
       </div>
 
       {/* ======= Terms Modal (scrollable) ======= */}
