@@ -281,7 +281,7 @@ export default function Login({
           </section>
         </main>
 
-<footer className="ft">
+<footer className="footer">
   <div>
     © {new Date().getFullYear()} {routes.brandName || "Raymoch"}. All rights reserved.
   </div>
