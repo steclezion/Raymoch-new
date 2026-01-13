@@ -12,9 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('countries', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
+           // $table->id();
+           // $table->string('name')->nullable();
+           // $table->timestamps();
+$table->id();
+            $table->string('country_code', 2);       // ISO2 (US, GB, ET, …)
+            $table->string('country_name');          // "United States"
+            $table->string('flag_icon', 8)->nullable(); // emoji flag or alias
             $table->timestamps();
+            $table->string('name')->default(0)->nullable();
+
         });
 
     }

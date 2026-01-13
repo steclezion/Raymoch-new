@@ -7,8 +7,8 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::dropIfExists('countries');
-        Schema::create('countries', function (Blueprint $table) {
+       // Schema::dropIfExists('countries');
+        Schema::create('countriess', function (Blueprint $table) {
             $table->id();
             $table->string('country_code', 2);       // ISO2 (US, GB, ET, …)
             $table->string('country_name');          // "United States"
