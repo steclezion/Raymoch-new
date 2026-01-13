@@ -281,15 +281,13 @@ export default function Login({
           </section>
         </main>
 
-<footer className="footer">
-  <div>
-    © {new Date().getFullYear()} {routes.brandName || "Raymoch"}. All rights reserved.
-  </div>
-  <div>
-    <a href={routes.privacy}>Privacy</a>
-    <a href={routes.terms}>Terms</a>
-    <a href={routes.cookies}>Cookies</a>
-  </div>
+        <footer className="footer">
+          <div>© 2025 {brandName}. All rights reserved.</div>
+          <div className="footerLinks">
+            <a href={privacyHref}>Privacy</a>
+            <a href={termsHref}>Terms</a>
+            <a href={cookiesHref}>Cookies</a>
+          </div>
         </footer>
       </div>
     </>
