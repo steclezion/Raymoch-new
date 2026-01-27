@@ -62,21 +62,12 @@ export default function PricingBasic({ routes = {} }) {
               ]}
               primaryHref={`${premiumCreate}?plan=premium`}
               primaryLabel="Continue with Premium"
+              backLabel = "Back"
               backHref={signupIndex}
             />
           </section>
         </div>
       </main>
-
-{/* 
-      <footer className="ft">
-        <div>© {new Date().getFullYear()} {brandName}. All rights reserved.</div>
-        <div>
-          <a href={privacyHref}>Privacy</a>
-          <a href={termsHref}>Terms</a>
-          <a href={cookiesHref}>Cookies</a>
-        </div>
-      </footer> */}
 
 <Footer routes={routes} />
     </div>

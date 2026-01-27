@@ -34,7 +34,7 @@ export default function PlanCard({
 
       <div className="actions">
         <a className="primary" href={primaryHref}>{primaryLabel}</a>
-        <a className="back" href={backHref}>{backLabel}</a>
+        <a className="back"  href={backHref}>{backLabel}</a>
       </div>
     </article>
   );
