@@ -190,7 +190,9 @@ export default function Login({
       <style>{css}</style>
 
       <div className="page" >
-        <main className="main"  style={{ backgroundImage: `url(${africaMap})`}}>
+        {/* <main className="main"  style={{ backgroundImage: `url(${africaMap})`}}> */}
+
+        <main className="main" >
 
           <section className="card" aria-label="Login card">
             <header className="head">
@@ -411,7 +413,7 @@ const css = `
   content: "";
   position: fixed;
   inset: 0;
-backgroundImage: 'url(${africaMap}),
+ backgroundImage: 'url(${africaMap}),
    background-repeat: no-repeat;
   background-position: center;
   background-size: 70%;
