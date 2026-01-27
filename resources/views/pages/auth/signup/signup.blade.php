@@ -19,7 +19,7 @@
       basicCreate: "{{ route('signup.basic.create') }}",
       businessCreate: "{{ route('signup.business.create') }}",
       investorCreate: "{{ route('signup.investor.create') }}",
-      brandName: "Raymoch"
+      brandName: "Raymoch",
     };
   </script>
 </head>

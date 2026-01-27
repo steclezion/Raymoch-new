@@ -36,18 +36,18 @@ export default defineConfig({
   },
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 
-                'resources/js/app.js', 
+            input: ['resources/css/app.css',
+                'resources/js/app.js',
                 'resources/js/app.jsx',
-                 'resources/js/styles/companies.css', 
+                 'resources/js/styles/companies.css',
                 'resources/js/styles/company-detail-dialog.css',
-                'resources/js/styles/companies.css', 
+                'resources/js/styles/companies.css',
                 'resources/js/styles/company-detail-dialog.css',
 
                 ...reactEntries,
                 ...reactcomponents_pricing,
             ...reactcomponents_signup,
-      
+
              ],
             refresh: true,
         }),

@@ -1,13 +1,18 @@
 // resources/js/pages/SignupBasic.jsx
 import React, { useEffect, useRef, useState } from "react";
-import { Toaster, toast } from "sonner";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Header from "./Header.jsx";
+
+
 
 import Select from "react-select";
 import ReactCountryFlag from "react-country-flag";
 import { getCountries, getCountryCallingCode } from "libphonenumber-js";
 import countries from "i18n-iso-countries";
 import enLocale from "i18n-iso-countries/langs/en.json";
+
+
 
 // Register English country names
 countries.registerLocale(enLocale);
@@ -65,45 +70,32 @@ const formatCCOption = (o) => (
 const getOptionValue = (o) => `${o.iso2}-${o.value}`;
 const getOptionLabel = (o) => `${o.value} ${o.name}`;
 
+
 /* ================== Reusable Modal component ================== */
 function Modal({ title, open, onClose, children }) {
   useEffect(() => {
-    const onEsc = (e) => {
-      if (e.key === "Escape") onClose?.();
-    };
+    const onEsc = (e) => { if (e.key === "Escape") onClose?.(); };
     if (open) document.addEventListener("keydown", onEsc);
     return () => document.removeEventListener("keydown", onEsc);
   }, [open, onClose]);
 
   if (!open) return null;
   return (
-    <div
-      className="modalOverlay"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="modal-title"
-    >
+    <div className="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div className="modalCard">
         <div className="modalHead">
           <h3 id="modal-title">{title}</h3>
-          <button
-            className="modalClose"
-            aria-label="Close"
-            onClick={onClose}
-          >
-            ×
-          </button>
+          <button className="modalClose" aria-label="Close" onClick={onClose}>×</button>
         </div>
         <div className="modalBody">{children}</div>
         <div className="modalFoot">
-          <button className="cta subtle" onClick={onClose}>
-            Close
-          </button>
+          <button className="cta subtle" onClick={onClose}>Close</button>
         </div>
       </div>
     </div>
   );
 }
+
 
 export default function SignupBasic({ routes }) {
   const R = routes || (typeof window !== "undefined" ? window.ROUTES : {});
@@ -137,6 +129,7 @@ export default function SignupBasic({ routes }) {
 
   // Phone: selected country code (string) + raw number
   const [countryCode, setCountryCode] = useState(() => {
+    // default to +1 if present in options
     const us = CC_OPTIONS.find((o) => o.iso2 === "US") || CC_OPTIONS[0];
     return us?.value || "+1";
   });
@@ -174,9 +167,7 @@ export default function SignupBasic({ routes }) {
   };
 
   const strongPass = (s) =>
-    /^(?=.*[A-Z])(?=.*\d)(?=.*[ !"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~]).{9,}$/.test(
-      s
-    );
+    /^(?=.*[A-Z])(?=.*\d)(?=.*[ !"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~]).{9,}$/.test(s);
 
   const validate = () => {
     if (!values.name.trim()) {
@@ -192,9 +183,7 @@ export default function SignupBasic({ routes }) {
       return false;
     }
     if (!values.password || !strongPass(values.password)) {
-      toast.error(
-        "Password must be ≥9 chars and include 1 uppercase, 1 number, and 1 special character."
-      );
+      toast.error("Password must be ≥9 chars and include 1 uppercase, 1 number, and 1 special character.");
       return false;
     }
     if (values.password !== values.confirm_password) {
@@ -210,12 +199,9 @@ export default function SignupBasic({ routes }) {
       return false;
     }
     if (!values.consent) {
-      toast.error("Please accept the Terms & Privacy to continue.");
+      toast.error("“I agree” is not selected.");
       consentRef.current?.focus();
-      consentRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+      consentRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       return false;
     }
     return true;
@@ -230,37 +216,32 @@ export default function SignupBasic({ routes }) {
     setBusy(true);
     try {
       const csrf =
-        document
-          .querySelector('meta[name="csrf-token"]')
-          ?.getAttribute("content") ||
+        document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") ||
         R.csrf ||
         "";
 
       const formattedPhone = `${countryCode}${digitsOnly(values.phone)}`;
 
-      const res = await fetch(
-        R.signup?.basic?.send_otp ?? "/signup/basic/send-otp",
-        {
-          method: "POST",
-          headers: {
-            "X-CSRF-TOKEN": csrf,
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: values.name.trim(),
-            email: values.email.trim(),
-            display_name: values.display_name.trim(),
-            password: values.password,
-            confirm_password: values.confirm_password,
-            phone: formattedPhone,
-            company_name: values.company_name.trim(),
-            consent: values.consent ? 1 : 0,
-            plan: "basic",
-          }),
-          credentials: "same-origin",
-        }
-      );
+      const res = await fetch(R.signup?.basic?.send_otp ?? "/signup/basic/send-otp", {
+        method: "POST",
+        headers: {
+          "X-CSRF-TOKEN": csrf,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: values.name.trim(),
+          email: values.email.trim(),
+          display_name: values.display_name.trim(),
+          password: values.password,
+          confirm_password: values.confirm_password,
+          phone: formattedPhone,
+          company_name: values.company_name.trim(),
+          consent: values.consent ? 1 : 0,
+          plan: "basic",
+        }),
+        credentials: "same-origin",
+      });
 
       const json = await res.json().catch(() => ({}));
       if (res.ok && json.ok) {
@@ -298,14 +279,11 @@ export default function SignupBasic({ routes }) {
   };
 
   const onOtpKeyDown = (i) => (e) => {
-    if (e.key === "Backspace" && !otp[i] && i > 0)
-      otpRefs[i - 1].current?.focus();
+    if (e.key === "Backspace" && !otp[i] && i > 0) otpRefs[i - 1].current?.focus();
   };
 
   const onOtpPaste = (e) => {
-    const pasted = (e.clipboardData.getData("text") || "")
-      .replace(/\D/g, "")
-      .slice(0, 6);
+    const pasted = (e.clipboardData.getData("text") || "").replace(/\D/g, "").slice(0, 6);
     if (!pasted) return;
     e.preventDefault();
     const arr = pasted.split("").concat(Array(6).fill("")).slice(0, 6);
@@ -324,31 +302,23 @@ export default function SignupBasic({ routes }) {
     setBusy(true);
     try {
       const csrf =
-        document
-          .querySelector('meta[name="csrf-token"]')
-          ?.getAttribute("content") ||
+        document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") ||
         R.csrf ||
         "";
-      const res = await fetch(
-        R.signup?.basic?.verify_otp ?? "/signup/basic/verify-otp",
-        {
-          method: "POST",
-          headers: {
-            "X-CSRF-TOKEN": csrf,
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ code, email: values.email.trim() }),
-          credentials: "same-origin",
-        }
-      );
+      const res = await fetch(R.signup?.basic?.verify_otp ?? "/signup/basic/verify-otp", {
+        method: "POST",
+        headers: {
+          "X-CSRF-TOKEN": csrf,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ code, email: values.email.trim() }),
+        credentials: "same-origin",
+      });
       const json = await res.json().catch(() => ({}));
       if (res.ok && json.ok) {
         toast.success("Verified! Redirecting…");
-        setTimeout(
-          () => window.location.assign(json.redirect || "/dashboard"),
-          700
-        );
+        setTimeout(() => window.location.assign(json.redirect || "/dashboard"), 700);
       } else {
         toast.error(json?.message || "Invalid code.");
       }
@@ -372,28 +342,15 @@ export default function SignupBasic({ routes }) {
     <>
       <style>{css}</style>
       <style>{modalCss}</style>
-
       <Header routes={R} />
-
-      {/* ✅ Sonner Toaster */}
-      <Toaster
-        position="top-right"
-        richColors
-        closeButton
-        expand={false}
-        toastOptions={{ duration: 3500 }}
-      />
+      <ToastContainer position="top-right" />
 
       <div className="page">
         <main>
           <section className="card">
             <div className="cardHeader">
               <h1>Individual Account</h1>
-              <button
-                type="button"
-                className="backBtn"
-                onClick={() => window.history.back()}
-              >
+              <button type="button" className="backBtn" onClick={() => window.history.back()}>
                 ← Back
               </button>
             </div>
@@ -428,6 +385,8 @@ export default function SignupBasic({ routes }) {
                 </div>
 
                 <div className="row">
+  
+
                   {/* Password with eye */}
                   <div>
                     <label htmlFor="b-pass">Password</label>
@@ -447,26 +406,9 @@ export default function SignupBasic({ routes }) {
                         aria-label={showPass ? "Hide password" : "Show password"}
                         onClick={() => setShowPass((v) => !v)}
                       >
-                        <svg
-                          width="22"
-                          height="22"
-                          viewBox="0 0 24 24"
-                          aria-hidden="true"
-                        >
-                          <path
-                            d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z"
-                            fill="none"
-                            stroke="#334155"
-                            strokeWidth="1.5"
-                          />
-                          <circle
-                            cx="12"
-                            cy="12"
-                            r="3"
-                            fill="none"
-                            stroke="#334155"
-                            strokeWidth="1.5"
-                          />
+                        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" fill="none" stroke="#334155" strokeWidth="1.5" />
+                          <circle cx="12" cy="12" r="3" fill="none" stroke="#334155" strokeWidth="1.5" />
                         </svg>
                       </button>
                     </div>
@@ -488,40 +430,23 @@ export default function SignupBasic({ routes }) {
                       <button
                         type="button"
                         className="revealBtn"
-                        aria-label={
-                          showPass2 ? "Hide password" : "Show password"
-                        }
+                        aria-label={showPass2 ? "Hide password" : "Show password"}
                         onClick={() => setShowPass2((v) => !v)}
                       >
-                        <svg
-                          width="22"
-                          height="22"
-                          viewBox="0 0 24 24"
-                          aria-hidden="true"
-                        >
-                          <path
-                            d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z"
-                            fill="none"
-                            stroke="#334155"
-                            strokeWidth="1.5"
-                          />
-                          <circle
-                            cx="12"
-                            cy="12"
-                            r="3"
-                            fill="none"
-                            stroke="#334155"
-                            strokeWidth="1.5"
-                          />
+                        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" fill="none" stroke="#334155" strokeWidth="1.5" />
+                          <circle cx="12" cy="12" r="3" fill="none" stroke="#334155" strokeWidth="1.5" />
                         </svg>
                       </button>
                     </div>
                   </div>
+
                 </div>
 
-                {/* Display name + phone */}
+                {/* Confirm password + phone with country code */}
                 <div className="row">
-                  <div>
+                
+   <div>
                     <label htmlFor="b-username">Display name</label>
                     <input
                       id="b-username"
@@ -542,9 +467,7 @@ export default function SignupBasic({ routes }) {
                         classNamePrefix="rs"
                         options={CC_OPTIONS}
                         value={selectedCC}
-                        onChange={(opt) =>
-                          setCountryCode(opt?.value || countryCode)
-                        }
+                        onChange={(opt) => setCountryCode(opt?.value || countryCode)}
                         formatOptionLabel={formatCCOption}
                         getOptionValue={getOptionValue}
                         getOptionLabel={getOptionLabel}
@@ -567,9 +490,7 @@ export default function SignupBasic({ routes }) {
                             ...base,
                             paddingTop: 8,
                             paddingBottom: 8,
-                            backgroundColor: state.isFocused
-                              ? "#eef2ff"
-                              : "white",
+                            backgroundColor: state.isFocused ? "#eef2ff" : "white",
                             color: "#0f172a",
                           }),
                           menu: (base) => ({
@@ -619,40 +540,16 @@ export default function SignupBasic({ routes }) {
                   />
                   <label htmlFor="b-consent">
                     <strong>I agree</strong> to the{" "}
-                    <a
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setShowTerms(true);
-                      }}
-                    >
-                      Terms
-                    </a>{" "}
+                    <a href="#" onClick={(e) => { e.preventDefault(); setShowTerms(true); }}>Terms</a>{" "}
                     and{" "}
-                    <a
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setShowPrivacy(true);
-                      }}
-                    >
-                      Privacy
-                    </a>
-                    .<br />
-                    <small>
-                      We’ll use your info to create a basic account. You can
-                      upgrade anytime.
-                    </small>
+                    <a href="#" onClick={(e) => { e.preventDefault(); setShowPrivacy(true); }}>Privacy</a>.
+                    <br />
+                    <small>We’ll use your info to create a basic account. You can upgrade anytime.</small>
                   </label>
                 </div>
 
                 <div className="actions">
-                  <button
-                    type="submit"
-                    className="cta"
-                    disabled={busy}
-                    aria-disabled={busy}
-                  >
+                  <button type="submit" className="cta" disabled={busy} aria-disabled={busy}>
                     {busy ? "Sending Code…" : "Create Basic Account"}
                   </button>
                   <div className="subtle">
@@ -667,8 +564,7 @@ export default function SignupBasic({ routes }) {
               <div className="otpWrap">
                 <h2 className="otpTitle">Email Verification</h2>
                 <p className="muted">
-                  We’ve sent a 6-digit code to <strong>{values.email}</strong>.
-                  Enter it below.
+                  We’ve sent a 6-digit code to <strong>{values.email}</strong>. Enter it below.
                 </p>
 
                 <div className="otpInputs" onPaste={onOtpPaste}>
@@ -688,9 +584,7 @@ export default function SignupBasic({ routes }) {
                 </div>
 
                 <div className="otpMeta">
-                  <div className="timer">
-                    Expires in: <strong>{mm}:{ss}</strong>
-                  </div>
+                  <div className="timer">Expires in: <strong>{mm}:{ss}</strong></div>
                   <button
                     type="button"
                     className="cta ghost"
@@ -705,50 +599,26 @@ export default function SignupBasic({ routes }) {
           </section>
         </main>
 
-        <footer className="ft">
+  <footer className="ft">
+  <div>
+    © {new Date().getFullYear()} {routes.brandName || "Raymoch"}. All rights reserved.
+  </div>
+ 
           <div>
-            © {new Date().getFullYear()} {routes?.brandName || "Raymoch"}. All
-            rights reserved.
-          </div>
-
-          <div>
-            <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                setShowPrivacy(true);
-              }}
-            >
-              Privacy
-            </a>
-            <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                setShowTerms(true);
-              }}
-            >
-              Terms
-            </a>
+            <a href="#" onClick={(e) => { e.preventDefault(); setShowPrivacy(true); }}>Privacy</a>
+            <a href="#" onClick={(e) => { e.preventDefault(); setShowTerms(true); }}>Terms</a>
           </div>
         </footer>
       </div>
 
-      {/* ======= Terms Modal (scrollable) ======= */}
-      <Modal
-        title="Terms of Service"
-        open={showTerms}
-        onClose={() => setShowTerms(false)}
-      >
-        <p>
-          <strong>Effective:</strong> January 1, 2025
-        </p>
+       {/* ======= Terms Modal (scrollable) ======= */}
+      <Modal title="Terms of Service" open={showTerms} onClose={() => setShowTerms(false)}>
+        <p><strong>Effective:</strong> January 1, 2025</p>
         <h4>1) Acceptance of Terms</h4>
         <p>
-          By creating an account or using Raymoch, you agree to these Terms of
-          Service. If you do not agree, you may not access or use the platform.
-          We may update these Terms periodically; continued use after updates
-          constitutes acceptance.
+          By creating an account or using Raymoch, you agree to these Terms of Service. If you do not agree,
+          you may not access or use the platform. We may update these Terms periodically; continued use after
+          updates constitutes acceptance.
         </p>
 
         <h4>2) Accounts & Responsibilities</h4>
@@ -760,8 +630,8 @@ export default function SignupBasic({ routes }) {
 
         <h4>3) Service Availability & Changes</h4>
         <p>
-          We aim for high availability but do not guarantee uninterrupted service. We may modify, suspend,
-          or discontinue features at any time with or without notice.
+          We aim for high availability but do not guarantee uninterrupted service. We may modify, suspend, or
+          discontinue features at any time with or without notice.
         </p>
 
         <h4>4) Paid Plans, Billing & Taxes</h4>
@@ -794,14 +664,8 @@ export default function SignupBasic({ routes }) {
       </Modal>
 
       {/* ======= Privacy Modal (scrollable) ======= */}
-      <Modal
-        title="Privacy Policy"
-        open={showPrivacy}
-        onClose={() => setShowPrivacy(false)}
-      >
-        <p>
-          <strong>Effective:</strong> January 1, 2025
-        </p>
+      <Modal title="Privacy Policy" open={showPrivacy} onClose={() => setShowPrivacy(false)}>
+        <p><strong>Effective:</strong> January 1, 2025</p>
         <h4>1) Data We Collect</h4>
         <ul>
           <li>Account data: name, email, display name, company; password stored using strong hashing.</li>
@@ -831,11 +695,10 @@ export default function SignupBasic({ routes }) {
         <h4>5) Your Rights</h4>
         <ul>
           <li>Access, correct, export, or delete your personal data (subject to applicable law).</li>
-          <li>
-            Contact: <a href="mailto:support@raymoch.com">support@raymoch.com</a>
-          </li>
+          <li>Contact: <a href="mailto:support@raymoch.com">support@raymoch.com</a></li>
         </ul>
       </Modal>
+
     </>
   );
 }
@@ -850,13 +713,8 @@ const css = `
 /* Base layout */
 html, body { height:100%; }
 *{ box-sizing:border-box; margin:0; padding:0; font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif; }
-
 .page{
-  min-height:100dvh;
-  display:flex;
-  flex-direction:column;
-  background:var(--bg);
-  color:var(--ink);
+  min-height:100vh; display:flex; flex-direction:column; background:var(--bg); color:var(--ink);
 }
 
 /* Header (scoped to Header.jsx markup) */
@@ -877,14 +735,6 @@ html, body { height:100%; }
 
 .iconbtn{ background:transparent; border:0; cursor:pointer; padding:6px; border-radius:8px; display:flex; align-items:center; justify-content:center; position:relative; }
 .iconbtn:hover{ background:#f2f4ff; }
-
-/* Main & Card */
-.page > main{ flex:1 1 auto; display:flex; align-items:center; justify-content:center; padding:24px; }
-
-.card{
-  background:var(--card);
-  border:1px solid var(--border);
-
 
 /* Main & Card */
 main{ flex:1; display:flex; align-items:center; justify-content:center; padding:24px; }
@@ -1029,33 +879,6 @@ const modalCss = `
 
 .ft{
   margin-top: auto;     /* footer sticks to bottom */
-}
-
-/* ===== Card hover control (override any global hover styles) ===== */
-
-/* 1) Disable any "blue overlay / transform" hover coming from other CSS */
-.card:hover{
-  background: var(--card) !important;
-  color: inherit !important;
-  transform: none !important;
-  filter: none !important;
-  outline: none !important;
-}
-
-/* If some CSS is using focus-within to highlight the whole card */
-.card:focus-within{
-  background: var(--card) !important;
-  outline: none !important;
-}
-
-/* 2) Optional: make hover subtle (ONLY border + shadow, not blue fill) */
-.card{
-  transition: box-shadow .2s ease, border-color .2s ease;
-}
-
-.card:hover{
-  border-color: #d9e1ff !important;
-  box-shadow: 0 10px 28px rgba(10,42,107,.10) !important;
 }
 
 `;

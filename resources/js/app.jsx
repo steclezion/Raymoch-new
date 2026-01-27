@@ -150,6 +150,7 @@ if (mount) {
 const signupEl = document.getElementById("signup-root");
 if (signupEl) {
   const routes = window.ROUTES || {};
+  const brandName = "Raymoch";
   createRoot(signupEl).render(<SignupPage routes={routes} />);
 }
 

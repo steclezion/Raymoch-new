@@ -74,7 +74,7 @@ export default function SignupPage({ routes }) {
 
 <footer className="ft">
   <div>
-    © {new Date().getFullYear()} {routes.brandName || "Raymoch"}. All rights reserved.
+    © {new Date().getFullYear()} { "Raymoch"}. All rights reserved.
   </div>
   <div>
     <a href={routes.privacy}>Privacy</a>
