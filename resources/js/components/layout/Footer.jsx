@@ -4,7 +4,7 @@ export default function Footer({ routes }) {
   return (
 <footer className="ft">
   <div>
-    © {new Date().getFullYear()} { "Raymoch"}. All rights reserved.
+    © {new Date().getFullYear()} {routes.brandName || "Raymoch"}. All rights reserved.
   </div>
   <div>
     <a href={routes.privacy}>Privacy</a>

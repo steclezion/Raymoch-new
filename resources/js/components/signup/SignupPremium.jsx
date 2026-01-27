@@ -1,232 +1,15 @@
 // resources/js/pages/SignupPremium.jsx
 import React, { useEffect, useRef, useState } from "react";
 import Header from "./Header.jsx";
+import Footer from "./Footer.jsx";
 
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
 
-/* ================== INLINE CSS (page styles) ================== */
-const css = `
-:root{
-  --brand-blue:#0328aeed; --brand-blue-700:#213bb1; --brand-blue-500:#041b64;
-  --ink:#101114; --bg:#fafafa; --border:#e8e8ee; --card:#fff;
-  --shadow:0 4px 16px rgba(10,42,107,.06); --footer-bg:#0b1020; --radius:16px
-}
-html, body { height:100%; }
-*{ box-sizing:border-box; margin:0; padding:0; font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif; }
-.page{ min-height:100vh; display:flex; flex-direction:column; background:var(--bg); color:var(--ink); }
 
-/* Header (same classes as Header.jsx) */
-.header{
-  height:80px; background:#fff; border-bottom:1px solid var(--border);
-  display:flex; align-items:center; justify-content:space-between; padding:0 24px; position:relative; flex-shrink:0;
-}
-.brand{ display:flex; align-items:center; gap:10px; color:var(--brand-blue); text-decoration:none; }
-.brand svg{ width:26px; height:26px; display:block; }
-.brand span{ font-weight:900; font-size:1.3rem; letter-spacing:.2px; color:var(--brand-blue); }
-.iconbtn{ background:transparent; border:0; cursor:pointer; padding:6px; border-radius:8px; display:flex; align-items:center; justify-content:center; position:relative; }
-.iconbtn:hover{ background:#f2f4ff; }
 
-/* Main & Card */
-main{ flex:1; display:flex; align-items:center; justify-content:center; padding:24px; }
-.card{
-  background:var(--card); border:1px solid var(--border); box-shadow:var(--shadow);
-  border-radius:var(--radius); padding:32px 36px; width:100%; max-width:820px;
-}
-.cardHeader{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
-.cardHeader h1{ font-size:1.9rem; font-weight:900; color:#063122; }
-.backBtn{
-  background:transparent; border:1px solid #d9e1ff; color:#041b64;
-  font-weight:700; border-radius:10px; padding:8px 14px; cursor:pointer; transition:background .25s ease, border-color .25s ease;
-}
-.backBtn:hover{ background:#eef3ff; border-color:#c9d4ff; }
-
-/* Form */
-.row{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:6px; }
-@media (max-width:720px){ .row{ grid-template-columns:1fr; } }
-label{ font-weight:700; font-size:.95rem; display:block; margin-top:4px; }
-.input{
-  width:100%; padding:14px 16px; border:1px solid #063122; border-radius:10px;
-  margin:8px 0 16px; font-size:15px; background:#fff;
-}
-.input:focus{ outline:none; box-shadow:0 0 0 3px rgba(3,40,174,.25); }
-.consent{ display:flex; gap:10px; margin:10px 0 16px; }
-.consent input{ width:18px; height:18px; margin-top:3px; }
-
-/* Actions */
-.actions{ display:flex; gap:12px; align-items:center; margin-top:6px; }
-button.cta{
-  padding:14px 18px; border:0; border-radius:12px;
-  background:linear-gradient(135deg,var(--brand-blue-700),var(--brand-blue-500));
-  color:#fff; font-weight:800; font-size:15px; cursor:pointer;
-}
-button.cta[disabled]{ opacity:.7; cursor:not-allowed; }
-button.cta.ghost{ background:#f5f8ff; color:#041b64; border:1px solid #d9e1ff; }
-
-.muted{ color:#475569; margin-bottom:12px; }
-
-/* OTP */
-.otpWrap{ margin-top:6px; }
-.otpTitle{ font-size:1.25rem; font-weight:900; color:#063122; margin-bottom:6px; }
-.otpInputs{ display:flex; gap:10px; justify-content:center; margin:14px 0 10px; }
-.otpBox{
-  width:46px; height:52px; text-align:center; font-weight:900; font-size:20px;
-  border:1px solid #cbd5e1; border-radius:10px; background:#fff;
-}
-.otpBox:focus{ outline:none; box-shadow:0 0 0 3px rgba(3,40,174,.25); }
-.otpMeta{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
-.timer{ font-weight:800; }
-
-/* Footer */
-.ft{
-  background:var(--footer-bg); color:#cbd5e1; font-size:.9rem; padding:12px 24px;
-  display:flex; justify-content:space-between; align-items:center; border-top:1px solid #1f2937; flex-shrink:0;
-}
-.ft a{ color:#cbd5e1; margin-left:14px; text-decoration:none; }
-.ft a:hover{ text-decoration:underline; }
-
-@media (max-width:600px){
-  .ft{ flex-direction:column; text-align:center; gap:6px; }
-  .otpMeta{ flex-direction:column; }
-}
-
-/* Password reveal buttons */
-.inputWrap{ position:relative; }
-.revealBtn{
-  position:absolute; right:10px; top:50%; transform:translateY(-50%);
-  border:0; background:transparent; cursor:pointer; padding:4px; border-radius:8px;
-}
-.revealBtn:hover{ background:#eef2ff; }
-`;
-
-/* ================== INLINE CSS (modal styles) ================== */
-const modalCss = `
-.modalOverlay{
-  position:fixed; inset:0; background:rgba(15,23,42,.55);
-  display:flex; align-items:center; justify-content:center; z-index:9999;
-}
-.modalCard{
-  width:min(860px, calc(100% - 28px));
-  background:#fff; border-radius:16px; border:1px solid #e8e8ee;
-  box-shadow:0 18px 40px rgba(2,6,23,.22);
-  overflow:hidden; display:flex; flex-direction:column; max-height:86vh;
-}
-.modalHead{
-  display:flex; align-items:center; justify-content:space-between;
-  padding:14px 16px; border-bottom:1px solid #eef0f6; background:#f9fafb;
-}
-.modalHead h3{ margin:0; font-size:1.05rem; font-weight:800; color:#041b64; }
-.modalClose{
-  background:transparent; border:0; font-size:22px; line-height:1; cursor:pointer;
-  color:#0f172a; border-radius:10px; padding:4px 8px;
-}
-.modalClose:hover{ background:#eef2ff; }
-.modalBody{
-  padding:18px; overflow:auto; color:#0f172a; line-height:1.55;
-}
-.modalBody h4{ margin:16px 0 8px; font-size:1.02rem; color:#041b64; }
-.modalBody p{ margin:6px 0 10px; color:#334155; }
-.modalBody ul{ padding-left:18px; margin:6px 0 12px; }
-.modalBody li{ margin:6px 0; color:#334155; }
-.modalFoot{
-  padding:12px 16px; border-top:1px solid #eef0f6; display:flex; justify-content:flex-end; gap:10px; background:#fff;
-}
-.modalFoot .cta.subtle{
-  background:#f5f8ff; color:#041b64; border:1px solid #d9e1ff; border-radius:10px; padding:10px 14px; font-weight:700; cursor:pointer;
-}
-`;
-
-/* ================== SweetAlert2 custom styles (small + animated “image-like” frame) ================== */
-const swalCss = `
-/* Compact popup base */
-.rm-swal {
-  width: 360px !important;               /* <= small width */
-  max-width: 92vw;
-  padding: 14px 16px !important;         /* tighter padding */
-  border-radius: 16px !important;        /* smooth corners */
-  box-shadow: 0 18px 44px rgba(2,6,23,.22);
-  border: 1px solid #e7ebff;
-  position: relative;
-  overflow: visible;                      /* allow the glow frame */
-  backdrop-filter: saturate(140%) blur(0.5px);
-}
-
-/* Animated gradient “blob/glow” frame around the box */
-.rm-swal::before{
-  content:"";
-  position:absolute;
-  inset:-6px;
-  border-radius: 22px;
-  background: conic-gradient(from 0deg,
-    #5b7cff, #7c5cff, #7e9bff, #5b7cff);
-  filter: blur(8px);
-  opacity: .35;
-  z-index:-1;
-  animation: rm-swal-spin 4.5s linear infinite;
-}
-
-/* Soft inner highlight */
-.rm-swal::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  border-radius:16px;
-  pointer-events:none;
-  box-shadow: inset 0 0 0 1px rgba(3,40,174,.12),
-              inset 0 12px 32px rgba(3,40,174,.06);
-}
-
-/* Title & text sizing for compact look */
-.rm-swal-title {
-  font-size: 1.05rem !important;
-  font-weight: 800 !important;
-  letter-spacing: .2px;
-  color: #041b64 !important;
-  margin-bottom: 6px !important;
-}
-.rm-swal-text, .swal2-html-container {
-  font-size: .92rem !important;
-  color: #334155 !important;
-  margin-top: 6px !important;
-}
-
-/* Buttons styled to match your brand */
-.rm-swal-btn.swal2-confirm{
-  background: linear-gradient(135deg, var(--brand-blue-700), var(--brand-blue-500)) !important;
-  border: none !important;
-  color: #fff !important;
-  font-weight: 800 !important;
-  border-radius: 10px !important;
-  padding: 10px 14px !important;
-  box-shadow: 0 4px 14px rgba(4,27,100,.22);
-}
-.rm-swal-btn.swal2-cancel{
-  background: #f5f8ff !important;
-  color: #041b64 !important;
-  border: 1px solid #d9e1ff !important;
-  font-weight: 700 !important;
-  border-radius: 10px !important;
-  padding: 10px 14px !important;
-}
-
-/* Appear / disappear animations */
-.rm-swal-in { animation: rm-swal-pop-in .18s ease-out both; }
-.rm-swal-out{ animation: rm-swal-pop-out .14s ease-in both; }
-
-@keyframes rm-swal-pop-in {
-  0%   { transform: translateY(4px) scale(.96); opacity: 0; }
-  100% { transform: translateY(0)   scale(1);    opacity: 1; }
-}
-@keyframes rm-swal-pop-out {
-  0%   { transform: translateY(0)   scale(1);    opacity: 1; }
-  100% { transform: translateY(4px) scale(.96);  opacity: 0; }
-}
-@keyframes rm-swal-spin {
-  to { transform: rotate(360deg); }
-}
-`;
 
 /* ================== Reusable Modal component ================== */
 function Modal({ title, open, onClose, children }) {
@@ -869,19 +652,7 @@ function PremiumForm({ routes }) {
           </section>
         </main>
 
-<footer className="ft">
-  <div>
-    © {new Date().getFullYear()} {routes.brandName || "Raymoch"}. All rights reserved.
-  </div>
-  <div>
-    <a href={routes.privacy}>Privacy</a>
-    <a href={routes.terms}>Terms</a>
-    <a href={routes.cookies}>Cookies</a>
-  </div>
-          <div>
-            <a href={R.signup?.index ?? "/signup"}>Signup Options</a>
-          </div>
-        </footer>
+<Footer routes={R} />
         
       </div>
 
@@ -983,3 +754,275 @@ export default function SignupPremium(props) {
     </Elements>
   );
 }
+
+
+/* ================== INLINE CSS (page styles) ================== */
+const css = `
+:root{
+  --brand-blue:#0328aeed; --brand-blue-700:#213bb1; --brand-blue-500:#041b64;
+  --ink:#101114; --bg:#fafafa; --border:#e8e8ee; --card:#fff;
+  --shadow:0 4px 16px rgba(10,42,107,.06); --footer-bg:#0b1020; --radius:16px
+}
+html, body { height:100%; }
+*{ box-sizing:border-box; margin:0; padding:0; font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif; }
+.page{ min-height:100vh; display:flex; flex-direction:column; background:var(--bg); color:var(--ink); }
+
+/* Header (same classes as Header.jsx) */
+.header{
+  height:80px; background:#fff; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between; padding:0 24px; position:relative; flex-shrink:0;
+}
+.brand{ display:flex; align-items:center; gap:10px; color:var(--brand-blue); text-decoration:none; }
+.brand svg{ width:26px; height:26px; display:block; }
+.brand span{ font-weight:900; font-size:1.3rem; letter-spacing:.2px; color:var(--brand-blue); }
+.iconbtn{ background:transparent; border:0; cursor:pointer; padding:6px; border-radius:8px; display:flex; align-items:center; justify-content:center; position:relative; }
+.iconbtn:hover{ background:#f2f4ff; }
+
+/* Main & Card */
+main{ flex:1; display:flex; align-items:center; justify-content:center; padding:24px; }
+.card{
+  background:var(--card); border:1px solid var(--border); box-shadow:var(--shadow);
+  border-radius:var(--radius); padding:32px 36px; width:100%; max-width:820px;
+}
+.cardHeader{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.cardHeader h1{ font-size:1.9rem; font-weight:900; color:#063122; }
+.backBtn{
+  background:transparent; border:1px solid #d9e1ff; color:#041b64;
+  font-weight:700; border-radius:10px; padding:8px 14px; cursor:pointer; transition:background .25s ease, border-color .25s ease;
+}
+.backBtn:hover{ background:#eef3ff; border-color:#c9d4ff; }
+
+/* Form */
+.row{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:6px; }
+@media (max-width:720px){ .row{ grid-template-columns:1fr; } }
+label{ font-weight:700; font-size:.95rem; display:block; margin-top:4px; }
+.input{
+  width:100%; padding:14px 16px; border:1px solid #063122; border-radius:10px;
+  margin:8px 0 16px; font-size:15px; background:#fff;
+}
+.input:focus{ outline:none; box-shadow:0 0 0 3px rgba(3,40,174,.25); }
+.consent{ display:flex; gap:10px; margin:10px 0 16px; }
+.consent input{ width:18px; height:18px; margin-top:3px; }
+
+/* Actions */
+.actions{ display:flex; gap:12px; align-items:center; margin-top:6px; }
+button.cta{
+  padding:14px 18px; border:0; border-radius:12px;
+  background:linear-gradient(135deg,var(--brand-blue-700),var(--brand-blue-500));
+  color:#fff; font-weight:800; font-size:15px; cursor:pointer;
+}
+button.cta[disabled]{ opacity:.7; cursor:not-allowed; }
+button.cta.ghost{ background:#f5f8ff; color:#041b64; border:1px solid #d9e1ff; }
+
+.muted{ color:#475569; margin-bottom:12px; }
+
+/* OTP */
+.otpWrap{ margin-top:6px; }
+.otpTitle{ font-size:1.25rem; font-weight:900; color:#063122; margin-bottom:6px; }
+.otpInputs{ display:flex; gap:10px; justify-content:center; margin:14px 0 10px; }
+.otpBox{
+  width:46px; height:52px; text-align:center; font-weight:900; font-size:20px;
+  border:1px solid #cbd5e1; border-radius:10px; background:#fff;
+}
+.otpBox:focus{ outline:none; box-shadow:0 0 0 3px rgba(3,40,174,.25); }
+.otpMeta{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.timer{ font-weight:800; }
+
+/* Footer */
+.ft{
+  background:var(--footer-bg); color:#cbd5e1; font-size:.9rem; padding:12px 24px;
+  display:flex; justify-content:space-between; align-items:center; border-top:1px solid #1f2937; flex-shrink:0;
+}
+.ft a{ color:#cbd5e1; margin-left:14px; text-decoration:none; }
+.ft a:hover{ text-decoration:underline; }
+
+@media (max-width:600px){
+  .ft{ flex-direction:column; text-align:center; gap:6px; }
+  .otpMeta{ flex-direction:column; }
+}
+
+/* Password reveal buttons */
+.inputWrap{ position:relative; }
+.revealBtn{
+  position:absolute; right:10px; top:50%; transform:translateY(-50%);
+  border:0; background:transparent; cursor:pointer; padding:4px; border-radius:8px;
+}
+.revealBtn:hover{ background:#eef2ff; }
+`;
+
+/* ================== INLINE CSS (modal styles) ================== */
+const modalCss = `
+.modalOverlay{
+  position:fixed; inset:0; background:rgba(15,23,42,.55);
+  display:flex; align-items:center; justify-content:center; z-index:9999;
+}
+.modalCard{
+  width:min(860px, calc(100% - 28px));
+  background:#fff; border-radius:16px; border:1px solid #e8e8ee;
+  box-shadow:0 18px 40px rgba(2,6,23,.22);
+  overflow:hidden; display:flex; flex-direction:column; max-height:86vh;
+}
+.modalHead{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 16px; border-bottom:1px solid #eef0f6; background:#f9fafb;
+}
+.modalHead h3{ margin:0; font-size:1.05rem; font-weight:800; color:#041b64; }
+.modalClose{
+  background:transparent; border:0; font-size:22px; line-height:1; cursor:pointer;
+  color:#0f172a; border-radius:10px; padding:4px 8px;
+}
+.modalClose:hover{ background:#eef2ff; }
+.modalBody{
+  padding:18px; overflow:auto; color:#0f172a; line-height:1.55;
+}
+.modalBody h4{ margin:16px 0 8px; font-size:1.02rem; color:#041b64; }
+.modalBody p{ margin:6px 0 10px; color:#334155; }
+.modalBody ul{ padding-left:18px; margin:6px 0 12px; }
+.modalBody li{ margin:6px 0; color:#334155; }
+.modalFoot{
+  padding:12px 16px; border-top:1px solid #eef0f6; display:flex; justify-content:flex-end; gap:10px; background:#fff;
+}
+.modalFoot .cta.subtle{
+  background:#f5f8ff; color:#041b64; border:1px solid #d9e1ff; border-radius:10px; padding:10px 14px; font-weight:700; cursor:pointer;
+}
+  
+/* ===== Card hover control (override any global hover styles) ===== */
+
+/* 1) Disable any "blue overlay / transform" hover coming from other CSS */
+.card:hover{
+  background: var(--card) !important;
+  color: inherit !important;
+  transform: none !important;
+  filter: none !important;
+  outline: none !important;
+}
+
+/* If some CSS is using focus-within to highlight the whole card */
+.card:focus-within{
+  background: var(--card) !important;
+  outline: none !important;
+}
+
+/* 2) Optional: make hover subtle (ONLY border + shadow, not blue fill) */
+.card{
+  transition: box-shadow .2s ease, border-color .2s ease;
+}
+
+.card:hover{
+  border-color: #d9e1ff !important;
+  box-shadow: 0 10px 28px rgba(10,42,107,.10) !important;
+}
+`;
+
+
+/* ================== SweetAlert2 custom styles (small + animated “image-like” frame) ================== */
+const swalCss = `
+/* Compact popup base */
+.rm-swal {
+  width: 360px !important;               /* <= small width */
+  max-width: 92vw;
+  padding: 14px 16px !important;         /* tighter padding */
+  border-radius: 16px !important;        /* smooth corners */
+  box-shadow: 0 18px 44px rgba(2,6,23,.22);
+  border: 1px solid #e7ebff;
+  position: relative;
+  overflow: visible;                      /* allow the glow frame */
+  backdrop-filter: saturate(140%) blur(0.5px);
+}
+
+/* Animated gradient “blob/glow” frame around the box */
+.rm-swal::before{
+  content:"";
+  position:absolute;
+  inset:-6px;
+  border-radius: 22px;
+  background: conic-gradient(from 0deg,
+    #5b7cff, #7c5cff, #7e9bff, #5b7cff);
+  filter: blur(8px);
+  opacity: .35;
+  z-index:-1;
+  animation: rm-swal-spin 4.5s linear infinite;
+}
+
+/* Soft inner highlight */
+.rm-swal::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:16px;
+  pointer-events:none;
+  box-shadow: inset 0 0 0 1px rgba(3,40,174,.12),
+              inset 0 12px 32px rgba(3,40,174,.06);
+}
+
+/* Title & text sizing for compact look */
+.rm-swal-title {
+  font-size: 1.05rem !important;
+  font-weight: 800 !important;
+  letter-spacing: .2px;
+  color: #041b64 !important;
+  margin-bottom: 6px !important;
+}
+.rm-swal-text, .swal2-html-container {
+  font-size: .92rem !important;
+  color: #334155 !important;
+  margin-top: 6px !important;
+}
+
+/* Buttons styled to match your brand */
+.rm-swal-btn.swal2-confirm{
+  background: linear-gradient(135deg, var(--brand-blue-700), var(--brand-blue-500)) !important;
+  border: none !important;
+  color: #fff !important;
+  font-weight: 800 !important;
+  border-radius: 10px !important;
+  padding: 10px 14px !important;
+  box-shadow: 0 4px 14px rgba(4,27,100,.22);
+}
+.rm-swal-btn.swal2-cancel{
+  background: #f5f8ff !important;
+  color: #041b64 !important;
+  border: 1px solid #d9e1ff !important;
+  font-weight: 700 !important;
+  border-radius: 10px !important;
+  padding: 10px 14px !important;
+}
+
+/* Appear / disappear animations */
+.rm-swal-in { animation: rm-swal-pop-in .18s ease-out both; }
+.rm-swal-out{ animation: rm-swal-pop-out .14s ease-in both; }
+
+@keyframes rm-swal-pop-in {
+  0%   { transform: translateY(4px) scale(.96); opacity: 0; }
+  100% { transform: translateY(0)   scale(1);    opacity: 1; }
+}
+@keyframes rm-swal-pop-out {
+  0%   { transform: translateY(0)   scale(1);    opacity: 1; }
+  100% { transform: translateY(4px) scale(.96);  opacity: 0; }
+}
+@keyframes rm-swal-spin {
+  to { transform: rotate(360deg); }
+}
+
+  /* Footer */
+.ft{
+  margin-top: auto;
+  background: var(--footer-bg);
+  color:#cbd5e1;
+  font-size:.9rem;
+  padding:12px 24px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-top:1px solid #1f2937;
+  flex-shrink:0;
+}
+
+.ft a{ color:#cbd5e1; margin-left:14px; text-decoration:none; }
+.ft a:hover{ text-decoration:underline; }
+
+@media (max-width:600px){
+  .ft{ flex-direction:column; text-align:center; gap:6px; }
+}]
+
+`;

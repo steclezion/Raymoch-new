@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Toaster, toast } from "sonner";
 import Header from "./Header.jsx";
+import Footer from "./Footer.jsx";
 
 import Select from "react-select";
 import ReactCountryFlag from "react-country-flag";
@@ -705,33 +706,22 @@ export default function SignupBasic({ routes }) {
           </section>
         </main>
 
-        <footer className="ft">
-          <div>
-            © {new Date().getFullYear()} {routes?.brandName || "Raymoch"}. All
-            rights reserved.
-          </div>
 
-          <div>
-            <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                setShowPrivacy(true);
-              }}
-            >
-              Privacy
-            </a>
-            <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                setShowTerms(true);
-              }}
-            >
-              Terms
-            </a>
-          </div>
-        </footer>
+{/* <footer className="ft">
+  <div>
+    © {new Date().getFullYear()} { "Raymoch"}. All rights reserved.
+  </div>
+  <div>
+    <a href={routes.privacy}>Privacy</a>
+    <a href={routes.terms}>Terms</a>
+    <a href={routes.cookies}>Cookiesss</a>
+  </div>
+</footer> */}
+
+<Footer routes={routes} />
+
+
+
       </div>
 
       {/* ======= Terms Modal (scrollable) ======= */}
@@ -884,10 +874,8 @@ html, body { height:100%; }
 .card{
   background:var(--card);
   border:1px solid var(--border);
+  box-shadow:var(--shadow);
 
-
-/* Main & Card */
-main{ flex:1; display:flex; align-items:center; justify-content:center; padding:24px; }
 .card{
   background:var(--card); border:1px solid var(--border);
   box-shadow:var(--shadow); border-radius:var(--radius);
@@ -952,14 +940,8 @@ button.cta.ghost{ background:#f5f8ff; color:#041b64; border:1px solid #d9e1ff; }
 .otpMeta{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .timer{ font-weight:800; }
 
-/* Footer */
-.ft{
-  background:var(--footer-bg); color:#cbd5e1; font-size:.9rem; padding:12px 24px;
-  display:flex; justify-content:space-between; align-items:center; border-top:1px solid #1f2937;
-  flex-shrink:0;
-}
-.ft a{ color:#cbd5e1; margin-left:14px; text-decoration:none; }
-.ft a:hover{ text-decoration:underline; }
+
+
 
 /* Phone group: react-select + input */
 .phoneGroup{
@@ -1002,6 +984,7 @@ const modalCss = `
   color:#0f172a; border-radius:10px; padding:4px 8px;
 }
 .modalClose:hover{ background:#eef2ff; }
+
 .modalBody{
   padding:18px; overflow:auto; color:#0f172a; line-height:1.55;
 }
@@ -1027,9 +1010,7 @@ const modalCss = `
   flex: 1 1 auto;       /* main takes remaining space */
 }
 
-.ft{
-  margin-top: auto;     /* footer sticks to bottom */
-}
+
 
 /* ===== Card hover control (override any global hover styles) ===== */
 
@@ -1056,6 +1037,27 @@ const modalCss = `
 .card:hover{
   border-color: #d9e1ff !important;
   box-shadow: 0 10px 28px rgba(10,42,107,.10) !important;
+}
+
+  /* Footer */
+.ft{
+  margin-top: auto;
+  background: var(--footer-bg);
+  color:#cbd5e1;
+  font-size:.9rem;
+  padding:12px 24px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-top:1px solid #1f2937;
+  flex-shrink:0;
+}
+
+.ft a{ color:#cbd5e1; margin-left:14px; text-decoration:none; }
+.ft a:hover{ text-decoration:underline; }
+
+@media (max-width:600px){
+  .ft{ flex-direction:column; text-align:center; gap:6px; }
 }
 
 `;
