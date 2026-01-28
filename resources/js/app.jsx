@@ -13,7 +13,8 @@ import SignupPremium from "./components/signup/SignupPremium.jsx";
 import SignupBusinessAccount from "./components/signup/SignupBusinessAccount.jsx";
 import ExploreBusinesses from './pages/ExploreBusinesses.jsx';
 import Companies from './pages/Companies.jsx';
-import Entire from "./pages/Entire";
+import Entire from "./pages/Entire.jsx";
+import Services from "./pages/Services.jsx";
 
 
 
@@ -24,6 +25,15 @@ const entireRoot = document.getElementById("entire-root");
 if (entireRoot) {
   const root = createRoot(entireRoot);
   root.render(<Entire />);
+}
+
+
+// Mount only if the element exists on the page
+const ServicesRoot = document.getElementById("ServicesRoot");
+
+if (ServicesRoot) {
+  const root = createRoot(ServicesRoot);
+  root.render(<Services />);
 }
 
 
