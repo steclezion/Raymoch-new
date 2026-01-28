@@ -1,5 +1,5 @@
 {{-- from companies.html --}}
-@extends('layouts.app_raymoch')
+@extends('layouts.appshellotest')
 
 @section('title','Companies • Raymoch')
 @section('content')

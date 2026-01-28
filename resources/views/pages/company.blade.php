@@ -1,5 +1,5 @@
 {{-- from Entire.html --}}
-@extends('layouts.app_raymoch_new')
+@extends('layouts.appshellotest')
 <script rel="stylesheet" src="{{ asset('js/script_entire.js') }}"></script>
 <link href="{{ asset('css/style_entire.css')  }}" rel="stylesheet" type="text/css" id="bootstrap">
 {{-- <link href="{{ asset('css/style_entire_2.css')  }}" rel="stylesheet" type="text/css" id="bootstrap"> --}}

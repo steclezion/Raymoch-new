@@ -1,4 +1,4 @@
-{{-- @extends('layouts.app_raymoch_new') --}}
+@extends('layouts.appshellotest')
 <link href="{{ asset('css/style_entire.css')  }}" rel="stylesheet" type="text/css" id="bootstrap">
 <!-- Bootstrap CSS for Section 4 African Slides -->
 @section('title','Raymoch • Business Explorer')
