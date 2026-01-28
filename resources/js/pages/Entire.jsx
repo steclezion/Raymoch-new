@@ -4,6 +4,7 @@ import React, { useEffect } from "react";
 import Header from "../components/layout_master/Header.jsx";
 import Footer from "../components/layout_master/Footer.jsx";
 import AfricaInvestmentPanel from "../components/AfricaInvestmentPanel.jsx";
+import { ResponsiveController } from "../components/ResponsiveController.jsx";
 const Entire = () => {
   useEffect(() => {
     // If your old script_entire.js / script_african_slider exposes an init function,
@@ -14,7 +15,10 @@ const Entire = () => {
   }, []);
 
   return (
+    
     <>
+       <ResponsiveController>
+        
       {/* Shared header from CompanyDetailDialog.jsx */}
       <Header />
 
@@ -296,6 +300,7 @@ const Entire = () => {
 
       {/* Shared footer from CompanyDetailDialog.jsx */}
       <Footer />
+         </ResponsiveController>
     </>
   );
 };
