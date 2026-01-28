@@ -16,7 +16,20 @@ import Companies from './pages/Companies.jsx';
 import Entire from "./pages/Entire.jsx";
 import Services from "./pages/Services.jsx";
 import Market_Insight from "./pages/Market_Insight.jsx";
+import About from "./pages/About.jsx";
 
+
+
+
+
+
+// Mount only if the element exists on the page
+const aboutRoot = document.getElementById("about-root");
+
+if (aboutRoot) {
+  const root = createRoot(aboutRoot);
+  root.render(<About />);
+}
 
 
 // Mount only if the element exists on the page
