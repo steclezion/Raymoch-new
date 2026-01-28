@@ -219,7 +219,8 @@ Route::view('/companies', 'pages.companies')->name('companies');    // main comp
 
 // Static placeholders used in header/footer links (wire up later as you build them)
 Route::view('/services', 'pages.services')->name('services');     // temp → point to real page later
-Route::view('/insights', 'pages.entire')->name('insights');      // temp
+Route::view('/insights', 'pages.market-insight')->name('insights');   // temp
+
 
 // services sub-pages
 Route::view('/partner-programs', 'pages.services.partner-programs')->name('partner-programs'); // partner programs page

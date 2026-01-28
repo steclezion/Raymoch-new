@@ -15,7 +15,7 @@ import ExploreBusinesses from './pages/ExploreBusinesses.jsx';
 import Companies from './pages/Companies.jsx';
 import Entire from "./pages/Entire.jsx";
 import Services from "./pages/Services.jsx";
-
+import Market_Insight from "./pages/Market_Insight.jsx";
 
 
 
@@ -28,13 +28,23 @@ if (entireRoot) {
 }
 
 
-// Mount only if the element exists on the page
+// Mount only if the element exists on the page MarketInsightRoot
 const ServicesRoot = document.getElementById("ServicesRoot");
 
 if (ServicesRoot) {
   const root = createRoot(ServicesRoot);
   root.render(<Services />);
 }
+
+
+// Mount only if the element exists on the page MarketInsightRoot
+const MarketInsightRoot = document.getElementById("MarketInsightRoot");
+
+if (MarketInsightRoot) {
+  const root = createRoot(MarketInsightRoot);
+  root.render(<Market_Insight />);
+}
+
 
 
 
