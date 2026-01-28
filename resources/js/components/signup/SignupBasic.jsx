@@ -396,7 +396,7 @@ export default function SignupBasic({ routes }) {
                                 className="backBtn"
                                 onClick={() => window.history.back()}
                             >
-                                ← Back
+                                 Back
                             </button>
                         </div>
 

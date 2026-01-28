@@ -33,7 +33,7 @@ export default function PricingBasic({ routes = {} }) {
             <PlanCard
               id="basic"
               title="Basic"
-              badge="Most popular"
+     
               price="$0"
               per="per user"
               desc="Browse and keep tabs on companies. Perfect for getting started."
@@ -51,6 +51,7 @@ export default function PricingBasic({ routes = {} }) {
             <PlanCard
               id="premium"
               title="Premium"
+                       badge="Most popular"
               price="$9"
               per="per user"
               desc="Richer signals and more room to grow. Best for active users."

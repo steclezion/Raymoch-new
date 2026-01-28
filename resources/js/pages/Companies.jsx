@@ -12,6 +12,17 @@ import React, { useEffect, useMemo, useState } from "react";
 import Header from "../components/layout_master/Header.jsx";
 import Footer from "../components/layout_master/Footer.jsx";
 
+// if (import.meta.env.DEV) {
+//   const _freeze = Object.freeze;
+//   Object.freeze = function (obj) {
+//     try {
+//       console.trace("Object.freeze called on:", obj);
+//     } catch {}
+//     return _freeze(obj);
+//   };
+// }
+
+
 // MUI
 import {
   Box,

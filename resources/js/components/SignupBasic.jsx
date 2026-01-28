@@ -351,7 +351,7 @@ export default function SignupBasic({ routes }) {
             <div className="cardHeader">
               <h1>Individual Account</h1>
               <button type="button" className="backBtn" onClick={() => window.history.back()}>
-                ← Back
+                 Back
               </button>
             </div>
 
