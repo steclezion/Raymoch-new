@@ -1,13 +1,6 @@
 // resources/js/components/AfricaInvestmentPanel.jsx
 import React, { useEffect, useMemo, useState } from "react";
-import {
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  Legend,
-} from "recharts";
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 
 /** -------------------- fallback seed (keeps UI working) -------------------- */
 const fallbackCompanies = [
@@ -129,7 +122,7 @@ const PIE_COLORS = [
 
 export default function AfricaInvestmentPanel({
   apiEndpoint = "/api/africa/companies",
-  pollMs = 0, // set 6000 for live polling
+  pollMs = 0,
   className = "",
 }) {
   const [paused, setPaused] = useState(false);
@@ -171,9 +164,8 @@ export default function AfricaInvestmentPanel({
 
     load();
 
-    if (pollMs > 0 && !paused) {
-      timer = setInterval(load, pollMs);
-    }
+    if (pollMs > 0 && !paused) timer = setInterval(load, pollMs);
+
     return () => {
       alive = false;
       if (timer) clearInterval(timer);
@@ -189,9 +181,8 @@ export default function AfricaInvestmentPanel({
     const q = search.trim().toLowerCase();
     let list = companies;
 
-    if (country !== "ALL") {
-      list = list.filter((c) => (c.country || "").toUpperCase() === country);
-    }
+    if (country !== "ALL") list = list.filter((c) => (c.country || "").toUpperCase() === country);
+
     if (q) {
       list = list.filter((c) => {
         const name = (c.name || "").toLowerCase();
@@ -203,8 +194,7 @@ export default function AfricaInvestmentPanel({
 
     return [...list].sort((a, b) => {
       if (sortMode === "capex") return (b.capexUsd || 0) - (a.capexUsd || 0);
-      if (sortMode === "name")
-        return String(a.name || "").localeCompare(String(b.name || ""));
+      if (sortMode === "name") return String(a.name || "").localeCompare(String(b.name || ""));
       return (b.trendPct || 0) - (a.trendPct || 0);
     });
   }, [companies, country, search, sortMode]);
@@ -232,281 +222,235 @@ export default function AfricaInvestmentPanel({
   }, [selected]);
 
   const statCompanies = rows.length;
-  const statCapex = useMemo(
-    () => rows.reduce((s, c) => s + (Number(c.capexUsd) || 0), 0),
-    [rows]
-  );
+  const statCapex = useMemo(() => rows.reduce((s, c) => s + (Number(c.capexUsd) || 0), 0), [rows]);
 
-  const trendClass =
-    selected?.trendPct > 0 ? "pos" : selected?.trendPct < 0 ? "neg" : "";
+  const trendClass = selected?.trendPct > 0 ? "pos" : selected?.trendPct < 0 ? "neg" : "";
 
   return (
-    <section className={`section rm-panel ${className}`} aria-label="Africa Investment Panel">
+    <section className={`rm-panel ${className}`} aria-label="Africa Investment Panel">
       <style>{panelCss}</style>
 
-      <div className="container-xxl my-4">
-        <div className="rm-card p-3 p-md-4">
-          {/* Top row */}
-          <div className="rm-top d-flex flex-wrap align-items-center justify-content-between gap-2">
-            <div className="d-flex align-items-center gap-2">
-              <div className="rm-titleWrap">
-                <h5 className="m-0 rm-title">Africa Investment Panel</h5>
-                <div className="rm-sub text-secondary">
-                  Market pulse + sector mix • Click any company to update chart
+      <div className="rm-shell">
+        <div className="rm-surface">
+          {/* Header */}
+          <header className="rm-head">
+            <div className="rm-headLeft">
+              <div className="rm-titleRow">
+                <h2 className="rm-title">Africa Investment Panel</h2>
+                <span className="rm-live">Live</span>
+              </div>
+              <p className="rm-sub">
+                Market pulse + sector mix • Tap any company to update chart
+              </p>
+            </div>
+
+            <div className="rm-headRight">
+              <div className="rm-updated">
+                Updated: <strong>{updatedAt ? new Date(updatedAt).toLocaleString() : "—"}</strong>
+              </div>
+
+              <div className="rm-actions">
+                <button type="button" className="rm-btn" onClick={() => setPaused((v) => !v)}>
+                  {paused ? "Resume" : "Pause"}
+                </button>
+
+                <div className="rm-speed">
+                  <span className="rm-speedLabel">Speed</span>
+                  <input
+                    aria-label="Ticker speed"
+                    type="range"
+                    min="20"
+                    max="80"
+                    value={speed}
+                    step="2"
+                    onChange={(e) => setSpeed(Number(e.target.value))}
+                  />
                 </div>
               </div>
-              <span className="rm-pillLive">Live</span>
-
-              <span className="rm-updated text-secondary">
-                Updated:{" "}
-                <strong>
-                  {updatedAt ? new Date(updatedAt).toLocaleString() : "—"}
-                </strong>
-              </span>
             </div>
+          </header>
 
-            <div className="d-flex align-items-center gap-2">
-              <button
-                type="button"
-                className={`rm-btn ${paused ? "rm-btnGhost" : "rm-btnGhost"}`}
-                onClick={() => setPaused((v) => !v)}
-              >
-                {paused ? "Resume" : "Pause"}
-              </button>
+          {/* Country chips (horizontal scroll on mobile) */}
+          <div className="rm-chips" role="tablist" aria-label="Country filter">
+            <button
+              type="button"
+              className={`rm-chip ${country === "ALL" ? "active" : ""}`}
+              onClick={() => setCountry("ALL")}
+            >
+              ALL
+            </button>
 
-              <div className="rm-speed">
-                <label htmlFor="speed" className="rm-speedLabel">
-                  Speed
-                </label>
-                <input
-                  id="speed"
-                  type="range"
-                  min="20"
-                  max="80"
-                  value={speed}
-                  step="2"
-                  onChange={(e) => setSpeed(Number(e.target.value))}
-                />
-              </div>
-            </div>
+            {countries
+              .filter((c) => c !== "ALL")
+              .map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  className={`rm-chip ${country === c ? "active" : ""}`}
+                  onClick={() => setCountry(c)}
+                  title={`Filter: ${c}`}
+                >
+                  {c}
+                </button>
+              ))}
           </div>
 
-          {/* Chips / ticker */}
-          <div className={`rm-ticker ${paused ? "isPaused" : ""}`}>
-            <div className="rm-track" style={{ "--ticker-speed": `${speed}s` }}>
-              {countries
-                .filter((c) => c !== "ALL")
-                .slice(0, 24)
-                .map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    className={`rm-chip ${country === c ? "active" : ""}`}
-                    onClick={() => setCountry(c)}
-                    title={`Filter: ${c}`}
-                  >
-                    {c}
-                  </button>
-                ))}
-
-              <button
-                type="button"
-                className={`rm-chip ${country === "ALL" ? "active" : ""}`}
-                onClick={() => setCountry("ALL")}
-              >
-                ALL
-              </button>
-            </div>
-          </div>
-
-          {/* Main grid */}
-          <div className="row g-3 mt-2">
-            {/* Left */}
-            <div className="col-12 col-lg-5">
-              <div className="rm-cardInner h-100">
-                <div className="rm-innerHead d-flex align-items-center justify-content-between">
-                  <div className="rm-badge">
-                    <span className="mono">{country === "ALL" ? "AFRICA" : country}</span>
-                  </div>
-                  <div className="text-secondary small">
-                    Selected:{" "}
-                    <strong>
-                      {selected ? `${selected.name} (${selected.id})` : "—"}
-                    </strong>
-                  </div>
-                </div>
-
-                <div className="row g-3 mt-1">
-                  <div className="col-6">
-                    <div className="rm-stat">
-                      <div className="rm-statLabel">Companies</div>
-                      <div className="rm-statValue">
-                        {statCompanies.toLocaleString()}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="col-6">
-                    <div className="rm-stat">
-                      <div className="rm-statLabel">Total CAPEX</div>
-                      <div className="rm-statValue">{formatMoney(statCapex)}</div>
-                    </div>
-                  </div>
-
-                  <div className="col-6">
-                    <div className="rm-stat">
-                      <div className="rm-statLabel">Primary sector</div>
-                      <div className="rm-statValue">
-                        {selected?.sector || "—"}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="col-6">
-                    <div className="rm-stat">
-                      <div className="rm-statLabel">Trend</div>
-                      <div className={`rm-statValue ${trendClass}`}>
-                        {selected ? formatPct(selected.trendPct) : "—"}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Chart */}
-                <div className="rm-chartHead">
-                  <div className="fw-bold">Sector Breakdown</div>
-                  <div className="text-secondary small">
-                    {selected?.name ? selected.name : "—"}
-                  </div>
-                </div>
-
-                <div className="rm-chartBox">
-                  <ResponsiveContainer width="100%" height={270}>
-                    <PieChart>
-                      <Pie
-                        data={pieData}
-                        dataKey="value"
-                        nameKey="name"
-                        innerRadius={62}
-                        outerRadius={104}
-                        paddingAngle={2}
-                      >
-                        {pieData.map((_, idx) => (
-                          <Cell
-                            key={idx}
-                            fill={PIE_COLORS[idx % PIE_COLORS.length]}
-                          />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-
-                <div className="rm-hint text-secondary small">
-                  Tip: click a row on the right to update the pie instantly.
+          {/* Main responsive layout */}
+          <div className="rm-grid">
+            {/* Left column */}
+            <aside className="rm-card">
+              <div className="rm-cardTop">
+                <div className="rm-badge mono">{country === "ALL" ? "AFRICA" : country}</div>
+                <div className="rm-selected">
+                  Selected:{" "}
+                  <strong>{selected ? `${selected.name} (${selected.id})` : "—"}</strong>
                 </div>
               </div>
-            </div>
 
-            {/* Right */}
-            <div className="col-12 col-lg-7">
-              <div className="rm-cardInner h-100">
-                <div className="rm-tableTop d-flex align-items-center justify-content-between gap-2 flex-wrap">
-                  <div>
-                    <div className="fw-bold">Private Investment Plans</div>
-                    <div className="text-secondary small">
-                      Sorted by {sortMode === "trend" ? "trend" : sortMode}.
-                    </div>
+              <div className="rm-stats">
+                <div className="rm-stat">
+                  <div className="rm-statLabel">Companies</div>
+                  <div className="rm-statValue">{statCompanies.toLocaleString()}</div>
+                </div>
+
+                <div className="rm-stat">
+                  <div className="rm-statLabel">Total CAPEX</div>
+                  <div className="rm-statValue">{formatMoney(statCapex)}</div>
+                </div>
+
+                <div className="rm-stat">
+                  <div className="rm-statLabel">Primary sector</div>
+                  <div className="rm-statValue">{selected?.sector || "—"}</div>
+                </div>
+
+                <div className="rm-stat">
+                  <div className="rm-statLabel">Trend</div>
+                  <div className={`rm-statValue ${trendClass}`}>
+                    {selected ? formatPct(selected.trendPct) : "—"}
                   </div>
+                </div>
+              </div>
 
-                  <div className="d-flex align-items-center gap-2">
-                    <select
-                      className="form-select form-select-sm rm-select"
-                      value={sortMode}
-                      onChange={(e) => setSortMode(e.target.value)}
+              <div className="rm-chartHead">
+                <div>
+                  <div className="rm-chartTitle">Sector Breakdown</div>
+                  <div className="rm-chartSub">{selected?.name || "—"}</div>
+                </div>
+              </div>
+
+              <div className="rm-chartBox">
+                <ResponsiveContainer width="100%" height={260}>
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      dataKey="value"
+                      nameKey="name"
+                      innerRadius="55%"
+                      outerRadius="85%"
+                      paddingAngle={2}
                     >
-                      <option value="trend">Sort: Trend</option>
-                      <option value="capex">Sort: CAPEX</option>
-                      <option value="name">Sort: Name</option>
-                    </select>
+                      {pieData.map((_, idx) => (
+                        <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
 
-                    <input
-                      className="form-control form-control-sm rm-search"
-                      placeholder="Search company/sector…"
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                    />
+              <div className="rm-hint">Tip: tap a row to update the chart instantly.</div>
+            </aside>
+
+            {/* Right column */}
+            <section className="rm-card">
+              <div className="rm-tableHead">
+                <div>
+                  <div className="rm-cardTitle">Private Investment Plans</div>
+                  <div className="rm-cardSub">
+                    Sorted by {sortMode === "trend" ? "trend" : sortMode}.
                   </div>
                 </div>
 
-                <div className="rm-tableWrap">
-                  <table className="table table-sm align-middle rm-table">
-                    <thead>
-                      <tr>
-                        <th style={{ minWidth: 220 }}>Company</th>
-                        <th style={{ minWidth: 120 }}>Sector</th>
-                        <th className="text-end" style={{ minWidth: 120 }}>
-                          CAPEX
-                        </th>
-                        <th className="text-end" style={{ minWidth: 90 }}>
-                          Trend
-                        </th>
-                        <th style={{ minWidth: 110 }}>Status</th>
-                      </tr>
-                    </thead>
+                {/* Stable controls (won’t jump on empty results) */}
+                <div className="rm-controlsRow">
+                  <select className="rm-select" value={sortMode} onChange={(e) => setSortMode(e.target.value)}>
+                    <option value="trend">Sort: Trend</option>
+                    <option value="capex">Sort: CAPEX</option>
+                    <option value="name">Sort: Name</option>
+                  </select>
 
-                    <tbody>
-                      {rows.length === 0 ? (
-                        <tr>
-                          <td colSpan="5" className="text-center py-4 text-secondary">
-                            No results…
-                          </td>
-                        </tr>
-                      ) : (
-                        rows.map((c) => {
-                          const active = c.id === selected?.id;
-                          return (
-                            <tr
-                              key={c.id}
-                              className={`rm-row ${active ? "active" : ""}`}
-                              onClick={() => setSelectedId(c.id)}
-                              role="button"
-                              title="Click to update chart"
-                            >
-                              <td>
-                                <div className="fw-bold rm-company">{c.name}</div>
-                                <div className="text-secondary small mono">
-                                  {c.id} • {c.country}
-                                </div>
-                              </td>
-                              <td>{c.sector || "—"}</td>
-                              <td className="text-end mono">{formatMoney(c.capexUsd)}</td>
-                              <td className="text-end mono">
-                                <span
-                                  className={
-                                    c.trendPct > 0 ? "pos" : c.trendPct < 0 ? "neg" : ""
-                                  }
-                                >
-                                  {formatPct(c.trendPct)}
-                                </span>
-                              </td>
-                              <td>{c.status || "—"}</td>
-                            </tr>
-                          );
-                        })
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-
-                <div className="rm-foot text-secondary small">
-                  Showing <strong>{rows.length.toLocaleString()}</strong>{" "}
-                  {country === "ALL" ? "companies across Africa" : `companies in ${country}`}.
+                  <input
+                    className="rm-input"
+                    placeholder="Search company/sector…"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
                 </div>
               </div>
-            </div>
+
+              {/* Table wrapper: internal scroll + mobile horizontal scroll */}
+              <div className="rm-tableWrap" role="region" aria-label="Companies table">
+                <table className="rm-table">
+                  <thead>
+                    <tr>
+                      <th style={{ minWidth: 220 }}>Company</th>
+                      <th style={{ minWidth: 140 }}>Sector</th>
+                      <th className="tr" style={{ minWidth: 120 }}>
+                        CAPEX
+                      </th>
+                      <th className="tr" style={{ minWidth: 90 }}>
+                        Trend
+                      </th>
+                      <th style={{ minWidth: 120 }}>Status</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {rows.length === 0 ? (
+                      <tr>
+                        <td colSpan="5" className="rm-empty">
+                          No results…
+                        </td>
+                      </tr>
+                    ) : (
+                      rows.map((c) => {
+                        const active = c.id === selected?.id;
+                        return (
+                          <tr
+                            key={c.id}
+                            className={`rm-row ${active ? "active" : ""}`}
+                            onClick={() => setSelectedId(c.id)}
+                            role="button"
+                            title="Click to update chart"
+                          >
+                            <td>
+                              <div className="rm-company">{c.name}</div>
+                              <div className="rm-muted mono">
+                                {c.id} • {c.country}
+                              </div>
+                            </td>
+                            <td className="nowrap">{c.sector || "—"}</td>
+                            <td className="tr mono">{formatMoney(c.capexUsd)}</td>
+                            <td className="tr mono">
+                              <span className={c.trendPct > 0 ? "pos" : c.trendPct < 0 ? "neg" : ""}>
+                                {formatPct(c.trendPct)}
+                              </span>
+                            </td>
+                            <td className="nowrap">{c.status || "—"}</td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="rm-foot">
+                Showing <strong>{rows.length.toLocaleString()}</strong>{" "}
+                {country === "ALL" ? "companies across Africa" : `companies in ${country}`}.
+              </div>
+            </section>
           </div>
         </div>
       </div>
@@ -515,15 +459,15 @@ export default function AfricaInvestmentPanel({
 }
 
 /**
- * ✅ Seamless integration notes:
- * - NO :root overrides (uses .rm-panel scope)
- * - Uses your existing variables if available:
- *   --brand-blue, --border, --shadow, --radius, --bg, --card
- * - Provides fallbacks only inside .rm-panel tokens
+ * ✅ RESPONSIVE RULES:
+ * - No global html/body changes (prevents scroll bugs)
+ * - Chips row scrolls horizontally
+ * - Two-column on desktop, one-column on mobile
+ * - Table scrolls inside wrapper (Y + X)
+ * - No “squeezed text” on mobile
  */
 const panelCss = `
 .rm-panel{
-  /* fallbacks (won’t override your global :root) */
   --rm-ink: var(--ink, #0f172a);
   --rm-muted: #64748b;
   --rm-border: var(--border, rgba(226,232,240,.9));
@@ -535,35 +479,82 @@ const panelCss = `
   --rm-blue-500: var(--brand-blue-500, #041b64);
   color: var(--rm-ink);
 }
-.rm-panel .mono{
+
+.rm-panel, .rm-panel *{ box-sizing: border-box; }
+.rm-panel{ width: 100%; max-width: 100%; overflow-x: hidden; } /* only within component */
+
+.mono{
   font-variant-numeric: tabular-nums;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
-.rm-panel .pos{ color:#166534; font-weight:800; }
-.rm-panel .neg{ color:#b91c1c; font-weight:800; }
+.pos{ color:#166534; font-weight:800; }
+.neg{ color:#b91c1c; font-weight:800; }
+.tr{ text-align:right; }
+.nowrap{ white-space: nowrap; }
 
-.rm-card{
-  background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,1));
-  border:1px solid var(--rm-border);
-  border-radius: calc(var(--rm-radius) + 4px);
-  box-shadow: var(--rm-shadow);
+.rm-shell{
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
 }
 
-.rm-top{ padding-bottom: 6px; }
-.rm-title{ font-weight: 900; letter-spacing: .2px; }
-.rm-sub{ font-size: .92rem; line-height: 1.35; }
-.rm-titleWrap{ display:flex; flex-direction:column; }
-.rm-pillLive{
-  display:inline-flex; align-items:center;
-  padding:6px 10px;
-  border-radius:999px;
-  font-weight:900;
-  font-size:.82rem;
+.rm-surface{
+  background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,1));
+  border: 1px solid var(--rm-border);
+  border-radius: calc(var(--rm-radius) + 6px);
+  box-shadow: var(--rm-shadow);
+  padding: 14px;
+}
+
+/* Header becomes stacked on small screens */
+.rm-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-bottom: 10px;
+}
+
+.rm-titleRow{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.rm-title{
+  margin:0;
+  font-size: 18px;
+  font-weight: 950;
+  letter-spacing: .2px;
+}
+.rm-sub{
+  margin: 6px 0 0;
+  color: var(--rm-muted);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.rm-live{
+  display:inline-flex;
+  align-items:center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 950;
+  font-size: 12px;
   color:#fff;
   background: linear-gradient(135deg, var(--rm-blue-700), var(--rm-blue-500));
   box-shadow: 0 6px 16px rgba(4,27,100,.18);
 }
-.rm-updated{ font-size: .86rem; }
+
+.rm-updated{ color: var(--rm-muted); font-size: 13px; }
+
+.rm-actions{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 
 .rm-btn{
   border-radius: 12px;
@@ -572,140 +563,212 @@ const panelCss = `
   border: 1px solid #dbe4ff;
   background: #f5f8ff;
   color: #0a1f44;
-  transition: transform .08s ease, background .2s ease, border-color .2s ease;
+  cursor: pointer;
 }
 .rm-btn:hover{ background:#eef3ff; border-color:#c9d4ff; }
-.rm-btn:active{ transform: translateY(1px); }
 
-.rm-speed{ display:flex; align-items:center; gap:10px; }
-.rm-speedLabel{ font-size:.9rem; color: var(--rm-muted); font-weight:800; }
+.rm-speed{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--rm-border);
+  border-radius: 12px;
+  background: #fff;
+}
+.rm-speedLabel{ font-size: 12px; color: var(--rm-muted); font-weight: 900; }
 .rm-speed input{ accent-color: var(--rm-blue-700); }
 
-.rm-ticker{
-  margin-top: 10px;
-  border: 1px solid var(--rm-border);
-  border-radius: 14px;
-  background: #fff;
-  overflow:hidden;
-  padding: 10px;
+/* Chips row: always scrollable on mobile */
+.rm-chips{
+  display:flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 8px 0 6px;
+  -webkit-overflow-scrolling: touch;
 }
-.rm-track{
-  display:flex; align-items:center; gap:10px; width:max-content;
-  animation: rm-ticker var(--ticker-speed, 48s) linear infinite;
-}
-.rm-ticker.isPaused .rm-track{ animation-play-state: paused; }
-@keyframes rm-ticker{ from{ transform:translateX(0) } to{ transform:translateX(-35%) } }
-
 .rm-chip{
+  flex: 0 0 auto;
   border: 1px solid rgba(226,232,240,.9);
   background: #f8fafc;
   color: #0f172a;
   padding: 8px 10px;
   border-radius: 999px;
   font-weight: 900;
-  font-size: .82rem;
-  transition: box-shadow .2s ease, border-color .2s ease, transform .08s ease, background .2s ease;
+  font-size: 12px;
+  cursor: pointer;
 }
-.rm-chip:hover{
-  background:#fff;
-  border-color: rgba(33,59,177,.35);
-  box-shadow: 0 0 0 3px rgba(33,59,177,.12);
-}
-.rm-chip:active{ transform: translateY(1px); }
 .rm-chip.active{
   background: #eef3ff;
   border-color: rgba(33,59,177,.55);
 }
 
-.rm-cardInner{
-  border:1px solid rgba(226,232,240,.9);
+/* Main grid: one column on mobile */
+.rm-grid{
+  margin-top: 12px;
+  display:grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.rm-card{
+  border: 1px solid rgba(226,232,240,.9);
   background:#fff;
   border-radius: 18px;
   padding: 14px;
   box-shadow: 0 10px 26px rgba(2,6,23,.05);
+  min-width: 0;
 }
 
-.rm-innerHead{ padding: 4px 2px 8px; }
+.rm-cardTop{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .rm-badge{
   padding: 7px 10px;
   border-radius: 999px;
   background: #0b1020;
   color:#e2e8f0;
-  font-weight: 900;
-  border:1px solid #1f2937;
+  font-weight: 950;
+  border: 1px solid #1f2937;
 }
+.rm-selected{ color: var(--rm-muted); font-size: 12px; }
 
+.rm-stats{
+  margin-top: 10px;
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
 .rm-stat{
   border: 1px solid rgba(226,232,240,.9);
   border-radius: 14px;
-  padding: 12px 12px;
+  padding: 12px;
   background: linear-gradient(180deg, #ffffff, #fbfcff);
 }
-.rm-statLabel{
-  font-size: .82rem;
-  color: var(--rm-muted);
-  font-weight: 800;
-}
-.rm-statValue{
-  font-size: 1.05rem;
-  font-weight: 950;
-  letter-spacing: .2px;
-  margin-top: 4px;
-  color: #0f172a;
-}
+.rm-statLabel{ font-size: 12px; color: var(--rm-muted); font-weight: 900; }
+.rm-statValue{ font-size: 14px; font-weight: 950; margin-top: 6px; }
 
 .rm-chartHead{
-  margin-top: 14px;
+  margin-top: 12px;
   display:flex;
-  align-items:flex-end;
   justify-content:space-between;
+  gap: 10px;
+  align-items:flex-end;
 }
+.rm-chartTitle{ font-weight: 950; }
+.rm-chartSub{ color: var(--rm-muted); font-size: 12px; margin-top: 3px; }
+
 .rm-chartBox{
   margin-top: 10px;
   border: 1px solid rgba(226,232,240,.9);
   border-radius: 16px;
   padding: 10px;
-  background: #fff;
+  background:#fff;
+  overflow:hidden;
 }
 
-.rm-hint{ margin-top: 10px; }
+.rm-hint{ margin-top: 10px; color: var(--rm-muted); font-size: 12px; }
 
-.rm-tableTop{ padding: 4px 2px 10px; }
-.rm-select{ border-radius: 12px; font-weight: 800; }
-.rm-search{ border-radius: 12px; }
+/* Table header + controls */
+.rm-tableHead{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.rm-cardTitle{ font-weight: 950; }
+.rm-cardSub{ color: var(--rm-muted); font-size: 12px; margin-top: 3px; }
 
-.rm-tableWrap{
-  border: 1px solid rgba(226,232,240,.9);
-  border-radius: 16px;
-  overflow:auto;
-  max-height: 360px;
+.rm-controlsRow{
+  display:flex;
+  gap: 10px;
+  align-items:center;
+  flex-wrap: wrap;
+  min-height: 44px; /* keeps stable height */
+}
+
+.rm-select, .rm-input{
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--rm-border);
+  padding: 0 10px;
+  font-weight: 800;
+  font-size: 13px;
+  outline: none;
   background:#fff;
 }
-.rm-table{ margin:0; }
-.rm-table thead th{
+.rm-input{ width: min(320px, 78vw); }
+.rm-input:focus, .rm-select:focus{
+  border-color: rgba(3,40,174,.35);
+  box-shadow: 0 0 0 4px rgba(3,40,174,.10);
+}
+
+/* Table wrapper: scroll inside (Y + X on mobile) */
+.rm-tableWrap{
+  margin-top: 12px;
+  border: 1px solid rgba(226,232,240,.9);
+  border-radius: 16px;
+  overflow: auto;
+  max-height: 420px;
+  background:#fff;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.rm-table{
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 760px; /* ensures horizontal scroll on narrow screens */
+}
+.rm-table th, .rm-table td{
+  padding: 10px 10px;
+  border-bottom: 1px solid rgba(226,232,240,.85);
+  vertical-align: middle;
+}
+.rm-table th{
   position: sticky;
   top: 0;
   z-index: 2;
   background: #f8fafc;
-  border-bottom: 1px solid rgba(226,232,240,.95);
   font-weight: 950;
-  color: #0f172a;
+  color:#0f172a;
 }
-.rm-row td{
-  transition: background .15s ease;
-}
-.rm-row:hover td{
-  background:#fbfdff;
-}
+
+.rm-row:hover td{ background:#fbfdff; cursor:pointer; }
 .rm-row.active td{
   background: #f5f8ff !important;
   border-top: 1px solid #dbe4ff;
   border-bottom: 1px solid #dbe4ff;
 }
-.rm-company{ line-height: 1.1; }
-.rm-foot{ padding-top: 10px; }
 
-@media (max-width: 576px){
-  .rm-updated{ width:100%; display:block; margin-top:6px; }
+.rm-company{ font-weight: 950; line-height: 1.15; }
+.rm-muted{ color: var(--rm-muted); font-size: 12px; margin-top: 2px; }
+
+.rm-empty{
+  text-align:center;
+  padding: 22px 10px;
+  color: var(--rm-muted);
+}
+
+.rm-foot{ margin-top: 10px; color: var(--rm-muted); font-size: 12px; }
+
+/* Desktop: two columns */
+@media (min-width: 992px){
+  .rm-grid{ grid-template-columns: 420px 1fr; align-items:start; }
+  .rm-title{ font-size: 20px; }
+  .rm-table{ min-width: 0; } /* no forced min-width on large screens */
+}
+
+/* Small phones: stats become 1 column and inputs full width */
+@media (max-width: 420px){
+  .rm-stats{ grid-template-columns: 1fr; }
+  .rm-input{ width: 100%; }
 }
 `;
