@@ -261,6 +261,47 @@ main{flex:1}
 .svc-menu{margin-top:clamp(28px,6vw,72px); margin-bottom:clamp(48px,10vw,128px)}
 .svc-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
 .svc-col-3{grid-column:span 3}
+/* =========================================================
+   SERVICES MENU – RESPONSIVE STACK (NO SHRINKING)
+   ========================================================= */
+
+/* Ensure section always flows downward */
+.svc-menu {
+  display: block;
+  width: 100%;
+}
+
+/* Desktop: grid layout */
+.svc-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 20px;
+}
+
+/* Prevent cards from shrinking */
+.svc-box {
+  min-width: 280px;      /* HARD STOP: no shrinking */
+  width: 100%;
+}
+
+/* ================= MOBILE / TABLET ================= */
+@media (max-width: 1024px) {
+  .svc-grid {
+    display: flex;
+    flex-direction: column; /* STACK TOP → BOTTOM */
+    gap: 20px;
+  }
+
+  .svc-col-3 {
+    grid-column: auto;      /* disable grid math */
+    width: 100%;
+  }
+
+  .svc-box {
+    min-height: 190px;      /* preserve visual size */
+  }
+}
+
 
 /* ===================== SERVICE CARDS ===================== */
 .svc-box{
