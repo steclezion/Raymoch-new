@@ -73,6 +73,10 @@ class DatabaseSeeder extends Seeder
                     ->create([
                         'company_id' => $company->id,
                     ]);
+
+                $this->call([
+                    SectorsTableSeeder::class,
+                ]);
             });
     }
 

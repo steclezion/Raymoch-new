@@ -38,6 +38,8 @@ use App\Http\Controllers\RoutePdfController;
 use App\Http\Controllers\AllCompaniesController;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Response;
+use App\Http\Controllers\ServiceController;
+
 
 
 
@@ -174,24 +176,6 @@ Route::view('/', 'pages.entire')->name('entire');           // from Entire.html
 Route::view('/e', 'pages.entiree')->name('entire');
 
 
-
-// This page uses query ?id=... and fetches JSON from /api/companies/{id}
-
-
-
-
-// Route::get('/companies/vl/{id?}', function ($id = null) {
-//     // If you want, you can pass $id down to Blade to prefill a data attribute
-//     return view('pages.services.companies-vl', ['preloadId' => $id]);
-// })->name('companies.vl');
-
-// LEGACY redirects that PRESERVE the query string
-// Route::get('/companies.html', function () {
-//     $qs = request()->getQueryString(); // e.g. sector=Agriculture&from=explore
-
-//     return redirect()->to(route('companies') . ($qs ? ('?' . $qs) : ''));
-// });
-
 Route::get('/explore2.html', function () {
     $qs = request()->getQueryString();
 
@@ -203,18 +187,6 @@ Route::get('/companies-test', function () {
 });
 
 Route::view('/companies', 'pages.companies')->name('companies');    // main companies listing page
-
-// Route::view('/companies/vl', 'pages.services.companies-vl')->name('companies.vl');
-// Route::view('/company', 'pages.company');     // detail view uses ?id=...
-
-// Route::get('/companies/visibility', function () {
-//     return view('pages.services.companies-vl', [
-//         'from' => request('from'),
-//         'verified' => request('verified'),
-//     ]);
-// })->name('companies.visibility');
-
-
 
 
 // Static placeholders used in header/footer links (wire up later as you build them)
@@ -349,7 +321,7 @@ Route::get('/dashboard', function () {
 Route::get('/explore', [ExploreController::class, 'index'])->name('explore.index');
 Route::get('/explore/data', [ExploreController::class, 'data'])->name('explore.data');
 Route::get('/routes/pdf', [RoutePdfController::class, 'export']);
-
+Route::get('/services/options', [ServiceController::class, 'options']);
 
 
 
