@@ -37,6 +37,50 @@ html, body { height:100%; }
   color:var(--ink);
 }
 
+/* =========================
+   FIX: small screens / short heights
+   (paste at END to override)
+========================= */
+
+/* 1) Allow vertical scroll (prevents “cut off” bottoms) */
+html, body { overflow-y: auto !important; }
+body { overflow-x: hidden; }
+
+/* 2) main must not clip content */
+.page > main{
+  overflow: auto !important;                 /* was hidden */
+  -webkit-overflow-scrolling: touch;
+  align-items: center;                       /* keep your look on normal screens */
+}
+
+/* 3) On SHORT screens: stop centering so the top stays visible */
+@media (max-height: 740px){
+  .page > main{
+    align-items: flex-start !important;      /* ✅ card starts at top */
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+  }
+}
+
+/* 4) Card should never be cut off; allow it to shrink and scroll inside */
+.card{
+  max-height: calc(100dvh - var(--header-h) - var(--footer-h) - 24px) !important;
+  overflow: auto !important;                 /* ✅ card becomes scroll container if needed */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 5) Make sure grid items don’t overflow on narrow widths */
+.row{
+  grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+}
+@media (max-width:720px){
+  .row{ grid-template-columns: 1fr; }
+}
+
+/* 6) Actions always visible and full width on small screens */
+.actions{ width:100%; flex-wrap:wrap; }
+.actions .cta{ width:100%; }
+
 
 
 

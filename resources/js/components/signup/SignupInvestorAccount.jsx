@@ -1,4 +1,4 @@
-// resources/js/pages/SignupInvestorAccount.jsx
+// resources/js/pages/SignupBusinessAccount.jsx
 import React, { useEffect, useRef, useState } from "react";
 import Header from "./Header.jsx";
 import Footer from "./Footer.jsx";
@@ -36,6 +36,50 @@ html, body { height:100%; }
   background:var(--bg);
   color:var(--ink);
 }
+
+/* =========================
+   FIX: small screens / short heights
+   (paste at END to override)
+========================= */
+
+/* 1) Allow vertical scroll (prevents “cut off” bottoms) */
+html, body { overflow-y: auto !important; }
+body { overflow-x: hidden; }
+
+/* 2) main must not clip content */
+.page > main{
+  overflow: auto !important;                 /* was hidden */
+  -webkit-overflow-scrolling: touch;
+  align-items: center;                       /* keep your look on normal screens */
+}
+
+/* 3) On SHORT screens: stop centering so the top stays visible */
+@media (max-height: 740px){
+  .page > main{
+    align-items: flex-start !important;      /* ✅ card starts at top */
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+  }
+}
+
+/* 4) Card should never be cut off; allow it to shrink and scroll inside */
+.card{
+  max-height: calc(100dvh - var(--header-h) - var(--footer-h) - 24px) !important;
+  overflow: auto !important;                 /* ✅ card becomes scroll container if needed */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 5) Make sure grid items don’t overflow on narrow widths */
+.row{
+  grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+}
+@media (max-width:720px){
+  .row{ grid-template-columns: 1fr; }
+}
+
+/* 6) Actions always visible and full width on small screens */
+.actions{ width:100%; flex-wrap:wrap; }
+.actions .cta{ width:100%; }
 
 
 
@@ -791,7 +835,7 @@ function BusinessForm({ routes }) {
                 }
             }
 
-            notifyOk("Business account activated! Subscription created.");
+            notifyOk("Investor Account activated! Subscription created.");
             setTimeout(
                 () => window.location.assign(subJson.redirect || "/dashboard"),
                 700
@@ -1059,7 +1103,7 @@ function BusinessForm({ routes }) {
                                         .<br />
                                         <small>
                                             We’ll use your info to create a
-                                            business account and send essential
+                                            Investor Account and send essential
                                             updates.
                                         </small>
                                     </label>
@@ -1446,7 +1490,7 @@ function BusinessForm({ routes }) {
     );
 }
 
-export default function SignupInvestorAccount(props) {
+export default function SignupBusinessAccount(props) {
     return (
         <Elements stripe={stripePromise}>
             <BusinessForm {...props} />
