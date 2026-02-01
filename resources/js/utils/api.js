@@ -73,7 +73,7 @@ export async function fetchCompanies(filters = {}) {
   if (filters.country) params.set("country", filters.country);
   if (filters.sector) params.set("sector", filters.sector);
 
-  const qs = params.toString();
+  const qs = params.toString();f
   return fetchJSON(`${API_BASE}/companies${qs ? `?${qs}` : ""}`);
 }
 

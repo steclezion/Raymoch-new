@@ -11,6 +11,7 @@ import PricingBasic from "./components/PricingBasic.jsx";
 import SignupBasic from "./components/signup/SignupBasic.jsx";
 import SignupPremium from "./components/signup/SignupPremium.jsx";
 import SignupBusinessAccount from "./components/signup/SignupBusinessAccount.jsx";
+import SignupInvestorAccount from "./components/signup/SignupInvestorAccount.jsx";  
 import ExploreBusinesses from './pages/ExploreBusinesses.jsx';
 import Companies from './pages/Companies.jsx';
 import Entire from "./pages/Entire.jsx";
@@ -29,6 +30,15 @@ const aboutRoot = document.getElementById("about-root");
 if (aboutRoot) {
   const root = createRoot(aboutRoot);
   root.render(<About />);
+}
+
+
+// Mount only if the element exists on the page
+const SignupInvestorAccountRoot = document.getElementById("SignupInvestorAccountRoot");
+
+if (SignupInvestorAccountRoot) {
+  const root = createRoot(SignupInvestorAccountRoot);
+  root.render(<SignupInvestorAccount routes={window.ROUTES} />);
 }
 
 
