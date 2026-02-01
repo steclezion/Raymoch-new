@@ -236,7 +236,7 @@
         </div>
 
         <div class="btns">
-          <a id="backLink" class="back" href="companies-vl.html?from=visibility&verified=1"> Back to Listings</a>
+          <a id="backLink" class="back" href="companies.html?from=explore"> Back to Companies</a>
           <a class="btn sm" id="btnVisit" target="_blank" rel="noopener">Visit site</a>
           <button class="btn sm ghost" id="btnShare" type="button">Share</button>
           <!-- Owner-gated action swaps below (Edit vs Request Update) -->
@@ -386,16 +386,17 @@
   })();
 
   /* ===== Utilities ===== */
-  const API = "http://localhost:3001"; // adjust for prod
+  const API = location.origin; // use current origin (works with your FastAPI mount)
   const qs = new URLSearchParams(location.search);
-  const id = qs.get("id");
+  const key = (qs.get("id") || qs.get("slug") || qs.get("name") || "").trim();
+
   const $ = (id)=>document.getElementById(id);
   const money = n => (n==null? "—" : "$"+Number(n).toLocaleString());
-  const verDotClass = v => ({Verified:"ok", Pending:"warn", Unverified:"off"})[v] || "off";
+  const verDotClass = v => ({Verified:"ok", Pending:"warn", Unverified:"off", approved:"ok", rejected:"off"}[(v||"").toString()]) || "off";
 
   function linkify(url){
     if(!url) return null;
-    try{ const u = new URL(url); return u.href; } catch { return url; }
+    try{ const u = new URL(url, location.href); return u.href; } catch { return url; }
   }
 
   function setActiveTab(){
@@ -408,10 +409,10 @@
 
   function setFlags(c){
     const out=[];
-    if(c.DiasporaOwned) out.push(`<span class="pill">Diaspora-owned</span>`);
-    if(c.WomenLed) out.push(`<span class="pill">Women-led</span>`);
-    if(c.YouthLed) out.push(`<span class="pill">Youth-led</span>`);
-    if(c.HasFinancials) out.push(`<span class="pill">Financials on file</span>`);
+    if(c.DiasporaOwned || c.diaspora_owned) out.push(`<span class="pill">Diaspora-owned</span>`);
+    if(c.WomenLed || c.women_led) out.push(`<span class="pill">Women-led</span>`);
+    if(c.YouthLed || c.youth_led) out.push(`<span class="pill">Youth-led</span>`);
+    if(c.HasFinancials || c.has_financials) out.push(`<span class="pill">Financials on file</span>`);
     $("flags").innerHTML = out.join("") || `<span class="small muted">No flags</span>`;
   }
 
@@ -419,25 +420,26 @@
     const back = $("backLink");
     const ret = qs.get("return");
     if (ret) {
-      try {
-        const url = new URL(ret, location.href);
-        back.href = url.href;
-      } catch { /* ignore bad return */ }
+      try { back.href = new URL(ret, location.href).href; } catch {}
     } else {
-      back.href = "companies-vl.html?from=visibility&verified=1";
+      // preserve common list params if arriving from companies page
+      const p = new URLSearchParams();
+      ["from","q","sector","country","page","page_size","all","verified"].forEach(k=>{
+        const v = qs.get(k); if(v) p.set(k,v);
+      });
+      back.href = "companies.html" + (p.toString()? ("?"+p.toString()):"");
     }
   }
 
   function ownerGating(){
-    const isOwner = qs.get("owner")==="1";
+    const isOwner = qs.get("owner")==="1" || qs.get("edit")==="1";
     const btnEdit   = $("btnEdit");
     const btnUpdate = $("btnUpdate");
     if (isOwner) {
       btnEdit.style.display = "";
       btnUpdate.style.display = "none";
       btnEdit.onclick = () => {
-        // Future: route to authenticated edit screen
-        alert("Edit mode (owner stub). In production, open the edit dashboard.");
+        alert("Edit mode (owner stub). In production, route to authenticated edit flow.");
       };
     } else {
       btnEdit.style.display = "none";
@@ -451,10 +453,10 @@
     const panel = $("updatePanel");
     panel.classList.add("active");
     panel.setAttribute("aria-hidden","false");
-    // prefill if we have the company name/country
+    // prefill
     const n = $("name").textContent.trim();
     if(n && n !== "Loading…") $("uCompany").value = n;
-    $("uCountry").value = (window.__company && window.__company.Country) || "";
+    $("uCountry").value = (window.__company && (window.__company.Country || window.__company.country)) || "";
     panel.scrollIntoView({behavior:"smooth", block:"center"});
   }
   function closeUpdatePanel(){
@@ -462,60 +464,110 @@
     panel.classList.remove("active");
     panel.setAttribute("aria-hidden","true");
   }
-
   $("closeUpdate")?.addEventListener("click", closeUpdatePanel);
   $("updateForm")?.addEventListener("submit", (e)=>{
     e.preventDefault();
-    // In production: submit to claim API; here we just demo
     alert("Claim link sent (demo). We’ll email you to confirm ownership.");
     closeUpdatePanel();
   });
 
+  function normalize(rec){
+    // Support DB columns and fallback JSON keys
+    return {
+      id: rec.CompanyID || rec.id || rec.companyId || null,
+      name: rec.CompanyName || rec.name || "—",
+      sector: rec.Sector || rec.sector || "",
+      country: rec.Country || rec.country || "",
+      city: rec.City || rec.city || "",
+      stage: rec.Stage || rec.stage || "",
+      verification: rec.VerificationStatus || rec.verificationStatus || rec.status || "",
+      description: rec.Description || rec.description || "",
+      founded: rec.FoundedYear || rec.founded || null,
+      employees: rec.Employees || rec.employees || null,
+      revenue: rec.AnnualRevenueUSD || rec.annualRevenueUSD || null,
+      funding: rec.TotalFundingUSD || rec.totalFundingUSD || null,
+      ctiTier: rec.CTI_Tier || (rec.cti && rec.cti.tier) || "",
+      ctiScore: rec.CTI_Score || (rec.cti && rec.cti.score) || "",
+      website: rec.Website || rec.website || "",
+      email: rec.Email || rec.email || "",
+      phone: rec.Phone || rec.phone || "",
+      lastUpdated: rec.LastUpdated || rec.updated_at || "",
+      sources: rec.DataSourcesCount || rec.sources || ""
+    };
+  }
+
+  async function fetchJSON(u){
+    const r = await fetch(u, {cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return r.json();
+  }
+
   async function loadProfile(){
-    if (!id){
-      const err = $("error"); err.style.display="block";
-      err.textContent = "Missing ?id. Use companies-vl.html to pick a company.";
+    const err = $("error");
+    if (!key){
+      err.style.display="block";
+      err.textContent = "Missing ?id, ?slug, or ?name.";
       return;
     }
-    const r = await fetch(`${API}/companies/${encodeURIComponent(id)}`);
-    if(!r.ok){ const err = $("error"); err.style.display="block"; err.textContent = "HTTP "+r.status; return; }
-    const c = await r.json();
-    window.__company = c;
 
-    $("verDot").className = "dot " + verDotClass(c.VerificationStatus);
-    $("name").textContent = c.CompanyName || "—";
-    $("subline").textContent = `${c.Sector || "—"} • ${c.Country || "—"}`;
-    $("pills").innerHTML = [c.City, c.Stage, c.ListingBucket].filter(Boolean).map(x=>`<span class="pill">${x}</span>`).join("");
+    // Try DB-first API, then legacy fallbacks
+    let rec = null;
+    const safeKey = encodeURIComponent(key.toLowerCase());
+    const tries = [
+      `${API}/api/companies/${safeKey}`,
+      `${API}/companies/${safeKey}`,
+      `${API}/company?id=${safeKey}`,
+      `${API}/company?slug=${safeKey}`,
+      `${API}/company?name=${safeKey}`
+    ];
+    let lastErr = null;
+    for (const url of tries){
+      try { rec = await fetchJSON(url); if (rec) break; } catch(e){ lastErr = e; }
+    }
+    if (!rec){
+      err.style.display="block";
+      err.textContent = "Failed to load company. " + (lastErr? lastErr.message : "Not found");
+      return;
+    }
 
-    $("desc").textContent = c.Description || "—";
+    window.__company = rec;
+    const c = normalize(rec);
+
+    $("verDot").className = "dot " + verDotClass(c.verification);
+    $("verDot").title = c.verification || "Unverified";
+    $("name").textContent = c.name || "—";
+    $("subline").textContent = `${c.sector || "—"} • ${c.country || "—"}`;
+    $("pills").innerHTML = [c.city, c.stage].filter(Boolean).map(x=>`<span class="pill">${x}</span>`).join("");
+
+    $("desc").textContent = c.description || "—";
     $("snapshot").innerHTML = [
-      ["Founded", c.FoundedYear],["Country", c.Country],["City", c.City],
-      ["Stage", c.Stage],["Verification", c.VerificationStatus],["Employees", c.Employees]
+      ["Founded", c.founded],["Country", c.country],["City", c.city],
+      ["Stage", c.stage],["Verification", c.verification],["Employees", c.employees]
     ].map(([k,v])=>`<div><b>${k}</b><span>${v??"—"}</span></div>`).join("");
 
     $("fin").innerHTML = [
-      ["Annual Revenue", money(c.AnnualRevenueUSD)],
-      ["Total Funding",  money(c.TotalFundingUSD)]
+      ["Annual Revenue", money(c.revenue)],
+      ["Total Funding",  money(c.funding)]
     ].map(([k,v])=>`<div><b>${k}</b><span>${v}</span></div>`).join("");
 
-    $("ctiTier").textContent=c.CTI_Tier||"—";
+    $("ctiTier").textContent=c.ctiTier||"—";
     $("ctiTier").className="pill";
-    $("ctiScore").textContent="CTI: "+(c.CTI_Score??"—");
+    $("ctiScore").textContent="CTI: "+(c.ctiScore??"—");
 
-    setFlags(c);
+    setFlags(rec);
 
-    const site = linkify(c.Website);
+    const site = linkify(c.website);
     const btnVisit = $("btnVisit");
     if (site){ btnVisit.href = site; btnVisit.textContent = "Visit site"; btnVisit.style.display="inline-flex"; }
     else { btnVisit.style.display="none"; }
 
     $("contactKv").innerHTML = [
       ["Website", site? `<a href="${site}" target="_blank" rel="noopener">${new URL(site).hostname}</a>`:"—"],
-      ["Email", c.Email?`<a href="mailto:${c.Email}">${c.Email}</a>`:"—"],
-      ["Phone", c.Phone||"—"]
+      ["Email", c.email?`<a href="mailto:${c.email}">${c.email}</a>`:"—"],
+      ["Phone", c.phone||"—"]
     ].map(([k,v])=>`<div><b>${k}</b><span>${v}</span></div>`).join("");
 
-    $("meta").textContent = `Last updated ${c.LastUpdated || "—"} • Sources ${c.DataSourcesCount ?? "—"}`;
+    $("meta").textContent = `Last updated ${c.lastUpdated || "—"} • Sources ${c.sources || "—"}`;
 
     $("btnShare").onclick = async () => {
       const url = location.href;
@@ -526,7 +578,7 @@
     setActiveTab();
     window.addEventListener("hashchange", setActiveTab);
 
-    // If action=update, auto-open the panel (non-owners)
+    // Auto-open request panel if action=update and not owner
     if (qs.get("action")==="update" && qs.get("owner")!=="1") openUpdatePanel();
   }
 
