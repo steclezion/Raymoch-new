@@ -39,11 +39,7 @@ use App\Http\Controllers\AllCompaniesController;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Response;
 use App\Http\Controllers\ServiceController;
-
-
-
-
-
+use App\Mail\EmailTestMailGun;
 
 Route::get('/bussiness_menu', [ControlLayoutController::class, 'Business_menus'])->name('bussiness_menu');
 
@@ -59,12 +55,23 @@ Route::resource('permissions', PermissionController::class)->middleware('auth');
 Route::get('/auth/google', [GoogleAuthController::class, 'redirectToGoogle'])->name('auth_google');
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleCallback']);
 Route::get('verify-email', [GoogleAuthController::class, 'verifyEmail'])->name('verify.email.link');
+
 Route::get('/send', function () {
     // return view('raymoch.pages.index');
     Mail::to('steclezion@gmail.com')->send(new HelloMail);
 
     return 'Email sent!';
 });
+
+
+Route::get('/Mailgun', function () {
+    // return view('raymoch.pages.index');
+    Mail::to(users: 'steclezion@gmail.com')->send(new EmailTestMailGun());
+
+    return 'Email sent!';
+});
+
+
 Route::post('/chatbot', [ChatbotController::class, 'respond']);
 
 Route::get('/test-email', function () {

@@ -1,100 +1,92 @@
 // resources/js/pages/SignupBasic.jsx
-import React, { useEffect, useRef, useState } from "react";
+
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-
-
-import Select from "react-select";
-import ReactCountryFlag from "react-country-flag";
 import { getCountries, getCountryCallingCode } from "libphonenumber-js";
 import countries from "i18n-iso-countries";
 import enLocale from "i18n-iso-countries/langs/en.json";
 
-
-
 // Register English country names
 countries.registerLocale(enLocale);
 
-/** Build a full, sorted list of { value: "+1", iso2: "US", name: "United States" } */
+/**
+ * Build a full, sorted list of country calling codes:
+ * [{ value:"+1", iso2:"US", name:"United States", label:"United States (US) +1" }]
+ *
+ * ✅ World countries only
+ * ✅ Correct calling codes from libphonenumber-js
+ * ✅ Sorted ascending by country name (stable, user-friendly)
+ */
 function buildAllCountryOptions() {
+  const iso2List = getCountries().map((c) => c.toUpperCase());
+
   const seen = new Set();
-  const opts =
-    getCountries()
-      .map((iso2Lower) => {
-        try {
-          const iso2 = iso2Lower.toUpperCase();
-          const name =
-            countries.getName(iso2, "en", { select: "official" }) ||
-            countries.getName(iso2, "en") ||
-            iso2;
-          const value = "+" + getCountryCallingCode(iso2Lower);
-          const key = `${iso2}|${value}`;
-          if (seen.has(key)) return null;
-          seen.add(key);
-          return { value, iso2, name };
-        } catch {
-          return null;
-        }
-      })
-      .filter(Boolean) || [];
+  const opts = [];
 
-  // Sort primarily by numeric calling code, then by name
-  opts.sort((a, b) => {
-    const na = parseInt(a.value.slice(1), 10);
-    const nb = parseInt(b.value.slice(1), 10);
-    if (na !== nb) return na - nb;
-    return a.name.localeCompare(b.name);
-  });
+  for (const iso2 of iso2List) {
+    try {
+      const name =
+        countries.getName(iso2, "en", { select: "official" }) ||
+        countries.getName(iso2, "en") ||
+        iso2;
 
+      const value = "+" + getCountryCallingCode(iso2); // expects ISO2, e.g. "US"
+      const key = `${iso2}|${value}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      opts.push({
+        value,
+        iso2,
+        name,
+        label: `${name} (${iso2}) ${value}`,
+      });
+    } catch {
+      // ignore missing data
+    }
+  }
+
+  // Sort by country name A-Z (requested "simple")
+  opts.sort((a, b) => a.name.localeCompare(b.name));
   return opts;
 }
 
+// Build once (module scope) to avoid rebuilding on each render
 const CC_OPTIONS = buildAllCountryOptions();
-
-// Helpers for the react-select option display with flag + text
-const formatCCOption = (o) => (
-  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-    <ReactCountryFlag
-      svg
-      countryCode={o.iso2}
-      style={{ width: 20, height: 14 }}
-      title={o.name}
-    />
-    <strong>{o.value}</strong>
-    <span style={{ opacity: 0.7 }}>{o.name}</span>
-  </div>
-);
-
-const getOptionValue = (o) => `${o.iso2}-${o.value}`;
-const getOptionLabel = (o) => `${o.value} ${o.name}`;
-
 
 /* ================== Reusable Modal component ================== */
 function Modal({ title, open, onClose, children }) {
   useEffect(() => {
-    const onEsc = (e) => { if (e.key === "Escape") onClose?.(); };
+    const onEsc = (e) => {
+      if (e.key === "Escape") onClose?.();
+    };
     if (open) document.addEventListener("keydown", onEsc);
     return () => document.removeEventListener("keydown", onEsc);
   }, [open, onClose]);
 
   if (!open) return null;
+
   return (
     <div className="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div className="modalCard">
         <div className="modalHead">
           <h3 id="modal-title">{title}</h3>
-          <button className="modalClose" aria-label="Close" onClick={onClose}>×</button>
+          <button className="modalClose" aria-label="Close" onClick={onClose}>
+            ×
+          </button>
         </div>
         <div className="modalBody">{children}</div>
         <div className="modalFoot">
-          <button className="cta subtle" onClick={onClose}>Close</button>
+          <button className="cta subtle" onClick={onClose}>
+            Close
+          </button>
         </div>
       </div>
     </div>
   );
 }
-
 
 export default function SignupBasic({ routes }) {
   const R = routes || (typeof window !== "undefined" ? window.ROUTES : {});
@@ -112,6 +104,7 @@ export default function SignupBasic({ routes }) {
 
   const [busy, setBusy] = useState(false);
   const [step, setStep] = useState("form"); // "form" | "otp"
+
   const [showTerms, setShowTerms] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const consentRef = useRef(null);
@@ -128,10 +121,25 @@ export default function SignupBasic({ routes }) {
 
   // Phone: selected country code (string) + raw number
   const [countryCode, setCountryCode] = useState(() => {
-    // default to +1 if present in options
     const us = CC_OPTIONS.find((o) => o.iso2 === "US") || CC_OPTIONS[0];
     return us?.value || "+1";
   });
+
+  // Lightweight search for the <select> options (fast)
+  const [ccQuery, setCcQuery] = useState("");
+
+  const filteredCC = useMemo(() => {
+    const q = (ccQuery || "").trim().toLowerCase();
+    if (!q) return CC_OPTIONS;
+
+    return CC_OPTIONS.filter((o) => {
+      return (
+        o.name.toLowerCase().includes(q) ||
+        o.iso2.toLowerCase().includes(q) ||
+        o.value.includes(q)
+      );
+    });
+  }, [ccQuery]);
 
   const digitsOnly = (s) => (s || "").replace(/\D/g, "");
 
@@ -148,6 +156,7 @@ export default function SignupBasic({ routes }) {
         const now = Math.floor(Date.now() / 1000);
         const remaining = Math.max(0, expiresAt - now);
         setCountdown(remaining);
+
         if (remaining === 0) {
           toast.error("Code expired. Reloading…");
           setTimeout(() => window.location.reload(), 1000);
@@ -182,7 +191,9 @@ export default function SignupBasic({ routes }) {
       return false;
     }
     if (!values.password || !strongPass(values.password)) {
-      toast.error("Password must be ≥9 chars and include 1 uppercase, 1 number, and 1 special character.");
+      toast.error(
+        "Password must be ≥9 chars and include 1 uppercase, 1 number, and 1 special character."
+      );
       return false;
     }
     if (values.password !== values.confirm_password) {
@@ -215,9 +226,7 @@ export default function SignupBasic({ routes }) {
     setBusy(true);
     try {
       const csrf =
-        document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") ||
-        R.csrf ||
-        "";
+        document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || R.csrf || "";
 
       const formattedPhone = `${countryCode}${digitsOnly(values.phone)}`;
 
@@ -243,11 +252,13 @@ export default function SignupBasic({ routes }) {
       });
 
       const json = await res.json().catch(() => ({}));
+
       if (res.ok && json.ok) {
         toast.success("Verification code sent to your email.");
         const ts = json.expires
           ? Math.floor(new Date(json.expires).getTime() / 1000)
           : Math.floor(Date.now() / 1000) + 300;
+
         setExpiresAt(ts);
         setCountdown(ts - Math.floor(Date.now() / 1000));
         setStep("otp");
@@ -301,9 +312,8 @@ export default function SignupBasic({ routes }) {
     setBusy(true);
     try {
       const csrf =
-        document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") ||
-        R.csrf ||
-        "";
+        document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || R.csrf || "";
+
       const res = await fetch(R.signup?.basic?.verify_otp ?? "/signup/basic/verify-otp", {
         method: "POST",
         headers: {
@@ -314,7 +324,9 @@ export default function SignupBasic({ routes }) {
         body: JSON.stringify({ code, email: values.email.trim() }),
         credentials: "same-origin",
       });
+
       const json = await res.json().catch(() => ({}));
+
       if (res.ok && json.ok) {
         toast.success("Verified! Redirecting…");
         setTimeout(() => window.location.assign(json.redirect || "/dashboard"), 700);
@@ -331,17 +343,15 @@ export default function SignupBasic({ routes }) {
   const mm = String(Math.floor(countdown / 60)).padStart(2, "0");
   const ss = String(countdown % 60).padStart(2, "0");
 
-  // Current selected option for react-select (derive from countryCode string)
-  const selectedCC =
-    CC_OPTIONS.find((o) => o.value === countryCode) ||
-    CC_OPTIONS.find((o) => o.iso2 === "US") ||
-    CC_OPTIONS[0];
-
   return (
     <>
       <style>{css}</style>
       <style>{modalCss}</style>
-      <Header routes={R} />
+
+      {/* If you have Header component, keep it */}
+      {/* <Header routes={R} /> */}
+      {/* You didn't include Header import here; if you use it, re-add it. */}
+
       <ToastContainer position="top-right" />
 
       <div className="page">
@@ -350,7 +360,7 @@ export default function SignupBasic({ routes }) {
             <div className="cardHeader">
               <h1>Individual Account</h1>
               <button type="button" className="backBtn" onClick={() => window.history.back()}>
-                 Back
+                Back
               </button>
             </div>
 
@@ -384,8 +394,6 @@ export default function SignupBasic({ routes }) {
                 </div>
 
                 <div className="row">
-  
-
                   {/* Password with eye */}
                   <div>
                     <label htmlFor="b-pass">Password</label>
@@ -406,8 +414,20 @@ export default function SignupBasic({ routes }) {
                         onClick={() => setShowPass((v) => !v)}
                       >
                         <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-                          <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" fill="none" stroke="#334155" strokeWidth="1.5" />
-                          <circle cx="12" cy="12" r="3" fill="none" stroke="#334155" strokeWidth="1.5" />
+                          <path
+                            d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z"
+                            fill="none"
+                            stroke="#334155"
+                            strokeWidth="1.5"
+                          />
+                          <circle
+                            cx="12"
+                            cy="12"
+                            r="3"
+                            fill="none"
+                            stroke="#334155"
+                            strokeWidth="1.5"
+                          />
                         </svg>
                       </button>
                     </div>
@@ -433,19 +453,28 @@ export default function SignupBasic({ routes }) {
                         onClick={() => setShowPass2((v) => !v)}
                       >
                         <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-                          <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" fill="none" stroke="#334155" strokeWidth="1.5" />
-                          <circle cx="12" cy="12" r="3" fill="none" stroke="#334155" strokeWidth="1.5" />
+                          <path
+                            d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z"
+                            fill="none"
+                            stroke="#334155"
+                            strokeWidth="1.5"
+                          />
+                          <circle
+                            cx="12"
+                            cy="12"
+                            r="3"
+                            fill="none"
+                            stroke="#334155"
+                            strokeWidth="1.5"
+                          />
                         </svg>
                       </button>
                     </div>
                   </div>
-
                 </div>
 
-                {/* Confirm password + phone with country code */}
                 <div className="row">
-                
-   <div>
+                  <div>
                     <label htmlFor="b-username">Display name</label>
                     <input
                       id="b-username"
@@ -458,47 +487,38 @@ export default function SignupBasic({ routes }) {
                     />
                   </div>
 
-                  {/* Country code + phone side-by-side */}
+                  {/* Country code + phone side-by-side (FAST SIMPLE) */}
                   <div>
                     <label htmlFor="b-phone">Phone number</label>
+
                     <div className="phoneGroup">
-                      <Select
-                        classNamePrefix="rs"
-                        options={CC_OPTIONS}
-                        value={selectedCC}
-                        onChange={(opt) => setCountryCode(opt?.value || countryCode)}
-                        formatOptionLabel={formatCCOption}
-                        getOptionValue={getOptionValue}
-                        getOptionLabel={getOptionLabel}
-                        isSearchable
-                        menuPlacement="auto"
-                        styles={{
-                          control: (base) => ({
-                            ...base,
-                            height: 48,
-                            minHeight: 48,
-                            borderColor: "#063122",
-                            borderRadius: 10,
-                            boxShadow: "none",
-                          }),
-                          valueContainer: (base) => ({
-                            ...base,
-                            gap: 8,
-                          }),
-                          option: (base, state) => ({
-                            ...base,
-                            paddingTop: 8,
-                            paddingBottom: 8,
-                            backgroundColor: state.isFocused ? "#eef2ff" : "white",
-                            color: "#0f172a",
-                          }),
-                          menu: (base) => ({
-                            ...base,
-                            zIndex: 30,
-                          }),
-                        }}
-                        aria-label="Country code"
-                      />
+                      <div className="ccWrap">
+                        <input
+                          className="ccSearch"
+                          type="search"
+                          placeholder="Search code / country"
+                          value={ccQuery}
+                          onChange={(e) => setCcQuery(e.target.value)}
+                          aria-label="Search countries"
+                        />
+
+                        <select
+                          className="ccSelect"
+                          value={countryCode}
+                          onChange={(e) => setCountryCode(e.target.value)}
+                          aria-label="Country code"
+                        >
+                          {filteredCC.map((o) => (
+                            <option key={`${o.iso2}-${o.value}`} value={o.value}>
+                              {o.label}
+                            </option>
+                          ))}
+                        </select>
+
+                        <div className="ccHint">
+                          Showing {filteredCC.length} / {CC_OPTIONS.length}
+                        </div>
+                      </div>
 
                       <input
                         id="b-phone"
@@ -539,11 +559,30 @@ export default function SignupBasic({ routes }) {
                   />
                   <label htmlFor="b-consent">
                     <strong>I agree</strong> to the{" "}
-                    <a href="#" onClick={(e) => { e.preventDefault(); setShowTerms(true); }}>Terms</a>{" "}
+                    <a
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setShowTerms(true);
+                      }}
+                    >
+                      Terms
+                    </a>{" "}
                     and{" "}
-                    <a href="#" onClick={(e) => { e.preventDefault(); setShowPrivacy(true); }}>Privacy</a>.
+                    <a
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setShowPrivacy(true);
+                      }}
+                    >
+                      Privacy
+                    </a>
+                    .
                     <br />
-                    <small>We’ll use your info to create a basic account. You can upgrade anytime.</small>
+                    <small>
+                      We’ll use your info to create a basic account. You can upgrade anytime.
+                    </small>
                   </label>
                 </div>
 
@@ -551,9 +590,9 @@ export default function SignupBasic({ routes }) {
                   <button type="submit" className="cta" disabled={busy} aria-disabled={busy}>
                     {busy ? "Sending Code…" : "Create Basic Account"}
                   </button>
+
                   <div className="subtle">
-                    Wrong Turn?{" "}
-                    <a href={R.signup?.index ?? "/signup"}>Choose another role</a>
+                    Wrong Turn? <a href={R.signup?.index ?? "/signup"}>Choose another role</a>
                   </div>
                 </div>
               </form>
@@ -583,7 +622,11 @@ export default function SignupBasic({ routes }) {
                 </div>
 
                 <div className="otpMeta">
-                  <div className="timer">Expires in: <strong>{mm}:{ss}</strong></div>
+                  <div className="timer">
+                    Expires in: <strong>
+                      {mm}:{ss}
+                    </strong>
+                  </div>
                   <button
                     type="button"
                     className="cta ghost"
@@ -598,106 +641,115 @@ export default function SignupBasic({ routes }) {
           </section>
         </main>
 
-  <footer className="ft">
-  <div>
-    © {new Date().getFullYear()} {routes.brandName || "Raymoch"}. All rights reserved.
-  </div>
- 
+        <footer className="ft">
           <div>
-            <a href="#" onClick={(e) => { e.preventDefault(); setShowPrivacy(true); }}>Privacy</a>
-            <a href="#" onClick={(e) => { e.preventDefault(); setShowTerms(true); }}>Terms</a>
+            © {new Date().getFullYear()} {routes?.brandName || "Raymoch"}. All rights reserved.
+          </div>
+          <div>
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                setShowPrivacy(true);
+              }}
+            >
+              Privacy
+            </a>
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                setShowTerms(true);
+              }}
+            >
+              Terms
+            </a>
           </div>
         </footer>
       </div>
 
-       {/* ======= Terms Modal (scrollable) ======= */}
+      {/* ======= Terms Modal (scrollable) ======= */}
       <Modal title="Terms of Service" open={showTerms} onClose={() => setShowTerms(false)}>
-        <p><strong>Effective:</strong> January 1, 2025</p>
+        <p>
+          <strong>Effective:</strong> January 1, 2025
+        </p>
         <h4>1) Acceptance of Terms</h4>
         <p>
           By creating an account or using Raymoch, you agree to these Terms of Service. If you do not agree,
           you may not access or use the platform. We may update these Terms periodically; continued use after
           updates constitutes acceptance.
         </p>
-
         <h4>2) Accounts & Responsibilities</h4>
         <ul>
           <li>Provide accurate registration information and keep credentials secure.</li>
           <li>You are responsible for all activity under your account.</li>
           <li>Misuse (e.g., unauthorized access, scraping, abuse) may result in suspension or termination.</li>
         </ul>
-
         <h4>3) Service Availability & Changes</h4>
         <p>
           We aim for high availability but do not guarantee uninterrupted service. We may modify, suspend, or
           discontinue features at any time with or without notice.
         </p>
-
         <h4>4) Paid Plans, Billing & Taxes</h4>
         <ul>
           <li>Premium plans renew automatically until canceled.</li>
           <li>Billing is handled by our payment provider; taxes may apply based on your region.</li>
           <li>Failed or disputed charges may pause or terminate access.</li>
         </ul>
-
         <h4>5) Prohibited Conduct</h4>
         <ul>
           <li>Reverse engineering, automated scraping, or attempting to bypass security controls.</li>
           <li>Uploading malicious code or content that violates law or third-party rights.</li>
         </ul>
-
         <h4>6) Intellectual Property</h4>
         <p>
           The Raymoch name, logos, and platform content are protected by copyright, trademark, and other laws.
           You receive a limited, non-exclusive, non-transferable license to use the platform as intended.
         </p>
-
         <h4>7) Limitation of Liability</h4>
         <p>
           To the fullest extent permitted by law, Raymoch is not liable for indirect, incidental, special,
           consequential, or exemplary damages. Your exclusive remedy is to stop using the service.
         </p>
-
         <h4>8) Governing Law</h4>
         <p>These Terms are governed by the laws of California, USA, without regard to conflict-of-law rules.</p>
       </Modal>
 
       {/* ======= Privacy Modal (scrollable) ======= */}
       <Modal title="Privacy Policy" open={showPrivacy} onClose={() => setShowPrivacy(false)}>
-        <p><strong>Effective:</strong> January 1, 2025</p>
+        <p>
+          <strong>Effective:</strong> January 1, 2025
+        </p>
         <h4>1) Data We Collect</h4>
         <ul>
           <li>Account data: name, email, display name, company; password stored using strong hashing.</li>
           <li>Usage & device data (e.g., browser type, IP, timestamps) to improve reliability and security.</li>
           <li>Payment data is processed by our PCI-compliant provider; we do not store full card numbers.</li>
         </ul>
-
         <h4>2) How We Use Data</h4>
         <ul>
           <li>Create and maintain your account, authenticate access, and deliver features.</li>
           <li>Send transactional notices (verifications, receipts, security alerts).</li>
           <li>Monitor platform health, prevent abuse, and comply with legal obligations.</li>
         </ul>
-
         <h4>3) Sharing</h4>
         <p>
           We don’t sell or rent personal data. We share with service providers (cloud hosting, email delivery,
           payments) under contractual safeguards and only as needed to provide the service.
         </p>
-
         <h4>4) Security & Retention</h4>
         <p>
           We apply technical and organizational controls, store passwords using strong hashing, and retain data
           only as long as necessary for the stated purposes or legal requirements.
         </p>
-
         <h4>5) Your Rights</h4>
         <ul>
           <li>Access, correct, export, or delete your personal data (subject to applicable law).</li>
-          <li>Contact: <a href="mailto:support@raymoch.com">support@raymoch.com</a></li>
+          <li>
+            Contact: <a href="mailto:support@raymoch.com">support@raymoch.com</a>
+          </li>
         </ul>
       </Modal>
-
     </>
   );
 }
@@ -708,34 +760,11 @@ const css = `
   --ink:#101114; --bg:#fafafa; --border:#e8e8ee; --card:#fff;
   --shadow:0 4px 16px rgba(10,42,107,.06); --footer-bg:#0b1020; --radius:16px
 }
-
-/* Base layout */
 html, body { height:100%; }
 *{ box-sizing:border-box; margin:0; padding:0; font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif; }
 .page{
   min-height:100vh; display:flex; flex-direction:column; background:var(--bg); color:var(--ink);
 }
-
-/* Header (scoped to Header.jsx markup) */
-.header{
-  height:80px;
-  background:#fff;
-  border-bottom:1px solid var(--border);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 24px;
-  position:relative;
-  flex-shrink:0;
-}
-.brand{ display:flex; align-items:center; gap:10px; color:var(--brand-blue); text-decoration:none; }
-.brand svg{ width:26px; height:26px; display:block; }
-.brand span{ font-weight:900; font-size:1.3rem; letter-spacing:.2px; color:var(--brand-blue); }
-
-.iconbtn{ background:transparent; border:0; cursor:pointer; padding:6px; border-radius:8px; display:flex; align-items:center; justify-content:center; position:relative; }
-.iconbtn:hover{ background:#f2f4ff; }
-
-/* Main & Card */
 main{ flex:1; display:flex; align-items:center; justify-content:center; padding:24px; }
 .card{
   background:var(--card); border:1px solid var(--border);
@@ -744,6 +773,7 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 }
 .cardHeader{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
 .cardHeader h1{ font-size:1.9rem; font-weight:900; color:#063122; }
+
 .backBtn{
   background:transparent; border:1px solid #d9e1ff; color:#041b64;
   font-weight:700; border-radius:10px; padding:8px 14px; cursor:pointer;
@@ -755,6 +785,7 @@ main{ flex:1; display:flex; align-items:center; justify-content:center; padding:
 @media (max-width:720px){ .row{ grid-template-columns:1fr; } }
 
 label{ font-weight:700; font-size:.95rem; display:block; margin-top:4px; }
+
 .input{
   width:100%; padding:14px 16px; border:1px solid #063122; border-radius:10px;
   margin:8px 0 16px; font-size:15px;
@@ -783,7 +814,6 @@ button.cta{
 }
 button.cta[disabled]{ opacity:.7; cursor:not-allowed; }
 button.cta.ghost{ background:#f5f8ff; color:#041b64; border:1px solid #d9e1ff; }
-
 .subtle{ font-size:.95rem; }
 .subtle a{ font-weight:800; color:var(--ink); text-decoration:none; }
 .subtle a:hover{ text-decoration:underline; }
@@ -805,21 +835,47 @@ button.cta.ghost{ background:#f5f8ff; color:#041b64; border:1px solid #d9e1ff; }
 .ft{
   background:var(--footer-bg); color:#cbd5e1; font-size:.9rem; padding:12px 24px;
   display:flex; justify-content:space-between; align-items:center; border-top:1px solid #1f2937;
-  flex-shrink:0;
+  flex-shrink:0; margin-top:auto;
 }
 .ft a{ color:#cbd5e1; margin-left:14px; text-decoration:none; }
 .ft a:hover{ text-decoration:underline; }
 
-/* Phone group: react-select + input */
+/* Phone group: select + input */
 .phoneGroup{
-  display:grid; grid-template-columns: minmax(200px, 260px) 1fr; gap:10px; align-items:center;
+  display:grid;
+  grid-template-columns: minmax(220px, 320px) 1fr;
+  gap:10px;
+  align-items:start;
 }
-.phoneInput{ height:48px; }
+.phoneInput{ height:48px; margin-top:0; }
 
-/* React-Select classNamePrefix="rs" tweaks */
-.rs__control{ border-color:#063122 !important; box-shadow:none !important; }
-.rs__option--is-focused{ background:#eef2ff !important; }
-.rs__value-container{ gap:8px; }
+/* Country-code select block (fast + simple) */
+.ccWrap{ display:grid; gap:8px; }
+.ccSearch{
+  height:42px;
+  padding:0 12px;
+  border:1px solid #063122;
+  border-radius:10px;
+  outline:none;
+  background:#fff;
+}
+.ccSearch:focus{ box-shadow:0 0 0 3px rgba(3,40,174,.25); }
+
+.ccSelect{
+  height:48px;
+  padding:0 12px;
+  border:1px solid #063122;
+  border-radius:10px;
+  outline:none;
+  background:#fff;
+}
+.ccSelect:focus{ box-shadow:0 0 0 3px rgba(3,40,174,.25); }
+
+.ccHint{
+  font-size:12px;
+  color:#475569;
+  margin-top:-2px;
+}
 
 /* Responsive */
 @media (max-width:600px){
@@ -829,7 +885,6 @@ button.cta.ghost{ background:#f5f8ff; color:#041b64; border:1px solid #d9e1ff; }
 }
 `;
 
-/* ================== INLINE CSS (modal styles) ================== */
 const modalCss = `
 .modalOverlay{
   position:fixed; inset:0; background:rgba(15,23,42,.55);
@@ -862,23 +917,7 @@ const modalCss = `
   padding:12px 16px; border-top:1px solid #eef0f6; display:flex; justify-content:flex-end; gap:10px; background:#fff;
 }
 .modalFoot .cta.subtle{
-  background:#f5f8ff; color:#041b64; border:1px solid #d9e1ff; border-radius:10px; padding:10px 14px; font-weight:700; cursor:pointer;
+  background:#f5f8ff; color:#041b64; border:1px solid #d9e1ff;
+  border-radius:10px; padding:10px 14px; font-weight:700; cursor:pointer;
 }
-  html, body { height: 100%; }
-
-.page{
-  min-height: 100dvh;   /* better than 100vh */
-  display: flex;
-  flex-direction: column;
-}
-
-.page > main{
-  flex: 1 1 auto;       /* main takes remaining space */
-}
-
-.ft{
-  margin-top: auto;     /* footer sticks to bottom */
-}
-
 `;
-// Country code options
