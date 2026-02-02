@@ -261,7 +261,7 @@ class SignupController extends Controller
 
         return response()->json([
             'ok'       => true,
-            'redirect' => url('/dashboard'),
+            'redirect' => url('/'),
         ]);
     }
 

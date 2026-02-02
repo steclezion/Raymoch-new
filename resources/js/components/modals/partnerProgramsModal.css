@@ -1,0 +1,145 @@
+/* resources/js/components/services/modals/partnerProgramsModal.css */
+:root {
+  --border: #e8e8ee;
+  --shadow: 0 6px 22px rgba(10, 42, 107, 0.08);
+  --brand-blue: #0328aeed;
+  --card: #fff;
+}
+
+.pp-wrap {
+  padding: 18px;
+}
+.pp-container {
+  max-width: 980px;
+  margin: 0 auto;
+}
+.pp-title {
+  margin: 0;
+  color: var(--brand-blue);
+}
+.pp-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.pp-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 16px;
+  margin-top: 16px;
+}
+.col-4 {
+  grid-column: span 4;
+}
+@media (max-width: 920px) {
+  .col-4 {
+    grid-column: span 12;
+  }
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  padding: 18px;
+  transition: none !important;
+}
+.card:hover,
+.card:focus,
+.card:active,
+.card:focus-within {
+  background: var(--card) !important;
+  transform: none !important;
+  box-shadow: var(--shadow) !important;
+  border-color: var(--border) !important;
+}
+
+.card.click {
+  cursor: pointer;
+}
+
+.card h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  color: var(--brand-blue);
+}
+.meta {
+  color: #6b7280;
+  font-size: 14px;
+  margin: 0;
+}
+
+.filterbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin: 12px 0 14px;
+  flex-wrap: wrap;
+}
+.filterbar select,
+.filterbar input {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-size: 15px;
+}
+.filterbar input {
+  flex: 1;
+  min-width: 200px;
+}
+.reset {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 8px 14px;
+  font-weight: 700;
+  cursor: pointer;
+  background: #fff;
+}
+
+.btn {
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.btn.primary {
+  border: 0;
+  color: #fff;
+  background: linear-gradient(135deg, #213bb1, #041b64);
+}
+.btn.secondary {
+  background: #fff;
+}
+
+label {
+  display: block;
+  font-weight: 800;
+  font-size: 13px;
+  color: #24324a;
+  margin-bottom: 10px;
+}
+label input,
+label select {
+  width: 100%;
+  margin-top: 6px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+}
+
+label.ghost {
+  color: #6b7280;
+  font-weight: 700;
+  padding: 10px 0;
+}

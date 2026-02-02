@@ -1,0 +1,153 @@
+/* resources/js/components/services/modals/matchingModal.css */
+:root {
+  --border: #e8e8ee;
+  --card: #fff;
+  --shadow: 0 6px 22px rgba(10, 42, 107, 0.08);
+}
+
+.match-wrap {
+  padding: 18px;
+}
+
+.match-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  border-radius: 20px;
+  padding: 18px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 920px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.label {
+  font-size: 13px;
+  color: #334155;
+  margin-bottom: 6px;
+}
+.label.big {
+  font-size: 14px;
+  font-weight: 900;
+  margin-bottom: 10px;
+}
+
+.input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 11px 12px;
+  outline: none;
+  background: #fff;
+}
+
+.inline-range {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.step2-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 18px;
+  margin-top: 14px;
+}
+@media (max-width: 920px) {
+  .step2-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pills {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 10px 12px;
+  background: #fbfbfe;
+}
+.pill input {
+  width: 18px;
+  height: 18px;
+}
+
+.help {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 12px;
+}
+.help.error {
+  color: #b91c1c;
+}
+
+.ms2-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 920px) {
+  .ms2-col {
+    grid-template-columns: 1fr;
+  }
+}
+
+.multi-select {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px;
+  height: 190px;
+  overflow: auto;
+}
+
+.ms-wrap {
+  position: relative;
+}
+
+.ms-clear {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
+}
+.ms-clear:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.payload {
+  margin-top: 12px;
+  padding: 10px;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  background: #fafafa;
+  font-size: 12px;
+  color: #334155;
+  overflow: auto;
+}

@@ -1,0 +1,125 @@
+/* resources/js/components/services/services.css */
+:root {
+  --brand-blue: #0328aeed;
+  --brand-blue-700: #213bb1;
+  --brand-blue-500: #041b64;
+  --ink: #101114;
+  --bg: #fafafa;
+  --border: #e8e8ee;
+  --card: #ffffff;
+  --shadow: 0 6px 22px rgba(10, 42, 107, 0.08);
+  --footer-bg: #0b1020;
+  --maxw: 1328px;
+  --gutter: 18px;
+}
+
+.services-wrap {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+.services-page-hero {
+  background: linear-gradient(135deg, var(--brand-blue-700), var(--brand-blue-500));
+  color: #fff;
+  padding: clamp(40px, 4vw, 80px) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.services-page-hero h2 {
+  font-weight: 900;
+  font-size: clamp(32px, 5vw, 52px);
+  background: linear-gradient(90deg, #fff, #e7efff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.services-page-hero p {
+  margin-top: 8px;
+  color: #ddeBff;
+  font-size: clamp(16px, 2vw, 20px);
+}
+
+.services-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* SERVICES MENU – RESPONSIVE STACK (NO SHRINKING) */
+.svc-menu {
+  display: block;
+  width: 100%;
+  margin-top: clamp(28px, 6vw, 72px);
+  margin-bottom: clamp(48px, 10vw, 128px);
+}
+.svc-title {
+  margin: 0 0 8px;
+  color: var(--brand-blue);
+}
+.svc-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 20px;
+}
+.svc-col-3 {
+  grid-column: span 3;
+}
+.svc-box {
+  width: 100%;
+  text-align: left;
+  display: block;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--card);
+  padding: 28px 24px 24px;
+  box-shadow: var(--shadow);
+  transition: none;
+  min-height: 190px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  min-width: 280px;
+}
+.svc-box::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background: linear-gradient(180deg, var(--brand-blue-700), var(--brand-blue-500));
+  border-top-left-radius: 20px;
+  border-bottom-left-radius: 20px;
+}
+.svc-box h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+.svc-box p {
+  margin: 6px 0 0;
+  color: #475569;
+}
+
+@media (max-width: 1024px) {
+  .svc-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .svc-col-3 {
+    grid-column: auto;
+    width: 100%;
+  }
+}
+
+.svc-placeholder-card {
+  margin: 18px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: var(--shadow);
+  color: #475569;
+}

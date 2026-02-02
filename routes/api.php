@@ -12,8 +12,30 @@ use App\Http\Controllers\Api\CompanySearchLogController;
 use App\Http\Controllers\CompanyDetailController;
 use App\Http\Controllers\CompanyReactionController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\Api\CountryCodeController;
 
 
+
+
+
+
+
+
+
+Route::middleware('auth')->get('/me', function (\Illuminate\Http\Request $request) {
+    $u = $request->user();
+    return response()->json([
+        'ok' => true,
+        'user' => [
+            'id' => $u->id,
+            'name' => $u->name,
+            'display_name' => $u->display_name,
+            'email' => $u->email,
+            'type_of_account' => $u->type_of_account,
+            'trial_ends_at' => $u->trial_ends_at,
+        ],
+    ]);
+});
 
 
 Route::post('/company-search-logs', [CompanySearchLogController::class, 'store']);
@@ -37,6 +59,7 @@ Route::post('trial-requests/verify-code', [TrialRequestController::class, 'verif
 
 Route::get('/business-sectors', [DirectoryController::class, 'sectors']);
 Route::get('/countries',        [DirectoryController::class, 'countries']);
+Route::get('/country-codes', [CountryCodeController::class, 'index']);
 
 
 // JSON API routes

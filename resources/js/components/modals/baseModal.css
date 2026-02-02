@@ -1,0 +1,91 @@
+/* resources/js/components/services/modals/baseModal.css */
+:root {
+  --border: #e8e8ee;
+  --card: #ffffff;
+  --shadow: 0 6px 22px rgba(10, 42, 107, 0.08);
+  --brand-blue-700: #213bb1;
+  --brand-blue-500: #041b64;
+}
+
+.rm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 16, 32, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  z-index: 999999;
+}
+
+.rm-modal {
+  width: min(1040px, 100%);
+  max-height: calc(100dvh - 36px);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.rm-header {
+  padding: 18px 18px 14px;
+  border-bottom: 1px solid var(--border);
+  background: #fff;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.rm-title h3 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 900;
+  color: #0f172a;
+}
+.rm-sub {
+  margin-top: 6px;
+  color: #6b7280;
+}
+
+.rm-close {
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 14px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.rm-body {
+  padding: 0;
+  overflow: auto;
+  background: #fff;
+}
+
+.rm-footer {
+  padding: 14px 18px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+}
+
+.rm-btn {
+  border-radius: 14px;
+  padding: 10px 14px;
+  font-weight: 900;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: #fff;
+}
+
+.rm-btn-primary {
+  background: linear-gradient(135deg, var(--brand-blue-700), var(--brand-blue-500));
+  color: #fff;
+  border: 0;
+}

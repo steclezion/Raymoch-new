@@ -38,8 +38,9 @@ export default function Login({
     "";
 
   const getApiUrl = () => apiUrl ?? window.LOGIN_BOOT?.apiLogin ?? "/login/json";
-  const getRedirect = (j) =>
-    j?.redirect || redirectTo || window.LOGIN_BOOT?.redirectTo || "/dashboard";
+  // const getRedirect = (j) => j?.redirect || redirectTo || window.LOGIN_BOOT?.redirectTo || "/dashboard";
+ const getRedirect = (j) => j?.redirect || redirectTo || window.LOGIN_BOOT?.redirectTo || "/";
+
 
   // set value + clear that field's error when typing
   const set = (k) => (e) => {
