@@ -1,52 +1,21 @@
-// resources/js/pages/Companies.jsx
-// ------------------------------------------------------------------
-// Raymoch "Companies" listing page:
-//  - Filter/search + pagination
-//  - Grouping: Country / Sector / Country→Sector nested
-//  - Opens CompanyDetailDialog for rich view
-// ------------------------------------------------------------------
-
+// resources/js/pages/companies/Companies.jsx
 import React, { useEffect, useMemo, useState } from "react";
 
 // Layout
 import Header from "../components/layout_master/Header.jsx";
 import Footer from "../components/layout_master/Footer.jsx";
 
-// if (import.meta.env.DEV) {
-//   const _freeze = Object.freeze;
-//   Object.freeze = function (obj) {
-//     try {
-//       console.trace("Object.freeze called on:", obj);
-//     } catch {}
-//     return _freeze(obj);
-//   };
-// }
-
-
 // MUI
-import {
-  Box,
-  Button,
-  TextField,
-  Switch,
-  FormControlLabel,
-  CircularProgress,
-  Tooltip,
-  Fade,
-  Typography,
-  Stack,
-  Autocomplete,
-  Alert,
-  Breadcrumbs,
-  Link as MLink,
-  Chip,
-} from "@mui/material";
+import { Box, Alert, Breadcrumbs, Link as MLink, Typography } from "@mui/material";
 
 // Local
-
-import "../styles/companies.css";
+import "../styles/companies.css"; // keep your global companies styles
 import CompanyDetailDialog from "../components/companies/CompanyDetailDialog.jsx";
 import { API_BASE, fetchJSON } from "../utils/api.js";
+
+import FilterPanel from "../pages/companies/Filter_panel.jsx";
+import MainLoadPanel from "../pages/companies/Main_load_panel.jsx";
+
 /* ----------------------------- HELPERS ----------------------------- */
 
 // Simple ASCII normalizer
@@ -88,13 +57,9 @@ function canonicalizeCountry(input) {
 // Normalize company record to stable shape
 function normalizeCompany(c) {
   if (!c) return {};
-  const rawStatus =
-    c.VerificationStatus ??
-    c.verification_status ??
-    "";
+  const rawStatus = c.VerificationStatus ?? c.verification_status ?? "";
   const statusStr = String(rawStatus).trim().toLowerCase();
-  const isVerified =
-    /\bverified\b/.test(statusStr) || !!c.Verified;
+  const isVerified = /\bverified\b/.test(statusStr) || !!c.Verified;
 
   return {
     id: c.Id ?? c.id ?? c.ID ?? null,
@@ -117,36 +82,26 @@ function normalizeCompany(c) {
 function groupByCountry(items) {
   const groups = new Map();
   items.forEach((x) => {
-    const key =
-      (x.country || "Unspecified country").trim() || "Unspecified country";
+    const key = (x.country || "Unspecified country").trim() || "Unspecified country";
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(x);
   });
 
-  const out = Array.from(groups.entries()).sort((a, b) =>
-    a[0].localeCompare(b[0])
-  );
-  out.forEach(([_, arr]) =>
-    arr.sort((u, v) => (u.name || "").localeCompare(v.name || ""))
-  );
+  const out = Array.from(groups.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  out.forEach(([_, arr]) => arr.sort((u, v) => (u.name || "").localeCompare(v.name || "")));
   return out;
 }
 
 function groupBySector(items) {
   const groups = new Map();
   items.forEach((x) => {
-    const key =
-      (x.sector || "Unspecified sector").trim() || "Unspecified sector";
+    const key = (x.sector || "Unspecified sector").trim() || "Unspecified sector";
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(x);
   });
 
-  const out = Array.from(groups.entries()).sort((a, b) =>
-    a[0].localeCompare(b[0])
-  );
-  out.forEach(([_, arr]) =>
-    arr.sort((u, v) => (u.name || "").localeCompare(v.name || ""))
-  );
+  const out = Array.from(groups.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  out.forEach(([_, arr]) => arr.sort((u, v) => (u.name || "").localeCompare(v.name || "")));
   return out;
 }
 
@@ -157,77 +112,32 @@ function groupByCountryAndSector(items) {
   const countryMap = new Map();
 
   items.forEach((c) => {
-    const country =
-      (c.country || "Unspecified country").trim() || "Unspecified country";
-    const sector =
-      (c.sector || "Unspecified sector").trim() || "Unspecified sector";
+    const country = (c.country || "Unspecified country").trim() || "Unspecified country";
+    const sector = (c.sector || "Unspecified sector").trim() || "Unspecified sector";
 
-    if (!countryMap.has(country)) {
-      countryMap.set(country, new Map());
-    }
+    if (!countryMap.has(country)) countryMap.set(country, new Map());
+
     const sectorMap = countryMap.get(country);
-    if (!sectorMap.has(sector)) {
-      sectorMap.set(sector, []);
-    }
+    if (!sectorMap.has(sector)) sectorMap.set(sector, []);
     sectorMap.get(sector).push(c);
   });
 
-  const countries = Array.from(countryMap.entries()).sort((a, b) =>
-    a[0].localeCompare(b[0])
-  );
+  const countries = Array.from(countryMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
 
   return countries.map(([countryName, sectorMap]) => {
     const sectors = Array.from(sectorMap.entries())
       .sort((a, b) => a[0].localeCompare(b[0]))
       .map(([sectorName, companies]) => ({
         sector: sectorName,
-        companies: companies
-          .slice()
-          .sort((u, v) => (u.name || "").localeCompare(v.name || "")),
+        companies: companies.slice().sort((u, v) => (u.name || "").localeCompare(v.name || "")),
       }));
-
     return { country: countryName, sectors };
   });
-}
-
-/* ---------------------------- UI COMPONENTS ---------------------------- */
-
-function CompanyCard({ company, onOpen, showVerifiedBadge }) {
-  const tier = company.cti?.tier || "";
-  const tierLower = tier.toLowerCase();
-  let tierClass = "";
-  if (tierLower.includes("gold")) tierClass = "cti-gold";
-  else if (tierLower.includes("silver")) tierClass = "cti-silver";
-  else if (tierLower.includes("bronze")) tierClass = "cti-bronze";
-
-  return (
-    <div className="card" onClick={() => onOpen(company)}>
-      {showVerifiedBadge && company.verified && (
-        <Tooltip title="Verified company" arrow>
-          <div className="verified-badge">V</div>
-        </Tooltip>
-      )}
-      <h3>{company.name || "—"}</h3>
-      <p>
-        {company.sector || "—"} • {company.country || "—"}
-      </p>
-      <div className="meta">
-        {company.stage && <span className="pill">Stage: {company.stage}</span>}
-        {company.city && <span className="pill">{company.city}</span>}
-        {tier && (
-          <span className={`pill cti-pill ${tierClass}`}>
-            CTI: {tier}
-          </span>
-        )}
-      </div>
-    </div>
-  );
 }
 
 /* ============================== MAIN PAGE ============================== */
 
 export default function Companies() {
-  /* --------------- ROUTES (can be centralized later if needed) --------------- */
   const ROUTES = useMemo(
     () => ({
       privacy: "/privacy",
@@ -246,7 +156,6 @@ export default function Companies() {
   );
 
   /* ---------------------------- FILTER STATE ---------------------------- */
-
   const [q, setQ] = useState("");
   const [sector, setSector] = useState("");
   const [country, setCountry] = useState("");
@@ -269,12 +178,10 @@ export default function Companies() {
   const [fromParam, setFromParam] = useState("");
 
   /* ------------------------- DETAIL DIALOG STATE ------------------------- */
-
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState(null);
 
   /* --------------------------- INIT FROM URL --------------------------- */
-
   useEffect(() => {
     const qs = new URLSearchParams(window.location.search);
 
@@ -294,7 +201,6 @@ export default function Companies() {
   }, []);
 
   /* ------------------------ LOAD FILTER OPTIONS ------------------------ */
-
   useEffect(() => {
     let cancelled = false;
 
@@ -313,6 +219,7 @@ export default function Companies() {
             .sort();
           setSectorOptions(list);
         }
+
         if (countryRes && Array.isArray(countryRes.data)) {
           const list = countryRes.data
             .map((c) => c.country_name || c.name)
@@ -331,29 +238,21 @@ export default function Companies() {
   }, []);
 
   /* ------------------------- LOADING ANIMATION ------------------------- */
-
   useEffect(() => {
     if (!loading) {
       setProgress(100);
       return;
     }
     setProgress(10);
-    const id = setInterval(
-      () => setProgress((p) => (p < 90 ? p + 10 : p)),
-      200
-    );
+    const id = setInterval(() => setProgress((p) => (p < 90 ? p + 10 : p)), 200);
     return () => clearInterval(id);
   }, [loading]);
 
   /* ---------------------------- FLAGS / MODES ---------------------------- */
-
-  const isAllInputsEmpty =
-    !q && !sector && !country && !verified && !localFilter.trim();
-
+  const isAllInputsEmpty = !q && !sector && !country && !verified && !localFilter.trim();
   const hasAnyFilter = !!(q || sector || country || verified);
 
   /* --------------------------- MAIN LIST FETCH --------------------------- */
-
   useEffect(() => {
     let cancelled = false;
 
@@ -380,11 +279,7 @@ export default function Companies() {
           list = payload.data;
         } else if (Array.isArray(payload)) {
           list = payload;
-          payload = {
-            current_page: page,
-            last_page: 1,
-            total: payload.length,
-          };
+          payload = { current_page: page, last_page: 1, total: payload.length };
         } else if (Array.isArray(js)) {
           list = js;
           payload = { current_page: page, last_page: 1, total: js.length };
@@ -417,28 +312,23 @@ export default function Companies() {
     }
 
     load();
-
     return () => {
       cancelled = true;
     };
   }, [page, q, sector, country, verified, fromParam]);
 
-  /* -------------------------- DERIVED LISTS -------------------------- */
+  
 
+  /* -------------------------- DERIVED LISTS -------------------------- */
   const visibleCompanies = useMemo(() => {
     let list = companies;
 
-    if (verified) {
-      list = list.filter((c) => c.verified);
-    }
+    if (verified) list = list.filter((c) => c.verified);
 
     if (!q && localFilter.trim()) {
       const term = localFilter.trim().toLowerCase();
-      list = list.filter((c) =>
-        (c.name || "").toLowerCase().includes(term)
-      );
+      list = list.filter((c) => (c.name || "").toLowerCase().includes(term));
     }
-
     return list;
   }, [companies, verified, q, localFilter]);
 
@@ -448,25 +338,18 @@ export default function Companies() {
   );
 
   const flatGrouped = useMemo(
-    () =>
-      shouldGroupBySector
-        ? groupBySector(visibleCompanies)
-        : groupByCountry(visibleCompanies),
+    () => (shouldGroupBySector ? groupBySector(visibleCompanies) : groupByCountry(visibleCompanies)),
     [visibleCompanies, shouldGroupBySector]
   );
 
   const nestedGrouped = useMemo(
-    () =>
-      isAllInputsEmpty ? groupByCountryAndSector(visibleCompanies) : [],
+    () => (isAllInputsEmpty ? groupByCountryAndSector(visibleCompanies) : []),
     [isAllInputsEmpty, visibleCompanies]
   );
 
-  const hasResults = isAllInputsEmpty
-    ? nestedGrouped.length > 0
-    : flatGrouped.length > 0;
+  const hasResults = isAllInputsEmpty ? nestedGrouped.length > 0 : flatGrouped.length > 0;
 
   /* ----------------------------- PAGINATION ----------------------------- */
-
   const pageNumbers = useMemo(() => {
     const pages = [];
     const max = 7;
@@ -487,7 +370,6 @@ export default function Companies() {
   const goNext = () => page < totalPages && setPage(page + 1);
 
   /* --------------------------- BREADCRUMB LINK --------------------------- */
-
   const { backHref } = useMemo(() => {
     function baseFor(from) {
       switch (from) {
@@ -515,14 +397,10 @@ export default function Companies() {
     if (country) p.set("country", country);
     if (verified) p.set("verified", "1");
     const extra = p.toString();
-
-    return {
-      backHref: dest.href + (extra ? "?" + extra : ""),
-    };
+    return { backHref: dest.href + (extra ? "?" + extra : "") };
   }, [fromParam, q, sector, country, verified]);
 
   /* ------------------------------ HANDLERS ------------------------------ */
-
   const onClearFilters = () => {
     setQ("");
     setSector("");
@@ -538,7 +416,6 @@ export default function Companies() {
   };
 
   /* ================================ UI ================================ */
-
   return (
     <div className="page">
       <Header routes={ROUTES} />
@@ -547,26 +424,13 @@ export default function Companies() {
         {/* Breadcrumb */}
         <Box sx={{ mb: 1 }}>
           <Breadcrumbs aria-label="breadcrumb" separator="›">
-            <MLink
-              color="inherit"
-              underline="hover"
-              href={ROUTES.home}
-              sx={{ fontSize: 13 }}
-            >
+            <MLink color="inherit" underline="hover" href={ROUTES.home} sx={{ fontSize: 13 }}>
               Home
             </MLink>
-            <MLink
-              color="inherit"
-              underline="hover"
-              href={backHref}
-              sx={{ fontSize: 13 }}
-            >
+            <MLink color="inherit" underline="hover" href={backHref} sx={{ fontSize: 13 }}>
               Explore businesses
             </MLink>
-            <Typography
-              color="text.primary"
-              sx={{ fontSize: 13, fontWeight: 600 }}
-            >
+            <Typography color="text.primary" sx={{ fontSize: 13, fontWeight: 600 }}>
               Companies
             </Typography>
           </Breadcrumbs>
@@ -587,370 +451,47 @@ export default function Companies() {
           </Box>
         )}
 
-        {/* ---------------------------- FILTER PANEL ---------------------------- */}
-        <Box className="panel">
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "1fr",
-                sm: "1fr 1fr",
-                md: "2fr 1.3fr 1.3fr auto",
-              },
-              columnGap: 1.5,
-              rowGap: 1.25,
-              alignItems: "center",
-            }}
-          >
-            {/* Server search */}
-            <Box sx={{ gridColumn: { xs: "1 / -1", sm: "1 / -1", md: "auto" } }}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Search companies..."
-                value={q}
-                onChange={(e) => {
-                  setQ(e.target.value);
-                  setPage(1);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    setPage(1);
-                  }
-                }}
-              />
-            </Box>
+        {/* ✅ FILTER PANEL (split file) */}
+        <FilterPanel
+          q={q}
+          setQ={setQ}
+          sector={sector}
+          setSector={setSector}
+          country={country}
+          setCountry={setCountry}
+          verified={verified}
+          setVerified={setVerified}
+          localFilter={localFilter}
+          setLocalFilter={setLocalFilter}
+          sectorOptions={sectorOptions}
+          countryOptions={countryOptions}
+          hasAnyFilter={hasAnyFilter}
+          onClearFilters={onClearFilters}
+          setPage={setPage}
+        />
 
-            {/* Sector */}
-            <Box>
-              <Autocomplete
-                fullWidth
-                size="small"
-                options={sectorOptions}
-                value={sector || null}
-                onChange={(_, v) => {
-                  setSector(v || "");
-                  setPage(1);
-                }}
-                renderInput={(params) => (
-                  <TextField {...params} label="All sectors" fullWidth />
-                )}
-                clearOnEscape
-              />
-            </Box>
-
-            {/* Country */}
-            <Box>
-              <Autocomplete
-                fullWidth
-                size="small"
-                options={countryOptions}
-                value={country || null}
-                onChange={(_, v) => {
-                  setCountry(v || "");
-                  setPage(1);
-                }}
-                renderInput={(params) => (
-                  <TextField {...params} label="All countries" fullWidth />
-                )}
-                clearOnEscape
-              />
-            </Box>
-
-            {/* Verified + Clear */}
-            <Stack
-              direction="row"
-              spacing={1}
-              alignItems="center"
-              sx={{
-                width: "100%",
-                justifyContent: { xs: "space-between", md: "flex-end" },
-              }}
-            >
-              <Tooltip title="Show only companies with a verified profile." arrow>
-                <FormControlLabel
-                  sx={{
-                    m: 0,
-                    ".MuiFormControlLabel-label": { fontSize: 13 },
-                  }}
-                  control={
-                    <Switch
-                      size="small"
-                      checked={verified}
-                      onChange={(e) => {
-                        setVerified(e.target.checked);
-                        setPage(1);
-                      }}
-                    />
-                  }
-                  label="Verified only"
-                />
-              </Tooltip>
-
-              <Tooltip title="Reset all filters and show default results." arrow>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={onClearFilters}
-                >
-                  Clear
-                </Button>
-              </Tooltip>
-            </Stack>
-          </Box>
-
-          {/* Active filter chips */}
-          {hasAnyFilter && (
-            <Box
-              sx={{
-                mt: 1.5,
-                p: 1.2,
-                borderRadius: 2,
-                bgcolor: "#f9fafb",
-                border: "1px dashed #d0d7e2",
-              }}
-            >
-              <Stack
-                direction="row"
-                alignItems="center"
-                spacing={1}
-                flexWrap="wrap"
-              >
-                <Typography
-                  variant="body2"
-                  sx={{ fontWeight: 600, color: "text.secondary", mr: 0.5 }}
-                >
-                  Active filters:
-                </Typography>
-
-                {q && (
-                  <Chip
-                    size="small"
-                    label={`Search: "${q}"`}
-                    onDelete={() => {
-                      setQ("");
-                      setPage(1);
-                    }}
-                  />
-                )}
-                {sector && (
-                  <Chip
-                    size="small"
-                    label={`Sector: ${sector}`}
-                    onDelete={() => {
-                      setSector("");
-                      setPage(1);
-                    }}
-                  />
-                )}
-                {country && (
-                  <Chip
-                    size="small"
-                    label={`Country: ${country}`}
-                    onDelete={() => {
-                      setCountry("");
-                      setPage(1);
-                    }}
-                  />
-                )}
-                {verified && (
-                  <Chip
-                    size="small"
-                    label="Verified only"
-                    onDelete={() => {
-                      setVerified(false);
-                      setPage(1);
-                    }}
-                  />
-                )}
-                <Button
-                  size="small"
-                  variant="text"
-                  onClick={onClearFilters}
-                  sx={{ ml: 0.5, textTransform: "none" }}
-                >
-                  Clear all
-                </Button>
-              </Stack>
-            </Box>
-          )}
-
-          {/* Client-side filter (only when q empty) */}
-          {!q && (
-            <Box sx={{ mt: 1.5 }}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Filter current results by company name…"
-                value={localFilter}
-                onChange={(e) => setLocalFilter(e.target.value)}
-                helperText="This filter applies on the currently loaded list without calling the server."
-              />
-            </Box>
-          )}
-        </Box>
-
-        {/* ---------------------------- LOADING ---------------------------- */}
-        {loading && (
-          <Box sx={{ my: 3, textAlign: "center" }}>
-            <Box sx={{ position: "relative", display: "inline-flex" }}>
-              <CircularProgress variant="determinate" value={progress} />
-              <Box
-                sx={{
-                  top: 0,
-                  left: 0,
-                  bottom: 0,
-                  right: 0,
-                  position: "absolute",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Typography variant="caption" component="div">
-                  {`${Math.round(progress)}%`}
-                </Typography>
-              </Box>
-            </Box>
-          </Box>
-        )}
-
-        {/* ----------------------------- GRID ----------------------------- */}
-        {!loading && (
-          <>
-            {!hasResults ? (
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ mt: 1.5 }}
-              >
-                No results.
-              </Typography>
-            ) : isAllInputsEmpty ? (
-              nestedGrouped.map((countryGroup) => (
-                <section key={countryGroup.country}>
-                  <h2 className="country-heading">{countryGroup.country}</h2>
-                  {countryGroup.sectors.map((sectorGroup) => (
-                    <Box key={sectorGroup.sector} sx={{ mb: 1.5 }}>
-                      <Typography
-                        variant="subtitle2"
-                        sx={{
-                          fontWeight: 600,
-                          mb: 0.5,
-                          color: "#475569",
-                        }}
-                      >
-                        Sector: {sectorGroup.sector}
-                      </Typography>
-                      <div className="grid">
-                        {sectorGroup.companies.map((c) => (
-                          <Tooltip
-                            key={c.id}
-                            title={c.name}
-                            arrow
-                            TransitionComponent={Fade}
-                            TransitionProps={{ timeout: 200 }}
-                          >
-                            <Box>
-                              <CompanyCard
-                                company={c}
-                                onOpen={openDetailDialog}
-                                showVerifiedBadge={verified}
-                              />
-                            </Box>
-                          </Tooltip>
-                        ))}
-                      </div>
-                    </Box>
-                  ))}
-                </section>
-              ))
-            ) : (
-              flatGrouped.map(([groupName, arr]) => (
-                <section key={groupName}>
-                  <h2 className="country-heading">
-                    {shouldGroupBySector ? `Sector: ${groupName}` : groupName}
-                  </h2>
-                  <div className="grid">
-                    {arr.map((c) => (
-                      <Tooltip
-                        key={c.id}
-                        title={c.name}
-                        arrow
-                        TransitionComponent={Fade}
-                        TransitionProps={{ timeout: 200 }}
-                      >
-                        <Box>
-                          <CompanyCard
-                            company={c}
-                            onOpen={openDetailDialog}
-                            showVerifiedBadge={verified}
-                          />
-                        </Box>
-                      </Tooltip>
-                    ))}
-                  </div>
-                </section>
-              ))
-            )}
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <Box sx={{ mt: 3, textAlign: "center" }}>
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  justifyContent="center"
-                  flexWrap="wrap"
-                  className="pagination"
-                  sx={{ mb: 1 }}
-                >
-                  <Button
-                    size="small"
-                    onClick={() => goToPage(1)}
-                    disabled={page === 1}
-                  >
-                    «
-                  </Button>
-                  <Button size="small" onClick={goPrev} disabled={page === 1}>
-                    ‹
-                  </Button>
-                  {pageNumbers.map((n) => (
-                    <Button
-                      key={n}
-                      size="small"
-                      variant={n === page ? "contained" : "outlined"}
-                      onClick={() => goToPage(n)}
-                    >
-                      {n}
-                    </Button>
-                  ))}
-                  <Button
-                    size="small"
-                    onClick={goNext}
-                    disabled={page === totalPages}
-                  >
-                    ›
-                  </Button>
-                  <Button
-                    size="small"
-                    onClick={() => goToPage(totalPages)}
-                    disabled={page === totalPages}
-                  >
-                    »
-                  </Button>
-                </Stack>
-                <div className="page-info">
-                  Page {page} / {totalPages} • {total} total
-                </div>
-              </Box>
-            )}
-          </>
-        )}
+        {/* ✅ EVERYTHING ELSE (split file) */}
+        <MainLoadPanel
+          loading={loading}
+          progress={progress}
+          hasResults={hasResults}
+          isAllInputsEmpty={isAllInputsEmpty}
+          nestedGrouped={nestedGrouped}
+          flatGrouped={flatGrouped}
+          shouldGroupBySector={shouldGroupBySector}
+          verified={verified}
+          openDetailDialog={openDetailDialog}
+          totalPages={totalPages}
+          page={page}
+          total={total}
+          pageNumbers={pageNumbers}
+          goToPage={goToPage}
+          goPrev={goPrev}
+          goNext={goNext}
+        />
       </Box>
 
-      {/* Detail Dialog is fully independent & reusable */}
+      {/* Detail Dialog */}
       <CompanyDetailDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
