@@ -63,4 +63,7 @@ return [
         'scheme' => 'https',
     ],
 
+    'default' => env('MAIL_MAILER', 'smtp'),
+
+
 ];

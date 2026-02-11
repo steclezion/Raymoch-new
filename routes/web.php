@@ -66,7 +66,7 @@ Route::get('/send', function () {
 
 Route::get('/Mailgun', function () {
     // return view('raymoch.pages.index');
-    Mail::to(users: 'steclezion@gmail.com')->send(new EmailTestMailGun());
+    Mail::to(users: 'samsonteclezion@gmail.com')->send(new EmailTestMailGun());
 
     return 'Email sent!';
 });
