@@ -1,19 +1,23 @@
 /* resources/js/pages/SignupBasic.css */
 :root{
   --brand-blue:#0328aeed; --brand-blue-700:#213bb1; --brand-blue-500:#041b64;
-  --ink:#101114; --bg:#fafafa; --border:#e8e8ee; --card:#fff;
-  --shadow:0 4px 16px rgba(10,42,107,.06); --footer-bg:#0b1020; --radius:16px;
+  /* --ink:#101114; --bg:#fafafa; --border:#e8e8ee; --card:#fff; */
+  /* --shadow:0 4px 16px rgba(10,42,107,.06); --footer-bg:#0b1020; --radius:16px; */
 }
 
-html, body { height:100%; }
-*{ box-sizing:border-box; margin:0; padding:0; font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif; }
+/* html, body { height:100%; }
+*{ box-sizing:border-box; margin:0;
+     padding:0; font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif; } */
+
+     /* ✅ IMPORTANT: remove global selectors like *, html, body */
+.sb-page *{  box-sizing:border-box; font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif; }
 
 .page{
   min-height:100dvh;
   display:flex;
   flex-direction:column;
   background:var(--bg);
-  color:var(--ink);
+  /* color:var(--ink); */
 }
 
 .page > main{
