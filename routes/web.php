@@ -41,6 +41,14 @@ use Illuminate\Support\Facades\Response;
 use App\Http\Controllers\ServiceController;
 use App\Mail\EmailTestMailGun;
 
+use App\Mail\TestPostmarkMail;
+
+Route::get('/test-postmark', function () {
+    Mail::to('steclezion@gmail.com')->send(new TestPostmarkMail());
+    return 'Sent!';
+});
+
+
 Route::get('/bussiness_menu', [ControlLayoutController::class, 'Business_menus'])->name('bussiness_menu');
 
 Route::get('login', [AuthController::class, 'login'])->name('login');

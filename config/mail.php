@@ -103,6 +103,10 @@ return [
             // ],
         ],
 
+        'postmark' => [
+            'transport' => 'postmark',
+        ],
+
 
     ],
 
