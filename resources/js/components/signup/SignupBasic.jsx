@@ -5,7 +5,6 @@ import Select from "react-select";
 
 import Header from "./Header.jsx";
 import Footer from "./Footer.jsx";
-
 import "./css/SignupBasic.css";
 
 /* ================== Reusable Modal component ================== */
@@ -76,13 +75,11 @@ export default function SignupBasic({ routes }) {
   const [expiresAt, setExpiresAt] = useState(null);
   const [countdown, setCountdown] = useState(300);
 
-  // ✅ DB country codes
+  // Country codes
   const [ccLoading, setCcLoading] = useState(true);
   const [ccOptions, setCcOptions] = useState([]); // { name, dial }
   const [countryCode, setCountryCode] = useState("+1");
 
-  
-  // Load country codes from API
   useEffect(() => {
     let alive = true;
 
@@ -121,7 +118,6 @@ export default function SignupBasic({ routes }) {
         });
 
         setCcOptions(mapped);
-
         const pick = mapped.find((o) => o.dial === "+1") || mapped[0];
         if (pick?.dial) setCountryCode(pick.dial);
       } catch {
@@ -188,7 +184,6 @@ export default function SignupBasic({ routes }) {
     return true;
   };
 
-  // STEP 1 — send OTP
   const sendOtp = async (e) => {
     e.preventDefault();
     if (busy) return;
@@ -249,36 +244,6 @@ export default function SignupBasic({ routes }) {
     }
   };
 
-  // OTP behaviors
-  const onOtpChange = (i) => (e) => {
-    const val = e.target.value.replace(/\D/g, "").slice(0, 1);
-    const next = [...otp];
-    next[i] = val;
-    setOtp(next);
-
-    if (val && i < 5) otpRefs.current[i + 1]?.current?.focus();
-    if (i === 5 && val && next.join("").length === 6) verifyOtp(next.join(""));
-  };
-
-  const onOtpKeyDown = (i) => (e) => {
-    if (e.key === "Backspace" && !otp[i] && i > 0) otpRefs.current[i - 1]?.current?.focus();
-  };
-
-  const onOtpPaste = (e) => {
-    const pasted = (e.clipboardData.getData("text") || "").replace(/\D/g, "").slice(0, 6);
-    if (!pasted) return;
-    e.preventDefault();
-
-    const arr = pasted.split("").concat(Array(6).fill("")).slice(0, 6);
-    setOtp(arr);
-
-    const idx = Math.min(5, pasted.length - 1);
-    setTimeout(() => otpRefs.current[idx]?.current?.focus(), 10);
-
-    if (arr.join("").length === 6) verifyOtp(arr.join(""));
-  };
-
-  // STEP 2 — verify OTP
   const verifyOtp = async (code) => {
     if (!code || code.length !== 6) return toast.error("Enter the 6-digit code."), null;
 
@@ -312,6 +277,35 @@ export default function SignupBasic({ routes }) {
     }
   };
 
+  // OTP behaviors
+  const onOtpChange = (i) => (e) => {
+    const val = e.target.value.replace(/\D/g, "").slice(0, 1);
+    const next = [...otp];
+    next[i] = val;
+    setOtp(next);
+
+    if (val && i < 5) otpRefs.current[i + 1]?.current?.focus();
+    if (i === 5 && val && next.join("").length === 6) verifyOtp(next.join(""));
+  };
+
+  const onOtpKeyDown = (i) => (e) => {
+    if (e.key === "Backspace" && !otp[i] && i > 0) otpRefs.current[i - 1]?.current?.focus();
+  };
+
+  const onOtpPaste = (e) => {
+    const pasted = (e.clipboardData.getData("text") || "").replace(/\D/g, "").slice(0, 6);
+    if (!pasted) return;
+    e.preventDefault();
+
+    const arr = pasted.split("").concat(Array(6).fill("")).slice(0, 6);
+    setOtp(arr);
+
+    const idx = Math.min(5, pasted.length - 1);
+    setTimeout(() => otpRefs.current[idx]?.current?.focus(), 10);
+
+    if (arr.join("").length === 6) verifyOtp(arr.join(""));
+  };
+
   const mm = String(Math.floor(countdown / 60)).padStart(2, "0");
   const ss = String(countdown % 60).padStart(2, "0");
 
@@ -327,14 +321,13 @@ export default function SignupBasic({ routes }) {
   const getOptionLabel = (o) => `${o.name} (${o.dial})`;
   const getOptionValue = (o) => o.dial;
 
-  // ✅ use CSS-driven styling (no ugly inline size hacks)
   const selectStyles = useMemo(
     () => ({
       control: (base, state) => ({
         ...base,
-        minHeight: 50,
-        height: 50,
-        borderRadius: 12,
+        minHeight: 48,
+        height: 48,
+        borderRadius: 10,
         borderColor: state.isFocused ? "rgba(3,40,174,.55)" : "rgba(6,49,34,.35)",
         boxShadow: state.isFocused ? "0 0 0 4px rgba(3,40,174,.15)" : "none",
         backgroundColor: "#fff",
@@ -344,7 +337,7 @@ export default function SignupBasic({ routes }) {
       input: (base) => ({ ...base, margin: 0, padding: 0 }),
       singleValue: (base) => ({ ...base, fontWeight: 700, color: "#0f172a" }),
       placeholder: (base) => ({ ...base, color: "#64748b", fontWeight: 700 }),
-      indicatorsContainer: (base) => ({ ...base, height: 50 }),
+      indicatorsContainer: (base) => ({ ...base, height: 48 }),
       menu: (base) => ({ ...base, zIndex: 50, borderRadius: 12, overflow: "hidden" }),
       option: (base, state) => ({
         ...base,
@@ -360,7 +353,6 @@ export default function SignupBasic({ routes }) {
   return (
     <>
       <Header routes={R} />
-
       <Toaster position="top-right" richColors closeButton expand={false} toastOptions={{ duration: 3500 }} />
 
       <div className="page sb-page">
@@ -378,9 +370,10 @@ export default function SignupBasic({ routes }) {
             </div>
 
             {step === "form" && (
-              <form noValidate onSubmit={sendOtp}>
-                <div className="row form-grid" >
-                  <div>
+              <form noValidate onSubmit={sendOtp} className="sbForm">
+                {/* ✅ ONE consistent grid */}
+                <div className="grid2">
+                  <div className="field">
                     <label htmlFor="b-name">Full name</label>
                     <input
                       id="b-name"
@@ -393,7 +386,7 @@ export default function SignupBasic({ routes }) {
                     />
                   </div>
 
-                  <div>
+                  <div className="field">
                     <label htmlFor="b-email">Email</label>
                     <input
                       id="b-email"
@@ -405,10 +398,8 @@ export default function SignupBasic({ routes }) {
                       required
                     />
                   </div>
-                </div>
 
-                <div className="row">
-                  <div>
+                  <div className="field">
                     <label htmlFor="b-pass">Password</label>
                     <div className="inputWrap">
                       <input
@@ -439,7 +430,7 @@ export default function SignupBasic({ routes }) {
                     </div>
                   </div>
 
-                  <div>
+                  <div className="field">
                     <label htmlFor="b-pass2">Confirm password</label>
                     <div className="inputWrap">
                       <input
@@ -469,10 +460,8 @@ export default function SignupBasic({ routes }) {
                       </button>
                     </div>
                   </div>
-                </div>
 
-                <div className="row">
-                  <div>
+                  <div className="field">
                     <label htmlFor="b-username">Display name</label>
                     <input
                       id="b-username"
@@ -485,11 +474,11 @@ export default function SignupBasic({ routes }) {
                     />
                   </div>
 
-                  <div>
+                  <div className="field">
                     <label htmlFor="b-phone">Phone number</label>
 
-                    {/* ✅ Professional phone field layout */}
-                    <div className="phoneField">
+                    {/* ✅ phone layout matches CSS class names */}
+                    <div className="phoneRow">
                       <div className="phoneDial">
                         <Select
                           classNamePrefix="rs"
@@ -509,11 +498,12 @@ export default function SignupBasic({ routes }) {
                         />
                       </div>
 
-                      <div className="phoneNumber">
+                      <div className="phoneNum">
                         <input
                           id="b-phone"
                           className="input"
-                          type="number"
+                          inputMode="numeric"
+                          type="text"
                           placeholder="555 555 5555"
                           value={values.phone}
                           onChange={set("phone")}
@@ -522,10 +512,9 @@ export default function SignupBasic({ routes }) {
                       </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="row">
-                  <div>
+                  {/* ✅ make company full-width */}
+                  <div className="field span2">
                     <label htmlFor="b-company">Company name</label>
                     <input
                       id="b-company"
@@ -630,19 +619,17 @@ export default function SignupBasic({ routes }) {
         <Footer routes={routes} />
       </div>
 
-      {/* ======= Terms Modal ======= */}
       <Modal title="Terms of Service" open={showTerms} onClose={() => setShowTerms(false)}>
         <p>
           <strong>Effective:</strong> January 1, 2025
         </p>
         <h4>1) Acceptance of Terms</h4>
         <p>
-          By creating an account or using Raymoch, you agree to these Terms of Service. If you do not agree, you
-          may not access or use the platform.
+          By creating an account or using Raymoch, you agree to these Terms of Service. If you do not agree, you may not
+          access or use the platform.
         </p>
       </Modal>
 
-      {/* ======= Privacy Modal ======= */}
       <Modal title="Privacy Policy" open={showPrivacy} onClose={() => setShowPrivacy(false)}>
         <p>
           <strong>Effective:</strong> January 1, 2025

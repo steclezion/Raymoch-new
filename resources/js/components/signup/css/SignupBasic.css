@@ -1,23 +1,28 @@
-/* resources/js/pages/SignupBasic.css */
+/* resources/js/pages/css/SignupBasic.css */
 :root{
-  --brand-blue:#0328aeed; --brand-blue-700:#213bb1; --brand-blue-500:#041b64;
-  /* --ink:#101114; --bg:#fafafa; --border:#e8e8ee; --card:#fff; */
-  /* --shadow:0 4px 16px rgba(10,42,107,.06); --footer-bg:#0b1020; --radius:16px; */
+  --brand-blue:#0328aeed;
+  --brand-blue-700:#213bb1;
+  --brand-blue-500:#041b64;
+
+  --bg:#fafafa;
+  --ink:#0f172a;
+  --border:#e8e8ee;
+  --card:#fff;
+  --shadow:0 4px 16px rgba(10,42,107,.06);
+  --radius:16px;
 }
 
-/* html, body { height:100%; }
-*{ box-sizing:border-box; margin:0;
-     padding:0; font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif; } */
-
-     /* ✅ IMPORTANT: remove global selectors like *, html, body */
-.sb-page *{  box-sizing:border-box; font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif; }
+.sb-page *{
+  box-sizing:border-box;
+  font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+}
 
 .page{
   min-height:100dvh;
   display:flex;
   flex-direction:column;
   background:var(--bg);
-  /* color:var(--ink); */
+  color:var(--ink);
 }
 
 .page > main{
@@ -40,97 +45,73 @@
 
 .cardHeader{
   display:flex;
-  align-items:center;
+  align-items:flex-start;
   justify-content:space-between;
-  margin-bottom:16px;
+  gap:14px;
+  margin-bottom:18px;
 }
+
 .cardHeader h1{
   font-size:1.9rem;
   font-weight:900;
   color:#063122;
+  margin:0;
 }
 
-.backBtn{
-  background:transparent;
-  border:1px solid #d9e1ff;
-  color:#041b64;
-  font-weight:700;
-  border-radius:10px;
-  padding:8px 14px;
-  cursor:pointer;
-  transition:background .25s ease, border-color .25s ease;
+.cardSub{
+  margin:6px 0 0;
+  color:#475569;
+  opacity:1;
 }
-.backBtn:hover{ background:#eef3ff; border-color:#c9d4ff; }
 
-.row{
+/* ✅ ONE grid used everywhere */
+.grid2{
   display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:16px;
-  margin-top:6px;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:18px 28px;
+  width:100%;
 }
+
 @media (max-width:720px){
-  .row{ grid-template-columns:1fr; }
+  .grid2{ grid-template-columns:1fr; }
 }
 
-label{
-  font-weight:700;
+/* field wrapper gives consistent spacing */
+.field{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+/* full width row */
+.span2{ grid-column:1 / -1; }
+
+/* labels */
+.field label{
+  font-weight:800;
   font-size:.95rem;
-  display:block;
-  margin-top:4px;
-}
-/* Main grid */
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24px 32px; /* row gap | column gap */
-  width: 100%;
+  margin:0;
 }
 
-/* Each field */
-.field {
-  display: flex;
-  flex-direction: column;
-}
-
-/* Make full-width fields span both columns */
-.field.full {
-  grid-column: 1 / -1;
-}
-
-/* Inputs styling (optional but recommended) */
-.field input,
-.field select {
-  height: 48px;
-  padding: 0 14px;
-  border-radius: 10px;
-  border: 1px solid #d1d5db;
-  font-size: 15px;
-}
-
-/* Labels */
-.field label {
-  margin-bottom: 6px;
-  font-weight: 600;
-  font-size: 14px;
-  color: #111827;
-}
-
-
-/* ✅ Base input sizing */
+/* ✅ Inputs: no margins (grid handles spacing) */
 .input{
   width:100%;
   height:48px;
-  min-height:48px;
-  padding:14px 16px;
-  border:1px solid #063122;
+  padding:0 14px;
+  border:1px solid rgba(6,49,34,.55);
   border-radius:10px;
-  margin:8px 0 16px;
   font-size:15px;
   line-height:1.2;
-  box-sizing:border-box;
+  background:#fff;
 }
-.input:focus{ outline:none; box-shadow:0 0 0 3px rgba(3,40,174,.25); }
 
+.input:focus{
+  outline:none;
+  box-shadow:0 0 0 3px rgba(3,40,174,.20);
+  border-color:rgba(3,40,174,.55);
+}
+
+/* password wrap */
 .inputWrap{ position:relative; }
 .revealBtn{
   position:absolute;
@@ -145,20 +126,51 @@ label{
 }
 .revealBtn:hover{ background:#eef2ff; }
 
+/* ✅ Phone row aligns select + input perfectly */
+.phoneRow{
+  display:grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  gap:12px;
+  align-items:stretch;
+}
+
+@media (max-width:720px){
+  .phoneRow{ grid-template-columns:1fr; }
+}
+
+.phoneDial .rs__control{
+  height:48px !important;
+  min-height:48px !important;
+  border-radius:10px !important;
+  border:1px solid rgba(6,49,34,.55) !important;
+  box-shadow:none !important;
+}
+.phoneDial .rs__value-container{ height:48px !important; }
+.phoneDial .rs__indicators{ height:48px !important; }
+.phoneDial .rs__menu{ z-index:50 !important; }
+
+/* consent */
 .consent{
   display:flex;
   gap:10px;
-  margin:10px 0 16px;
+  margin:18px 0 14px;
+  align-items:flex-start;
 }
 .consent input{ width:18px; height:18px; margin-top:3px; }
 .consent small{ color:#475569; }
 
+/* actions */
 .actions{
   display:flex;
   gap:12px;
   align-items:center;
-  margin-top:6px;
+  margin-top:8px;
+  flex-wrap:wrap;
 }
+@media (max-width:600px){
+  .actions{ flex-direction:column; align-items:stretch; }
+}
+
 button.cta{
   padding:14px 18px;
   border:0;
@@ -170,11 +182,6 @@ button.cta{
   cursor:pointer;
 }
 button.cta[disabled]{ opacity:.7; cursor:not-allowed; }
-button.cta.ghost{ background:#f5f8ff; color:#041b64; border:1px solid #d9e1ff; }
-
-.subtle{ font-size:.95rem; }
-.subtle a{ font-weight:800; color:var(--ink); text-decoration:none; }
-.subtle a:hover{ text-decoration:underline; }
 
 /* OTP */
 .otpWrap{ margin-top:6px; }
@@ -193,57 +200,10 @@ button.cta.ghost{ background:#f5f8ff; color:#041b64; border:1px solid #d9e1ff; }
 }
 .otpBox:focus{ outline:none; box-shadow:0 0 0 3px rgba(3,40,174,.25); }
 .otpMeta{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+@media (max-width:600px){ .otpMeta{ flex-direction:column; } }
 .timer{ font-weight:800; }
 
-/* ================= PHONE GROUP FIX ================= */
-.phoneGroup{
-  display:grid;
-  grid-template-columns:160px 1fr; /* select fixed, input fills */
-  gap:12px;
-  align-items:stretch;
-  width:100%;
-}
-
-/* ✅ phone input must match .input exactly */
-.phoneGroup .phoneInput{
-  width:100% !important;
-  height:48px !important;
-  min-height:48px !important;
-  padding:14px 16px !important;
-  font-size:15px !important;
-  line-height:1.2 !important;
-  border-radius:10px !important;
-  margin:8px 0 16px !important;
-  box-sizing:border-box !important;
-}
-
-/* ✅ react-select must match .input height */
-.phoneGroup .rs__control{
-  width:100% !important;
-  height:48px !important;
-  min-height:48px !important;
-  border:1px solid #063122 !important;
-  border-radius:10px !important;
-  box-shadow:none !important;
-}
-.phoneGroup .rs__value-container{
-  height:48px !important;
-  padding:0 12px !important;
-  display:flex !important;
-  align-items:center !important;
-}
-.phoneGroup .rs__indicators{ height:48px !important; }
-.phoneGroup .rs__single-value{ line-height:48px !important; }
-.phoneGroup .rs__option--is-focused{ background:#eef2ff !important; }
-
-@media (max-width:600px){
-  .otpMeta{ flex-direction:column; }
-  .phoneGroup{ grid-template-columns:1fr; }
-  .actions{ flex-direction:column; align-items:stretch; }
-  button.cta{ width:100%; }
-}
-
-/* ================== MODAL ================== */
+/* modal (keep your existing modal styles if you want) */
 .modalOverlay{
   position:fixed; inset:0; background:rgba(15,23,42,.55);
   display:flex; align-items:center; justify-content:center; z-index:9999;
@@ -267,104 +227,4 @@ button.cta.ghost{ background:#f5f8ff; color:#041b64; border:1px solid #d9e1ff; }
 .modalBody{ padding:18px; overflow:auto; color:#0f172a; line-height:1.55; }
 .modalFoot{
   padding:12px 16px; border-top:1px solid #eef0f6; display:flex; justify-content:flex-end; gap:10px; background:#fff;
-}
-.modalFoot .cta.subtle{
-  background:#f5f8ff; color:#041b64; border:1px solid #d9e1ff;
-  border-radius:10px; padding:10px 14px; font-weight:700; cursor:pointer;
-}
-
-button.cta{
-  padding:14px 18px;
-  border:0;
-  border-radius:12px;
-  background:linear-gradient(135deg,var(--brand-blue-700),var(--brand-blue-500));
-  color:#fff;
-  font-weight:800;
-  font-size:15px;
-  cursor:pointer;
-}
-button.cta[disabled]{ opacity:.7; cursor:not-allowed; }
-button.cta.ghost{ background:#f5f8ff; color:#041b64; border:1px solid #d9e1ff; }
-
-/* ✅ Footer (append to the END of resources/js/pages/SignupBasic.css) */
-
-.ft{
-  margin-top: auto;
-  background: #0b1020;
-  color:#cbd5e1;
-  font-size:.92rem;
-  padding:14px 22px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  border-top:1px solid rgba(255,255,255,.08);
-}
-
-.ft a{
-  color:#cbd5e1;
-  text-decoration:none;
-  font-weight:700;
-  margin-left:14px;
-  opacity:.95;
-  transition: opacity .15s ease, text-decoration-color .15s ease;
-}
-
-.ft a:hover{
-  opacity:1;
-  text-decoration:underline;
-}
-
-@media (max-width:700px){
-  .ft{
-    flex-direction:column;
-    text-align:center;
-    padding:14px 16px;
-  }
-  .ft a{
-    margin-left:10px;
-    margin-right:10px;
-    display:inline-block;
-  }
-}
-
-
-/* =========================================
-   ✨ Soft & Professional fade for .cardSub
-   ========================================= */
-
-.cardSub{
-  opacity: 0.88;                 /* slightly light by default */
-  color: #475569;                /* soft slate tone */
-  transition: opacity .18s ease, color .18s ease;
-}
-
-/* On hover: very subtle brightening */
-.card:hover .cardSub,
-.cardSub:hover,
-.card:focus-within .cardSub{
-  opacity: 1;
-  color: #334155;                /* slightly darker = clearer */
-}
-
-/* =========================================
-   🔒 Disable ALL hover / fade effects on .cardSub
-   ========================================= */
-
-.cardSub{
-  opacity: 1 !important;
-  filter: none !important;
-  transform: none !important;
-  transition: none !important;
-}
-
-/* Prevent parent hover from affecting cardSub */
-.card:hover .cardSub,
-.card:focus-within .cardSub,
-.cardSub:hover{
-  opacity: 1 !important;
-  filter: none !important;
-  transform: none !important;
-  background: inherit !important;
-  color: inherit !important;
 }
