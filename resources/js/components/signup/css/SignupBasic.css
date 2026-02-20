@@ -78,6 +78,43 @@ label{
   display:block;
   margin-top:4px;
 }
+/* Main grid */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px 32px; /* row gap | column gap */
+  width: 100%;
+}
+
+/* Each field */
+.field {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Make full-width fields span both columns */
+.field.full {
+  grid-column: 1 / -1;
+}
+
+/* Inputs styling (optional but recommended) */
+.field input,
+.field select {
+  height: 48px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  font-size: 15px;
+}
+
+/* Labels */
+.field label {
+  margin-bottom: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #111827;
+}
+
 
 /* ✅ Base input sizing */
 .input{

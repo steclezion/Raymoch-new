@@ -379,7 +379,7 @@ export default function SignupBasic({ routes }) {
 
             {step === "form" && (
               <form noValidate onSubmit={sendOtp}>
-                <div className="row">
+                <div className="row form-grid" >
                   <div>
                     <label htmlFor="b-name">Full name</label>
                     <input
