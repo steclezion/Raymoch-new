@@ -32,12 +32,19 @@ class TrialWelcomeNotification extends Notification
     /**
      * Get the mail representation of the notification.
      */
+
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->line('The introduction to the notification.')
-            ->action('Notification Action', url('/'))
-            ->line('Thank you for using our application!');
+            ->subject('Raymoch Notification')
+            ->view('mail.signupNotification', [
+                'name' => $notifiable->name ?? 'there',
+                'messageTitle' => 'Account Notification',
+                'messageBody'  => 'Your account action was received successfully. Please follow the instructions below.',
+                'ctaText'      => 'Open Raymoch',
+                'ctaUrl'       => url('/dashboard'),
+                'footerNote'   => 'If you didn’t request this, you can ignore this email.',
+            ]);
     }
 
     /**

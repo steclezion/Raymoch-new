@@ -206,9 +206,22 @@ class SignupController extends Controller
         ], now()->addMinutes(5));
 
         // send via mail (use your Mailable if you prefer)
-        Mail::raw("Your Raymoch verification code is: {$code}. It expires in 5 minutes.", function ($m) use ($data) {
-            $m->to($data['email'])->subject('Your Raymoch verification code');
-        });
+        // Mail::raw("Your Raymoch verification code is: {$code}. It expires in 5 minutes.", function ($m) use ($data) {
+        //     $m->to($data['email'])->subject('Your Raymoch verification code');
+        // });
+
+        // store form payload and OTP for 5 minutes
+        Cache::put($key, [
+            'payload' => $data,
+            'code'    => (string)$code,
+            'expires' => now()->addMinutes(5),
+        ], now()->addMinutes(5));
+
+        // ✅ send via designed HTML email
+        Mail::to($data['email'])->send(new \App\Mail\RaymochOtpMail((string)$code, 5));
+
+
+
 
         return response()->json([
             'ok' => true,
