@@ -40,17 +40,32 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Response;
 use App\Http\Controllers\ServiceController;
 use App\Mail\EmailTestMailGun;
-
 use App\Mail\TestPostmarkMail;
+
+
+
+// Here is where you can register web routes for your application.
+// This a mail from test for postmark
 
 Route::get('/test-postmark', function () {
     Mail::to('steclezion@gmail.com')->send(new TestPostmarkMail());
     return 'Sent!';
 });
+// This a mail from test for smtp
+Route::get('/send', function () {
+    Mail::to('steclezion@gmail.com')->send(new HelloMail);
+    return 'Email sent!';
+});
+
+Route::get('/Mailgun', function () {
+    Mail::to('steclezion@gmail.com')->send(new EmailTestMailGun());
+    return 'Email sent!';
+});
+
+
 
 
 Route::get('/bussiness_menu', [ControlLayoutController::class, 'Business_menus'])->name('bussiness_menu');
-
 Route::get('login', [AuthController::class, 'login'])->name('login');
 Route::post('login', [AuthController::class, 'loginPost'])->name('login.post');
 Route::get('register', [AuthController::class, 'register'])->name('register');
@@ -64,20 +79,8 @@ Route::get('/auth/google', [GoogleAuthController::class, 'redirectToGoogle'])->n
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleCallback']);
 Route::get('verify-email', [GoogleAuthController::class, 'verifyEmail'])->name('verify.email.link');
 
-Route::get('/send', function () {
-    // return view('raymoch.pages.index');
-    Mail::to('steclezion@gmail.com')->send(new HelloMail);
-
-    return 'Email sent!';
-});
 
 
-Route::get('/Mailgun', function () {
-    // return view('raymoch.pages.index');
-    Mail::to(users: 'steclezion@gmail.com')->send(new EmailTestMailGun());
-
-    return 'Email sent!';
-});
 
 
 Route::post('/chatbot', [ChatbotController::class, 'respond']);
