@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8">
   <title>Raymoch • Sign Up</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+
   @viteReactRefresh
   @vite('resources/js/app.jsx')
   <script>
