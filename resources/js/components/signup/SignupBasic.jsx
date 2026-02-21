@@ -46,6 +46,10 @@ const normalizeDial = (dial) => {
   return only ? `+${only}` : "";
 };
 
+// ✅ phone validation helpers
+const normalizePhoneDigits = (raw) => digitsOnly(raw || "");
+const isValidPhone = (digits) => digits.length >= 7 && digits.length <= 15; // E.164 typical range
+
 export default function SignupBasic({ routes }) {
   const R = routes || (typeof window !== "undefined" ? window.ROUTES : {}) || {};
 
@@ -166,14 +170,28 @@ export default function SignupBasic({ routes }) {
 
   const validate = () => {
     if (!values.name.trim()) return toast.error("Please enter your full name."), false;
+
     if (!values.email.trim() || !/\S+@\S+\.\S+/.test(values.email.trim()))
       return toast.error("Please enter a valid email."), false;
+
     if (!values.display_name.trim()) return toast.error("Please enter a display name."), false;
+
     if (!values.password || !strongPass(values.password))
-      return toast.error("Password must be ≥9 chars and include 1 uppercase, 1 number, and 1 special character."), false;
+      return (
+        toast.error("Password must be ≥9 chars and include 1 uppercase, 1 number, and 1 special character."),
+        false
+      );
+
     if (values.password !== values.confirm_password) return toast.error("Passwords do not match."), false;
-    if (!values.phone.trim()) return toast.error("Please enter your phone number."), false;
-    if (!values.company_name.trim()) return toast.error("Please enter your company name (type N/A if none)."), false;
+
+    // ✅ better phone validation
+    const phoneDigits = normalizePhoneDigits(values.phone);
+    if (!phoneDigits) return toast.error("Please enter your phone number."), false;
+    if (!isValidPhone(phoneDigits))
+      return toast.error("Please enter a valid phone number (7 to 15 digits)."), false;
+
+    if (!values.company_name.trim())
+      return toast.error("Please enter your company name (type N/A if none)."), false;
 
     if (!values.consent) {
       toast.error("Please accept the Terms & Privacy to continue.");
@@ -181,6 +199,7 @@ export default function SignupBasic({ routes }) {
       consentRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       return false;
     }
+
     return true;
   };
 
@@ -370,7 +389,7 @@ export default function SignupBasic({ routes }) {
             </div>
 
             {step === "form" && (
-              <form noValidate onSubmit={sendOtp} className="sbForm">
+              <form noValidate onSubmit={sendOtp} className="sbForm" autoComplete="on">
                 {/* ✅ ONE consistent grid */}
                 <div className="grid2">
                   <div className="field">
@@ -379,6 +398,8 @@ export default function SignupBasic({ routes }) {
                       id="b-name"
                       className="input"
                       type="text"
+                      name="name"
+                      autoComplete="name"
                       placeholder="Your full name"
                       value={values.name}
                       onChange={set("name")}
@@ -392,6 +413,8 @@ export default function SignupBasic({ routes }) {
                       id="b-email"
                       className="input"
                       type="email"
+                      name="email"
+                      autoComplete="email"
                       placeholder="name@example.com"
                       value={values.email}
                       onChange={set("email")}
@@ -406,6 +429,8 @@ export default function SignupBasic({ routes }) {
                         id="b-pass"
                         className="input"
                         type={showPass ? "text" : "password"}
+                        name="password"
+                        autoComplete="new-password"
                         placeholder="Choose a strong password"
                         value={values.password}
                         onChange={set("password")}
@@ -437,6 +462,8 @@ export default function SignupBasic({ routes }) {
                         id="b-pass2"
                         className="input"
                         type={showPass2 ? "text" : "password"}
+                        name="password_confirmation"
+                        autoComplete="new-password"
                         placeholder="Re-enter your password"
                         value={values.confirm_password}
                         onChange={set("confirm_password")}
@@ -467,6 +494,8 @@ export default function SignupBasic({ routes }) {
                       id="b-username"
                       className="input"
                       type="text"
+                      name="nickname"
+                      autoComplete="nickname"
                       placeholder="@handle"
                       value={values.display_name}
                       onChange={set("display_name")}
@@ -503,6 +532,8 @@ export default function SignupBasic({ routes }) {
                           id="b-phone"
                           className="input"
                           inputMode="numeric"
+                          autoComplete="tel"
+                          name="phone"
                           type="text"
                           placeholder="555 555 5555"
                           value={values.phone}
@@ -520,6 +551,8 @@ export default function SignupBasic({ routes }) {
                       id="b-company"
                       className="input"
                       type="text"
+                      name="organization"
+                      autoComplete="organization"
                       placeholder="Your company or N/A"
                       value={values.company_name}
                       onChange={set("company_name")}
