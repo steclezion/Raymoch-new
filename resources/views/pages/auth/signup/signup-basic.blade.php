@@ -3,7 +3,9 @@
 <head>
   <meta charset="utf-8">
   <title>Raymoch • Pricing — Basic Plans</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+{{-- <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"> --}}
+<meta name="viewport" content="{{ csrf_token() }},width=device-width, initial-scale=1, viewport-fit=cover">
+
   @viteReactRefresh
   @vite('resources/js/app.jsx')
 </head>
