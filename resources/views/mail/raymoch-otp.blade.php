@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="{{ csrf_token() }},width=device-width,initial-scale=1">
   <title>Raymoch Verification</title>
 </head>
 <body style="margin:0;padding:0;background:#1A267A;">
