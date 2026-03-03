@@ -274,6 +274,7 @@ Route::get('/signup/basic/pricing', fn() => view('pages.auth.signup.basic.pricin
 // Show the Basic create form (React page above)
 
 Route::get('/signup/basic/create/individual', [SignupController::class, 'showPaymentPlansCreate'])->name('signup.basic.create.individual');
+
 // Store the Basic account (JSON)
 
 Route::get('/signup/premium/create/individual/', [SignupController::class, 'showPaymentPlansCreate'])->name('signup.premium.create.individual');

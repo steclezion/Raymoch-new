@@ -25,7 +25,7 @@ class ChatbotController extends Controller
         //
     }
 
- /**
+    /**
      * Respond the form for creating a new resource.
      */
     public function respond(Request $request)
@@ -48,22 +48,23 @@ class ChatbotController extends Controller
     }
 
 
+
     public function reply(Request $request)
-{
-    $userMessage = $request->input('message');
+    {
+        $userMessage = $request->input('message');
 
-    $response = OpenAI::chat()->create([
-        'model' => 'gpt-3.5-turbo', // or 'gpt-4'
-        'messages' => [
-            ['role' => 'system', 'content' => 'You are a helpful assistant.'],
-            ['role' => 'user', 'content' => $userMessage],
-        ],
-    ]);
+        $response = OpenAI::chat()->create([
+            'model' => 'gpt-3.5-turbo', // or 'gpt-4'
+            'messages' => [
+                ['role' => 'system', 'content' => 'You are a helpful assistant.'],
+                ['role' => 'user', 'content' => $userMessage],
+            ],
+        ]);
 
-    $botMessage = $response->choices[0]->message->content;
+        $botMessage = $response->choices[0]->message->content;
 
-    return response()->json(['reply' => $botMessage]);
-}
+        return response()->json(['reply' => $botMessage]);
+    }
 
 
     /**

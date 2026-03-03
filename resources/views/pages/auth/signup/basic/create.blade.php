@@ -11,20 +11,22 @@
 <body>
   <div id="signupBasicRoot"></div>
 
-  <script>
-    window.ROUTES = {
-      csrf: "{{ csrf_token() }}",
-      login: "{{ route('login') }}",
-      signup: {
-        index: "{{ route('signup.index') }}",
-        basic: {
-          create: "{{ route('signup.basic.create.individual') }}",
-          store: "{{ route('signup.basic.store') }}", // we'll use this as POST target
-        },
+<script>
+  window.ROUTES = {
+    csrf: "{{ csrf_token() }}",
+    login: "{{ route('login', [], false) }}",
+    signup: {
+      index: "{{ route('signup.index', [], false) }}",
+      basic: {
+        create: "{{ route('signup.basic.create.individual', [], false) }}",
+        // IMPORTANT: use the same key your React uses:
+        send_otp: "{{ route('signup.basic.send_otp', [], false) }}",
+        verify_otp: "{{ route('signup.basic.verify_otp', [], false) }}",
       },
-      request: { show: "{{ route('request.show') }}" },
-      dashboard: "{{ url('/dashboard') }}",
-    };
-  </script>
+    },
+    request: { show: "{{ route('request.show', [], false) }}" },
+    dashboard: "{{ url('/dashboard') }}",
+  };
+</script>
 </body>
 </html>
