@@ -11,16 +11,22 @@ class OtpCodeMail extends Mailable
     use Queueable, SerializesModels;
 
     public int $code;
+    public int $minutes;
 
-    public function __construct(int $code)
+
+    public function __construct(string $code, int $minutes = 5)
     {
         $this->code = $code;
+        $this->minutes = $minutes;
     }
 
     public function build()
     {
-        return $this->subject('Your Raymoch Verification Code')
-            ->view('emails.otp')
-            ->with(['code' => $this->code]);
+        return $this->subject('Your Raymoch verification code')
+            ->view('mail.raymoch-otp')
+            ->with([
+                'code' => $this->code,
+                'minutes' => $this->minutes,
+            ]);
     }
 }

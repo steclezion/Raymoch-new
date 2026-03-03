@@ -33,7 +33,7 @@ class PaymentController extends Controller
         $customerId = DB::table('payment_methods')->where('email', $data['email'])->value('stripe_customer_id');
         if (!$customerId) {
             // check if we already created one for signup
-            $existing = DB::table('premium_signups')->where('email', $data['email'])->first();
+            $existing = DB::table('users')->where('email', $data['email'])->first();
             if ($existing && $existing->stripe_customer_id) {
                 $customerId = $existing->stripe_customer_id;
             } else {
@@ -42,7 +42,7 @@ class PaymentController extends Controller
                     'name'  => $data['name'],
                 ]);
                 $customerId = $customer->id;
-                DB::table('premium_signups')->where('email', $data['email'])->update(['stripe_customer_id' => $customerId]);
+                DB::table('users')->where('email', $data['email'])->update(['stripe_customer_id' => $customerId]);
             }
         }
 

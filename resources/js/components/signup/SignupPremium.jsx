@@ -403,8 +403,8 @@ function PremiumForm({ routes }) {
         try {
             // 1) Create a $9 PaymentIntent on server
             const piRes = await fetch(
-                R.payment?.create_payment_intent ??
-                    "/payment/create-payment-intent",
+                R.payment?.create_setup_intent ??
+                    "payment/create-setup-intent",
                 {
                     method: "POST",
                     headers: {

@@ -25,14 +25,14 @@ class PremiumSignupController extends Controller
         ]);
 
         // store/refresh pending signup
-        DB::table('premium_signups')->updateOrInsert(
+        DB::table('users')->updateOrInsert(
             ['email' => $data['email']],
             [
                 'name' => $data['name'],
                 'display_name' => $data['display_name'],
                 'company_name' => $data['company_name'],
                 // Hash later upon finalization; keep temp salted hash or encrypted blob if you prefer.
-                'password_plain' => bcrypt($data['password']), // or encrypt() if you want to re-hash final
+                'password' => bcrypt($data['password']), // or encrypt() if you want to re-hash final
                 'consent' => $data['consent'] ? 1 : 0,
                 'plan' => 'premium',
                 'updated_at' => now(),
@@ -76,7 +76,7 @@ class PremiumSignupController extends Controller
         }
 
         // mark verified flag on premium_signups
-        DB::table('premium_signups')->where('email', $req->email)->update(['is_verified' => 1, 'updated_at' => now()]);
+        DB::table('users')->where('email', $req->email)->update(['is_verified' => 1, 'updated_at' => now()]);
 
         return response()->json(['ok' => true]);
     }

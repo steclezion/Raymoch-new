@@ -303,6 +303,10 @@ Route::middleware('auth')->group(function () {
 Route::post('/signup/premium/send-otp', [PremiumSignupController::class, 'sendOtp'])->name('signup.premium.send_otp');
 Route::post('/signup/premium/verify-otp', [PremiumSignupController::class, 'verifyOtp'])->name('signup.premium.verify_otp');
 
+// OTP flow for Basic signup
+Route::post('/signup/basic/send-otp',   [SignupController::class, 'sendOtp'])->name('signup.basic.send_otp');
+Route::post('/signup/basic/verify-otp', [SignupController::class, 'verifyOtp'])->name('signup.basic.verify_otp');
+
 // Payment (Stripe)
 Route::post('/payment/create-setup-intent', [PaymentController::class, 'createSetupIntent'])->name('payment.create_setup_intent');
 Route::post('/payment/create-subscription', [PaymentController::class, 'createSubscription'])->name('payment.create_subscription');
@@ -320,6 +324,7 @@ Route::post('/auth/check-email', BusinessAccountController::class)
     ->name('auth.check-email');
 
 Route::get('/signup/business/create', [BusinessAccountController::class, 'createBusiness'])->name('signup.business.create');
+
 // OTP (separate controller)
 Route::post('/signup/business/send-otp', [BusinessOtpController::class, 'sendOtp']);
 Route::post('/signup/business/verify-otp', [BusinessOtpController::class, 'verifyOtp']);
