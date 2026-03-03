@@ -41,6 +41,7 @@ use Illuminate\Support\Facades\Response;
 use App\Http\Controllers\ServiceController;
 use App\Mail\EmailTestMailGun;
 use App\Mail\TestPostmarkMail;
+use Laravel\Cashier\Http\Controllers\WebhookController;
 
 
 
@@ -356,3 +357,8 @@ Route::get('/documents/{filename}', function ($filename) {
     // If you want "Download" instead, use:
     // return response()->download($path);
 })->where('filename', '.*');
+
+
+
+Route::post('/stripe/webhook', [WebhookController::class, 'handleWebhook'])
+    ->name('cashier.webhook');

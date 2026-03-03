@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('subscription_items', function (Blueprint $table) {
-            $table->string('meter_id')->nullable()->after('stripe_price');
-        });
+        // Schema::table('subscription_items', function (Blueprint $table) {
+        //     $table->string('meter_id')->nullable()->after('stripe_price');
+        // });
     }
 
     /**
