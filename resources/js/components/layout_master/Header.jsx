@@ -21,22 +21,30 @@ import Portal from "@mui/material/Portal";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 
-
-
 // Icons
 import CloseIcon from "@mui/icons-material/Close";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
 import KeyboardArrowUpRoundedIcon from "@mui/icons-material/KeyboardArrowUpRounded";
 
-
+import { getAuthUser, logoutRequest } from "../../lib/auth";
 
 /* =========================================================
    Router-safe primitives (prevents basename null crash)
 ========================================================= */
 function SafeLink({ to, children, ...rest }) {
   const hasRouter = useInRouterContext?.() ?? false;
-  if (hasRouter) return <Link to={to} {...rest}>{children}</Link>;
-  return <a href={typeof to === "string" ? to : "/"} {...rest}>{children}</a>;
+  if (hasRouter) {
+    return (
+      <Link to={to} {...rest}>
+        {children}
+      </Link>
+    );
+  }
+  return (
+    <a href={typeof to === "string" ? to : "/"} {...rest}>
+      {children}
+    </a>
+  );
 }
 
 function RouterSafeButton({ to, children, sx, ...rest }) {
@@ -95,11 +103,10 @@ const mobileMenuStyles = {
   },
 };
 
-// NOTE: We will render the dropdown inside a Portal as FIXED, so it always sits above EVERYTHING.
 const desktopDropdownStyles = {
   panel: {
     position: "fixed",
-    zIndex: 3000, // ✅ above AppBar/Drawer/Modal
+    zIndex: 3000,
     width: 760,
     maxWidth: "92vw",
     borderRadius: 2,
@@ -151,15 +158,9 @@ const secondaryNavBtnSx = {
   fontWeight: 800,
   textTransform: "none",
   color: "#000",
-  "&:hover": {
-    color: "#000",
-    bgcolor: "action.hover",
-  },
+  "&:hover": { color: "#000", bgcolor: "action.hover" },
 };
 
-/* =========================================================
-   Animated hamburger icon
-========================================================= */
 function HamburgerIcon({ open }) {
   return (
     <Box
@@ -199,55 +200,81 @@ export default function Header({ routes = {} }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
+  // ✅ Session-auth state (single source of truth)
+  const [isAuthed, setIsAuthed] = useState(false);
+  const [authUser, setAuthUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
   // Desktop explore dropdown state
   const [openExplore, setOpenExplore] = useState(false);
   const [showGrid, setShowGrid] = useState(false);
 
-  // Mobile drawer state
+  // Mobile drawer
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // For Portal dropdown positioning
+  // Portal positioning
   const btnRef = useRef(null);
   const [dropdownPos, setDropdownPos] = useState({ top: 80, left: 16, width: 760 });
 
-  const safeRoutes = useMemo(() => ({
-    home: routes.home ?? "/",
-    explore: routes.explore ?? "/explore",
-    services: routes.services ?? "/services",
-    insights: routes.insights ?? "/insights",
-    about: routes.about ?? "/about",
-    matching: routes.matching ?? "/matching",
-    verification: routes.verification ?? "/verification",
-    incentives: routes.incentives ?? "/incentives",
-    whitespace: routes.whitespace ?? "/whitespace",
-    login: routes.login ?? "/login",
-    signup: routes.signup ?? "/signup",
-    trial: (typeof routes.trial === "string" ? routes.trial : routes.trial?.page) ?? "/request-trial",
-  }), [routes]);
+  const safeRoutes = useMemo(
+    () => ({
+      home: routes.home ?? "/",
+      explore: routes.explore ?? "/explore",
+      services: routes.services ?? "/services",
+      insights: routes.insights ?? "/insights",
+      about: routes.about ?? "/about",
+      matching: routes.matching ?? "/matching",
+      verification: routes.verification ?? "/verification",
+      incentives: routes.incentives ?? "/incentives",
+      whitespace: routes.whitespace ?? "/whitespace",
+      login: routes.login ?? "/login",
+      signup: routes.signup ?? "/signup",
+      trial:
+        (typeof routes.trial === "string" ? routes.trial : routes.trial?.page) ??
+        "/request-trial",
+      logout: routes.logout ?? "/logout", // should be POST route in Laravel
+    }),
+    [routes]
+  );
+
+  async function refreshAuth() {
+    setAuthLoading(true);
+    try {
+      const { authenticated, user } = await getAuthUser();
+      setIsAuthed(authenticated);
+      setAuthUser(user);
+    } catch {
+      setIsAuthed(false);
+      setAuthUser(null);
+    } finally {
+      setAuthLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    refreshAuth();
+  }, []);
 
   const computeDropdownPosition = () => {
     const el = btnRef.current;
     if (!el) return;
-
     const rect = el.getBoundingClientRect();
     const gap = 10;
 
-    // dropdown below button, aligned left with button
     const top = rect.bottom + gap;
     const left = rect.left;
 
-    // responsive width
     const maxWidth = Math.min(760, Math.floor(window.innerWidth * 0.92));
     const width = maxWidth;
 
-    // keep within viewport (shift left if overflow)
     const overflowRight = left + width - window.innerWidth;
-    const safeLeft = overflowRight > 0 ? Math.max(8, left - overflowRight - 8) : Math.max(8, left);
+    const safeLeft =
+      overflowRight > 0 ? Math.max(8, left - overflowRight - 8) : Math.max(8, left);
 
     setDropdownPos({ top, left: safeLeft, width });
   };
 
-  // Close on ESC
+  // ESC close
   useEffect(() => {
     const onEsc = (e) => {
       if (e.key === "Escape") {
@@ -268,14 +295,12 @@ export default function Header({ routes = {} }) {
     }
   }, [isMobile]);
 
-  // Recompute dropdown position when opened + on resize/scroll
+  // Recompute dropdown position when opened + resize/scroll
   useEffect(() => {
     if (!openExplore) return;
-
     computeDropdownPosition();
     const onResize = () => computeDropdownPosition();
     const onScroll = () => computeDropdownPosition();
-
     window.addEventListener("resize", onResize);
     window.addEventListener("scroll", onScroll, true);
     return () => {
@@ -283,6 +308,20 @@ export default function Header({ routes = {} }) {
       window.removeEventListener("scroll", onScroll, true);
     };
   }, [openExplore]);
+
+  const handleLogout = async () => {
+    try {
+      // ✅ POST logout recommended
+      await logoutRequest({ logoutUrl: safeRoutes.logout });
+    } catch {
+      // ignore and still redirect
+    } finally {
+      // clear state and go home/login
+      setIsAuthed(false);
+      setAuthUser(null);
+      window.location.assign("/");
+    }
+  };
 
   return (
     <AppBar
@@ -295,7 +334,6 @@ export default function Header({ routes = {} }) {
         borderColor: "divider",
       }}
     >
-      {/* Top bar */}
       <Toolbar sx={{ minHeight: 64 }}>
         <Container maxWidth="xl" sx={{ px: { xs: 1, sm: 2 } }}>
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }}>
@@ -321,7 +359,7 @@ export default function Header({ routes = {} }) {
                       x="100"
                       y="118"
                       textAnchor="middle"
-                      style={{ fill: "currentColor", font: "700 105px Georgia",color: "#0a2a6b" }}
+                      style={{ fill: "currentColor", font: "700 105px Georgia", color: "#0a2a6b" }}
                     >
                       R
                     </text>
@@ -333,7 +371,7 @@ export default function Header({ routes = {} }) {
               </SafeLink>
 
               {/* Explore (desktop) */}
-              {!isMobile && (
+              {!isMobile && isAuthed && !authLoading && (
                 <ClickAwayListener
                   onClickAway={() => {
                     setOpenExplore(false);
@@ -347,7 +385,6 @@ export default function Header({ routes = {} }) {
                       onClick={() => {
                         setOpenExplore((v) => !v);
                         setShowGrid(false);
-                        // compute now for first open
                         setTimeout(() => computeDropdownPosition(), 0);
                       }}
                       endIcon={openExplore ? <KeyboardArrowUpRoundedIcon /> : <KeyboardArrowDownRoundedIcon />}
@@ -363,7 +400,6 @@ export default function Header({ routes = {} }) {
                       Explore
                     </Button>
 
-                    {/* ✅ PORTAL dropdown: ALWAYS above any element */}
                     <Portal>
                       <Slide direction="down" in={openExplore} mountOnEnter unmountOnExit>
                         <Paper
@@ -376,13 +412,14 @@ export default function Header({ routes = {} }) {
                           role="menu"
                           aria-label="Explore"
                         >
-                          <Box sx={desktopDropdownStyles.head} onClick={() => setShowGrid((v) => !v)}>
+                          <Box
+                            sx={desktopDropdownStyles.head}
+                            onClick={() => setShowGrid((v) => !v)}
+                          >
                             <Typography sx={{ fontWeight: 900, color: "primary.dark" }}>
                               Explore services
                             </Typography>
-                            <Typography sx={{ fontWeight: 900 }}>
-                              {showGrid ? "▲" : "▼"}
-                            </Typography>
+                            <Typography sx={{ fontWeight: 900 }}>{showGrid ? "▲" : "▼"}</Typography>
                           </Box>
 
                           <Collapse in={showGrid} timeout={180}>
@@ -464,39 +501,58 @@ export default function Header({ routes = {} }) {
                     />
                   </Box>
 
-                  <Button
-                    component="a"
-                    href={safeRoutes.trial}
-                    target="_blank"
-                    variant="contained"
-                    sx={{ borderRadius: 999, fontWeight: 900, textTransform: "none", bgcolor: "#f59e0b" }}
-                  >
-                    Request a free trial
-                  </Button>
+                  {!isAuthed && !authLoading && (
+                    <>
+                      <Button
+                        component="a"
+                        href={safeRoutes.trial}
+                        target="_blank"
+                        variant="contained"
+                        sx={{ borderRadius: 999, fontWeight: 900, textTransform: "none", bgcolor: "#f59e0b" }}
+                      >
+                        Request a free trial
+                      </Button>
 
-                  <Button
-                    component="a"
-                    href={safeRoutes.login}
-                    target="_blank"
-                    variant="contained"
-                    color="primary"
-                    sx={{ borderRadius: 999, fontWeight: 900, textTransform: "none" }}
-                  >
-                    Login
-                  </Button>
+                      <Button
+                        component="a"
+                        href={safeRoutes.login}
+                        target="_blank"
+                        variant="contained"
+                        color="primary"
+                        sx={{ borderRadius: 999, fontWeight: 900, textTransform: "none" }}
+                      >
+                        Login
+                      </Button>
 
-                  <Button
-                    component="a"
-                    href={safeRoutes.signup}
-                    target="_blank"
-                    variant="contained"
-                    sx={{ borderRadius: 999, fontWeight: 900, textTransform: "none", bgcolor: "#16a34a" }}
-                  >
-                    Sign up
-                  </Button>
+                      <Button
+                        component="a"
+                        href={safeRoutes.signup}
+                        target="_blank"
+                        variant="contained"
+                        sx={{ borderRadius: 999, fontWeight: 900, textTransform: "none", bgcolor: "#16a34a" }}
+                      >
+                        Sign up
+                      </Button>
+                    </>
+                  )}
+
+                  {isAuthed && !authLoading && (
+                    <Button
+                      onClick={handleLogout}
+                      variant="contained"
+                      color="primary"
+                      sx={{ borderRadius: 999, fontWeight: 900, textTransform: "none" }}
+                    >
+                      Logout
+                    </Button>
+                  )}
                 </>
               ) : (
-                <IconButton aria-label="Open menu" onClick={() => setMobileOpen(true)} sx={{ borderRadius: 2 }}>
+                <IconButton
+                  aria-label="Open menu"
+                  onClick={() => setMobileOpen(true)}
+                  sx={{ borderRadius: 2 }}
+                >
                   <HamburgerIcon open={mobileOpen} />
                 </IconButton>
               )}
@@ -505,15 +561,28 @@ export default function Header({ routes = {} }) {
         </Container>
       </Toolbar>
 
-      {/* Secondary nav (desktop only) - black labels */}
+      {/* Secondary nav (desktop only) */}
       {!isMobile && (
         <Box sx={{ bgcolor: "grey.100", borderTop: "1px solid", borderColor: "divider" }}>
           <Container maxWidth="xl" sx={{ px: { xs: 1, sm: 2 } }}>
             <Box sx={{ display: "flex", gap: 2, py: 1, flexWrap: "wrap", alignItems: "center" }}>
-              <RouterSafeButton to={safeRoutes.explore} sx={secondaryNavBtnSx}>Businesses</RouterSafeButton>
-              <RouterSafeButton to={safeRoutes.services} sx={secondaryNavBtnSx}>Services</RouterSafeButton>
-              <RouterSafeButton to={safeRoutes.insights} sx={secondaryNavBtnSx}>Research &amp; Insights</RouterSafeButton>
-              <RouterSafeButton to={safeRoutes.about} sx={secondaryNavBtnSx}>Who We Are</RouterSafeButton>
+              {isAuthed && !authLoading && (
+                <>
+                  <RouterSafeButton to={safeRoutes.explore} sx={secondaryNavBtnSx}>
+                    Businesses
+                  </RouterSafeButton>
+                  <RouterSafeButton to={safeRoutes.services} sx={secondaryNavBtnSx}>
+                    Services
+                  </RouterSafeButton>
+                  <RouterSafeButton to={safeRoutes.insights} sx={secondaryNavBtnSx}>
+                    Research &amp; Insights
+                  </RouterSafeButton>
+                </>
+              )}
+
+              <RouterSafeButton to={safeRoutes.about} sx={secondaryNavBtnSx}>
+                Who We Are
+              </RouterSafeButton>
             </Box>
           </Container>
         </Box>
@@ -537,15 +606,20 @@ export default function Header({ routes = {} }) {
         <Divider />
 
         <Box sx={mobileMenuStyles.content} className="raymochMobileMenu">
-          <SafeLink to={safeRoutes.explore} style={mobileMenuStyles.link} onClick={() => setMobileOpen(false)}>
-            Businesses
-          </SafeLink>
-          <SafeLink to={safeRoutes.services} style={mobileMenuStyles.link} onClick={() => setMobileOpen(false)}>
-            Services
-          </SafeLink>
-          <SafeLink to={safeRoutes.insights} style={mobileMenuStyles.link} onClick={() => setMobileOpen(false)}>
-            Research &amp; Insights
-          </SafeLink>
+          {isAuthed && !authLoading && (
+            <>
+              <SafeLink to={safeRoutes.explore} style={mobileMenuStyles.link} onClick={() => setMobileOpen(false)}>
+                Businesses
+              </SafeLink>
+              <SafeLink to={safeRoutes.services} style={mobileMenuStyles.link} onClick={() => setMobileOpen(false)}>
+                Services
+              </SafeLink>
+              <SafeLink to={safeRoutes.insights} style={mobileMenuStyles.link} onClick={() => setMobileOpen(false)}>
+                Research &amp; Insights
+              </SafeLink>
+            </>
+          )}
+
           <SafeLink to={safeRoutes.about} style={mobileMenuStyles.link} onClick={() => setMobileOpen(false)}>
             Who We Are
           </SafeLink>
@@ -553,36 +627,54 @@ export default function Header({ routes = {} }) {
           <Divider flexItem sx={{ width: "100%" }} />
 
           <Box sx={mobileMenuStyles.actionStack}>
-            <Button
-              component="a"
-              href={safeRoutes.login}
-              variant="contained"
-              color="primary"
-              sx={mobileMenuStyles.actionBtn}
-              onClick={() => setMobileOpen(false)}
-            >
-              Login
-            </Button>
+            {!isAuthed && !authLoading ? (
+              <>
+                <Button
+                  component="a"
+                  href={safeRoutes.login}
+                  variant="contained"
+                  color="primary"
+                  sx={mobileMenuStyles.actionBtn}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Login
+                </Button>
 
-            <Button
-              component="a"
-              href={safeRoutes.signup}
-              variant="contained"
-              sx={{ ...mobileMenuStyles.actionBtn, bgcolor: "#16a34a" }}
-              onClick={() => setMobileOpen(false)}
-            >
-              Sign up
-            </Button>
+                <Button
+                  component="a"
+                  href={safeRoutes.signup}
+                  variant="contained"
+                  sx={{ ...mobileMenuStyles.actionBtn, bgcolor: "#16a34a" }}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Sign up
+                </Button>
 
-            <Button
-              component="a"
-              href={safeRoutes.trial}
-              variant="contained"
-              sx={{ ...mobileMenuStyles.actionBtn, bgcolor: "#f59e0b" }}
-              onClick={() => setMobileOpen(false)}
-            >
-              Request a free trial
-            </Button>
+                <Button
+                  component="a"
+                  href={safeRoutes.trial}
+                  variant="contained"
+                  sx={{ ...mobileMenuStyles.actionBtn, bgcolor: "#f59e0b" }}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Request a free trial
+                </Button>
+              </>
+            ) : null}
+
+            {isAuthed && !authLoading ? (
+              <Button
+                onClick={() => {
+                  setMobileOpen(false);
+                  handleLogout();
+                }}
+                variant="contained"
+                color="primary"
+                sx={mobileMenuStyles.actionBtn}
+              >
+                Logout
+              </Button>
+            ) : null}
           </Box>
         </Box>
       </Drawer>

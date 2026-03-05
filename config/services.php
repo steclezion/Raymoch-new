@@ -53,7 +53,7 @@ return [
         'key' => env('STRIPE_KEY'),
         'secret' => env('STRIPE_SECRET'),
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
-        'price_business_monthly' => env('STRIPE_PRICE_BUSINESS_MONTHLY')
+        'price_business_monthly' => env('STRIPE_PRICE_BUSINESS_MONTHLY_Signup_Prem')
     ],
 
     'mailgun' => [

@@ -67,8 +67,7 @@ class LoginController extends Controller
         /** @var User|null $user */
         $user = User::where($credentialKey, $validated['user'])->first();
 
-        if (! $user || ! Auth::attempt([$credentialKey => $validated['user'], 'password' => $validated['password']], false)) 
-            {
+        if (! $user || ! Auth::attempt([$credentialKey => $validated['user'], 'password' => $validated['password']], false)) {
             RateLimiter::hit($this->throttleKey($request));
             return response()->json([
                 'ok' => false,
@@ -93,6 +92,12 @@ class LoginController extends Controller
 
         return response()->json([
             'ok' => true,
+            'authenticated' => true,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+            ],
             'redirect' => url('/dashboard'),
         ]);
     }
@@ -110,6 +115,8 @@ class LoginController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('login');
+        //    return response()->json(['ok' => true]);
+
     }
 
     protected function ensureIsNotRateLimited(Request $request): void

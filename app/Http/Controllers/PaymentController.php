@@ -20,7 +20,7 @@ class PaymentController extends Controller
         return new StripeClient(config('services.stripe.secret'));
     }
 
-    public function createSetupIntent(Request $req)
+    public function createPaymentIntent(Request $req)
     {
         $data = $req->validate([
             'email' => 'required|email',

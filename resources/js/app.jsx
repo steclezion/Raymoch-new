@@ -1,204 +1,153 @@
 // resources/js/app.jsx
-import React from "react";
-
+import React, { useEffect, useMemo, useState, createContext, useContext } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import RequestTrial from "./components/RequestTrial.jsx";
-import "./components/trial.css"  //from "./components/trial.css"; // your component styles
+
 import Login from "./components/Login.jsx";
 import SignupPage from "./components/signup/SignupPage.jsx";
 import PricingBasic from "./components/PricingBasic.jsx";
 import SignupBasic from "./components/signup/SignupBasic.jsx";
 import SignupPremium from "./components/signup/SignupPremium.jsx";
 import SignupBusinessAccount from "./components/signup/SignupBusinessAccount.jsx";
-import SignupInvestorAccount from "./components/signup/SignupInvestorAccount.jsx";  
-import ExploreBusinesses from './pages/ExploreBusinesses.jsx';
-import Companies from './pages/Companies.jsx';
+import SignupInvestorAccount from "./components/signup/SignupInvestorAccount.jsx";
+import ExploreBusinesses from "./pages/ExploreBusinesses.jsx";
+import Companies from "./pages/Companies.jsx";
 import Entire from "./pages/Entire.jsx";
 import Services from "./pages/Services.jsx";
 import Market_Insight from "./pages/Market_Insight.jsx";
 import About from "./pages/About.jsx";
 
+/* =========================================================
+   Auth Context (session-based)
+========================================================= */
+const AuthCtx = createContext(null);
 
-
-
-
-
-// Mount only if the element exists on the page
-const aboutRoot = document.getElementById("about-root");
-
-if (aboutRoot) {
-  const root = createRoot(aboutRoot);
-  root.render(<About />);
+export function useAuth() {
+  const ctx = useContext(AuthCtx);
+  if (!ctx) throw new Error("useAuth must be used inside <AuthProvider />");
+  return ctx;
 }
 
-
-// Mount only if the element exists on the page
-const SignupInvestorAccountRoot = document.getElementById("SignupInvestorAccountRoot");
-
-if (SignupInvestorAccountRoot) {
-  const root = createRoot(SignupInvestorAccountRoot);
-  root.render(<SignupInvestorAccount routes={window.ROUTES} />);
-}
-
-
-// Mount only if the element exists on the page
-const entireRoot = document.getElementById("entire-root");
-
-if (entireRoot) {
-  const root = createRoot(entireRoot);
-  root.render(<Entire />);
-}
-
-
-// Mount only if the element exists on the page MarketInsightRoot
-const ServicesRoot = document.getElementById("ServicesRoot");
-
-if (ServicesRoot) {
-  const root = createRoot(ServicesRoot);
-  root.render(<Services />);
-}
-
-
-// Mount only if the element exists on the page MarketInsightRoot
-const MarketInsightRoot = document.getElementById("MarketInsightRoot");
-
-if (MarketInsightRoot) {
-  const root = createRoot(MarketInsightRoot);
-  root.render(<Market_Insight />);
-}
-
-
-
-
-//SignupBusinessAccount
-
-
-function App() {
-  // routes will be injected by Blade into window.ROUTES
-  const routes = (typeof window !== "undefined" ? window.ROUTES : {}) || {};
+function getCsrf() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Your existing routes... */}
-
-        {/* Signups */}
-        <Route path="/signup" element={<Navigate to="/signup/basic" replace />} />
-        <Route path="/signup/basic" element={<SignupBasic routes={routes} />} />
-        <Route path="/signup/premium" element={<SignupPremium routes={routes} />} />
-
-        {/* Fallback */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
+    window.APP?.csrf ??
+    window.LOGIN_BOOT?.csrf ??
+    document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") ??
+    ""
   );
 }
 
+function AuthProvider({ children }) {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authUser, setAuthUser] = useState(null);
+  const [booted, setBooted] = useState(false);
 
+  const refreshAuth = async () => {
+    try {
+      const res = await fetch("/auth/user", {
+        method: "GET",
+        headers: { Accept: "application/json" },
+        credentials: "include",
+      });
+      const data = await res.json();
+      setIsAuthenticated(!!data.authenticated);
+      setAuthUser(data.user || null);
+    } catch {
+      setIsAuthenticated(false);
+      setAuthUser(null);
+    } finally {
+      setBooted(true);
+    }
+  };
 
+  useEffect(() => {
+    refreshAuth();
+  }, []);
 
+  const login = (user) => {
+    setIsAuthenticated(true);
+    setAuthUser(user || null);
+  };
 
+  const logout = async () => {
+    try {
+      await fetch("/logout", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "X-CSRF-TOKEN": getCsrf(),
+        },
+        credentials: "include",
+      });
+    } catch {}
+    setIsAuthenticated(false);
+    setAuthUser(null);
+    window.location.href = "/";
+  };
 
-const rootEl = document.getElementById("explore-root");
-if (rootEl) {
-  const root = createRoot(rootEl);
-  root.render(<ExploreBusinesses />);
-}
-
-
-
-
-const rootCompanies = document.getElementById("explore-companies");
-if (rootCompanies) {
-  const root = createRoot(rootCompanies);
-  root.render(<Companies />);
-}
-
-
-
-
-const mountBasic = document.getElementById("signupBasicRoot");
-if (mountBasic) {
-  createRoot(mountBasic).render(<SignupBasic routes={window.ROUTES} />);
-}
-
-const mountPremium = document.getElementById("signupPremiumRoot");
-if (mountPremium) {
-  // alert("Mama Alamazino")
-  createRoot(mountPremium).render(<SignupPremium routes={window.ROUTES} />);
-}
-
-//SignupBusinessAccountRoot
-
-const mountBusiness = document.getElementById("SignupBusinessAccountRoot");
-if (mountBusiness) {
-  // alert("Mama Alamazino")
-  createRoot(mountBusiness).render(<SignupBusinessAccount routes={window.ROUTES} />);
-}
-
-
-const main = document.getElementById("rootMain");
-if (main) {
-createRoot(main).render(<main routes={window.ROUTES} />);
-
-
-}
-
-
-// Optional: a simple NotFound component
-function NotFound() {
-  return <div style={{ padding: 24 }}>Page not found.</div>;
-}
-
-
-// Mount Pricing (Basic Plans) page
-const pricingBasicEl = document.getElementById("pricingBasic");
-if (pricingBasicEl) {
-  createRoot(pricingBasicEl).render(
-    <PricingBasic routes={window.ROUTES || {}} />
+  const value = useMemo(
+    () => ({
+      isAuthenticated,
+      authUser,
+      booted,
+      refreshAuth,
+      login,
+      logout,
+    }),
+    [isAuthenticated, authUser, booted]
   );
+
+  return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 }
 
-
-
-
-const el = document.getElementById("root");
-
-
-if (document.getElementById('root')) {
-  createRoot(document.getElementById('root')).render(
-    <RequestTrial
-      apiUrl={window.APP?.apiTrial ?? '/api/trial-requests'}
-      csrfToken={window.APP?.csrf ?? document.querySelector('meta[name="csrf-token"]')?.content}
-    />
-  );
+/* =========================================================
+   Mount helpers
+========================================================= */
+function mount(id, element) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  createRoot(el).render(<AuthProvider>{element}</AuthProvider>);
 }
 
-const mount = document.getElementById("doot");
-if (mount) {
+/* =========================================================
+   Your mounts
+========================================================= */
+mount("about-root", <About />);
+
+mount("SignupInvestorAccountRoot", <SignupInvestorAccount routes={window.ROUTES} />);
+
+mount("entire-root", <Entire />);
+
+mount("ServicesRoot", <Services />);
+
+mount("MarketInsightRoot", <Market_Insight />);
+
+mount("explore-root", <ExploreBusinesses />);
+
+mount("explore-companies", <Companies />);
+
+mount("signupBasicRoot", <SignupBasic routes={window.ROUTES} />);
+
+mount("signupPremiumRoot", <SignupPremium routes={window.ROUTES} />);
+
+mount("SignupBusinessAccountRoot", <SignupBusinessAccount routes={window.ROUTES} />);
+
+mount("pricingBasic", <PricingBasic routes={window.ROUTES || {}} />);
+
+mount("signup-root", <SignupPage routes={window.ROUTES || {}} />);
+
+/**
+ * Login mount (uses AuthProvider so header state can be refreshed)
+ */
+const loginMount = document.getElementById("doot");
+if (loginMount) {
   const boot = window.LOGIN_BOOT || {};
-  createRoot(mount).render(
-    <Login
-      apiUrl={boot.apiLogin}
-      csrfToken={boot.csrf}
-      redirectTo={boot.redirectTo}
-    />
+  createRoot(loginMount).render(
+    <AuthProvider>
+      <Login
+        apiUrl={boot.apiLogin || "/login/json"}
+        csrfToken={boot.csrf || getCsrf()}
+        redirectTo={boot.redirectTo || "/dashboard"}
+      />
+    </AuthProvider>
   );
-
 }
-
-
-
-// Mount Sign Up page
-const signupEl = document.getElementById("signup-root");
-if (signupEl) {
-  const routes = window.ROUTES || {};
-  const brandName = "Raymoch";
-  createRoot(signupEl).render(<SignupPage routes={routes} />);
-}
-
-
-
-
-
-
