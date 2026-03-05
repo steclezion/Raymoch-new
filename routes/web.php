@@ -210,9 +210,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/descriptions/{company}/{description}/edit', [company_description::class, 'edit'])->name('descriptions.edit');
     Route::put('/descriptions/{company}', [company_description::class, 'update'])->name('descriptions.update');
     Route::delete('/descriptions/{id}', [company_description::class, 'destroy'])->name('descriptions.destroy');
-
     Route::post('/company_classifications/import', [CompanyClassificationController::class, 'import'])->name('company_classifications.import');
     Route::resource('company_classifications', CompanyClassificationController::class);
+    Route::view('/companies', 'pages.companies')->name('companies'); // main companies listing page // Static placeholders used in header/footer links (wire up later as you build them) 
+    Route::view('/services', 'pages.services')->name('services'); // temp → point to real page later 
+    Route::view('/insights', 'pages.market-insight')->name('insights'); // temp // services sub-pages 
+    Route::view('/partner-programs', 'pages.services.partner-programs')->name('partner-programs'); // partner programs page
+
+
 
     // PDF export
     Route::get('/routes/pdf', [RoutePdfController::class, 'export'])->name('routes.pdf');
