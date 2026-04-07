@@ -1,4 +1,3 @@
-// resources/js/components/layout_master/Header.jsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useInRouterContext } from "react-router-dom";
 
@@ -20,19 +19,55 @@ import ClickAwayListener from "@mui/material/ClickAwayListener";
 import Portal from "@mui/material/Portal";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import Avatar from "@mui/material/Avatar";
+import Stack from "@mui/material/Stack";
+import Chip from "@mui/material/Chip";
+import CircularProgress from "@mui/material/CircularProgress";
 
 // Icons
 import CloseIcon from "@mui/icons-material/Close";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
 import KeyboardArrowUpRoundedIcon from "@mui/icons-material/KeyboardArrowUpRounded";
+import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
+import EditRoundedIcon from "@mui/icons-material/EditRounded";
+import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
+import PhotoCameraRoundedIcon from "@mui/icons-material/PhotoCameraRounded";
 
 import { getAuthUser, logoutRequest } from "../../lib/auth";
 
 /* =========================================================
-   Router-safe primitives (prevents basename null crash)
+   Helpers
+========================================================= */
+function getCsrf() {
+  return (
+    document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") ||
+    window.APP?.csrf ||
+    ""
+  );
+}
+
+function firstLetter(v) {
+  return (v || "?").trim().charAt(0).toUpperCase();
+}
+
+function absoluteImageUrl(path) {
+  if (!path) return "";
+  if (/^https?:\/\//i.test(path)) return path;
+  return path.startsWith("/storage/") || path.startsWith("/")
+    ? path
+    : `/storage/${path}`;
+}
+
+/* =========================================================
+   Router-safe primitives
 ========================================================= */
 function SafeLink({ to, children, ...rest }) {
   const hasRouter = useInRouterContext?.() ?? false;
+
   if (hasRouter) {
     return (
       <Link to={to} {...rest}>
@@ -40,6 +75,7 @@ function SafeLink({ to, children, ...rest }) {
       </Link>
     );
   }
+
   return (
     <a href={typeof to === "string" ? to : "/"} {...rest}>
       {children}
@@ -49,6 +85,7 @@ function SafeLink({ to, children, ...rest }) {
 
 function RouterSafeButton({ to, children, sx, ...rest }) {
   const hasRouter = useInRouterContext?.() ?? false;
+
   if (hasRouter) {
     return (
       <Button component={Link} to={to} sx={sx} {...rest}>
@@ -56,6 +93,7 @@ function RouterSafeButton({ to, children, sx, ...rest }) {
       </Button>
     );
   }
+
   return (
     <Button component="a" href={to} sx={sx} {...rest}>
       {children}
@@ -200,12 +238,24 @@ export default function Header({ routes = {} }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
-  // ✅ Session-auth state (single source of truth)
+  // Auth state
   const [isAuthed, setIsAuthed] = useState(false);
   const [authUser, setAuthUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
-  // Desktop explore dropdown state
+  // Profile modal state
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileError, setProfileError] = useState("");
+  const [profileForm, setProfileForm] = useState({
+    name: "",
+    email: "",
+    avatar: null,
+    avatarPreview: "",
+  });
+
+  // Explore dropdown
   const [openExplore, setOpenExplore] = useState(false);
   const [showGrid, setShowGrid] = useState(false);
 
@@ -214,7 +264,12 @@ export default function Header({ routes = {} }) {
 
   // Portal positioning
   const btnRef = useRef(null);
-  const [dropdownPos, setDropdownPos] = useState({ top: 80, left: 16, width: 760 });
+  const fileInputRef = useRef(null);
+  const [dropdownPos, setDropdownPos] = useState({
+    top: 80,
+    left: 16,
+    width: 760,
+  });
 
   const safeRoutes = useMemo(
     () => ({
@@ -230,22 +285,43 @@ export default function Header({ routes = {} }) {
       login: routes.login ?? "/login",
       signup: routes.signup ?? "/signup",
       trial:
-        (typeof routes.trial === "string" ? routes.trial : routes.trial?.page) ??
-        "/request-trial",
-      logout: routes.logout ?? "/logout", // should be POST route in Laravel
+        (typeof routes.trial === "string"
+          ? routes.trial
+          : routes.trial?.page) ?? "/request-trial",
+      logout: routes.logout ?? "/logout",
+      profileUpdate: routes.profileUpdate ?? "/profile/update",
     }),
     [routes]
   );
+
+  const avatarSrc =
+    profileForm.avatarPreview ||
+    absoluteImageUrl(authUser?.avatar_url) ||
+    absoluteImageUrl(authUser?.avatar) ||
+    "";
 
   async function refreshAuth() {
     setAuthLoading(true);
     try {
       const { authenticated, user } = await getAuthUser();
+
       setIsAuthed(authenticated);
       setAuthUser(user);
+      setProfileForm({
+        name: user?.name || "",
+        email: user?.email || "",
+        avatar: null,
+        avatarPreview: "",
+      });
     } catch {
       setIsAuthed(false);
       setAuthUser(null);
+      setProfileForm({
+        name: "",
+        email: "",
+        avatar: null,
+        avatarPreview: "",
+      });
     } finally {
       setAuthLoading(false);
     }
@@ -255,26 +331,34 @@ export default function Header({ routes = {} }) {
     refreshAuth();
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (profileForm.avatarPreview) {
+        URL.revokeObjectURL(profileForm.avatarPreview);
+      }
+    };
+  }, [profileForm.avatarPreview]);
+
   const computeDropdownPosition = () => {
     const el = btnRef.current;
     if (!el) return;
+
     const rect = el.getBoundingClientRect();
     const gap = 10;
-
     const top = rect.bottom + gap;
     const left = rect.left;
-
     const maxWidth = Math.min(760, Math.floor(window.innerWidth * 0.92));
     const width = maxWidth;
-
     const overflowRight = left + width - window.innerWidth;
+
     const safeLeft =
-      overflowRight > 0 ? Math.max(8, left - overflowRight - 8) : Math.max(8, left);
+      overflowRight > 0
+        ? Math.max(8, left - overflowRight - 8)
+        : Math.max(8, left);
 
     setDropdownPos({ top, left: safeLeft, width });
   };
 
-  // ESC close
   useEffect(() => {
     const onEsc = (e) => {
       if (e.key === "Escape") {
@@ -283,11 +367,11 @@ export default function Header({ routes = {} }) {
         setMobileOpen(false);
       }
     };
+
     document.addEventListener("keydown", onEsc);
     return () => document.removeEventListener("keydown", onEsc);
   }, []);
 
-  // If switching to mobile, close desktop dropdown
   useEffect(() => {
     if (isMobile) {
       setOpenExplore(false);
@@ -295,389 +379,869 @@ export default function Header({ routes = {} }) {
     }
   }, [isMobile]);
 
-  // Recompute dropdown position when opened + resize/scroll
   useEffect(() => {
     if (!openExplore) return;
+
     computeDropdownPosition();
+
     const onResize = () => computeDropdownPosition();
     const onScroll = () => computeDropdownPosition();
+
     window.addEventListener("resize", onResize);
     window.addEventListener("scroll", onScroll, true);
+
     return () => {
       window.removeEventListener("resize", onResize);
       window.removeEventListener("scroll", onScroll, true);
     };
   }, [openExplore]);
 
+  const openProfileModal = () => {
+    setProfileError("");
+    setEditMode(false);
+    setProfileForm({
+      name: authUser?.name || "",
+      email: authUser?.email || "",
+      avatar: null,
+      avatarPreview: "",
+    });
+    setProfileOpen(true);
+  };
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setProfileError("Please select a valid image file.");
+      return;
+    }
+
+    if (profileForm.avatarPreview) {
+      URL.revokeObjectURL(profileForm.avatarPreview);
+    }
+
+    const preview = URL.createObjectURL(file);
+
+    setProfileError("");
+    setProfileForm((prev) => ({
+      ...prev,
+      avatar: file,
+      avatarPreview: preview,
+    }));
+  };
+
+  const handleProfileSave = async () => {
+    setProfileError("");
+
+    if (!profileForm.avatar) {
+      setProfileError("Please choose a profile picture first.");
+      return;
+    }
+
+    setSavingProfile(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("avatar", profileForm.avatar);
+
+      const res = await fetch(safeRoutes.profileUpdate, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "X-CSRF-TOKEN": getCsrf(),
+        },
+        credentials: "include",
+        body: formData,
+      });
+
+      const json = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        const msg =
+          json?.message ||
+          json?.errors?.avatar?.[0] ||
+          "Profile picture update failed.";
+        throw new Error(msg);
+      }
+
+      const nextUser = json?.user || authUser;
+
+      setAuthUser(nextUser);
+      setProfileForm({
+        name: nextUser?.name || "",
+        email: nextUser?.email || "",
+        avatar: null,
+        avatarPreview: "",
+      });
+      setEditMode(false);
+    } catch (err) {
+      setProfileError(err?.message || "Unable to update profile picture.");
+    } finally {
+      setSavingProfile(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
   const handleLogout = async () => {
     try {
-      // ✅ POST logout recommended
       await logoutRequest({ logoutUrl: safeRoutes.logout });
     } catch {
-      // ignore and still redirect
+      // ignore
     } finally {
-      // clear state and go home/login
       setIsAuthed(false);
       setAuthUser(null);
+      setProfileOpen(false);
       window.location.assign("/");
     }
   };
 
   return (
-    <AppBar
-      position="sticky"
-      elevation={0}
-      sx={{
-        bgcolor: "background.paper",
-        color: "text.primary",
-        borderBottom: "1px solid",
-        borderColor: "divider",
-      }}
-    >
-      <Toolbar sx={{ minHeight: 64 }}>
-        <Container maxWidth="xl" sx={{ px: { xs: 1, sm: 2 } }}>
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }}>
-            {/* Brand + Explore */}
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2, position: "relative" }}>
-              <SafeLink to={safeRoutes.home} style={{ textDecoration: "none" }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <Box
-                    component="svg"
-                    width="28"
-                    height="28"
-                    viewBox="0 0 200 200"
-                    aria-hidden="true"
-                    sx={{ color: "primary.main" }}
-                  >
-                    <polygon
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="10"
-                      points="100,18 172,59 172,141 100,182 28,141 28,59"
-                    />
-                    <text
-                      x="100"
-                      y="118"
-                      textAnchor="middle"
-                      style={{ fill: "currentColor", font: "700 105px Georgia", color: "#0a2a6b" }}
+    <>
+      <AppBar
+        position="sticky"
+        elevation={0}
+        sx={{
+          bgcolor: "background.paper",
+          color: "text.primary",
+          borderBottom: "1px solid",
+          borderColor: "divider",
+        }}
+      >
+        <Toolbar sx={{ minHeight: 64 }}>
+          <Container maxWidth="xl" sx={{ px: { xs: 1, sm: 2 } }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 2,
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 2,
+                  position: "relative",
+                }}
+              >
+                <SafeLink to={safeRoutes.home} style={{ textDecoration: "none" }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Box
+                      component="svg"
+                      width="28"
+                      height="28"
+                      viewBox="0 0 200 200"
+                      aria-hidden="true"
+                      sx={{ color: "primary.main" }}
                     >
-                      R
-                    </text>
-                  </Box>
-                  <Typography sx={{ fontWeight: 900, fontSize: "1.25rem", color: "#0a2a6b" }}>
-                    Raymoch
-                  </Typography>
-                </Box>
-              </SafeLink>
+                      <polygon
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="10"
+                        points="100,18 172,59 172,141 100,182 28,141 28,59"
+                      />
+                      <text
+                        x="100"
+                        y="118"
+                        textAnchor="middle"
+                        style={{
+                          fill: "currentColor",
+                          font: "700 105px Georgia",
+                          color: "#0a2a6b",
+                        }}
+                      >
+                        R
+                      </text>
+                    </Box>
 
-              {/* Explore (desktop) */}
-              {!isMobile && isAuthed && !authLoading && (
-                <ClickAwayListener
-                  onClickAway={() => {
-                    setOpenExplore(false);
-                    setShowGrid(false);
-                  }}
-                >
-                  <Box sx={{ position: "relative" }}>
-                    <Button
-                      ref={btnRef}
-                      variant="text"
-                      onClick={() => {
-                        setOpenExplore((v) => !v);
-                        setShowGrid(false);
-                        setTimeout(() => computeDropdownPosition(), 0);
-                      }}
-                      endIcon={openExplore ? <KeyboardArrowUpRoundedIcon /> : <KeyboardArrowDownRoundedIcon />}
+                    <Typography
                       sx={{
                         fontWeight: 900,
-                        textTransform: "none",
-                        borderRadius: 2,
-                        px: 1,
-                        color: "text.primary",
-                        "&:hover": { bgcolor: "action.hover" },
+                        fontSize: "1.25rem",
+                        color: "#0a2a6b",
                       }}
                     >
-                      Explore
-                    </Button>
+                      Raymoch
+                    </Typography>
+                  </Box>
+                </SafeLink>
 
-                    <Portal>
-                      <Slide direction="down" in={openExplore} mountOnEnter unmountOnExit>
-                        <Paper
-                          sx={{
-                            ...desktopDropdownStyles.panel,
-                            top: dropdownPos.top,
-                            left: dropdownPos.left,
-                            width: dropdownPos.width,
-                          }}
-                          role="menu"
-                          aria-label="Explore"
-                        >
-                          <Box
-                            sx={desktopDropdownStyles.head}
-                            onClick={() => setShowGrid((v) => !v)}
+                {!isMobile && isAuthed && !authLoading && (
+                  <ClickAwayListener
+                    onClickAway={() => {
+                      setOpenExplore(false);
+                      setShowGrid(false);
+                    }}
+                  >
+                    <Box sx={{ position: "relative" }}>
+                      <Button
+                        ref={btnRef}
+                        variant="text"
+                        onClick={() => {
+                          setOpenExplore((v) => !v);
+                          setShowGrid(false);
+                          setTimeout(() => computeDropdownPosition(), 0);
+                        }}
+                        endIcon={
+                          openExplore ? (
+                            <KeyboardArrowUpRoundedIcon />
+                          ) : (
+                            <KeyboardArrowDownRoundedIcon />
+                          )
+                        }
+                        sx={{
+                          fontWeight: 900,
+                          textTransform: "none",
+                          borderRadius: 2,
+                          px: 1,
+                          color: "text.primary",
+                          "&:hover": { bgcolor: "action.hover" },
+                        }}
+                      >
+                        Explore
+                      </Button>
+
+                      <Portal>
+                        <Slide direction="down" in={openExplore} mountOnEnter unmountOnExit>
+                          <Paper
+                            sx={{
+                              ...desktopDropdownStyles.panel,
+                              top: dropdownPos.top,
+                              left: dropdownPos.left,
+                              width: dropdownPos.width,
+                            }}
+                            role="menu"
+                            aria-label="Explore"
                           >
-                            <Typography sx={{ fontWeight: 900, color: "primary.dark" }}>
-                              Explore services
-                            </Typography>
-                            <Typography sx={{ fontWeight: 900 }}>{showGrid ? "▲" : "▼"}</Typography>
-                          </Box>
-
-                          <Collapse in={showGrid} timeout={180}>
-                            <Box sx={desktopDropdownStyles.grid}>
-                              <SafeLink to={safeRoutes.matching} style={desktopDropdownStyles.item}>
-                                <Paper sx={desktopDropdownStyles.card} variant="outlined">
-                                  <Typography sx={{ fontWeight: 900, mb: 0.5 }}>Trusted Matching</Typography>
-                                  <Typography variant="body2" color="text.secondary">
-                                    Get paired with credible businesses using CTI &amp; verification.
-                                  </Typography>
-                                </Paper>
-                              </SafeLink>
-
-                              <SafeLink to={safeRoutes.verification} style={desktopDropdownStyles.item}>
-                                <Paper sx={desktopDropdownStyles.card} variant="outlined">
-                                  <Typography sx={{ fontWeight: 900, mb: 0.5 }}>Verification</Typography>
-                                  <Typography variant="body2" color="text.secondary">
-                                    CTI badges, document checks, and data provenance.
-                                  </Typography>
-                                </Paper>
-                              </SafeLink>
-
-                              <SafeLink to={safeRoutes.insights} style={desktopDropdownStyles.item}>
-                                <Paper sx={desktopDropdownStyles.card} variant="outlined">
-                                  <Typography sx={{ fontWeight: 900, mb: 0.5 }}>Research &amp; Insights</Typography>
-                                  <Typography variant="body2" color="text.secondary">
-                                    Sector reports, trends, and regional briefs.
-                                  </Typography>
-                                </Paper>
-                              </SafeLink>
-
-                              <SafeLink to={safeRoutes.services} style={desktopDropdownStyles.item}>
-                                <Paper sx={desktopDropdownStyles.card} variant="outlined">
-                                  <Typography sx={{ fontWeight: 900, mb: 0.5 }}>Programs &amp; Services</Typography>
-                                  <Typography variant="body2" color="text.secondary">
-                                    Advisory, partner programs, and support options.
-                                  </Typography>
-                                </Paper>
-                              </SafeLink>
-
-                              <SafeLink to={safeRoutes.incentives} style={desktopDropdownStyles.item}>
-                                <Paper sx={desktopDropdownStyles.card} variant="outlined">
-                                  <Typography sx={{ fontWeight: 900, mb: 0.5 }}>Policy &amp; Incentives</Typography>
-                                  <Typography variant="body2" color="text.secondary">
-                                    Tax credits, grants, and regulatory signals.
-                                  </Typography>
-                                </Paper>
-                              </SafeLink>
-
-                              <SafeLink to={safeRoutes.whitespace} style={desktopDropdownStyles.item}>
-                                <Paper sx={desktopDropdownStyles.card} variant="outlined">
-                                  <Typography sx={{ fontWeight: 900, mb: 0.5 }}>Whitespace Map</Typography>
-                                  <Typography variant="body2" color="text.secondary">
-                                    Where demand outpaces supply across sectors.
-                                  </Typography>
-                                </Paper>
-                              </SafeLink>
+                            <Box
+                              sx={desktopDropdownStyles.head}
+                              onClick={() => setShowGrid((v) => !v)}
+                            >
+                              <Typography
+                                sx={{ fontWeight: 900, color: "primary.dark" }}
+                              >
+                                Explore services
+                              </Typography>
+                              <Typography sx={{ fontWeight: 900 }}>
+                                {showGrid ? "▲" : "▼"}
+                              </Typography>
                             </Box>
-                          </Collapse>
-                        </Paper>
-                      </Slide>
-                    </Portal>
-                  </Box>
-                </ClickAwayListener>
-              )}
-            </Box>
 
-            {/* Right side */}
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
-              {!isMobile ? (
-                <>
-                  <Box component="form" action={safeRoutes.explore} sx={{ width: { md: 260, lg: 320 } }}>
-                    <TextField
-                      size="small"
-                      name="q"
-                      placeholder="Search companies, sectors, regions…"
-                      fullWidth
-                      sx={{ "& .MuiOutlinedInput-root": { borderRadius: 999 } }}
-                    />
-                  </Box>
+                            <Collapse in={showGrid} timeout={180}>
+                              <Box sx={desktopDropdownStyles.grid}>
+                                <SafeLink to={safeRoutes.matching} style={desktopDropdownStyles.item}>
+                                  <Paper sx={desktopDropdownStyles.card} variant="outlined">
+                                    <Typography sx={{ fontWeight: 900, mb: 0.5 }}>
+                                      Trusted Matching
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                      Get paired with credible businesses using CTI &amp; verification.
+                                    </Typography>
+                                  </Paper>
+                                </SafeLink>
 
-                  {!isAuthed && !authLoading && (
-                    <>
-                      <Button
-                        component="a"
-                        href={safeRoutes.trial}
-                        target="_blank"
-                        variant="contained"
-                        sx={{ borderRadius: 999, fontWeight: 900, textTransform: "none", bgcolor: "#f59e0b" }}
-                      >
-                        Request a free trial
-                      </Button>
+                                <SafeLink to={safeRoutes.verification} style={desktopDropdownStyles.item}>
+                                  <Paper sx={desktopDropdownStyles.card} variant="outlined">
+                                    <Typography sx={{ fontWeight: 900, mb: 0.5 }}>
+                                      Verification
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                      CTI badges, document checks, and data provenance.
+                                    </Typography>
+                                  </Paper>
+                                </SafeLink>
 
-                      <Button
-                        component="a"
-                        href={safeRoutes.login}
-                        target="_blank"
-                        variant="contained"
-                        color="primary"
-                        sx={{ borderRadius: 999, fontWeight: 900, textTransform: "none" }}
-                      >
-                        Login
-                      </Button>
+                                <SafeLink to={safeRoutes.insights} style={desktopDropdownStyles.item}>
+                                  <Paper sx={desktopDropdownStyles.card} variant="outlined">
+                                    <Typography sx={{ fontWeight: 900, mb: 0.5 }}>
+                                      Research &amp; Insights
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                      Sector reports, trends, and regional briefs.
+                                    </Typography>
+                                  </Paper>
+                                </SafeLink>
 
-                      <Button
-                        component="a"
-                        href={safeRoutes.signup}
-                        target="_blank"
-                        variant="contained"
-                        sx={{ borderRadius: 999, fontWeight: 900, textTransform: "none", bgcolor: "#16a34a" }}
-                      >
-                        Sign up
-                      </Button>
-                    </>
-                  )}
+                                <SafeLink to={safeRoutes.services} style={desktopDropdownStyles.item}>
+                                  <Paper sx={desktopDropdownStyles.card} variant="outlined">
+                                    <Typography sx={{ fontWeight: 900, mb: 0.5 }}>
+                                      Programs &amp; Services
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                      Advisory, partner programs, and support options.
+                                    </Typography>
+                                  </Paper>
+                                </SafeLink>
 
-                  {isAuthed && !authLoading && (
-                    <Button
-                      onClick={handleLogout}
-                      variant="contained"
-                      color="primary"
-                      sx={{ borderRadius: 999, fontWeight: 900, textTransform: "none" }}
+                                <SafeLink to={safeRoutes.incentives} style={desktopDropdownStyles.item}>
+                                  <Paper sx={desktopDropdownStyles.card} variant="outlined">
+                                    <Typography sx={{ fontWeight: 900, mb: 0.5 }}>
+                                      Policy &amp; Incentives
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                      Tax credits, grants, and regulatory signals.
+                                    </Typography>
+                                  </Paper>
+                                </SafeLink>
+
+                                <SafeLink to={safeRoutes.whitespace} style={desktopDropdownStyles.item}>
+                                  <Paper sx={desktopDropdownStyles.card} variant="outlined">
+                                    <Typography sx={{ fontWeight: 900, mb: 0.5 }}>
+                                      Whitespace Map
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                      Where demand outpaces supply across sectors.
+                                    </Typography>
+                                  </Paper>
+                                </SafeLink>
+                              </Box>
+                            </Collapse>
+                          </Paper>
+                        </Slide>
+                      </Portal>
+                    </Box>
+                  </ClickAwayListener>
+                )}
+              </Box>
+
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
+                {!isMobile ? (
+                  <>
+                    <Box
+                      component="form"
+                      action={safeRoutes.explore}
+                      sx={{ width: { md: 260, lg: 320 } }}
                     >
-                      Logout
-                    </Button>
-                  )}
-                </>
-              ) : (
-                <IconButton
-                  aria-label="Open menu"
-                  onClick={() => setMobileOpen(true)}
-                  sx={{ borderRadius: 2 }}
-                >
-                  <HamburgerIcon open={mobileOpen} />
-                </IconButton>
-              )}
-            </Box>
-          </Box>
-        </Container>
-      </Toolbar>
+                      <TextField
+                        size="small"
+                        name="q"
+                        placeholder="Search companies, sectors, regions…"
+                        fullWidth
+                        sx={{ "& .MuiOutlinedInput-root": { borderRadius: 999 } }}
+                      />
+                    </Box>
 
-      {/* Secondary nav (desktop only) */}
-      {!isMobile && (
-        <Box sx={{ bgcolor: "grey.100", borderTop: "1px solid", borderColor: "divider" }}>
-          <Container maxWidth="xl" sx={{ px: { xs: 1, sm: 2 } }}>
-            <Box sx={{ display: "flex", gap: 2, py: 1, flexWrap: "wrap", alignItems: "center" }}>
-              {isAuthed && !authLoading && (
-                <>
-                  <RouterSafeButton to={safeRoutes.explore} sx={secondaryNavBtnSx}>
-                    Businesses
-                  </RouterSafeButton>
-                  <RouterSafeButton to={safeRoutes.services} sx={secondaryNavBtnSx}>
-                    Services
-                  </RouterSafeButton>
-                  <RouterSafeButton to={safeRoutes.insights} sx={secondaryNavBtnSx}>
-                    Research &amp; Insights
-                  </RouterSafeButton>
-                </>
-              )}
+                    {!isAuthed && !authLoading && (
+                      <>
+                        <Button
+                          component="a"
+                          href={safeRoutes.trial}
+                          target="_blank"
+                          variant="contained"
+                          sx={{
+                            borderRadius: 999,
+                            fontWeight: 900,
+                            textTransform: "none",
+                            bgcolor: "#f59e0b",
+                          }}
+                        >
+                          Request a free trial
+                        </Button>
 
-              <RouterSafeButton to={safeRoutes.about} sx={secondaryNavBtnSx}>
-                Who We Are
-              </RouterSafeButton>
+                        <Button
+                          component="a"
+                          href={safeRoutes.login}
+                          target="_blank"
+                          variant="contained"
+                          color="primary"
+                          sx={{
+                            borderRadius: 999,
+                            fontWeight: 900,
+                            textTransform: "none",
+                          }}
+                        >
+                          Login
+                        </Button>
+
+                        <Button
+                          component="a"
+                          href={safeRoutes.signup}
+                          target="_blank"
+                          variant="contained"
+                          sx={{
+                            borderRadius: 999,
+                            fontWeight: 900,
+                            textTransform: "none",
+                            bgcolor: "#16a34a",
+                          }}
+                        >
+                          Sign up
+                        </Button>
+                      </>
+                    )}
+
+                    {isAuthed && !authLoading && (
+                      <>
+                        <IconButton
+                          onClick={openProfileModal}
+                          aria-label="Open user profile"
+                          title="User Profile"
+                          sx={{
+                            width: 42,
+                            height: 42,
+                            border: "1px solid",
+                            borderColor: "divider",
+                            bgcolor: "background.paper",
+                            "&:hover": {
+                              bgcolor: "action.hover",
+                            },
+                          }}
+                        >
+                          {avatarSrc ? (
+                            <Avatar
+                              src={avatarSrc}
+                              alt={authUser?.name || "User"}
+                              sx={{ width: 34, height: 34 }}
+                            />
+                          ) : (
+                            <AccountCircleRoundedIcon />
+                          )}
+                        </IconButton>
+
+                        <Button
+                          onClick={handleLogout}
+                          variant="contained"
+                          color="primary"
+                          sx={{
+                            borderRadius: 999,
+                            fontWeight: 900,
+                            textTransform: "none",
+                          }}
+                        >
+                          Logout
+                        </Button>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <IconButton
+                    aria-label="Open menu"
+                    onClick={() => setMobileOpen(true)}
+                    sx={{ borderRadius: 2 }}
+                  >
+                    <HamburgerIcon open={mobileOpen} />
+                  </IconButton>
+                )}
+              </Box>
             </Box>
           </Container>
-        </Box>
-      )}
+        </Toolbar>
 
-      {/* Mobile Drawer */}
-      <Drawer
-        anchor="left"
-        open={mobileOpen}
-        onClose={() => setMobileOpen(false)}
-        PaperProps={{ sx: mobileMenuStyles.drawerPaper }}
-        ModalProps={{ keepMounted: true }}
-      >
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", px: 2, py: 1.25 }}>
-          <Typography sx={{ fontWeight: 900 }}>Menu</Typography>
-          <IconButton aria-label="Close menu" onClick={() => setMobileOpen(false)}>
-            <CloseIcon />
-          </IconButton>
-        </Box>
+        {!isMobile && (
+          <Box
+            sx={{
+              bgcolor: "grey.100",
+              borderTop: "1px solid",
+              borderColor: "divider",
+            }}
+          >
+            <Container maxWidth="xl" sx={{ px: { xs: 1, sm: 2 } }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 2,
+                  py: 1,
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                }}
+              >
+                {isAuthed && !authLoading && (
+                  <>
+                    <RouterSafeButton to={safeRoutes.explore} sx={secondaryNavBtnSx}>
+                      Businesses
+                    </RouterSafeButton>
+                    <RouterSafeButton to={safeRoutes.services} sx={secondaryNavBtnSx}>
+                      Services
+                    </RouterSafeButton>
+                    <RouterSafeButton to={safeRoutes.insights} sx={secondaryNavBtnSx}>
+                      Research &amp; Insights
+                    </RouterSafeButton>
+                  </>
+                )}
 
-        <Divider />
+                <RouterSafeButton to={safeRoutes.about} sx={secondaryNavBtnSx}>
+                  Who We Are
+                </RouterSafeButton>
+              </Box>
+            </Container>
+          </Box>
+        )}
 
-        <Box sx={mobileMenuStyles.content} className="raymochMobileMenu">
-          {isAuthed && !authLoading && (
-            <>
-              <SafeLink to={safeRoutes.explore} style={mobileMenuStyles.link} onClick={() => setMobileOpen(false)}>
-                Businesses
-              </SafeLink>
-              <SafeLink to={safeRoutes.services} style={mobileMenuStyles.link} onClick={() => setMobileOpen(false)}>
-                Services
-              </SafeLink>
-              <SafeLink to={safeRoutes.insights} style={mobileMenuStyles.link} onClick={() => setMobileOpen(false)}>
-                Research &amp; Insights
-              </SafeLink>
-            </>
-          )}
+        <Drawer
+          anchor="left"
+          open={mobileOpen}
+          onClose={() => setMobileOpen(false)}
+          PaperProps={{ sx: mobileMenuStyles.drawerPaper }}
+          ModalProps={{ keepMounted: true }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              px: 2,
+              py: 1.25,
+            }}
+          >
+            <Typography sx={{ fontWeight: 900 }}>Menu</Typography>
+            <IconButton aria-label="Close menu" onClick={() => setMobileOpen(false)}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
 
-          <SafeLink to={safeRoutes.about} style={mobileMenuStyles.link} onClick={() => setMobileOpen(false)}>
-            Who We Are
-          </SafeLink>
+          <Divider />
 
-          <Divider flexItem sx={{ width: "100%" }} />
-
-          <Box sx={mobileMenuStyles.actionStack}>
-            {!isAuthed && !authLoading ? (
+          <Box sx={mobileMenuStyles.content} className="raymochMobileMenu">
+            {isAuthed && !authLoading && (
               <>
-                <Button
-                  component="a"
-                  href={safeRoutes.login}
-                  variant="contained"
-                  color="primary"
-                  sx={mobileMenuStyles.actionBtn}
+                <SafeLink
+                  to={safeRoutes.explore}
+                  style={mobileMenuStyles.link}
                   onClick={() => setMobileOpen(false)}
                 >
-                  Login
-                </Button>
+                  Businesses
+                </SafeLink>
 
-                <Button
-                  component="a"
-                  href={safeRoutes.signup}
-                  variant="contained"
-                  sx={{ ...mobileMenuStyles.actionBtn, bgcolor: "#16a34a" }}
+                <SafeLink
+                  to={safeRoutes.services}
+                  style={mobileMenuStyles.link}
                   onClick={() => setMobileOpen(false)}
                 >
-                  Sign up
-                </Button>
+                  Services
+                </SafeLink>
 
-                <Button
-                  component="a"
-                  href={safeRoutes.trial}
-                  variant="contained"
-                  sx={{ ...mobileMenuStyles.actionBtn, bgcolor: "#f59e0b" }}
+                <SafeLink
+                  to={safeRoutes.insights}
+                  style={mobileMenuStyles.link}
                   onClick={() => setMobileOpen(false)}
                 >
-                  Request a free trial
-                </Button>
+                  Research &amp; Insights
+                </SafeLink>
               </>
-            ) : null}
+            )}
 
-            {isAuthed && !authLoading ? (
+            <SafeLink
+              to={safeRoutes.about}
+              style={mobileMenuStyles.link}
+              onClick={() => setMobileOpen(false)}
+            >
+              Who We Are
+            </SafeLink>
+
+            <Divider flexItem sx={{ width: "100%" }} />
+
+            <Box sx={mobileMenuStyles.actionStack}>
+              {!isAuthed && !authLoading ? (
+                <>
+                  <Button
+                    component="a"
+                    href={safeRoutes.login}
+                    variant="contained"
+                    color="primary"
+                    sx={mobileMenuStyles.actionBtn}
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Login
+                  </Button>
+
+                  <Button
+                    component="a"
+                    href={safeRoutes.signup}
+                    variant="contained"
+                    sx={{ ...mobileMenuStyles.actionBtn, bgcolor: "#16a34a" }}
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Sign up
+                  </Button>
+
+                  <Button
+                    component="a"
+                    href={safeRoutes.trial}
+                    variant="contained"
+                    sx={{ ...mobileMenuStyles.actionBtn, bgcolor: "#f59e0b" }}
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Request a free trial
+                  </Button>
+                </>
+              ) : null}
+
+              {isAuthed && !authLoading ? (
+                <>
+                  <Button
+                    onClick={() => {
+                      setMobileOpen(false);
+                      openProfileModal();
+                    }}
+                    variant="outlined"
+                    startIcon={
+                      avatarSrc ? (
+                        <Avatar
+                          src={avatarSrc}
+                          alt={authUser?.name || "User"}
+                          sx={{ width: 22, height: 22 }}
+                        />
+                      ) : (
+                        <AccountCircleRoundedIcon />
+                      )
+                    }
+                    sx={mobileMenuStyles.actionBtn}
+                  >
+                    User Profile
+                  </Button>
+
+                  <Button
+                    onClick={() => {
+                      setMobileOpen(false);
+                      handleLogout();
+                    }}
+                    variant="contained"
+                    color="primary"
+                    sx={mobileMenuStyles.actionBtn}
+                  >
+                    Logout
+                  </Button>
+                </>
+              ) : null}
+            </Box>
+          </Box>
+        </Drawer>
+      </AppBar>
+
+      <Dialog
+        open={profileOpen}
+        onClose={() => {
+          if (!savingProfile) {
+            setProfileOpen(false);
+            setEditMode(false);
+            setProfileError("");
+            if (profileForm.avatarPreview) {
+              URL.revokeObjectURL(profileForm.avatarPreview);
+            }
+            setProfileForm({
+              name: authUser?.name || "",
+              email: authUser?.email || "",
+              avatar: null,
+              avatarPreview: "",
+            });
+          }
+        }}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Avatar src={avatarSrc} sx={{ width: 56, height: 56 }}>
+              {!avatarSrc && firstLetter(authUser?.name)}
+            </Avatar>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 900 }}>
+                User Profile
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Logged-in account details
+              </Typography>
+            </Box>
+          </Stack>
+        </DialogTitle>
+
+        <DialogContent dividers>
+          <Stack spacing={2.2}>
+            <Box>
+              <Chip
+                label={isAuthed ? "Authenticated" : "Guest"}
+                color={isAuthed ? "success" : "default"}
+                size="small"
+              />
+            </Box>
+
+            {!editMode ? (
+              <>
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    p: 2,
+                    borderRadius: 2,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 2,
+                  }}
+                >
+                  <Avatar src={avatarSrc} sx={{ width: 72, height: 72 }}>
+                    {!avatarSrc && firstLetter(authUser?.name)}
+                  </Avatar>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Profile Picture
+                    </Typography>
+                    <Typography sx={{ fontWeight: 800, mt: 0.5 }}>
+                      {authUser?.name || "User"}
+                    </Typography>
+                  </Box>
+                </Paper>
+
+                <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Full Name
+                  </Typography>
+                  <Typography sx={{ fontWeight: 800, mt: 0.5 }}>
+                    {authUser?.name || "-"}
+                  </Typography>
+                </Paper>
+
+                <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Email Address
+                  </Typography>
+                  <Typography sx={{ fontWeight: 800, mt: 0.5 }}>
+                    {authUser?.email || "-"}
+                  </Typography>
+                </Paper>
+
+                <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    User ID
+                  </Typography>
+                  <Typography sx={{ fontWeight: 800, mt: 0.5 }}>
+                    {authUser?.id || "-"}
+                  </Typography>
+                </Paper>
+              </>
+            ) : (
+              <>
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    p: 2,
+                    borderRadius: 2,
+                    display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
+                    alignItems: { xs: "flex-start", sm: "center" },
+                    gap: 2,
+                  }}
+                >
+                  <Avatar src={avatarSrc} sx={{ width: 84, height: 84 }}>
+                    {!avatarSrc && firstLetter(authUser?.name)}
+                  </Avatar>
+
+                  <Box sx={{ flex: 1, width: "100%" }}>
+                    <Typography sx={{ fontWeight: 800, mb: 0.5 }}>
+                      Change Profile Picture
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                      JPG, PNG, or WEBP image only.
+                    </Typography>
+
+                    <Button
+                      variant="outlined"
+                      startIcon={<PhotoCameraRoundedIcon />}
+                      onClick={() => fileInputRef.current?.click()}
+                      sx={{ textTransform: "none", fontWeight: 800 }}
+                    >
+                      Choose Image
+                    </Button>
+
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      hidden
+                      accept="image/*"
+                      onChange={handleAvatarChange}
+                    />
+                  </Box>
+                </Paper>
+
+                <TextField
+                  label="Full Name"
+                  value={profileForm.name}
+                  fullWidth
+                  disabled
+                  InputProps={{
+                    readOnly: true,
+                  }}
+                />
+
+                <TextField
+                  label="Email Address"
+                  value={profileForm.email}
+                  fullWidth
+                  disabled
+                  InputProps={{
+                    readOnly: true,
+                  }}
+                />
+
+                {profileError ? (
+                  <Typography color="error" variant="body2">
+                    {profileError}
+                  </Typography>
+                ) : null}
+              </>
+            )}
+          </Stack>
+        </DialogContent>
+
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          {!editMode ? (
+            <>
+              <Button onClick={() => setProfileOpen(false)}>Close</Button>
+              <Button
+                variant="contained"
+                startIcon={<EditRoundedIcon />}
+                onClick={() => {
+                  setProfileError("");
+                  setEditMode(true);
+                }}
+              >
+                Change Picture
+              </Button>
+            </>
+          ) : (
+            <>
               <Button
                 onClick={() => {
-                  setMobileOpen(false);
-                  handleLogout();
+                  setEditMode(false);
+                  setProfileError("");
+                  if (profileForm.avatarPreview) {
+                    URL.revokeObjectURL(profileForm.avatarPreview);
+                  }
+                  if (fileInputRef.current) {
+                    fileInputRef.current.value = "";
+                  }
+                  setProfileForm({
+                    name: authUser?.name || "",
+                    email: authUser?.email || "",
+                    avatar: null,
+                    avatarPreview: "",
+                  });
                 }}
-                variant="contained"
-                color="primary"
-                sx={mobileMenuStyles.actionBtn}
+                disabled={savingProfile}
               >
-                Logout
+                Cancel
               </Button>
-            ) : null}
-          </Box>
-        </Box>
-      </Drawer>
-    </AppBar>
+
+              <Button
+                variant="contained"
+                startIcon={
+                  savingProfile ? (
+                    <CircularProgress size={16} color="inherit" />
+                  ) : (
+                    <SaveRoundedIcon />
+                  )
+                }
+                onClick={handleProfileSave}
+                disabled={savingProfile}
+              >
+                {savingProfile ? "Updating..." : "Update Picture"}
+              </Button>
+            </>
+          )}
+        </DialogActions>
+      </Dialog>
+    </>
   );
 }

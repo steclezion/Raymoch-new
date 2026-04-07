@@ -1,7 +1,14 @@
-// resources/js/app.jsx
-import React, { useEffect, useMemo, useState, createContext, useContext } from "react";
-import { createRoot } from "react-dom/client";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
+
+import { createRoot } from "react-dom/client";
 import Login from "./components/Login.jsx";
 import SignupPage from "./components/signup/SignupPage.jsx";
 import PricingBasic from "./components/PricingBasic.jsx";
@@ -17,7 +24,7 @@ import Market_Insight from "./pages/Market_Insight.jsx";
 import About from "./pages/About.jsx";
 
 /* =========================================================
-   Auth Context (session-based)
+   Auth Context
 ========================================================= */
 const AuthCtx = createContext(null);
 
@@ -36,21 +43,59 @@ function getCsrf() {
   );
 }
 
+async function api(path, { method = "GET", body } = {}) {
+  const headers = {
+    Accept: "application/json",
+  };
+
+  if (method !== "GET") {
+    headers["Content-Type"] = "application/json";
+    headers["X-CSRF-TOKEN"] = getCsrf();
+  }
+
+  const res = await fetch(path, {
+    method,
+    headers,
+    credentials: "include",
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  const json = await res.json().catch(() => ({}));
+  return { res, json };
+}
+
 function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authUser, setAuthUser] = useState(null);
   const [booted, setBooted] = useState(false);
 
+  // 30 minutes
+  const IDLE_LIMIT_MS = 30 * 60 * 1000;
+
+  const idleTimerRef = useRef(null);
+
+  const lastActivityRef = useRef(Date.now());
+  
+  const bcRef = useRef(null);
+
+  const clearIdleTimer = () => {
+    if (idleTimerRef.current) {
+      clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = null;
+    }
+  };
+
   const refreshAuth = async () => {
     try {
-      const res = await fetch("/auth/user", {
-        method: "GET",
-        headers: { Accept: "application/json" },
-        credentials: "include",
-      });
-      const data = await res.json();
-      setIsAuthenticated(!!data.authenticated);
-      setAuthUser(data.user || null);
+      const { res, json } = await api("/auth/user");
+
+      if (res.ok && json.authenticated) {
+        setIsAuthenticated(true);
+        setAuthUser(json.user || null);
+      } else {
+        setIsAuthenticated(false);
+        setAuthUser(null);
+      }
     } catch {
       setIsAuthenticated(false);
       setAuthUser(null);
@@ -59,16 +104,16 @@ function AuthProvider({ children }) {
     }
   };
 
-  useEffect(() => {
-    refreshAuth();
-  }, []);
-
   const login = (user) => {
     setIsAuthenticated(true);
     setAuthUser(user || null);
+    lastActivityRef.current = Date.now();
+    localStorage.setItem("raymoch:lastActivity", String(lastActivityRef.current));
   };
 
-  const logout = async () => {
+  const logout = async ({ silent = false, broadcast = true } = {}) => {
+    clearIdleTimer();
+
     try {
       await fetch("/logout", {
         method: "POST",
@@ -79,10 +124,165 @@ function AuthProvider({ children }) {
         credentials: "include",
       });
     } catch {}
+
     setIsAuthenticated(false);
     setAuthUser(null);
-    window.location.href = "/";
+
+    try {
+      localStorage.removeItem("raymoch:lastActivity");
+      localStorage.setItem("raymoch:logout", String(Date.now()));
+    } catch {}
+
+    if (broadcast && bcRef.current) {
+      try {
+        bcRef.current.postMessage({ type: "logout" });
+      } catch {}
+    }
+
+    if (!silent) {
+      window.location.href = "/";
+    }
   };
+
+  const armIdleTimer = () => {
+    clearIdleTimer();
+
+    if (!isAuthenticated) return;
+
+    const now = Date.now();
+    const elapsed = now - lastActivityRef.current;
+    const remaining = IDLE_LIMIT_MS - elapsed;
+
+    if (remaining <= 0) {
+      logout();
+      return;
+    }
+
+    idleTimerRef.current = setTimeout(() => {
+      logout();
+    }, remaining);
+  };
+
+  const recordActivity = () => {
+    if (!isAuthenticated) return;
+
+    lastActivityRef.current = Date.now();
+
+    try {
+      localStorage.setItem("raymoch:lastActivity", String(lastActivityRef.current));
+    } catch {}
+
+    if (bcRef.current) {
+      try {
+        bcRef.current.postMessage({
+          type: "activity",
+          at: lastActivityRef.current,
+        });
+      } catch {}
+    }
+
+    armIdleTimer();
+  };
+
+  useEffect(() => {
+    refreshAuth();
+  }, []);
+
+  // restore last activity timestamp on boot
+  useEffect(() => {
+    try {
+      const saved = Number(localStorage.getItem("raymoch:lastActivity") || 0);
+      if (saved > 0) {
+        lastActivityRef.current = saved;
+      }
+    } catch {}
+  }, []);
+
+  // multi-tab sync with BroadcastChannel
+  useEffect(() => {
+    if (typeof BroadcastChannel !== "undefined") {
+      bcRef.current = new BroadcastChannel("raymoch-auth");
+
+      bcRef.current.onmessage = (event) => {
+        const msg = event?.data;
+
+        if (!msg?.type) return;
+
+        if (msg.type === "activity" && msg.at) {
+          lastActivityRef.current = msg.at;
+          armIdleTimer();
+        }
+
+        if (msg.type === "logout") {
+          clearIdleTimer();
+          setIsAuthenticated(false);
+          setAuthUser(null);
+          window.location.href = "/";
+        }
+      };
+    }
+
+    return () => {
+      try {
+        bcRef.current?.close();
+      } catch {}
+    };
+  }, [isAuthenticated]);
+
+  // sync activity/logout through localStorage events too
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key === "raymoch:lastActivity" && e.newValue) {
+        const ts = Number(e.newValue);
+        if (ts > 0) {
+          lastActivityRef.current = ts;
+          armIdleTimer();
+        }
+      }
+
+      if (e.key === "raymoch:logout" && e.newValue) {
+        clearIdleTimer();
+        setIsAuthenticated(false);
+        setAuthUser(null);
+        window.location.href = "/";
+      }
+    };
+
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [isAuthenticated]);
+
+  // user activity listeners
+  useEffect(() => {
+    if (!isAuthenticated) {
+      clearIdleTimer();
+      return;
+    }
+
+    const events = [
+      "mousemove",
+      "mousedown",
+      "click",
+      "scroll",
+      "keydown",
+      "touchstart",
+    ];
+
+    const handler = () => recordActivity();
+
+    events.forEach((event) => {
+      window.addEventListener(event, handler, { passive: true });
+    });
+
+    armIdleTimer();
+
+    return () => {
+      events.forEach((event) => {
+        window.removeEventListener(event, handler);
+      });
+      clearIdleTimer();
+    };
+  }, [isAuthenticated]);
 
   const value = useMemo(
     () => ({
@@ -112,41 +312,35 @@ function mount(id, element) {
    Your mounts
 ========================================================= */
 mount("about-root", <About />);
-
-mount("SignupInvestorAccountRoot", <SignupInvestorAccount routes={window.ROUTES} />);
-
+mount(
+  "SignupInvestorAccountRoot",
+  <SignupInvestorAccount routes={window.ROUTES || window.APP?.routes || {}} />
+);
 mount("entire-root", <Entire />);
-
 mount("ServicesRoot", <Services />);
-
 mount("MarketInsightRoot", <Market_Insight />);
-
 mount("explore-root", <ExploreBusinesses />);
-
 mount("explore-companies", <Companies />);
+mount("signupBasicRoot", <SignupBasic routes={window.ROUTES || window.APP?.routes || {}} />);
+mount("signupPremiumRoot", <SignupPremium routes={window.ROUTES || window.APP?.routes || {}} />);
+mount(
+  "SignupBusinessAccountRoot",
+  <SignupBusinessAccount routes={window.ROUTES || window.APP?.routes || {}} />
+);
+mount("pricingBasic", <PricingBasic routes={window.ROUTES || window.APP?.routes || {}} />);
+mount("signup-root", <SignupPage routes={window.ROUTES || window.APP?.routes || {}} />);
 
-mount("signupBasicRoot", <SignupBasic routes={window.ROUTES} />);
-
-mount("signupPremiumRoot", <SignupPremium routes={window.ROUTES} />);
-
-mount("SignupBusinessAccountRoot", <SignupBusinessAccount routes={window.ROUTES} />);
-
-mount("pricingBasic", <PricingBasic routes={window.ROUTES || {}} />);
-
-mount("signup-root", <SignupPage routes={window.ROUTES || {}} />);
-
-/**
- * Login mount (uses AuthProvider so header state can be refreshed)
- */
-const loginMount = document.getElementById("doot");
+/* =========================================================
+   Login mount
+========================================================= */
+const loginMount = document.getElementById("doot") || document.getElementById("login-root");
 if (loginMount) {
-  const boot = window.LOGIN_BOOT || {};
   createRoot(loginMount).render(
     <AuthProvider>
       <Login
-        apiUrl={boot.apiLogin || "/login/json"}
-        csrfToken={boot.csrf || getCsrf()}
-        redirectTo={boot.redirectTo || "/dashboard"}
+        apiUrl="/login/json"
+        csrfToken={getCsrf()}
+        redirectTo="/dashboard"
       />
     </AuthProvider>
   );

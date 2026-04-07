@@ -33,6 +33,7 @@ class User extends Authenticatable
         'is_active',
         'trial_ends_at',
         'deactivated_at',
+        'avatar',
     ];
 
     /**

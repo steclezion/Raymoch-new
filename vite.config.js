@@ -26,10 +26,6 @@ const reactcomponents_layout_master = fg.sync('resources/js//**/*.{js,jsx,ts,tsx
   unique: true,
 }).filter(Boolean);
 
-
-
-
-
 export default defineConfig({
      build: {
     chunkSizeWarningLimit: 1000, // 1 MB

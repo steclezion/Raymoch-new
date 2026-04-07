@@ -46,6 +46,9 @@ use Illuminate\Support\Facades\Auth;
 
 use Laravel\Cashier\Http\Controllers\WebhookController;
 
+use App\Http\Controllers\ProfileController;
+
+
 use App\Mail\TestPostmarkMail;
 use App\Mail\HelloMail;
 use App\Mail\EmailTestMailGun;
@@ -62,11 +65,21 @@ Route::view('/about', 'pages.about')->name('about');
 
 Route::view('/services', 'pages.services')->name('services');
 Route::view('/insights', 'pages.market-insight')->name('insights');
+// Trial request pages
+Route::get('/request-trial', fn() => view('pages.auth.trial'))->name('trial.page');
+Route::view('/trial/verify', 'pages.auth.trial-verify')->name('trial.verify.page');
+Route::view('/trial/success', 'pages.auth.trial-success')->name('trial.success.page');
+Route::get('/request', [RequestTrialController::class, 'show'])->name('request.show');
+
 
 Route::view('/partner-programs', 'pages.services.partner-programs')->name('partner-programs');
 Route::view('/matching', 'pages.services.matching')->name('matching');
 Route::view('/visibility-listing', 'pages.services.visibility-listing')->name('visibility-listing');
 Route::view('/verification', 'pages.services.verification')->name('verification');
+
+Route::get('/explore', [ExploreController::class, 'index'])->name('explore.index');
+Route::get('/explore/data', [ExploreController::class, 'data'])->name('explore.data');
+
 
 Route::view('/careers', 'pages.entire')->name('careers');
 Route::view('/press', 'pages.entire')->name('press');
@@ -80,8 +93,6 @@ Route::get('/privacy', fn() => view('pages.entire'))->name('privacy');
 Route::get('/terms', fn() => view('pages.entire'))->name('terms');
 Route::get('/cookies', fn() => view('pages.entire'))->name('cookies');
 
-Route::get('/explore', [ExploreController::class, 'index'])->name('explore.index');
-Route::get('/explore/data', [ExploreController::class, 'data'])->name('explore.data');
 
 Route::get('/services/options', [ServiceController::class, 'options'])->name('services.options');
 
@@ -110,6 +121,9 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
     Route::get('/login', [LoginController::class, 'showLogin'])->name('login');
     Route::post('/login/json', [LoginController::class, 'loginJson'])->name('auth.login.json');
 
+    Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+
+
     // If you still need legacy AuthController login, keep it but don’t duplicate /login
     // Route::post('/login', [AuthController::class, 'loginPost'])->name('login.post');
 
@@ -120,11 +134,6 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
     Route::get('reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
     Route::post('reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
 
-    // Trial request pages
-    Route::get('/request-trial', fn() => view('pages.auth.trial'))->name('trial.page');
-    Route::view('/trial/verify', 'pages.auth.trial-verify')->name('trial.verify.page');
-    Route::view('/trial/success', 'pages.auth.trial-success')->name('trial.success.page');
-    Route::get('/request', [RequestTrialController::class, 'show'])->name('request.show');
 
     // Signup entry
     Route::get('/signup', [SignupController::class, 'index'])->name('signup.index');
@@ -182,7 +191,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Logout must be POST
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+    Route::view('/partner-programs', 'pages.services.partner-programs')->name('partner-programs');
+    Route::view('/matching', 'pages.services.matching')->name('matching');
+    Route::view('/visibility-listing', 'pages.services.visibility-listing')->name('visibility-listing');
+    Route::view('/verification', 'pages.services.verification')->name('verification');
 
+    Route::get('/explore', [ExploreController::class, 'index'])->name('explore.index');
+    Route::get('/explore/data', [ExploreController::class, 'data'])->name('explore.data');
 
     // Payment intents/subscription creation (only authed users should create)
     Route::post('/payment/create-payment-intent', [PaymentController::class, 'createPaymentIntent'])->name('payment.create_payment_intent');
