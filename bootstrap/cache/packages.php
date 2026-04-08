@@ -18,6 +18,13 @@
       0 => 'BeyondCode\\ErdGenerator\\ErdGeneratorServiceProvider',
     ),
   ),
+  'kitloong/laravel-migrations-generator' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'KitLoong\\MigrationsGenerator\\MigrationsGeneratorServiceProvider',
+    ),
+  ),
   'laravel/cashier' => 
   array (
     'providers' => 

@@ -6,9 +6,9 @@ import React, {
   useRef,
   useState,
 } from "react";
-
-
 import { createRoot } from "react-dom/client";
+import { Toaster } from "sonner";
+
 import Login from "./components/Login.jsx";
 import SignupPage from "./components/signup/SignupPage.jsx";
 import PricingBasic from "./components/PricingBasic.jsx";
@@ -30,7 +30,9 @@ const AuthCtx = createContext(null);
 
 export function useAuth() {
   const ctx = useContext(AuthCtx);
-  if (!ctx) throw new Error("useAuth must be used inside <AuthProvider />");
+  if (!ctx) {
+    throw new Error("useAuth must be used inside <AuthProvider />");
+  }
   return ctx;
 }
 
@@ -69,13 +71,10 @@ function AuthProvider({ children }) {
   const [authUser, setAuthUser] = useState(null);
   const [booted, setBooted] = useState(false);
 
-  // 30 minutes
-  const IDLE_LIMIT_MS = 30 * 60 * 1000;
+  const IDLE_LIMIT_MS = 30 * 60 * 1000; // 30 minutes
 
   const idleTimerRef = useRef(null);
-
   const lastActivityRef = useRef(Date.now());
-  
   const bcRef = useRef(null);
 
   const clearIdleTimer = () => {
@@ -89,9 +88,9 @@ function AuthProvider({ children }) {
     try {
       const { res, json } = await api("/auth/user");
 
-      if (res.ok && json.authenticated) {
+      if (res.ok && json?.authenticated) {
         setIsAuthenticated(true);
-        setAuthUser(json.user || null);
+        setAuthUser(json?.user || null);
       } else {
         setIsAuthenticated(false);
         setAuthUser(null);
@@ -107,8 +106,15 @@ function AuthProvider({ children }) {
   const login = (user) => {
     setIsAuthenticated(true);
     setAuthUser(user || null);
+
     lastActivityRef.current = Date.now();
-    localStorage.setItem("raymoch:lastActivity", String(lastActivityRef.current));
+
+    try {
+      localStorage.setItem(
+        "raymoch:lastActivity",
+        String(lastActivityRef.current)
+      );
+    } catch {}
   };
 
   const logout = async ({ silent = false, broadcast = true } = {}) => {
@@ -169,7 +175,10 @@ function AuthProvider({ children }) {
     lastActivityRef.current = Date.now();
 
     try {
-      localStorage.setItem("raymoch:lastActivity", String(lastActivityRef.current));
+      localStorage.setItem(
+        "raymoch:lastActivity",
+        String(lastActivityRef.current)
+      );
     } catch {}
 
     if (bcRef.current) {
@@ -188,7 +197,6 @@ function AuthProvider({ children }) {
     refreshAuth();
   }, []);
 
-  // restore last activity timestamp on boot
   useEffect(() => {
     try {
       const saved = Number(localStorage.getItem("raymoch:lastActivity") || 0);
@@ -198,7 +206,6 @@ function AuthProvider({ children }) {
     } catch {}
   }, []);
 
-  // multi-tab sync with BroadcastChannel
   useEffect(() => {
     if (typeof BroadcastChannel !== "undefined") {
       bcRef.current = new BroadcastChannel("raymoch-auth");
@@ -229,7 +236,6 @@ function AuthProvider({ children }) {
     };
   }, [isAuthenticated]);
 
-  // sync activity/logout through localStorage events too
   useEffect(() => {
     const onStorage = (e) => {
       if (e.key === "raymoch:lastActivity" && e.newValue) {
@@ -252,7 +258,6 @@ function AuthProvider({ children }) {
     return () => window.removeEventListener("storage", onStorage);
   }, [isAuthenticated]);
 
-  // user activity listeners
   useEffect(() => {
     if (!isAuthenticated) {
       clearIdleTimer();
@@ -300,12 +305,32 @@ function AuthProvider({ children }) {
 }
 
 /* =========================================================
+   Shared App Wrapper
+========================================================= */
+function AppShell({ children }) {
+  return (
+    <AuthProvider>
+      <>
+        {children}
+        <Toaster
+          position="top-right"
+          richColors
+          closeButton
+          duration={3500}
+        />
+      </>
+    </AuthProvider>
+  );
+}
+
+/* =========================================================
    Mount helpers
 ========================================================= */
 function mount(id, element) {
   const el = document.getElementById(id);
   if (!el) return;
-  createRoot(el).render(<AuthProvider>{element}</AuthProvider>);
+
+  createRoot(el).render(<AppShell>{element}</AppShell>);
 }
 
 /* =========================================================
@@ -321,27 +346,41 @@ mount("ServicesRoot", <Services />);
 mount("MarketInsightRoot", <Market_Insight />);
 mount("explore-root", <ExploreBusinesses />);
 mount("explore-companies", <Companies />);
-mount("signupBasicRoot", <SignupBasic routes={window.ROUTES || window.APP?.routes || {}} />);
-mount("signupPremiumRoot", <SignupPremium routes={window.ROUTES || window.APP?.routes || {}} />);
+mount(
+  "signupBasicRoot",
+  <SignupBasic routes={window.ROUTES || window.APP?.routes || {}} />
+);
+mount(
+  "signupPremiumRoot",
+  <SignupPremium routes={window.ROUTES || window.APP?.routes || {}} />
+);
 mount(
   "SignupBusinessAccountRoot",
   <SignupBusinessAccount routes={window.ROUTES || window.APP?.routes || {}} />
 );
-mount("pricingBasic", <PricingBasic routes={window.ROUTES || window.APP?.routes || {}} />);
-mount("signup-root", <SignupPage routes={window.ROUTES || window.APP?.routes || {}} />);
+mount(
+  "pricingBasic",
+  <PricingBasic routes={window.ROUTES || window.APP?.routes || {}} />
+);
+mount(
+  "signup-root",
+  <SignupPage routes={window.ROUTES || window.APP?.routes || {}} />
+);
 
 /* =========================================================
    Login mount
 ========================================================= */
-const loginMount = document.getElementById("doot") || document.getElementById("login-root");
+const loginMount =
+  document.getElementById("doot") || document.getElementById("login-root");
+
 if (loginMount) {
   createRoot(loginMount).render(
-    <AuthProvider>
+    <AppShell>
       <Login
         apiUrl="/login/json"
         csrfToken={getCsrf()}
         redirectTo="/dashboard"
       />
-    </AuthProvider>
+    </AppShell>
   );
 }

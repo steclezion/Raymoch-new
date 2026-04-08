@@ -121,7 +121,8 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
     Route::get('/login', [LoginController::class, 'showLogin'])->name('login');
     Route::post('/login/json', [LoginController::class, 'loginJson'])->name('auth.login.json');
 
-    Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+    //   Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+
 
 
     // If you still need legacy AuthController login, keep it but don’t duplicate /login
@@ -188,6 +189,13 @@ Route::get('/auth/user', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard
     Route::get('/dashboard', fn() => view('pages.dashboard.dashboard'))->name('dashboard');
+
+    Route::post('/profile/update', [ProfileController::class, 'updateProfilePicture'])
+        ->name('profile.update');
+
+    Route::get('/auth/user', [ProfileController::class, 'authUser'])
+        ->name('auth.user');
+
 
     // Logout must be POST
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');

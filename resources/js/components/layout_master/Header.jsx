@@ -27,7 +27,7 @@ import Avatar from "@mui/material/Avatar";
 import Stack from "@mui/material/Stack";
 import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
-
+import { toast } from "sonner";
 // Icons
 import CloseIcon from "@mui/icons-material/Close";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
@@ -431,59 +431,79 @@ export default function Header({ routes = {} }) {
     }));
   };
 
-  const handleProfileSave = async () => {
-    setProfileError("");
+const handleProfileSave = async () => {
+  if (!profileForm.avatar) {
+    toast.error("Please choose an image first.");
+    return;
+  }
 
-    if (!profileForm.avatar) {
-      setProfileError("Please choose a profile picture first.");
+  const loadingToast = toast.loading("Uploading profile picture...");
+
+  setSavingProfile(true);
+
+  try {
+    const formData = new FormData();
+    formData.append("avatar", profileForm.avatar);
+
+    const res = await fetch(safeRoutes.profileUpdate, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "X-CSRF-TOKEN": getCsrf(),
+      },
+      credentials: "include",
+      body: formData,
+    });
+
+    const json = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      let message =
+        json?.errors?.avatar?.[0] ||
+        json?.message ||
+        "Profile picture upload failed.";
+
+      if (
+        message.toLowerCase().includes("must be an image") ||
+        message.toLowerCase().includes("image")
+      ) {
+        message = "Only JPG, JPEG, PNG, or WEBP image files are allowed.";
+      }
+
+      toast.error(message, { id: loadingToast });
       return;
     }
 
-    setSavingProfile(true);
+    const nextUser = json?.user || authUser;
 
-    try {
-      const formData = new FormData();
-      formData.append("avatar", profileForm.avatar);
+    setAuthUser(nextUser);
+    setProfileForm({
+      name: nextUser?.name || "",
+      email: nextUser?.email || "",
+      avatar: null,
+      avatarPreview: "",
+    });
+    setEditMode(false);
 
-      const res = await fetch(safeRoutes.profileUpdate, {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "X-CSRF-TOKEN": getCsrf(),
-        },
-        credentials: "include",
-        body: formData,
-      });
-
-      const json = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        const msg =
-          json?.message ||
-          json?.errors?.avatar?.[0] ||
-          "Profile picture update failed.";
-        throw new Error(msg);
-      }
-
-      const nextUser = json?.user || authUser;
-
-      setAuthUser(nextUser);
-      setProfileForm({
-        name: nextUser?.name || "",
-        email: nextUser?.email || "",
-        avatar: null,
-        avatarPreview: "",
-      });
-      setEditMode(false);
-    } catch (err) {
-      setProfileError(err?.message || "Unable to update profile picture.");
-    } finally {
-      setSavingProfile(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
-  };
+
+    toast.success(json?.message || "Profile picture uploaded successfully.", {
+      id: loadingToast,
+    });
+    // ⏳ Close dialog after 2 seconds
+setTimeout(() => {
+  setProfileOpen(false);
+}, 2000);
+  } catch (err) {
+    toast.error("Network error. Please try again.", {
+      id: loadingToast,
+    });
+  } finally {
+    setSavingProfile(false);
+  }
+};
 
   const handleLogout = async () => {
     try {
@@ -500,6 +520,7 @@ export default function Header({ routes = {} }) {
 
   return (
     <>
+
       <AppBar
         position="sticky"
         elevation={0}
@@ -1102,14 +1123,14 @@ export default function Header({ routes = {} }) {
                   </Typography>
                 </Paper>
 
-                <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                {/* <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
                   <Typography variant="caption" color="text.secondary">
                     User ID
                   </Typography>
                   <Typography sx={{ fontWeight: 800, mt: 0.5 }}>
                     {authUser?.id || "-"}
                   </Typography>
-                </Paper>
+                </Paper> */}
               </>
             ) : (
               <>
