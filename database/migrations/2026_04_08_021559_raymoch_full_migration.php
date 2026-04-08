@@ -335,8 +335,8 @@ return new class extends Migration {
 
         Schema::create('matches', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('source_company_id')->constrained('organizations')->cascadeOnDelete();
-            $table->foreignId('target_company_id')->constrained('organizations')->cascadeOnDelete();
+            $table->foreignId('source_company_id')->constrained('companies')->cascadeOnDelete();
+            $table->foreignId('target_company_id')->constrained('companies')->cascadeOnDelete();
             $table->enum('match_type', ['buyer_supplier', 'investor_sme', 'partner_partner', 'service_provider_client', 'procurement']);
             $table->decimal('overall_score', 6, 2);
             $table->decimal('preference_score', 6, 2)->nullable();
@@ -364,7 +364,7 @@ return new class extends Migration {
         Schema::create('match_feedback', function (Blueprint $table) {
             $table->id();
             $table->foreignId('match_id')->constrained('matches')->cascadeOnDelete();
-            $table->foreignId('company_id')->constrained('organizations')->cascadeOnDelete();
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->enum('feedback_type', ['like', 'dislike', 'shortlist', 'not_relevant', 'contacted']);
             $table->text('feedback_reason')->nullable();
             $table->timestamps();
@@ -372,7 +372,7 @@ return new class extends Migration {
 
         Schema::create('organization_verifications', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained('organizations')->cascadeOnDelete();
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->foreignId('verification_type_id')->constrained('verification_types')->cascadeOnDelete();
             $table->enum('status', ['pending', 'approved', 'rejected', 'expired'])->default('pending');
             $table->timestamp('submitted_at')->nullable();
@@ -399,7 +399,7 @@ return new class extends Migration {
 
         Schema::create('organization_ats_scores', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained('organizations')->cascadeOnDelete();
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->foreignId('trust_dimension_id')->constrained('trust_dimensions')->cascadeOnDelete();
             $table->decimal('score', 6, 2);
             $table->decimal('max_score', 6, 2)->default(100.00);
@@ -411,7 +411,7 @@ return new class extends Migration {
 
         Schema::create('organization_cti_scores', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained('organizations')->cascadeOnDelete();
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->decimal('score', 6, 2);
             $table->enum('risk_level', ['low', 'medium', 'high']);
             $table->enum('confidence_level', ['low', 'medium', 'high']);
@@ -423,7 +423,7 @@ return new class extends Migration {
 
         Schema::create('organization_cti_histories', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained('organizations')->cascadeOnDelete();
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->decimal('previous_score', 6, 2)->nullable();
             $table->decimal('new_score', 6, 2);
             $table->text('change_reason')->nullable();
@@ -434,8 +434,8 @@ return new class extends Migration {
         Schema::create('match_requests', function (Blueprint $table) {
             $table->id();
             $table->foreignId('match_id')->nullable()->constrained('matches')->nullOnDelete();
-            $table->foreignId('requester_company_id')->constrained('organizations')->cascadeOnDelete();
-            $table->foreignId('target_company_id')->constrained('organizations')->cascadeOnDelete();
+            $table->foreignId('requester_company_id')->constrained('companies')->cascadeOnDelete();
+            $table->foreignId('target_company_id')->constrained('companies')->cascadeOnDelete();
             $table->text('message')->nullable();
             $table->enum('status', ['pending', 'accepted', 'declined', 'withdrawn'])->default('pending');
             $table->timestamps();
@@ -452,7 +452,7 @@ return new class extends Migration {
         Schema::create('conversation_participants', function (Blueprint $table) {
             $table->id();
             $table->foreignId('conversation_id')->constrained('conversations')->cascadeOnDelete();
-            $table->foreignId('company_id')->nullable()->constrained('organizations')->nullOnDelete();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->nullOnDelete();
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
@@ -469,7 +469,7 @@ return new class extends Migration {
 
         Schema::create('saved_matches', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained('organizations')->cascadeOnDelete();
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->foreignId('match_id')->constrained('matches')->cascadeOnDelete();
             $table->timestamps();
             $table->unique(['company_id', 'match_id']);
@@ -477,8 +477,8 @@ return new class extends Migration {
 
         Schema::create('favorite_organizations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained('organizations')->cascadeOnDelete();
-            $table->foreignId('favorite_company_id')->constrained('organizations')->cascadeOnDelete();
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
+            $table->foreignId('favorite_company_id')->constrained('companies')->cascadeOnDelete();
             $table->timestamps();
             $table->unique(
                 ['company_id', 'favorite_company_id'],
@@ -496,8 +496,8 @@ return new class extends Migration {
 
         Schema::create('organization_pipelines', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained('organizations')->cascadeOnDelete();
-            $table->foreignId('related_company_id')->constrained('organizations')->cascadeOnDelete();
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
+            $table->foreignId('related_company_id')->constrained('companies')->cascadeOnDelete();
             $table->foreignId('pipeline_stage_id')->constrained('pipeline_stages')->cascadeOnDelete();
             $table->foreignId('owner_user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->text('notes')->nullable();
@@ -506,7 +506,7 @@ return new class extends Migration {
 
         Schema::create('procurement_requests', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained('organizations')->cascadeOnDelete();
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->string('title');
             $table->longText('description')->nullable();
             $table->string('category')->nullable();
@@ -522,7 +522,7 @@ return new class extends Migration {
         Schema::create('procurement_bid_submissions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('procurement_request_id')->constrained('procurement_requests')->cascadeOnDelete();
-            $table->foreignId('company_id')->constrained('organizations')->cascadeOnDelete();
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->longText('proposal_summary')->nullable();
             $table->decimal('amount', 18, 2)->nullable();
             $table->string('currency_code', 3)->nullable();
@@ -533,7 +533,7 @@ return new class extends Migration {
 
         Schema::create('documents_and_media', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained('organizations')->cascadeOnDelete();
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->string('document_type');
             $table->string('title');
             $table->string('file_path');
@@ -547,7 +547,7 @@ return new class extends Migration {
 
         Schema::create('organization_media', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained('organizations')->cascadeOnDelete();
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->enum('media_type', ['logo', 'cover', 'gallery', 'video']);
             $table->string('file_path');
             $table->string('caption')->nullable();
@@ -557,8 +557,8 @@ return new class extends Migration {
 
         Schema::create('organization_reviews', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('reviewer_company_id')->constrained('organizations')->cascadeOnDelete();
-            $table->foreignId('reviewed_company_id')->constrained('organizations')->cascadeOnDelete();
+            $table->foreignId('reviewer_company_id')->constrained('companies')->cascadeOnDelete();
+            $table->foreignId('reviewed_company_id')->constrained('companies')->cascadeOnDelete();
             $table->decimal('rating', 3, 2);
             $table->text('review_text')->nullable();
             $table->enum('status', ['pending', 'published', 'hidden'])->default('pending');
@@ -567,7 +567,7 @@ return new class extends Migration {
 
         Schema::create('organization_testimonials', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained('organizations')->cascadeOnDelete();
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->string('author_name');
             $table->string('author_title')->nullable();
             $table->string('author_organization')->nullable();
@@ -578,8 +578,8 @@ return new class extends Migration {
 
         Schema::create('transaction_histories', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained('organizations')->cascadeOnDelete();
-            $table->foreignId('counterparty_company_id')->constrained('organizations')->cascadeOnDelete();
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
+            $table->foreignId('counterparty_company_id')->constrained('companies')->cascadeOnDelete();
             $table->string('transaction_type');
             $table->decimal('amount', 18, 2)->nullable();
             $table->string('currency_code', 3)->nullable();
@@ -598,7 +598,7 @@ return new class extends Migration {
 
         Schema::create('organization_tags', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained('organizations')->cascadeOnDelete();
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->foreignId('tag_id')->constrained('tags')->cascadeOnDelete();
             $table->timestamps();
             $table->unique(['company_id', 'tag_id']);
@@ -606,15 +606,15 @@ return new class extends Migration {
 
         Schema::create('search_logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->nullable()->constrained('organizations')->nullOnDelete();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->nullOnDelete();
             $table->foreignId('tag_id')->nullable()->constrained('tags')->nullOnDelete();
             $table->timestamps();
         });
 
         Schema::create('recommendation_logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained('organizations')->cascadeOnDelete();
-            $table->foreignId('recommended_company_id')->constrained('organizations')->cascadeOnDelete();
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
+            $table->foreignId('recommended_company_id')->constrained('companies')->cascadeOnDelete();
             $table->string('recommendation_type');
             $table->decimal('score', 6, 2);
             $table->text('reason')->nullable();
@@ -635,7 +635,7 @@ return new class extends Migration {
         Schema::create('activity_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->foreignId('company_id')->nullable()->constrained('organizations')->nullOnDelete();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->nullOnDelete();
             $table->string('action');
             $table->string('entity_type');
             $table->unsignedBigInteger('entity_id')->nullable();
@@ -648,7 +648,7 @@ return new class extends Migration {
         Schema::create('audit_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->foreignId('company_id')->nullable()->constrained('organizations')->nullOnDelete();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->nullOnDelete();
             $table->string('action');
             $table->string('entity_type');
             $table->unsignedBigInteger('entity_id')->nullable();
