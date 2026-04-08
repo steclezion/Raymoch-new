@@ -27,8 +27,6 @@ class CompanyFinancial extends Model
     ];
 
 
-
-
     public function company()
     {
         return $this->belongsTo(Company::class);
