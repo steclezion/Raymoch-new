@@ -299,7 +299,7 @@ export default function Header({ routes = {} }) {
     absoluteImageUrl(authUser?.avatar_url) ||
     absoluteImageUrl(authUser?.avatar) ||
     "";
-
+alert(absoluteImageUrl(authUser?.avatar));
   async function refreshAuth() {
     setAuthLoading(true);
     try {
