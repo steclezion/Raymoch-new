@@ -33,7 +33,6 @@
     "require-dev": {
         "beyondcode/laravel-er-diagram-generator": "^5.0",
         "fakerphp/faker": "^1.23",
-        "kitloong/laravel-migrations-generator": "^7.3",
         "laravel/pail": "^1.1",
         "laravel/pint": "^1.13",
         "laravel/sail": "^1.26",
