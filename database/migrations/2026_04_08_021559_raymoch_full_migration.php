@@ -180,7 +180,7 @@ return new class extends Migration {
 
         Schema::create('organization_profiles', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained()->cascadeOnDelete()->unique();
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete()->unique();
             $table->text('mission')->nullable();
             $table->text('vision')->nullable();
             $table->longText('business_summary')->nullable();
@@ -200,7 +200,7 @@ return new class extends Migration {
 
         Schema::create('organization_locations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->foreignId('country_id')->constrained('countries')->cascadeOnDelete();
             $table->foreignId('region_id')->nullable()->constrained('regions')->nullOnDelete();
             $table->string('city')->nullable();
@@ -216,7 +216,7 @@ return new class extends Migration {
 
         Schema::create('organization_operating_countries', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->foreignId('country_id')->constrained('countries')->cascadeOnDelete();
             $table->enum('market_role', ['origin', 'destination', 'operating', 'target']);
             $table->timestamps();
@@ -225,7 +225,7 @@ return new class extends Migration {
 
         Schema::create('organization_capabilities', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->foreignId('capability_id')->constrained('capabilities')->cascadeOnDelete();
             $table->text('description')->nullable();
             $table->decimal('capacity_value', 18, 2)->nullable();
@@ -237,7 +237,7 @@ return new class extends Migration {
 
         Schema::create('product_services', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->enum('type', ['product', 'service']);
             $table->string('name');
             $table->string('category')->nullable();
@@ -256,7 +256,7 @@ return new class extends Migration {
 
         Schema::create('organization_needs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->enum('need_type', ['supplier', 'buyer', 'investor', 'distributor', 'service_provider', 'technology_partner', 'market_access', 'procurement']);
             $table->string('title');
             $table->longText('description')->nullable();
@@ -272,7 +272,7 @@ return new class extends Migration {
 
         Schema::create('organization_interest_tags', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->string('tag');
             $table->enum('tag_type', ['sector', 'market', 'product', 'service', 'goal', 'theme']);
             $table->timestamps();
@@ -280,7 +280,7 @@ return new class extends Migration {
 
         Schema::create('match_preferences', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->boolean('seeking_investment')->default(false);
             $table->boolean('seeking_suppliers')->default(false);

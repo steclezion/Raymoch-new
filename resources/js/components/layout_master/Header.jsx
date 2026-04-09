@@ -339,6 +339,9 @@ export default function Header({ routes = {} }) {
     };
   }, [profileForm.avatarPreview]);
 
+  //API calls timers (setTimeout) subscriptions cleanup (like URL.revokeObjectURL)
+  //👉 It runs after state changes, not for updating state itself
+
   const computeDropdownPosition = () => {
     const el = btnRef.current;
     if (!el) return;
@@ -420,7 +423,7 @@ export default function Header({ routes = {} }) {
     if (profileForm.avatarPreview) {
       URL.revokeObjectURL(profileForm.avatarPreview);
     }
-
+  
     const preview = URL.createObjectURL(file);
 
     setProfileError("");
