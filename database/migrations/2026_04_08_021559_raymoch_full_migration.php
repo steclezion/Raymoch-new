@@ -623,7 +623,6 @@ return new class extends Migration {
 
         Schema::create('notifications', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('title');
             $table->text('body');
             $table->json('data')->nullable();

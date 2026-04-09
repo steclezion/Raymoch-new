@@ -8,9 +8,44 @@ use App\Models\CompanyFinancial;
 use App\Models\CompanyDocument;
 use App\Models\CompanyTeamMember;
 use App\Models\CompanyContact;
-// If you also have gallery:
 use App\Models\CompanyGallery;
 use App\Models\CompanyLocation;
+
+use App\Models\Region;
+use App\Models\OrganizationSize;
+use App\Models\Stage;
+use App\Models\AnnualRevenueRange;
+use App\Models\Capability;
+use App\Models\VerificationType;
+use App\Models\TrustDimension;
+use App\Models\OrganizationProfile;
+use App\Models\OrganizationLocation;
+use App\Models\OrganizationOperatingCountry;
+use App\Models\OrganizationCapability;
+use App\Models\ProductService;
+use App\Models\OrganizationNeed;
+use App\Models\OrganizationInterestTag;
+use App\Models\MatchPreference;
+use App\Models\MatchFeedback;
+use App\Models\OrganizationVerification;
+use App\Models\VerificationDocument;
+use App\Models\Conversation;
+use App\Models\Message;
+use App\Models\ProcurementRequest;
+use App\Models\ProcurementBidSubmission;
+use App\Models\DocumentAndMedia;
+use App\Models\OrganizationMedia;
+use App\Models\OrganizationReview;
+use App\Models\OrganizationTestimonial;
+use App\Models\TransactionHistory;
+use App\Models\Tag;
+use App\Models\OrganizationTag;
+use App\Models\Notification;
+use App\Models\ActivityLog;
+use App\Models\AuditLog;
+use App\Models\SystemSetting;
+use App\Models\ScoringRule;
+use App\Models\User;
 
 class ExistingCompaniesRelationsSeeder extends Seeder
 {

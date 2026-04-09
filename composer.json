@@ -9,6 +9,7 @@
         "php": "^8.2",
         "aws/aws-sdk-php": "^3.369",
         "barryvdh/laravel-dompdf": "^3.1",
+        "doctrine/dbal": "^4.4",
         "giggsey/libphonenumber-for-php": "^9.0",
         "illuminate/mail": "*",
         "intervention/image": "^3.11",

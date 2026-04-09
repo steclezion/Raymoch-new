@@ -54,6 +54,8 @@ class TrialWelcomeNotification extends Notification
      */
     public function toArray(object $notifiable): array
     {
-        return ['trial_days' => $this->trialDays];
+        return [
+            'trial_days' => $this->trialDays
+        ];
     }
 }
