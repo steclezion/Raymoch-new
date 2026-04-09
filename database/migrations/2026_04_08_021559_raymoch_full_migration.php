@@ -19,7 +19,7 @@ return new class extends Migration {
         Schema::dropIfExists('system_settings');
         Schema::dropIfExists('audit_logs');
         Schema::dropIfExists('activity_logs');
-        Schema::dropIfExists('notifications');
+        // Schema::dropIfExists('notifications');
         Schema::dropIfExists('recommendation_logs');
         Schema::dropIfExists('search_logs');
         Schema::dropIfExists('organization_tags');
@@ -621,16 +621,16 @@ return new class extends Migration {
             $table->timestamps();
         });
 
-        Schema::create('notifications', function (Blueprint $table) {
-            $table->id();
-            $table->string('title');
-            $table->text('body');
-            $table->json('data')->nullable();
-            $table->timestamp('read_at')->nullable();
-            $table->string('type');
-            $table->morphs('notifiable');
-            $table->timestamps();
-        });
+        // Schema::create('notifications', function (Blueprint $table) {
+        //     $table->id();
+        //     $table->string('title');
+        //     $table->text('body');
+        //     $table->json('data')->nullable();
+        //     $table->timestamp('read_at')->nullable();
+        //     $table->string('type');
+        //     $table->morphs('notifiable');
+        //     $table->timestamps();
+        // });
 
         Schema::create('activity_logs', function (Blueprint $table) {
             $table->id();
