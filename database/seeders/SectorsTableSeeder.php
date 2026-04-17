@@ -10,93 +10,48 @@ class SectorsTableSeeder extends Seeder
 {
     public function run(): void
     {
-        $raw = "
-Wholesale Trade
-Water & Sanitation
-Trucking & Freight
-Tourism & Hospitality
-Textile & Apparel
-Telecommunications
-Science & Research
-Satellite & Space Tech
-Retail & Ecommerce
-Real Estate
-Rail Transport
-Pharmaceuticals
-Packaging
-Other
-Oil & Gas
-Nonprofit & NGOs
-Music & Entertainment
-Mining & Extractives
-Media & Creative
-Market Research
-Maritime & Ports
-Manufacturing
-Logistics & Mobility
-Life Sciences
-Legal Services
-Investment & Capital Markets
-Insurance
-ICT / Software
-ICT & Software
-Humanitarian & Social Services
-Healthcare
-Government
-Gaming & Esports
-Forestry
-Food Products & Processing
-Food & Beverage
-Fishing & Aquaculture
-FinTech
-Environmental Services
-Engineering Services
-Energy & Renewables
-Emergency Services
-Education
-EdTech
-Dental Care
-Cybersecurity
-Consulting & Advisory
-Construction & Real Estate
-Construction
-Climate & Sustainability
-Chemicals
-Biotechnology
-Beauty & Personal Care
-Battery & Storage
-Banking
-Aviation
-Automotive Manufacturing
-Animal & Veterinary
-AI & Machine Learning
-Agriculture
-Accounting & Audit
-";
 
-        // Normalize to unique list
-        $items = collect(preg_split("/\r\n|\n|\r/", trim($raw)))
-            ->map(fn($x) => trim($x))
-            ->filter(fn($x) => $x !== "")
-            ->unique()
-            ->values()
-            ->all();
 
-        // Sort A->Z (case-insensitive, natural)
-        usort($items, function ($a, $b) {
-            return strcasecmp($a, $b);
-        });
 
         $now = now();
 
-        $rows = array_map(fn($name) => [
-            'name' => $name,
-            'created_at' => $now,
-            'updated_at' => $now,
-        ], $items);
+        $items = [
+            ['id' => 1,  'name' => 'Agriculture & Primary Sector',      'icon' => '🌾', 'description' => 'Activities related to farming, livestock, forestry, fishing, and raw natural resource production.'],
+            ['id' => 2,  'name' => 'Communication Services',            'icon' => '📡', 'description' => 'Telecom, media, broadcasting, publishing, digital communication, and related services.'],
+            ['id' => 3,  'name' => 'Consumer Discretionary',            'icon' => '🛍️', 'description' => 'Non-essential consumer goods and services such as retail, tourism, entertainment, and luxury products.'],
+            ['id' => 4,  'name' => 'Consumer Staples',                  'icon' => '🧴', 'description' => 'Essential everyday goods including food, beverages, household items, and personal care products.'],
+            ['id' => 5,  'name' => 'Education & Research',              'icon' => '🎓', 'description' => 'Schools, universities, training services, academic institutions, and research organizations.'],
+            ['id' => 6,  'name' => 'Energy',                            'icon' => '⚡', 'description' => 'Oil, gas, power generation, renewable energy, storage, and energy infrastructure.'],
+            ['id' => 7,  'name' => 'Environmental & Sustainability',    'icon' => '🌱', 'description' => 'Environmental protection, climate solutions, recycling, sustainability, and green innovation.'],
+            ['id' => 8,  'name' => 'Financials',                        'icon' => '💰', 'description' => 'Banking, insurance, investment, lending, capital markets, and financial services.'],
+            ['id' => 9,  'name' => 'Government & Public Sector',        'icon' => '🏛️', 'description' => 'Public administration, government institutions, policy implementation, and civic services.'],
+            ['id' => 10, 'name' => 'Health Care',                       'icon' => '🏥', 'description' => 'Hospitals, clinics, pharmaceuticals, medical devices, diagnostics, and healthcare services.'],
+            ['id' => 11, 'name' => 'Humanitarian & Social Services',    'icon' => '🤝', 'description' => 'Relief work, welfare programs, community development, and social support services.'],
+            ['id' => 12, 'name' => 'Industrials',                       'icon' => '🏭', 'description' => 'Manufacturing, engineering, construction, transportation, logistics, and industrial operations.'],
+            ['id' => 13, 'name' => 'Information Technology',            'icon' => '💻', 'description' => 'Software, hardware, IT services, cybersecurity, cloud systems, AI, and digital infrastructure.'],
+            ['id' => 14, 'name' => 'Materials',                         'icon' => '🧱', 'description' => 'Chemicals, mining, metals, packaging, construction materials, and raw material processing.'],
+            ['id' => 15, 'name' => 'Nonprofit / NGOs',                  'icon' => '❤️', 'description' => 'Nonprofit organizations, charities, advocacy groups, and mission-driven institutions.'],
+            ['id' => 16, 'name' => 'Real Estate',                       'icon' => '🏢', 'description' => 'Property development, real estate services, housing, commercial property, and land management.'],
+            ['id' => 17, 'name' => 'Utilities',                         'icon' => '💡', 'description' => 'Water, electricity, gas, sanitation, and other essential utility services.'],
+            ['id' => 18, 'name' => 'Z-other',                           'icon' => '📦', 'description' => 'Miscellaneous sectors that do not clearly fit into the standard sector classifications.'],
+        ];
 
-        // Insert (ignore duplicates in case seeder run again)
-        // If you want safe re-run:
-        DB::table('sectors')->upsert($rows, ['name'], ['updated_at']);
+        $rows = array_map(function ($item) use ($now) {
+            return [
+                'id' => $item['id'],
+                'title' => $item['name'],
+                // 'code' => Str::slug($item['name'], '_'),
+                'icon' => $item['icon'],
+                'description' => $item['description'],
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }, $items);
+
+        DB::table('sectors')->upsert(
+            $rows,
+            ['id'],
+            ['title', 'icon', 'description', 'updated_at']
+        );
     }
 }

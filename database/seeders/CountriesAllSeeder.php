@@ -13,27 +13,29 @@ class CountriesAllSeeder extends Seeder
     {
         DB::table('countries_all')->truncate();
 
-        $iso = new ISO3166();
-        $phoneUtil = PhoneNumberUtil::getInstance();
+        // $iso = new ISO3166();
+        // $phoneUtil = PhoneNumberUtil::getInstance();
 
-        $countries = $iso->all();
+        // $countries = $iso->all();
 
-        foreach ($countries as $country) {
+        // foreach ($countries as $country) {
 
-            $iso2 = $country['alpha2'];
+        //     $iso2 = $country['alpha2'];
 
-            // Get country calling code
-            $code = $phoneUtil->getCountryCodeForRegion($iso2);
+        //     // Get country calling code
+        //     $code = $phoneUtil->getCountryCodeForRegion($iso2);
 
-            if ($code == 0) continue;
+        //     if ($code == 0) continue;
 
-            DB::table('countries_all')->insert([
-                'name'         => $country['name'],
-                'tele_code'    => '+' . $code,
-                'country_code' => $iso2,
-                'created_at'   => now(),
-                'updated_at'   => now(),
-            ]);
-        }
+        //     DB::table('countries_all')->insert([
+        //         'name'         => $country['name'],
+        //         'tele_code'    => '+' . $code,
+        //         'country_code' => $iso2,
+        //         'created_at'   => now(),
+        //         'updated_at'   => now(),
+        //     ]);
+        // }
+
+        (DB::unprepared(file_get_contents(database_path('seeders/sql/countries_all.sql'))));
     }
 }

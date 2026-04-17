@@ -552,48 +552,38 @@ setTimeout(() => {
                   position: "relative",
                 }}
               >
-                <SafeLink to={safeRoutes.home} style={{ textDecoration: "none" }}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <Box
-                      component="svg"
-                      width="28"
-                      height="28"
-                      viewBox="0 0 200 200"
-                      aria-hidden="true"
-                      sx={{ color: "primary.main" }}
-                    >
-                      <polygon
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="10"
-                        points="100,18 172,59 172,141 100,182 28,141 28,59"
-                      />
-                      <text
-                        x="100"
-                        y="118"
-                        textAnchor="middle"
-                        style={{
-                          fill: "currentColor",
-                          font: "700 105px Georgia",
-                          color: "#0a2a6b",
-                        }}
-                      >
-                        R
-                      </text>
-                    </Box>
+<SafeLink to={safeRoutes.home} style={{ textDecoration: "none" }}>
+  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+    
+    <Box
+      component="svg"
+      width="28"
+      height="28"
+      viewBox="0 0 200 200"
+      aria-hidden="true"
+    >
+      <image
+        href="/images/logo_preview_exact.svg"
+        x="0"
+        y="0"
+        width="200"
+        height="200"
+        preserveAspectRatio="xMidYMid meet"
+      />
+    </Box>
 
-                    <Typography
-                      sx={{
-                        fontWeight: 900,
-                        fontSize: "1.25rem",
-                        color: "#0a2a6b",
-                      }}
-                    >
-                      Raymoch
-                    </Typography>
-                  </Box>
-                </SafeLink>
+    <Typography
+      sx={{
+        fontWeight: 900,
+        fontSize: "1.25rem",
+        color: "#0a2a6b",
+      }}
+    >
+      Raymoch
+    </Typography>
 
+  </Box>
+</SafeLink>
                 {!isMobile && isAuthed && !authLoading && (
                   <ClickAwayListener
                     onClickAway={() => {

@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import { createRoot } from "react-dom/client";
 import { Toaster } from "sonner";
-
+import { BrowserRouter } from "react-router-dom";
 import Login from "./components/Login.jsx";
 import SignupPage from "./components/signup/SignupPage.jsx";
 import PricingBasic from "./components/PricingBasic.jsx";
@@ -344,7 +344,13 @@ mount(
 mount("entire-root", <Entire />);
 mount("ServicesRoot", <Services />);
 mount("MarketInsightRoot", <Market_Insight />);
-mount("explore-root", <ExploreBusinesses />);
+
+mount("explore-root",
+<BrowserRouter>   <ExploreBusinesses /></BrowserRouter>
+
+   
+  );
+
 mount("explore-companies", <Companies />);
 mount(
   "signupBasicRoot",

@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
 use App\Models\Company;
+use Illuminate\Support\Facades\DB;
 
 class CompaniesTableSeeder extends Seeder
 {
@@ -14,31 +15,51 @@ class CompaniesTableSeeder extends Seeder
         $companies = json_decode($json, true);
 
         foreach ($companies as $c) {
+            // $sectorId = DB::table('sectors')->inRandomOrder()->value('id');
+            $sectorId = rand(1, 18);
+
+            $industryId = DB::table('industries')->where('sector_id', $sectorId)->inRandomOrder()->value('id');
+
+            $countryId = DB::table('countries_africans')
+                ->where('country_name', $c['Country'])
+                ->value('id');
+
+            $stageId = DB::table('stages')->inRandomOrder()->value('id');
+
+            $cityId = DB::table('cities_all')
+                ->where('country_id', $countryId)
+                ->value('id');
+
+            $RegionId = DB::table('countries_africans')
+                ->where('country_name', $c['Country'])
+                ->value('region_id');
+
             Company::create([
-                'CompanyName'       => $c['CompanyName'] ?? $c['name'] ?? null,
-                'Sector'             => $c['Sector'] ?? null,
-                'Country'            => $c['Country'] ?? null,
-                'Region'             => $c['Region'] ?? null,
-                'City'               => $c['City'] ?? null,
-                'FoundedYear'       => $c['FoundedYear'] ?? null,
-                'Stage'              => $c['Stage'] ?? null,
-                'VerificationStatus' => $c['VerificationStatus'] ?? 'Unverified',
-                'VerificationStep'   => $c['VerificationStep'] ?? null,
-                'CTI_Score'          => $c['CTI_Score'] ?? null,
-                'CTI_Tier'           => $c['CTI_Tier'] ?? null,
-                'ProfileCompletenessPct' => $c['ProfileCompletenessPct'] ?? null,
-                'Employees'          => $c['Employees'] ?? null,
-                'AnnualRevenueUSD'   => $c['AnnualRevenueUSD'] ?? null,
-                'TotalFundingUSD'    => $c['TotalFundingUSD'] ?? null,
-                'HasFinancials'     => $c['HasFinancials'] ?? null,
-                'DiasporaOwned'     => $c['DiasporaOwned'] ?? null,
-                'WomenLed'          => $c['WomenLed'] ?? null,
-                'YouthLed'          => $c['YouthLed'] ?? null,
-                'ListingBucket'     => $c['ListingBucket'] ?? null,
-                'Email'              => $c['Email'] ?? null,
-                'Website'            => $c['Website'] ?? null,
-                'Phone'              => $c['Phone'] ?? null,
-                'Description'        => $c['Description'] ?? null,
+                'CompanyName'              => $c['CompanyName'] ?? null,
+                'Sector'                 => $sectorId,
+                'industry_id'               => $industryId,
+                'Country'                => $countryId,
+                'City'                   => $cityId,
+                'FoundedYear'              => $c['FoundedYear'] ?? null,
+                'Stage'                  => $stageId,
+                'Region'                 =>   $RegionId ?? null,
+                'VerificationStatus'       => $c['VerificationStatus'] ?? 'Unverified',
+                'VerificationStep'         => $c['VerificationStep'] ?? null,
+                'CTI_Score'                 => $c['CTI_Score'] ?? null,
+                'CTI_Tier'                  => $c['CTI_Tier'] ?? null,
+                'ProfileCompletenessPct'  => $c['ProfileCompletenessPct'] ?? null,
+                'Employees'                 => $c['Employees'] ?? null,
+                'AnnualRevenueUSD'        => $c['AnnualRevenueUSD'] ?? null,
+                'TotalFundingUSD'         => $c['TotalFundingUSD'] ?? null,
+                'HasFinancials'            => filter_var($c['HasFinancials'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'DiasporaOwned'            => filter_var($c['DiasporaOwned'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'WomenLed'                 => filter_var($c['WomenLed'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'YouthLed'                 => filter_var($c['YouthLed'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'ListingBucket'            => $c['ListingBucket'] ?? null,
+                'Email'                     => $c['Email'] ?? null,
+                'website'                   => $c['Website'] ?? null,
+                'Phone'                     => $c['Phone'] ?? null,
+                'Description'               => $c['Description'] ?? null,
             ]);
         }
     }

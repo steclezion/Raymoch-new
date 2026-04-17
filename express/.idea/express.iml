@@ -242,6 +242,8 @@
       <excludeFolder url="file://$MODULE_DIR$/raymoch-app/vendor/vlucas/phpdotenv" />
       <excludeFolder url="file://$MODULE_DIR$/raymoch-app/vendor/voku/portable-ascii" />
       <excludeFolder url="file://$MODULE_DIR$/raymoch-app/vendor/webmozart/assert" />
+      <excludeFolder url="file://$MODULE_DIR$/Raymoch/storage/app" />
+      <excludeFolder url="file://$MODULE_DIR$/Raymoch/storage/framework" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

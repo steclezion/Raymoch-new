@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('CompanyName')->isNotEmpty();
             $table->string('Sector')->nullable();
+            $table->unsignedBigInteger('industry_id')->nullable();
+            $table->foreign('industry_id')->references('id')->on('industries')->onDelete('set null')->onUpdate('cascade');
             $table->string('Country')->nullable();
             $table->string('Region')->nullable();
             $table->string('City')->nullable();

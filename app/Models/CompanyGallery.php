@@ -21,6 +21,7 @@ class CompanyGallery extends Model
         'alt_text',
     ];
 
+
     public function company()
     {
         return $this->belongsTo(Company::class);

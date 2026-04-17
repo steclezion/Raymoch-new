@@ -4,7 +4,7 @@ namespace App\Models;
 
 use App\Models\CompanyClassification;
 use App\Models\companydescription;
-use App\Models\Country;
+use App\Models\CountryAfrican as Country;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

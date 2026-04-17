@@ -13,6 +13,8 @@ use App\Http\Controllers\CompanyDetailController;
 use App\Http\Controllers\CompanyReactionController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\Api\CountryCodeController;
+use App\Http\Controllers\Api\SearchFilterController;
+use App\Http\Controllers\Api\ExploreTooltipController;
 
 
 
@@ -72,7 +74,17 @@ Route::get('/api/companies/{id}', [AllCompaniesController::class, 'show'])
 Route::get('/services/options', [ServiceController::class, 'options']);
 
 
+Route::get('/regions', [SearchFilterController::class, 'regions']);
+Route::get('/countries-africans', [SearchFilterController::class, 'countries']);
+Route::get('/country-region', [SearchFilterController::class, 'countryRegion']);
+Route::get('/states-all', [SearchFilterController::class, 'states']);
+Route::get('/cities-all', [SearchFilterController::class, 'cities']);
+Route::get('/sectors', [SearchFilterController::class, 'sectors']);
+Route::get('/industries', [SearchFilterController::class, 'industries']);
 
+
+
+Route::get('/explore-card-stats', [ExploreTooltipController::class, 'show']);
 
 Route::prefix('companies/{company}')->group(function () {
     Route::get('/overview',   [CompanyDetailController::class, 'overview']);

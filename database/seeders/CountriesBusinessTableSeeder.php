@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\Country;
+use App\Models\CountryAfrican as Country;
 
 class CountriesBusinessTableSeeder extends Seeder
 {
@@ -56,12 +56,11 @@ class CountriesBusinessTableSeeder extends Seeder
             ['country_code' => 'UG', 'country_name' => 'Uganda',   'flag_icon' => '🇺🇬'],
             ['country_code' => 'ZM', 'country_name' => 'Zambia',   'flag_icon' => '🇿🇲'],
             ['country_code' => 'ZW', 'country_name' => 'Zimbabwe', 'flag_icon' => '🇿🇼'],
-            ['country_code' => 'US', 'country_name' => 'United States', 'flag_icon' => '🇺🇸'],
-            ['country_code' => 'GB', 'country_name' => 'United Kingdom', 'flag_icon' => '🇬🇧'],
+
         ];
 
         foreach ($rows as $r) {
-            Country::updateOrCreate(['country_code' => $r['country_code']], $r);
+            //  Country::updateOrCreate(['country_code' => $r['country_code']], $r);
         }
     }
 }

@@ -10,6 +10,7 @@ use Spatie\Permission\Traits\HasRoles;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Laravel\Cashier\Billable;
+use App\Models\Industry;
 
 class User extends Authenticatable
 {
@@ -64,5 +65,9 @@ class User extends Authenticatable
             'stripe_subscription_id',
             'email_verified_at'
         ];
+    }
+    public function industry()
+    {
+        return $this->hasMany(Industry::class);
     }
 }

@@ -1,288 +1,7 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
+import Select, { components } from "react-select";
+import { toast } from "sonner";
 
-const css = `
-/* ===== Wrapper required by task ===== */
-.panel-wrap{
-  width:100%;
-  display:flex;
-  justify-content:center;
-}
-
-/* ===== Card shell ===== */
-.sf-card{
-  width:100%;
-  background:#fff;
-  border:1px solid #e6e9f2;
-  border-radius:26px;
-  overflow:hidden;
-  box-shadow: 0 10px 26px rgba(10,42,107,.10);
-}
-
-/* ===== Top gradient header ===== */
-.sf-topbar{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:14px;
-  padding:18px 22px;
-  background: linear-gradient(135deg, #0A2A6B 0%, #1e3a8a 55%, #2d4fbf 100%);
-  color:#fff;
-}
-
-.sf-title{
-  font-weight:900;
-  letter-spacing:.3px;
-  font-size:18px;
-  line-height:1.15;
-  text-transform:uppercase;
-}
-
-.sf-sub{
-  margin-top:4px;
-  color:rgba(255,255,255,.88);
-  font-size:13px;
-}
-
-/* ===== Verified pill (top-right) ===== */
-.sf-badge{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  padding:8px 12px;
-  border-radius:999px;
-  font-weight:800;
-  font-size:13px;
-  white-space:nowrap;
-  background: rgba(255,255,255,.18);
-  border:1px solid rgba(255,255,255,.25);
-  box-shadow: inset 0 0 0 1px rgba(0,0,0,.05);
-}
-.sf-badge .check{
-  width:18px;height:18px;
-  display:inline-grid;
-  place-items:center;
-  border-radius:6px;
-  background: rgba(255,255,255,.18);
-  border:1px solid rgba(255,255,255,.25);
-  font-size:12px;
-}
-.sf-badge.on{
-  background: rgba(34,197,94,.18);
-  border-color: rgba(34,197,94,.28);
-}
-.sf-badge.off{
-  background: rgba(255,255,255,.18);
-}
-
-/* ===== Body ===== */
-.sf-body{
-  padding:18px 22px 16px;
-}
-
-/* Row with fields */
-.sf-row{
-  display:grid;
-  grid-template-columns: 1.55fr 1fr 1fr auto;
-  gap:18px;
-  align-items:end;
-}
-
-/* Labels above fields */
-.sf-label{
-  display:block;
-  font-size:13px;
-  color:#6b7280;
-  margin:0 0 6px 14px;
-}
-
-/* Input group: icon + field */
-.sf-field{
-  position:relative;
-  width:100%;
-}
-.sf-icon{
-  position:absolute;
-  left:16px;
-  top:50%;
-  transform:translateY(-50%);
-  width:18px;
-  height:18px;
-  opacity:.70;
-}
-
-/* Base pill field */
-.sf-input, .sf-select{
-  width:100%;
-  height:50px;
-  border-radius:999px;
-  border:1px solid #e5e7eb;
-  background:#fff;
-  padding:0 44px 0 46px; /* space for left icon + right arrow */
-  font-size:15px;
-  outline:none;
-  box-shadow: 0 2px 10px rgba(15,23,42,.04);
-}
-.sf-input::placeholder{ color:#9ca3af; }
-
-.sf-input:focus, .sf-select:focus{
-  border-color:#9db7ff;
-  box-shadow: 0 0 0 4px rgba(59,130,246,.14);
-}
-
-/* Select arrow (custom) */
-.sf-select{
-  appearance:none;
-  -webkit-appearance:none;
-  -moz-appearance:none;
-  padding-right:46px;
-}
-.sf-arrow{
-  position:absolute;
-  right:18px;
-  top:50%;
-  transform:translateY(-50%);
-  width:14px;height:14px;
-  opacity:.60;
-  pointer-events:none;
-}
-
-/* Verified only toggle */
-.sf-verify{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding-bottom:8px;
-  justify-content:flex-end;
-}
-.sf-verify .txt{
-  font-weight:800;
-  color:#0f172a;
-  white-space:nowrap;
-}
-
-/* Switch */
-.sf-switch{
-  position:relative;
-  width:52px;height:28px;
-  display:inline-block;
-}
-.sf-switch input{ display:none; }
-.sf-slider{
-  position:absolute; inset:0;
-  background:#e5e7eb;
-  border-radius:999px;
-  transition:.18s ease;
-  border:1px solid #e5e7eb;
-}
-.sf-slider::after{
-  content:"";
-  position:absolute;
-  left:3px; top:3px;
-  width:22px; height:22px;
-  background:#fff;
-  border-radius:50%;
-  box-shadow: 0 6px 14px rgba(0,0,0,.15);
-  transition:.18s ease;
-}
-.sf-switch input:checked + .sf-slider{
-  background:#3b82f6;
-  border-color:#3b82f6;
-}
-.sf-switch input:checked + .sf-slider::after{
-  transform:translateX(24px);
-}
-
-/* Divider */
-.sf-divider{
-  height:1px;
-  background:#eef2f7;
-  margin:16px 0 14px;
-}
-
-/* Bottom actions */
-.sf-actions{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:14px;
-}
-.sf-left-actions{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  flex-wrap:wrap;
-}
-
-/* Buttons */
-.sf-btn{
-  height:46px;
-  border-radius:999px;
-  padding:0 18px;
-  font-weight:900;
-  cursor:pointer;
-  border:1px solid transparent;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:10px;
-  text-decoration:none;
-  user-select:none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.sf-btn.ghost{
-  background:#fff;
-  border-color:#d7e2f5;
-  color:#2d4fbf;
-}
-.sf-btn.outline{
-  background:#fff;
-  border-color:#d7e2f5;
-  color:#2d4fbf;
-}
-.sf-btn.primary{
-  min-width:170px;
-  background: linear-gradient(135deg,#3b82f6,#2d4fbf);
-  border-color: transparent;
-  color:#fff;
-  box-shadow: 0 10px 18px rgba(59,130,246,.25);
-}
-.sf-btn.primary:active{ transform:translateY(1px); }
-
-/* Hover: keep clean, no layout change */
-.sf-btn:hover{ filter:brightness(.98); }
-
-/* Responsive */
-@media (max-width: 980px){
-  .sf-row{
-    grid-template-columns: 1fr 1fr;
-    align-items:end;
-  }
-  .sf-verify{
-    grid-column: 1 / -1;
-    justify-content:flex-start;
-    padding-left:6px;
-  }
-  .sf-actions{
-    flex-direction:column;
-    align-items:stretch;
-  }
-  .sf-left-actions{
-    justify-content:flex-start;
-  }
-  .sf-btn.primary{
-    width:100%;
-  }
-}
-@media (max-width: 560px){
-  .sf-row{ grid-template-columns: 1fr; }
-  .sf-label{ margin-left:8px; }
-  .sf-body{ padding:16px 14px 14px; }
-  .sf-topbar{ padding:16px 14px; }
-}
-`;
-
-/* Simple inline icons (match screenshot feel) */
 function IconSearch(props) {
   return (
     <svg viewBox="0 0 24 24" fill="none" {...props}>
@@ -300,6 +19,7 @@ function IconSearch(props) {
     </svg>
   );
 }
+
 function IconGlobe(props) {
   return (
     <svg viewBox="0 0 24 24" fill="none" {...props}>
@@ -323,6 +43,7 @@ function IconGlobe(props) {
     </svg>
   );
 }
+
 function IconBriefcase(props) {
   return (
     <svg viewBox="0 0 24 24" fill="none" {...props}>
@@ -346,49 +67,403 @@ function IconBriefcase(props) {
     </svg>
   );
 }
-function IconChevronDown(props) {
+
+function SelectDropdownIndicator(props) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" {...props}>
-      <path
-        d="m6 9 6 6 6-6"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+    <components.DropdownIndicator {...props}>
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none">
+        <path
+          d="m6 9 6 6 6-6"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </components.DropdownIndicator>
   );
 }
+
+function SelectNoOptionsMessage(props) {
+  return (
+    <components.NoOptionsMessage {...props}>
+      No matching result found
+    </components.NoOptionsMessage>
+  );
+}
+
+function buildSelectStyles(hasError = false) {
+  return {
+    container: (base) => ({
+      ...base,
+      width: "100%",
+    }),
+    control: (base, state) => ({
+      ...base,
+      minHeight: 50,
+      height: 50,
+      borderRadius: 999,
+      borderColor: hasError
+        ? "#ef4444"
+        : state.isFocused
+          ? "#9db7ff"
+          : "#e5e7eb",
+      boxShadow: hasError
+        ? "0 0 0 4px rgba(239,68,68,.12)"
+        : state.isFocused
+          ? "0 0 0 4px rgba(59,130,246,.14)"
+          : "0 2px 10px rgba(15,23,42,.04)",
+      backgroundColor: state.isDisabled ? "#f8fafc" : "#fff",
+      paddingLeft: 40,
+      paddingRight: 8,
+      cursor: state.isDisabled ? "not-allowed" : "pointer",
+      transition: "all .18s ease",
+      "&:hover": {
+        borderColor: hasError ? "#ef4444" : "#d7dbe5",
+      },
+    }),
+    valueContainer: (base) => ({
+      ...base,
+      height: 50,
+      padding: "0 8px 0 0",
+    }),
+    input: (base) => ({
+      ...base,
+      margin: 0,
+      padding: 0,
+      color: "#111827",
+    }),
+    indicatorSeparator: () => ({
+      display: "none",
+    }),
+    dropdownIndicator: (base) => ({
+      ...base,
+      color: "#6b7280",
+      padding: 8,
+    }),
+    clearIndicator: (base) => ({
+      ...base,
+      color: "#94a3b8",
+      padding: 8,
+    }),
+    placeholder: (base) => ({
+      ...base,
+      color: "#9ca3af",
+      fontSize: 15,
+    }),
+    singleValue: (base, state) => ({
+      ...base,
+      color: state.isDisabled ? "#94a3b8" : "#111827",
+      fontSize: 15,
+    }),
+    menuPortal: (base) => ({
+      ...base,
+      zIndex: 99999,
+    }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 99999,
+      borderRadius: 18,
+      overflow: "hidden",
+      border: "1px solid #e5e7eb",
+      boxShadow: "0 18px 40px rgba(15,23,42,.14)",
+    }),
+    menuList: (base) => ({
+      ...base,
+      padding: 8,
+      maxHeight: 240,
+    }),
+    option: (base, state) => ({
+      ...base,
+      borderRadius: 12,
+      marginBottom: 4,
+      padding: "11px 14px",
+      fontSize: 14,
+      cursor: "pointer",
+      backgroundColor: state.isSelected
+        ? "#dbeafe"
+        : state.isFocused
+          ? "#eff6ff"
+          : "#fff",
+      color: "#0f172a",
+      fontWeight: state.isSelected ? 800 : 600,
+      ":active": {
+        backgroundColor: "#dbeafe",
+      },
+    }),
+    noOptionsMessage: (base) => ({
+      ...base,
+      color: "#6b7280",
+      fontSize: 13,
+      fontWeight: 700,
+    }),
+  };
+}
+
+const selectSharedProps = {
+  isSearchable: true,
+  menuPosition: "fixed",
+  menuPortalTarget: typeof document !== "undefined" ? document.body : null,
+  components: {
+    DropdownIndicator: SelectDropdownIndicator,
+    NoOptionsMessage: SelectNoOptionsMessage,
+  },
+};
 
 export default function TopSearchPanel({
   q,
   setQ,
+  region,
+  setRegion,
   country,
   setCountry,
+  stateItem,
+  setStateItem,
+  city,
+  setCity,
   sector,
   setSector,
+  industry,
+  setIndustry,
   verified,
   setVerified,
+  regions,
   countries,
+  states,
+  cities,
   sectors,
+  industries,
   onSearch,
+  onCountryFirstSelection,
 }) {
-  const sectorOptions = useMemo(() => sectors.map((s) => s.title), [sectors]);
+  const [fieldErrors, setFieldErrors] = useState({
+    country: false,
+    sector: false,
+  });
+
+  const clearValidation = () => {
+    setFieldErrors({
+      country: false,
+      sector: false,
+    });
+  };
+
+  const regionOptions = useMemo(() => {
+    return [
+      { value: "all", label: "All" },
+      ...(regions ?? []).map((r) => ({
+        value: String(r.id),
+        label: r.name,
+      })),
+    ];
+  }, [regions]);
+
+  const countryOptions = useMemo(() => {
+    return [
+      { value: "all", label: "All" },
+      ...(countries ?? []).map((c) => ({
+        value: String(c.countries_all_id ?? c.id),
+        label: c.country_name ?? c.name,
+      })),
+    ];
+  }, [countries]);
+
+  const stateOptions = useMemo(() => {
+    if (!country || country === "all") {
+      return [];
+    }
+
+    return [
+      { value: "all", label: "All" },
+      ...(states ?? []).map((s) => ({
+        value: String(s.id),
+        label: s.name,
+      })),
+    ];
+  }, [states, country]);
+
+  const cityOptions = useMemo(() => {
+    if (!stateItem || stateItem === "all") {
+      return [];
+    }
+
+    return [
+      { value: "all", label: "All" },
+      ...(cities ?? []).map((c) => ({
+        value: String(c.id),
+        label: c.name,
+      })),
+    ];
+  }, [cities, stateItem]);
+
+  const sectorOptions = useMemo(() => {
+    return (sectors ?? []).map((s) => ({
+      value: String(s.id),
+      label: s.title ?? s.name,
+    }));
+  }, [sectors]);
+
+  const industryOptions = useMemo(() => {
+    return (industries ?? []).map((i) => ({
+      value: String(i.id),
+      label: i.name ?? i.title,
+    }));
+  }, [industries]);
+
+  const selectedRegion = useMemo(
+    () =>
+      regionOptions.find((opt) => opt.value === String(region ?? "all")) ||
+      regionOptions[0],
+    [regionOptions, region]
+  );
+
+  const selectedCountry = useMemo(
+    () =>
+      countryOptions.find((opt) => opt.value === String(country ?? "all")) ||
+      countryOptions[0],
+    [countryOptions, country]
+  );
+
+  const selectedState = useMemo(() => {
+    if (!stateItem) return null;
+    return stateOptions.find((opt) => opt.value === String(stateItem)) || null;
+  }, [stateOptions, stateItem]);
+
+  const selectedCity = useMemo(() => {
+    if (!city) return null;
+    return cityOptions.find((opt) => opt.value === String(city)) || null;
+  }, [cityOptions, city]);
+
+  const selectedSector = useMemo(
+    () =>
+      sectorOptions.find((opt) => opt.value === String(sector ?? "")) || null,
+    [sectorOptions, sector]
+  );
+
+  const selectedIndustry = useMemo(
+    () =>
+      industryOptions.find((opt) => opt.value === String(industry ?? "")) || null,
+    [industryOptions, industry]
+  );
 
   const clearAll = () => {
     setQ("");
-    setCountry("");
+    setRegion("all");
+    setCountry("all");
+    setStateItem("");
+    setCity("");
     setSector("");
+    setIndustry("");
     setVerified(false);
+    clearValidation();
   };
+
+  const handleRegionChange = (option) => {
+    const value = option?.value ?? "all";
+
+    clearValidation();
+    setRegion(value);
+
+    if (value === "all") {
+      setCountry("all");
+      setStateItem("");
+      setCity("");
+    }
+  };
+
+  const handleCountryChange = async (option) => {
+    const value = option?.value ?? "all";
+
+    clearValidation();
+    setCountry(value);
+
+    if (value === "all" || !value) {
+      setStateItem("");
+      setCity("");
+      return;
+    }
+
+    if (typeof onCountryFirstSelection === "function") {
+      await onCountryFirstSelection(value);
+    }
+
+    setStateItem("all");
+    setCity("");
+  };
+
+  const handleStateChange = (option) => {
+    const value = option?.value ?? "";
+
+    setStateItem(value);
+
+    if (!value || value === "all") {
+      setCity("");
+      return;
+    }
+
+    setCity("all");
+  };
+
+  const handleCityChange = (option) => {
+    setCity(option?.value ?? "");
+  };
+
+  const handleSectorChange = (option) => {
+    clearValidation();
+    setSector(option?.value ?? "");
+    setIndustry("");
+  };
+
+  const validateBeforeSearch = () => {
+    const normalizedSector =
+      sector && String(sector).trim() !== "" ? String(sector).trim() : "";
+
+    if (!normalizedSector) {
+      setFieldErrors({
+        country: false,
+        sector: true,
+      });
+
+      toast.error("Sector should be selected.");
+      return false;
+    }
+
+    setFieldErrors({
+      country: false,
+      sector: false,
+    });
+
+    return true;
+  };
+
+  const submitSearch = (e) => {
+    e.preventDefault();
+
+    if (!validateBeforeSearch()) return;
+
+    onSearch({
+      q,
+      region,
+      country,
+      stateItem,
+      city,
+      sector,
+      industry,
+      verified,
+    });
+  };
+
+  const countryDisabled = false;
+  const stateDisabled = !country || country === "all";
+  const cityDisabled = !stateItem || stateItem === "all";
+  const industryDisabled = !sector || String(sector).trim() === "";
 
   return (
     <>
       <style>{css}</style>
 
       <div className="panel-wrap">
-        <form className="sf-card" onSubmit={onSearch}>
-          {/* Header strip */}
+        <form className="sf-card" onSubmit={submitSearch}>
           <div className="sf-topbar">
             <div>
               <div className="sf-title">SEARCH &amp; FILTERS</div>
@@ -403,10 +478,8 @@ export default function TopSearchPanel({
             </div>
           </div>
 
-          {/* Body */}
           <div className="sf-body">
-            <div className="sf-row">
-              {/* Keyword */}
+            <div className="sf-grid">
               <div>
                 <label className="sf-label">Keyword</label>
                 <div className="sf-field">
@@ -414,58 +487,122 @@ export default function TopSearchPanel({
                   <input
                     className="sf-input"
                     type="search"
-                    placeholder="Search businesses..."
+                    placeholder="Search company name, keyword, city, industry..."
                     value={q}
                     onChange={(e) => setQ(e.target.value)}
                   />
                 </div>
               </div>
 
-              {/* Country */}
+              <div>
+                <label className="sf-label">Region</label>
+                <div className="sf-field sf-select-wrap">
+                  <IconGlobe className="sf-icon" style={{ color: "#111827" }} />
+                  <Select
+                    {...selectSharedProps}
+                    value={selectedRegion}
+                    onChange={handleRegionChange}
+                    options={regionOptions}
+                    placeholder="Select region"
+                    styles={buildSelectStyles(false)}
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="sf-label">Country</label>
-                <div className="sf-field">
+                <div className="sf-field sf-select-wrap">
                   <IconGlobe className="sf-icon" style={{ color: "#111827" }} />
-                  <select
-                    className="sf-select"
-                    value={country}
-                    onChange={(e) => setCountry(e.target.value)}
-                    aria-label="Country"
-                  >
-                    <option value="">Select country</option>
-                    {countries.map((c) => (
-                      <option key={c.id} value={c.country_name}>
-                        {c.country_name}
-                      </option>
-                    ))}
-                  </select>
-                  <IconChevronDown className="sf-arrow" style={{ color: "#111827" }} />
+                  <Select
+                    {...selectSharedProps}
+                    value={selectedCountry}
+                    onChange={handleCountryChange}
+                    options={countryOptions}
+                    isDisabled={countryDisabled}
+                    placeholder="Select country"
+                    styles={buildSelectStyles(false)}
+                  />
                 </div>
               </div>
 
-              {/* Sector */}
+              <div>
+                <label className="sf-label">State</label>
+                <div className="sf-field sf-select-wrap">
+                  <IconGlobe className="sf-icon" style={{ color: "#111827" }} />
+                  <Select
+                    {...selectSharedProps}
+                    value={selectedState}
+                    onChange={handleStateChange}
+                    options={stateOptions}
+                    isClearable
+                    isDisabled={stateDisabled}
+                    placeholder={
+                      stateDisabled ? "Select specific country first" : "Select state"
+                    }
+                    styles={buildSelectStyles(false)}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="sf-label">City</label>
+                <div className="sf-field sf-select-wrap">
+                  <IconGlobe className="sf-icon" style={{ color: "#111827" }} />
+                  <Select
+                    {...selectSharedProps}
+                    value={selectedCity}
+                    onChange={handleCityChange}
+                    options={cityOptions}
+                    isClearable
+                    isDisabled={cityDisabled}
+                    placeholder={
+                      cityDisabled ? "Select state first" : "Select city"
+                    }
+                    styles={buildSelectStyles(false)}
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="sf-label">Sector</label>
-                <div className="sf-field">
+                <div className="sf-field sf-select-wrap">
                   <IconBriefcase className="sf-icon" style={{ color: "#111827" }} />
-                  <select
-                    className="sf-select"
-                    value={sector}
-                    onChange={(e) => setSector(e.target.value)}
-                    aria-label="Sector"
-                  >
-                    <option value="">Select sector</option>
-                    {sectorOptions.map((t, i) => (
-                      <option key={i} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
-                  <IconChevronDown className="sf-arrow" style={{ color: "#111827" }} />
+                  <Select
+                    {...selectSharedProps}
+                    value={selectedSector}
+                    onChange={handleSectorChange}
+                    options={sectorOptions}
+                    isClearable
+                    placeholder="Select sector"
+                    styles={buildSelectStyles(fieldErrors.sector)}
+                  />
+                </div>
+                {fieldErrors.sector && (
+                  <div className="sf-error-text">
+                    Sector should be selected.
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="sf-label">Industry</label>
+                <div className="sf-field sf-select-wrap">
+                  <IconBriefcase className="sf-icon" style={{ color: "#111827" }} />
+                  <Select
+                    {...selectSharedProps}
+                    value={selectedIndustry}
+                    onChange={(option) => setIndustry(option?.value ?? "")}
+                    options={industryOptions}
+                    isClearable
+                    isDisabled={industryDisabled}
+                    placeholder={
+                      industryDisabled ? "Select sector first" : "Select industry"
+                    }
+                    styles={buildSelectStyles(false)}
+                  />
                 </div>
               </div>
 
-              {/* Verified toggle */}
               <div className="sf-verify" aria-label="Verified only">
                 <label className="sf-switch" title="Verified only">
                   <input
@@ -481,10 +618,13 @@ export default function TopSearchPanel({
 
             <div className="sf-divider" />
 
-            {/* Actions */}
             <div className="sf-actions">
               <div className="sf-left-actions">
-                <button type="button" className="sf-btn ghost" onClick={clearAll}>
+                <button
+                  type="button"
+                  className="sf-btn ghost"
+                  onClick={clearAll}
+                >
                   Clear
                 </button>
 
@@ -503,3 +643,267 @@ export default function TopSearchPanel({
     </>
   );
 }
+
+const css = `
+.panel-wrap{
+  width:100%;
+  display:flex;
+  justify-content:center;
+}
+.sf-card{
+  width:100%;
+  background:#fff;
+  border:1px solid #e6e9f2;
+  border-radius:26px;
+  overflow:visible;
+  box-shadow: 0 10px 26px rgba(10,42,107,.10);
+}
+.sf-topbar{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  padding:18px 22px;
+  background: linear-gradient(135deg, #0A2A6B 0%, #1e3a8a 55%, #2d4fbf 100%);
+  color:#fff;
+  border-radius:26px 26px 0 0;
+}
+.sf-title{
+  font-weight:900;
+  letter-spacing:.3px;
+  font-size:18px;
+  line-height:1.15;
+  text-transform:uppercase;
+}
+.sf-sub{
+  margin-top:4px;
+  color:rgba(255,255,255,.88);
+  font-size:13px;
+}
+.sf-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  border-radius:999px;
+  font-weight:800;
+  font-size:13px;
+  white-space:nowrap;
+  background: rgba(255,255,255,.18);
+  border:1px solid rgba(255,255,255,.25);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.05);
+}
+.sf-badge .check{
+  width:18px;
+  height:18px;
+  display:inline-grid;
+  place-items:center;
+  border-radius:6px;
+  background: rgba(255,255,255,.18);
+  border:1px solid rgba(255,255,255,.25);
+  font-size:12px;
+}
+.sf-badge.on{
+  background: rgba(34,197,94,.18);
+  border-color: rgba(34,197,94,.28);
+}
+.sf-badge.off{
+  background: rgba(255,255,255,.18);
+}
+.sf-body{
+  padding:18px 22px 16px;
+  overflow:visible;
+}
+.sf-grid{
+  display:grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap:18px;
+  align-items:end;
+  overflow:visible;
+}
+.sf-label{
+  display:block;
+  font-size:13px;
+  color:#6b7280;
+  margin:0 0 6px 14px;
+}
+.sf-field{
+  position:relative;
+  width:100%;
+  overflow:visible;
+}
+.sf-select-wrap{
+  z-index:5;
+}
+.sf-icon{
+  position:absolute;
+  left:16px;
+  top:50%;
+  transform:translateY(-50%);
+  width:18px;
+  height:18px;
+  opacity:.70;
+  z-index:3;
+  pointer-events:none;
+}
+.sf-input{
+  width:100%;
+  height:50px;
+  border-radius:999px;
+  border:1px solid #e5e7eb;
+  background:#fff;
+  padding:0 44px 0 46px;
+  font-size:15px;
+  outline:none;
+  box-shadow: 0 2px 10px rgba(15,23,42,.04);
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+.sf-input::placeholder{
+  color:#9ca3af;
+}
+.sf-input:focus{
+  border-color:#9db7ff;
+  box-shadow: 0 0 0 4px rgba(59,130,246,.14);
+}
+.sf-error-text{
+  margin:6px 0 0 14px;
+  color:#dc2626;
+  font-size:12px;
+  font-weight:700;
+}
+.sf-verify{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding-bottom:8px;
+  justify-content:flex-start;
+}
+.sf-verify .txt{
+  font-weight:800;
+  color:#0f172a;
+  white-space:nowrap;
+}
+.sf-switch{
+  position:relative;
+  width:52px;
+  height:28px;
+  display:inline-block;
+}
+.sf-switch input{
+  display:none;
+}
+.sf-slider{
+  position:absolute;
+  inset:0;
+  background:#e5e7eb;
+  border-radius:999px;
+  transition:.18s ease;
+  border:1px solid #e5e7eb;
+}
+.sf-slider::after{
+  content:"";
+  position:absolute;
+  left:3px;
+  top:3px;
+  width:22px;
+  height:22px;
+  background:#fff;
+  border-radius:50%;
+  box-shadow: 0 6px 14px rgba(0,0,0,.15);
+  transition:.18s ease;
+}
+.sf-switch input:checked + .sf-slider{
+  background:#3b82f6;
+  border-color:#3b82f6;
+}
+.sf-switch input:checked + .sf-slider::after{
+  transform:translateX(24px);
+}
+.sf-divider{
+  height:1px;
+  background:#eef2f7;
+  margin:16px 0 14px;
+}
+.sf-actions{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+}
+.sf-left-actions{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.sf-btn{
+  height:46px;
+  border-radius:999px;
+  padding:0 18px;
+  font-weight:900;
+  cursor:pointer;
+  border:1px solid transparent;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  text-decoration:none;
+  user-select:none;
+  -webkit-tap-highlight-color: transparent;
+}
+.sf-btn.ghost{
+  background:#fff;
+  border-color:#d7e2f5;
+  color:#2d4fbf;
+}
+.sf-btn.outline{
+  background:#fff;
+  border-color:#d7e2f5;
+  color:#2d4fbf;
+}
+.sf-btn.primary{
+  min-width:170px;
+  background: linear-gradient(135deg,#3b82f6,#2d4fbf);
+  border-color: transparent;
+  color:#fff;
+  box-shadow: 0 10px 18px rgba(59,130,246,.25);
+}
+.sf-btn.primary:active{
+  transform:translateY(1px);
+}
+.sf-btn:hover{
+  filter:brightness(.98);
+}
+
+@media (max-width: 1200px){
+  .sf-grid{
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 900px){
+  .sf-grid{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sf-actions{
+    flex-direction:column;
+    align-items:stretch;
+  }
+  .sf-btn.primary{
+    width:100%;
+  }
+}
+@media (max-width: 560px){
+  .sf-grid{
+    grid-template-columns: 1fr;
+  }
+  .sf-label{
+    margin-left:8px;
+  }
+  .sf-body{
+    padding:16px 14px 14px;
+  }
+  .sf-topbar{
+    padding:16px 14px;
+  }
+}
+`;
