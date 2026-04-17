@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Select, { components } from "react-select";
 import { toast } from "sonner";
+import { AnimatePresence, motion } from "framer-motion";
 
 function IconSearch(props) {
   return (
@@ -62,6 +63,27 @@ function IconBriefcase(props) {
         d="M4 12h16"
         stroke="currentColor"
         strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function SpinnerIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" {...props}>
+      <circle
+        cx="12"
+        cy="12"
+        r="9"
+        stroke="currentColor"
+        strokeOpacity="0.28"
+        strokeWidth="3"
+      />
+      <path
+        d="M21 12a9 9 0 0 0-9-9"
+        stroke="currentColor"
+        strokeWidth="3"
         strokeLinecap="round"
       />
     </svg>
@@ -210,6 +232,55 @@ const selectSharedProps = {
   },
 };
 
+function SearchAnimatedModal({ open, onClose }) {
+  return (
+    <AnimatePresence>
+      {open ? (
+        <motion.div
+          className="sf-modal-overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+        >
+          <motion.div
+            className="sf-modal-card"
+            initial={{ opacity: 0, y: 28, scale: 0.94 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 18, scale: 0.96 }}
+            transition={{ duration: 3.28, ease: [0.22, 1, 0.36, 1] }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sf-modal-badge">
+              <SpinnerIcon className="sf-modal-spinner" />
+              Search in progress
+            </div>
+
+            <div className="sf-modal-title">Preparing your search</div>
+            <div className="sf-modal-subtitle">
+              We are opening the animated search experience now.
+            </div>
+
+            <div className="sf-modal-bar">
+              <motion.div
+                className="sf-modal-bar-fill"
+                initial={{ width: "0%" }}
+                animate={{ width: ["15%", "45%", "78%", "100%"] }}
+                transition={{
+                  duration: 10.2,
+                  times: [0, 0.35, 0.72, 1],
+                  ease: [0.22, 1, 0.36, 1],
+                  repeat: Infinity,
+                }}
+              />
+            </div>
+          </motion.div>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
+  );
+}
+
 export default function TopSearchPanel({
   q,
   setQ,
@@ -240,6 +311,17 @@ export default function TopSearchPanel({
     country: false,
     sector: false,
   });
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const searchTimerRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (searchTimerRef.current) {
+        clearTimeout(searchTimerRef.current);
+      }
+    };
+  }, []);
 
   const clearValidation = () => {
     setFieldErrors({
@@ -347,6 +429,8 @@ export default function TopSearchPanel({
   );
 
   const clearAll = () => {
+    if (isSearching) return;
+
     setQ("");
     setRegion("all");
     setCountry("all");
@@ -359,6 +443,8 @@ export default function TopSearchPanel({
   };
 
   const handleRegionChange = (option) => {
+    if (isSearching) return;
+
     const value = option?.value ?? "all";
 
     clearValidation();
@@ -372,6 +458,8 @@ export default function TopSearchPanel({
   };
 
   const handleCountryChange = async (option) => {
+    if (isSearching) return;
+
     const value = option?.value ?? "all";
 
     clearValidation();
@@ -392,6 +480,8 @@ export default function TopSearchPanel({
   };
 
   const handleStateChange = (option) => {
+    if (isSearching) return;
+
     const value = option?.value ?? "";
 
     setStateItem(value);
@@ -405,10 +495,13 @@ export default function TopSearchPanel({
   };
 
   const handleCityChange = (option) => {
+    if (isSearching) return;
     setCity(option?.value ?? "");
   };
 
   const handleSectorChange = (option) => {
+    if (isSearching) return;
+
     clearValidation();
     setSector(option?.value ?? "");
     setIndustry("");
@@ -439,9 +532,10 @@ export default function TopSearchPanel({
   const submitSearch = (e) => {
     e.preventDefault();
 
+    if (isSearching) return;
     if (!validateBeforeSearch()) return;
 
-    onSearch({
+    const payload = {
       q,
       region,
       country,
@@ -450,17 +544,31 @@ export default function TopSearchPanel({
       sector,
       industry,
       verified,
-    });
+    };
+
+    setIsSearching(true);
+    setShowSearchModal(true);
+
+    searchTimerRef.current = setTimeout(() => {
+      onSearch(payload);
+    }, 450);
+  };
+
+  const closeModal = () => {
+    if (isSearching) return;
+    setShowSearchModal(false);
   };
 
   const countryDisabled = false;
-  const stateDisabled = !country || country === "all";
-  const cityDisabled = !stateItem || stateItem === "all";
-  const industryDisabled = !sector || String(sector).trim() === "";
+  const stateDisabled = !country || country === "all" || isSearching;
+  const cityDisabled = !stateItem || stateItem === "all" || isSearching;
+  const industryDisabled = !sector || String(sector).trim() === "" || isSearching;
 
   return (
     <>
       <style>{css}</style>
+
+      <SearchAnimatedModal open={showSearchModal} onClose={closeModal} />
 
       <div className="panel-wrap">
         <form className="sf-card" onSubmit={submitSearch}>
@@ -490,6 +598,7 @@ export default function TopSearchPanel({
                     placeholder="Search company name, keyword, city, industry..."
                     value={q}
                     onChange={(e) => setQ(e.target.value)}
+                    disabled={isSearching}
                   />
                 </div>
               </div>
@@ -505,6 +614,7 @@ export default function TopSearchPanel({
                     options={regionOptions}
                     placeholder="Select region"
                     styles={buildSelectStyles(false)}
+                    isDisabled={isSearching}
                   />
                 </div>
               </div>
@@ -518,7 +628,7 @@ export default function TopSearchPanel({
                     value={selectedCountry}
                     onChange={handleCountryChange}
                     options={countryOptions}
-                    isDisabled={countryDisabled}
+                    isDisabled={countryDisabled || isSearching}
                     placeholder="Select country"
                     styles={buildSelectStyles(false)}
                   />
@@ -575,6 +685,7 @@ export default function TopSearchPanel({
                     isClearable
                     placeholder="Select sector"
                     styles={buildSelectStyles(fieldErrors.sector)}
+                    isDisabled={isSearching}
                   />
                 </div>
                 {fieldErrors.sector && (
@@ -609,6 +720,7 @@ export default function TopSearchPanel({
                     type="checkbox"
                     checked={verified}
                     onChange={(e) => setVerified(e.target.checked)}
+                    disabled={isSearching}
                   />
                   <span className="sf-slider" />
                 </label>
@@ -624,17 +736,35 @@ export default function TopSearchPanel({
                   type="button"
                   className="sf-btn ghost"
                   onClick={clearAll}
+                  disabled={isSearching}
                 >
                   Clear
                 </button>
 
-                <a className="sf-btn outline" href="/companies">
+                <a
+                  className={`sf-btn outline ${isSearching ? "is-disabled-link" : ""}`}
+                  href={isSearching ? undefined : "/companies"}
+                  onClick={(e) => {
+                    if (isSearching) e.preventDefault();
+                  }}
+                >
                   All Companies <span aria-hidden="true">↗</span>
                 </a>
               </div>
 
-              <button type="submit" className="sf-btn primary">
-                Search
+              <button
+                type="submit"
+                className={`sf-btn primary ${isSearching ? "is-loading" : ""}`}
+                disabled={isSearching}
+              >
+                {isSearching ? (
+                  <>
+                    <SpinnerIcon className="sf-btn-spinner" />
+                    Searching...
+                  </>
+                ) : (
+                  "Search"
+                )}
               </button>
             </div>
           </div>
@@ -756,7 +886,7 @@ const css = `
   font-size:15px;
   outline:none;
   box-shadow: 0 2px 10px rgba(15,23,42,.04);
-  transition: border-color .18s ease, box-shadow .18s ease;
+  transition: border-color .18s ease, box-shadow .18s ease, opacity .18s ease;
 }
 .sf-input::placeholder{
   color:#9ca3af;
@@ -764,6 +894,11 @@ const css = `
 .sf-input:focus{
   border-color:#9db7ff;
   box-shadow: 0 0 0 4px rgba(59,130,246,.14);
+}
+.sf-input:disabled{
+  opacity:.75;
+  cursor:not-allowed;
+  background:#f8fafc;
 }
 .sf-error-text{
   margin:6px 0 0 14px;
@@ -850,6 +985,7 @@ const css = `
   text-decoration:none;
   user-select:none;
   -webkit-tap-highlight-color: transparent;
+  transition: opacity .18s ease, transform .18s ease, filter .18s ease;
 }
 .sf-btn.ghost{
   background:#fff;
@@ -873,6 +1009,94 @@ const css = `
 }
 .sf-btn:hover{
   filter:brightness(.98);
+}
+.sf-btn:disabled{
+  cursor:not-allowed;
+  opacity:.88;
+}
+.sf-btn.is-loading{
+  pointer-events:none;
+}
+.sf-btn-spinner{
+  width:18px;
+  height:18px;
+  animation: sf-spin .8s linear infinite;
+}
+.is-disabled-link{
+  pointer-events:none;
+  opacity:.65;
+}
+
+.sf-modal-overlay{
+  position:fixed;
+  inset:0;
+  z-index:100000;
+  background:rgba(15,23,42,.55);
+  backdrop-filter:blur(7px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+.sf-modal-card{
+  width:min(520px, 100%);
+  border-radius:28px;
+  background:linear-gradient(180deg,#ffffff 0%,#f7fbff 100%);
+  border:1px solid rgba(191,219,254,.95);
+  box-shadow:0 24px 70px rgba(15,23,42,.22);
+  padding:28px 24px 24px;
+  text-align:center;
+}
+.sf-modal-badge{
+  width:max-content;
+  margin:0 auto 16px;
+  padding:8px 14px;
+  border-radius:999px;
+  background:#eff6ff;
+  border:1px solid #bfdbfe;
+  color:#1d4ed8;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:12px;
+  font-weight:800;
+}
+.sf-modal-spinner{
+  width:16px;
+  height:16px;
+  animation:sf-spin .8s linear infinite;
+}
+.sf-modal-title{
+  font-size:28px;
+  line-height:1.1;
+  font-weight:900;
+  color:#0f172a;
+}
+.sf-modal-subtitle{
+  margin-top:8px;
+  color:#64748b;
+  font-size:14px;
+}
+.sf-modal-bar{
+  margin-top:22px;
+  width:100%;
+  height:12px;
+  background:#dbeafe;
+  border-radius:999px;
+  overflow:hidden;
+  position:relative;
+}
+.sf-modal-bar-fill{
+  height:100%;
+  border-radius:999px;
+  background:linear-gradient(90deg,#38bdf8 0%, #2563eb 50%, #1d4ed8 100%);
+  box-shadow:0 0 18px rgba(37,99,235,.35);
+}
+
+@keyframes sf-spin{
+  to{
+    transform:rotate(360deg);
+  }
 }
 
 @media (max-width: 1200px){
@@ -904,6 +1128,13 @@ const css = `
   }
   .sf-topbar{
     padding:16px 14px;
+  }
+  .sf-modal-card{
+    padding:22px 16px 18px;
+    border-radius:22px;
+  }
+  .sf-modal-title{
+    font-size:22px;
   }
 }
 `;
