@@ -3,10 +3,10 @@
   <component name="PHPUnit">
     <option name="directories">
       <list>
-        <option value="$PROJECT_DIR$/raymoch-app/tests/Unit" />
-        <option value="$PROJECT_DIR$/raymoch-app/tests/Feature" />
         <option value="$PROJECT_DIR$/Raymoch/tests/Unit" />
         <option value="$PROJECT_DIR$/Raymoch/tests/Feature" />
+        <option value="$PROJECT_DIR$/raymoch-app/tests/Unit" />
+        <option value="$PROJECT_DIR$/raymoch-app/tests/Feature" />
       </list>
     </option>
   </component>

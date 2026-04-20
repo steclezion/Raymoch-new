@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useMemo, useState } from "react";
 import Select, { components } from "react-select";
 import { toast } from "sonner";
-import { AnimatePresence, motion } from "framer-motion";
+import SearchAnimatedModal from "./SearchAnimatedModal";
 
 function IconSearch(props) {
   return (
@@ -232,52 +232,9 @@ const selectSharedProps = {
   },
 };
 
-function SearchAnimatedModal({ open, onClose }) {
+function getCsrfToken() {
   return (
-    <AnimatePresence>
-      {open ? (
-        <motion.div
-          className="sf-modal-overlay"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-        >
-          <motion.div
-            className="sf-modal-card"
-            initial={{ opacity: 0, y: 28, scale: 0.94 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 18, scale: 0.96 }}
-            transition={{ duration: 3.28, ease: [0.22, 1, 0.36, 1] }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="sf-modal-badge">
-              <SpinnerIcon className="sf-modal-spinner" />
-              Search in progress
-            </div>
-
-            <div className="sf-modal-title">Preparing your search</div>
-            <div className="sf-modal-subtitle">
-              We are opening the animated search experience now.
-            </div>
-
-            <div className="sf-modal-bar">
-              <motion.div
-                className="sf-modal-bar-fill"
-                initial={{ width: "0%" }}
-                animate={{ width: ["15%", "45%", "78%", "100%"] }}
-                transition={{
-                  duration: 10.2,
-                  times: [0, 0.35, 0.72, 1],
-                  ease: [0.22, 1, 0.36, 1],
-                  repeat: Infinity,
-                }}
-              />
-            </div>
-          </motion.div>
-        </motion.div>
-      ) : null}
-    </AnimatePresence>
+    document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || ""
   );
 }
 
@@ -304,28 +261,18 @@ export default function TopSearchPanel({
   cities,
   sectors,
   industries,
-  onSearch,
   onCountryFirstSelection,
 }) {
   const [fieldErrors, setFieldErrors] = useState({
-    country: false,
     sector: false,
   });
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
-  const searchTimerRef = useRef(null);
-
-  useEffect(() => {
-    return () => {
-      if (searchTimerRef.current) {
-        clearTimeout(searchTimerRef.current);
-      }
-    };
-  }, []);
+  const [searchToken, setSearchToken] = useState("");
+  const [searchPayload, setSearchPayload] = useState(null);
 
   const clearValidation = () => {
     setFieldErrors({
-      country: false,
       sector: false,
     });
   };
@@ -351,9 +298,7 @@ export default function TopSearchPanel({
   }, [countries]);
 
   const stateOptions = useMemo(() => {
-    if (!country || country === "all") {
-      return [];
-    }
+    if (!country || country === "all") return [];
 
     return [
       { value: "all", label: "All" },
@@ -365,9 +310,7 @@ export default function TopSearchPanel({
   }, [states, country]);
 
   const cityOptions = useMemo(() => {
-    if (!stateItem || stateItem === "all") {
-      return [];
-    }
+    if (!stateItem || stateItem === "all") return [];
 
     return [
       { value: "all", label: "All" },
@@ -416,17 +359,18 @@ export default function TopSearchPanel({
     return cityOptions.find((opt) => opt.value === String(city)) || null;
   }, [cityOptions, city]);
 
-  const selectedSector = useMemo(
-    () =>
-      sectorOptions.find((opt) => opt.value === String(sector ?? "")) || null,
-    [sectorOptions, sector]
-  );
+  const selectedSector = useMemo(() => {
+    return sectorOptions.find((opt) => opt.value === String(sector ?? "")) || null;
+  }, [sectorOptions, sector]);
 
-  const selectedIndustry = useMemo(
-    () =>
-      industryOptions.find((opt) => opt.value === String(industry ?? "")) || null,
-    [industryOptions, industry]
-  );
+  const selectedIndustry = useMemo(() => {
+    return industryOptions.find((opt) => opt.value === String(industry ?? "")) || null;
+  }, [industryOptions, industry]);
+
+  const countryDisabled = false;
+  const stateDisabled = !country || country === "all" || isSearching;
+  const cityDisabled = !stateItem || stateItem === "all" || isSearching;
+  const industryDisabled = !sector || String(sector).trim() === "" || isSearching;
 
   const clearAll = () => {
     if (isSearching) return;
@@ -439,6 +383,8 @@ export default function TopSearchPanel({
     setSector("");
     setIndustry("");
     setVerified(false);
+    setSearchPayload(null);
+    setSearchToken("");
     clearValidation();
   };
 
@@ -446,7 +392,6 @@ export default function TopSearchPanel({
     if (isSearching) return;
 
     const value = option?.value ?? "all";
-
     clearValidation();
     setRegion(value);
 
@@ -461,7 +406,6 @@ export default function TopSearchPanel({
     if (isSearching) return;
 
     const value = option?.value ?? "all";
-
     clearValidation();
     setCountry(value);
 
@@ -483,7 +427,6 @@ export default function TopSearchPanel({
     if (isSearching) return;
 
     const value = option?.value ?? "";
-
     setStateItem(value);
 
     if (!value || value === "all") {
@@ -512,63 +455,96 @@ export default function TopSearchPanel({
       sector && String(sector).trim() !== "" ? String(sector).trim() : "";
 
     if (!normalizedSector) {
-      setFieldErrors({
-        country: false,
-        sector: true,
-      });
-
+      setFieldErrors({ sector: true });
       toast.error("Sector should be selected.");
       return false;
     }
 
-    setFieldErrors({
-      country: false,
-      sector: false,
-    });
-
+    setFieldErrors({ sector: false });
     return true;
   };
 
-  const submitSearch = (e) => {
+  const buildPayload = () => {
+    return {
+      keyword: String(q ?? "").trim(),
+      region: region ?? "all",
+      country: country ?? "all",
+      state: stateItem ?? "all",
+      city: city ?? "all",
+      sector: sector ?? "",
+      industry: industry ?? "",
+      verification: Boolean(verified),
+    };
+  };
+
+  const submitSearch = async (e) => {
     e.preventDefault();
 
     if (isSearching) return;
     if (!validateBeforeSearch()) return;
 
-    const payload = {
-      q,
-      region,
-      country,
-      stateItem,
-      city,
-      sector,
-      industry,
-      verified,
-    };
+    const payload = buildPayload();
 
-    setIsSearching(true);
-    setShowSearchModal(true);
+    try {
+      setIsSearching(true);
+      setSearchPayload(payload);
 
-    searchTimerRef.current = setTimeout(() => {
-      onSearch(payload);
-    }, 450);
+      const startRes = await fetch("/api/main-search-engine/start", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "X-CSRF-TOKEN": getCsrfToken(),
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const startData = await startRes.json();
+
+      if (!startRes.ok || !startData?.ok || !startData?.token) {
+        throw new Error(startData?.message || "Unable to start search.");
+      }
+
+      const token = startData.token;
+
+      setSearchToken(token);
+      setShowSearchModal(true);
+
+      fetch(`/api/main-search-engine/run/${token}`, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "X-CSRF-TOKEN": getCsrfToken(),
+        },
+      }).catch((err) => {
+        console.error("Search execution failed:", err);
+      });
+    } catch (error) {
+      console.error(error);
+      toast.error(error.message || "Search could not be started.");
+      setIsSearching(false);
+      setShowSearchModal(false);
+      setSearchToken("");
+    }
   };
-
-  const closeModal = () => {
-    if (isSearching) return;
-    setShowSearchModal(false);
-  };
-
-  const countryDisabled = false;
-  const stateDisabled = !country || country === "all" || isSearching;
-  const cityDisabled = !stateItem || stateItem === "all" || isSearching;
-  const industryDisabled = !sector || String(sector).trim() === "" || isSearching;
 
   return (
     <>
       <style>{css}</style>
 
-      <SearchAnimatedModal open={showSearchModal} onClose={closeModal} />
+      <SearchAnimatedModal
+        open={showSearchModal}
+        token={searchToken}
+        payload={searchPayload}
+        onClose={() => {
+          setShowSearchModal(false);
+          setIsSearching(false);
+          setSearchToken("");
+        }}
+        onComplete={() => {
+          setIsSearching(false);
+        }}
+      />
 
       <div className="panel-wrap">
         <form className="sf-card" onSubmit={submitSearch}>
@@ -589,7 +565,15 @@ export default function TopSearchPanel({
           <div className="sf-body">
             <div className="sf-grid">
               <div>
-                <label className="sf-label">Keyword</label>
+                <label className="sf-label">
+  Keyword
+  <span
+    className="sf-tooltip"
+    title="You can leave Empty if you do not know the name of the company"
+  >
+    ⓘ
+  </span>
+</label>
                 <div className="sf-field">
                   <IconSearch className="sf-icon" style={{ color: "#111827" }} />
                   <input
@@ -665,9 +649,7 @@ export default function TopSearchPanel({
                     options={cityOptions}
                     isClearable
                     isDisabled={cityDisabled}
-                    placeholder={
-                      cityDisabled ? "Select state first" : "Select city"
-                    }
+                    placeholder={cityDisabled ? "Select state first" : "Select city"}
                     styles={buildSelectStyles(false)}
                   />
                 </div>
@@ -689,9 +671,7 @@ export default function TopSearchPanel({
                   />
                 </div>
                 {fieldErrors.sector && (
-                  <div className="sf-error-text">
-                    Sector should be selected.
-                  </div>
+                  <div className="sf-error-text">Sector should be selected.</div>
                 )}
               </div>
 
@@ -786,7 +766,7 @@ const css = `
   border:1px solid #e6e9f2;
   border-radius:26px;
   overflow:visible;
-  box-shadow: 0 10px 26px rgba(10,42,107,.10);
+  box-shadow:0 10px 26px rgba(10,42,107,.10);
 }
 .sf-topbar{
   display:flex;
@@ -794,7 +774,7 @@ const css = `
   justify-content:space-between;
   gap:14px;
   padding:18px 22px;
-  background: linear-gradient(135deg, #0A2A6B 0%, #1e3a8a 55%, #2d4fbf 100%);
+  background:linear-gradient(135deg,#0A2A6B 0%,#1e3a8a 55%,#2d4fbf 100%);
   color:#fff;
   border-radius:26px 26px 0 0;
 }
@@ -819,9 +799,9 @@ const css = `
   font-weight:800;
   font-size:13px;
   white-space:nowrap;
-  background: rgba(255,255,255,.18);
+  background:rgba(255,255,255,.18);
   border:1px solid rgba(255,255,255,.25);
-  box-shadow: inset 0 0 0 1px rgba(0,0,0,.05);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.05);
 }
 .sf-badge .check{
   width:18px;
@@ -829,16 +809,16 @@ const css = `
   display:inline-grid;
   place-items:center;
   border-radius:6px;
-  background: rgba(255,255,255,.18);
+  background:rgba(255,255,255,.18);
   border:1px solid rgba(255,255,255,.25);
   font-size:12px;
 }
 .sf-badge.on{
-  background: rgba(34,197,94,.18);
-  border-color: rgba(34,197,94,.28);
+  background:rgba(34,197,94,.18);
+  border-color:rgba(34,197,94,.28);
 }
 .sf-badge.off{
-  background: rgba(255,255,255,.18);
+  background:rgba(255,255,255,.18);
 }
 .sf-body{
   padding:18px 22px 16px;
@@ -846,7 +826,7 @@ const css = `
 }
 .sf-grid{
   display:grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns:repeat(4,minmax(0,1fr));
   gap:18px;
   align-items:end;
   overflow:visible;
@@ -885,15 +865,15 @@ const css = `
   padding:0 44px 0 46px;
   font-size:15px;
   outline:none;
-  box-shadow: 0 2px 10px rgba(15,23,42,.04);
-  transition: border-color .18s ease, box-shadow .18s ease, opacity .18s ease;
+  box-shadow:0 2px 10px rgba(15,23,42,.04);
+  transition:border-color .18s ease, box-shadow .18s ease, opacity .18s ease;
 }
 .sf-input::placeholder{
   color:#9ca3af;
 }
 .sf-input:focus{
   border-color:#9db7ff;
-  box-shadow: 0 0 0 4px rgba(59,130,246,.14);
+  box-shadow:0 0 0 4px rgba(59,130,246,.14);
 }
 .sf-input:disabled{
   opacity:.75;
@@ -944,7 +924,7 @@ const css = `
   height:22px;
   background:#fff;
   border-radius:50%;
-  box-shadow: 0 6px 14px rgba(0,0,0,.15);
+  box-shadow:0 6px 14px rgba(0,0,0,.15);
   transition:.18s ease;
 }
 .sf-switch input:checked + .sf-slider{
@@ -984,8 +964,8 @@ const css = `
   gap:10px;
   text-decoration:none;
   user-select:none;
-  -webkit-tap-highlight-color: transparent;
-  transition: opacity .18s ease, transform .18s ease, filter .18s ease;
+  -webkit-tap-highlight-color:transparent;
+  transition:opacity .18s ease, transform .18s ease, filter .18s ease;
 }
 .sf-btn.ghost{
   background:#fff;
@@ -999,10 +979,10 @@ const css = `
 }
 .sf-btn.primary{
   min-width:170px;
-  background: linear-gradient(135deg,#3b82f6,#2d4fbf);
-  border-color: transparent;
+  background:linear-gradient(135deg,#3b82f6,#2d4fbf);
+  border-color:transparent;
   color:#fff;
-  box-shadow: 0 10px 18px rgba(59,130,246,.25);
+  box-shadow:0 10px 18px rgba(59,130,246,.25);
 }
 .sf-btn.primary:active{
   transform:translateY(1px);
@@ -1010,9 +990,15 @@ const css = `
 .sf-btn:hover{
   filter:brightness(.98);
 }
+  .sf-tooltip {
+  margin-left: 6px;
+  font-size: 12px;
+  cursor: help;
+  color: #94a3b8;
+}
 .sf-btn:disabled{
   cursor:not-allowed;
-  opacity:.88;
+  opacity:.9;
 }
 .sf-btn.is-loading{
   pointer-events:none;
@@ -1020,77 +1006,11 @@ const css = `
 .sf-btn-spinner{
   width:18px;
   height:18px;
-  animation: sf-spin .8s linear infinite;
+  animation:sf-spin .8s linear infinite;
 }
 .is-disabled-link{
   pointer-events:none;
   opacity:.65;
-}
-
-.sf-modal-overlay{
-  position:fixed;
-  inset:0;
-  z-index:100000;
-  background:rgba(15,23,42,.55);
-  backdrop-filter:blur(7px);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:20px;
-}
-.sf-modal-card{
-  width:min(520px, 100%);
-  border-radius:28px;
-  background:linear-gradient(180deg,#ffffff 0%,#f7fbff 100%);
-  border:1px solid rgba(191,219,254,.95);
-  box-shadow:0 24px 70px rgba(15,23,42,.22);
-  padding:28px 24px 24px;
-  text-align:center;
-}
-.sf-modal-badge{
-  width:max-content;
-  margin:0 auto 16px;
-  padding:8px 14px;
-  border-radius:999px;
-  background:#eff6ff;
-  border:1px solid #bfdbfe;
-  color:#1d4ed8;
-  display:flex;
-  align-items:center;
-  gap:8px;
-  font-size:12px;
-  font-weight:800;
-}
-.sf-modal-spinner{
-  width:16px;
-  height:16px;
-  animation:sf-spin .8s linear infinite;
-}
-.sf-modal-title{
-  font-size:28px;
-  line-height:1.1;
-  font-weight:900;
-  color:#0f172a;
-}
-.sf-modal-subtitle{
-  margin-top:8px;
-  color:#64748b;
-  font-size:14px;
-}
-.sf-modal-bar{
-  margin-top:22px;
-  width:100%;
-  height:12px;
-  background:#dbeafe;
-  border-radius:999px;
-  overflow:hidden;
-  position:relative;
-}
-.sf-modal-bar-fill{
-  height:100%;
-  border-radius:999px;
-  background:linear-gradient(90deg,#38bdf8 0%, #2563eb 50%, #1d4ed8 100%);
-  box-shadow:0 0 18px rgba(37,99,235,.35);
 }
 
 @keyframes sf-spin{
@@ -1099,14 +1019,14 @@ const css = `
   }
 }
 
-@media (max-width: 1200px){
+@media (max-width:1200px){
   .sf-grid{
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns:repeat(3,minmax(0,1fr));
   }
 }
-@media (max-width: 900px){
+@media (max-width:900px){
   .sf-grid{
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns:repeat(2,minmax(0,1fr));
   }
   .sf-actions{
     flex-direction:column;
@@ -1116,9 +1036,9 @@ const css = `
     width:100%;
   }
 }
-@media (max-width: 560px){
+@media (max-width:560px){
   .sf-grid{
-    grid-template-columns: 1fr;
+    grid-template-columns:1fr;
   }
   .sf-label{
     margin-left:8px;
@@ -1128,13 +1048,6 @@ const css = `
   }
   .sf-topbar{
     padding:16px 14px;
-  }
-  .sf-modal-card{
-    padding:22px 16px 18px;
-    border-radius:22px;
-  }
-  .sf-modal-title{
-    font-size:22px;
   }
 }
 `;

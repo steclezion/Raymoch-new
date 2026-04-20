@@ -7,948 +7,1159 @@ import {
   MapPin,
   Briefcase,
   Layers3,
-  ShieldCheck,
+  BadgeCheck,
+  Loader2,
   CheckCircle2,
 } from "lucide-react";
-import { motion, animate, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
-const INTRO_DURATION = 2600;
-const STEP_DURATION = 3.25;
-const TOP_LEAD_DELAY = 0;
-const SNAKE_FOLLOW_DELAY = 320;
-const STEP_PAUSE = 2000;
-const RESULT_DELAY = 1000;
-
-const STEPS = [
-  {
-    id: "regions",
-    title: "Checking Regions",
-    description:
-      "We are scanning all matching regional records connected to this case.",
-    badge: "Regions checked",
+const STEP_META = {
+  keyword: {
+    title: "Keyword",
+    icon: Search,
+    image:
+      "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1400&q=80",
+  },
+  region: {
+    title: "Region",
     icon: Globe2,
+    image:
+      "https://images.unsplash.com/photo-1521295121783-8a321d551ad2?auto=format&fit=crop&w=1400&q=80",
   },
-  {
-    id: "country",
-    title: "Checking Country",
-    description:
-      "We are checking whether this case matches a country-level result.",
-    badge: "Country checked",
+  country: {
+    title: "Country",
     icon: Flag,
+    image:
+      "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&w=1400&q=80",
   },
-  {
-    id: "state",
-    title: "Checking State",
-    description:
-      "We are validating the state or province related to this case.",
-    badge: "State checked",
+  state: {
+    title: "State",
     icon: Map,
+    image:
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=80",
   },
-  {
-    id: "city",
-    title: "Checking City",
-    description:
-      "We are narrowing this case to the city-level location.",
-    badge: "City checked",
+  city: {
+    title: "City",
     icon: MapPin,
+    image:
+      "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=1400&q=80",
   },
-  {
-    id: "sector",
-    title: "Checking Sector",
-    description:
-      "We are checking the business sector attached to this case.",
-    badge: "Sector checked",
+  sector: {
+    title: "Sector",
     icon: Briefcase,
+    image:
+      "https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=1400&q=80",
   },
-  {
-    id: "industries",
-    title: "Checking Industries",
-    description:
-      "We are matching this case against industry classifications.",
-    badge: "Industries checked",
+  industry: {
+    title: "Industry",
     icon: Layers3,
+    image:
+      "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1400&q=80",
   },
-  {
-    id: "verification",
-    title: "Checking Verification",
-    description:
-      "We are confirming the verification status for this case.",
-    badge: "Verification checked",
-    icon: ShieldCheck,
+  verification: {
+    title: "Verification",
+    icon: BadgeCheck,
+    image:
+      "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1400&q=80",
   },
+};
+
+const ORDER = [
+  "keyword",
+  "region",
+  "country",
+  "state",
+  "city",
+  "sector",
+  "industry",
+  "verification",
 ];
 
-const companyName = "Raymoch Most Trust CTI Engine";
+const EMPTY_STEP = (key) => ({
+  key,
+  label: key === "keyword" ? "(empty)" : "all",
+  status: "idle",
+  elapsed_ms: 0,
+  found_count: 0,
+  found_ids: [],
+  started_at: null,
+  finished_at: null,
+});
 
-const NODE_ROTATIONS = [
-  {
-    label: "Keyword...",
-    bg: "linear-gradient(135deg, rgba(37,99,235,0.30), rgba(59,130,246,0.10))",
-    image:
-      "url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=900&q=80')",
-  },
-  {
-    label: "Regions...",
-    bg: "linear-gradient(135deg, rgba(14,165,233,0.30), rgba(59,130,246,0.10))",
-    image:
-      "url('https://images.unsplash.com/photo-1526778548025-fa2f459cd5ce?auto=format&fit=crop&w=900&q=80')",
-  },
-  {
-    label: "Location...",
-    bg: "linear-gradient(135deg, rgba(16,185,129,0.30), rgba(59,130,246,0.10))",
-    image:
-      "url('https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&w=900&q=80')",
-  },
-  {
-    label: "Country...",
-    bg: "linear-gradient(135deg, rgba(249,115,22,0.30), rgba(59,130,246,0.10))",
-    image:
-      "url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80')",
-  },
-  {
-    label: "State...",
-    bg: "linear-gradient(135deg, rgba(168,85,247,0.30), rgba(59,130,246,0.10))",
-    image:
-      "url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=900&q=80')",
-  },
-  {
-    label: "City...",
-    bg: "linear-gradient(135deg, rgba(236,72,153,0.30), rgba(59,130,246,0.10))",
-    image:
-      "url('https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=900&q=80')",
-  },
-  {
-    label: "Sector...",
-    bg: "linear-gradient(135deg, rgba(245,158,11,0.30), rgba(59,130,246,0.10))",
-    image:
-      "url('https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=900&q=80')",
-  },
-  {
-    label: "Industry...",
-    bg: "linear-gradient(135deg, rgba(34,197,94,0.30), rgba(59,130,246,0.10))",
-    image:
-      "url('https://images.unsplash.com/photo-1513828583688-c52646db42da?auto=format&fit=crop&w=900&q=80')",
-  },
-  {
-    label: "Verification Status...",
-    bg: "linear-gradient(135deg, rgba(99,102,241,0.30), rgba(59,130,246,0.10))",
-    image:
-      "url('https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=900&q=80')",
-  },
-];
-
-const CARD_POSITIONS = [
-  "left-[7%] top-[12%]",
-  "left-[26%] top-[8%]",
-  "left-[42%] top-[54%]",
-  "left-[57%] top-[54%]",
-  "left-[66%] top-[9%]",
-  "left-[79%] top-[9%]",
-  "left-[79%] top-[55%]",
-];
-
-const STEP_TOTAL_MS =
-  SNAKE_FOLLOW_DELAY + (STEP_DURATION + 0.2) * 1000 + STEP_PAUSE;
-
-const TOTAL_OPERATION_MS =
-  INTRO_DURATION + STEPS.length * STEP_TOTAL_MS + RESULT_DELAY;
-
-function clamp(n, min, max) {
-  return Math.min(max, Math.max(min, n));
-}
-
-function lerp(a, b, t) {
-  return a + (b - a) * t;
-}
-
-function cubicBezier(p0, p1, p2, p3, t) {
-  const mt = 1 - t;
-  return {
-    x:
-      mt * mt * mt * p0.x +
-      3 * mt * mt * t * p1.x +
-      3 * mt * t * t * p2.x +
-      t * t * t * p3.x,
-    y:
-      mt * mt * mt * p0.y +
-      3 * mt * mt * t * p1.y +
-      3 * mt * t * t * p2.y +
-      t * t * t * p3.y,
-  };
-}
-
-function buildSnakePath() {
-  return [
-    { type: "line", from: { x: 90, y: 450 }, to: { x: 220, y: 450 } },
-    {
-      type: "curve",
-      from: { x: 220, y: 450 },
-      cp1: { x: 300, y: 450 },
-      cp2: { x: 300, y: 285 },
-      to: { x: 420, y: 285 },
-    },
-    { type: "line", from: { x: 420, y: 285 }, to: { x: 610, y: 285 } },
-    {
-      type: "curve",
-      from: { x: 610, y: 285 },
-      cp1: { x: 720, y: 285 },
-      cp2: { x: 720, y: 455 },
-      to: { x: 860, y: 455 },
-    },
-    { type: "line", from: { x: 860, y: 455 }, to: { x: 1040, y: 455 } },
-    {
-      type: "curve",
-      from: { x: 1040, y: 455 },
-      cp1: { x: 1160, y: 455 },
-      cp2: { x: 1160, y: 270 },
-      to: { x: 1320, y: 270 },
-    },
-    { type: "line", from: { x: 1320, y: 270 }, to: { x: 1525, y: 270 } },
-  ];
-}
-
-function snakePathD(segments) {
-  return segments
-    .map((segment, index) => {
-      if (segment.type === "line") {
-        return `${
-          index === 0 ? `M ${segment.from.x} ${segment.from.y}` : ""
-        } L ${segment.to.x} ${segment.to.y}`;
-      }
-
-      return `${
-        index === 0 ? `M ${segment.from.x} ${segment.from.y}` : ""
-      } C ${segment.cp1.x} ${segment.cp1.y}, ${segment.cp2.x} ${segment.cp2.y}, ${segment.to.x} ${segment.to.y}`;
-    })
-    .join(" ");
-}
-
-function pointAtProgress(segments, progress) {
-  const p = clamp(progress, 0, 1);
-
-  const lengths = segments.map((segment) => {
-    if (segment.type === "line") {
-      return Math.hypot(
-        segment.to.x - segment.from.x,
-        segment.to.y - segment.from.y
-      );
-    }
-
-    let length = 0;
-    let prev = segment.from;
-
-    for (let i = 1; i <= 36; i += 1) {
-      const t = i / 36;
-      const next = cubicBezier(
-        segment.from,
-        segment.cp1,
-        segment.cp2,
-        segment.to,
-        t
-      );
-      length += Math.hypot(next.x - prev.x, next.y - prev.y);
-      prev = next;
-    }
-
-    return length;
-  });
-
-  const total = lengths.reduce((a, b) => a + b, 0);
-  let target = total * p;
-
-  for (let i = 0; i < segments.length; i += 1) {
-    const segment = segments[i];
-    const len = lengths[i];
-
-    if (target <= len || i === segments.length - 1) {
-      const t = len === 0 ? 0 : target / len;
-
-      if (segment.type === "line") {
-        return {
-          x: lerp(segment.from.x, segment.to.x, t),
-          y: lerp(segment.from.y, segment.to.y, t),
-        };
-      }
-
-      return cubicBezier(segment.from, segment.cp1, segment.cp2, segment.to, t);
-    }
-
-    target -= len;
+function normalizeStepLabel(stepKey, rawLabel) {
+  if (rawLabel === null || rawLabel === undefined || rawLabel === "") {
+    return stepKey === "keyword" ? "(empty)" : "all";
   }
 
-  return segments[segments.length - 1].to;
+  if (typeof rawLabel === "boolean") {
+    return rawLabel ? "ON" : "OFF";
+  }
+
+  const text = String(rawLabel).trim();
+
+  if (!text) {
+    return stepKey === "keyword" ? "(empty)" : "all";
+  }
+
+  return text;
 }
 
-function topBarProgress(activeStep, intra) {
-  return ((activeStep + intra) / STEPS.length) * 100;
+function formatStepTitle(step, meta) {
+  const label = normalizeStepLabel(step.key, step.label);
+
+  if (step.key === "keyword") {
+    return `Search in progress...(Exact or Similar): ${label}`;
+  }
+
+  return `${meta.title}: ${label}`;
 }
 
-function nodeProgress(index, activeStep, snakeIntra) {
-  if (index < activeStep) return 1;
-  if (index > activeStep) return 0;
-  return snakeIntra;
-}
-
-function StageArt({ stage }) {
-  const arts = {
-    regions: (
-      <svg viewBox="0 0 1600 620" className="h-full w-full">
-        <g fill="none" stroke="rgba(100,116,139,0.20)" strokeWidth="1.3">
-          <path d="M80 120 C 240 60, 320 70, 410 130 S 650 220, 840 160 S 1130 60, 1320 120 S 1460 210, 1540 170" />
-          <path d="M65 300 C 210 240, 350 245, 500 310 S 820 400, 1040 330 S 1320 250, 1540 310" />
-          <path d="M140 475 C 330 430, 560 430, 780 480 S 1180 530, 1510 470" />
-          <path d="M260 70 L 300 560" />
-          <path d="M570 55 L 620 560" />
-          <path d="M990 70 L 1020 560" />
-          <path d="M1310 85 L 1360 535" />
-        </g>
-        <g fill="rgba(59,130,246,0.10)">
-          <circle cx="420" cy="285" r="92" />
-          <circle cx="610" cy="285" r="66" />
-          <circle cx="860" cy="455" r="78" />
-          <circle cx="1040" cy="455" r="58" />
-        </g>
-      </svg>
-    ),
-    country: (
-      <svg viewBox="0 0 1600 620" className="h-full w-full">
-        <g fill="rgba(148,163,184,0.13)" stroke="rgba(148,163,184,0.18)" strokeWidth="1">
-          <path d="M250 150 L420 95 L555 170 L510 320 L340 345 L210 255 Z" />
-          <path d="M850 170 L1040 120 L1160 215 L1120 355 L925 390 L790 270 Z" />
-          <path d="M1210 355 L1370 325 L1475 395 L1440 500 L1270 520 L1175 430 Z" />
-        </g>
-        <g fill="none" stroke="rgba(59,130,246,0.16)" strokeWidth="2">
-          <path d="M250 150 L420 95 L555 170 L510 320 L340 345 L210 255 Z" />
-          <path d="M850 170 L1040 120 L1160 215 L1120 355 L925 390 L790 270 Z" />
-        </g>
-      </svg>
-    ),
-    state: (
-      <svg viewBox="0 0 1600 620" className="h-full w-full">
-        <g fill="none" stroke="rgba(100,116,139,0.22)" strokeWidth="1">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <path key={i} d={`M ${220 + i * 90} 110 L ${240 + i * 85} 520`} />
-          ))}
-          {Array.from({ length: 6 }).map((_, i) => (
-            <path
-              key={`h-${i}`}
-              d={`M 180 ${140 + i * 70} C 420 ${120 + i * 65}, 860 ${160 + i * 60}, 1450 ${140 + i * 70}`}
-            />
-          ))}
-        </g>
-        <g fill="rgba(59,130,246,0.08)">
-          <rect x="360" y="180" rx="26" ry="26" width="240" height="160" />
-          <rect x="905" y="245" rx="26" ry="26" width="220" height="150" />
-        </g>
-      </svg>
-    ),
-    city: (
-      <svg viewBox="0 0 1600 620" className="h-full w-full">
-        <g fill="rgba(148,163,184,0.12)">
-          <circle cx="520" cy="300" r="150" />
-          <circle cx="520" cy="300" r="88" />
-          <circle cx="520" cy="300" r="18" />
-        </g>
-        <g fill="none" stroke="rgba(59,130,246,0.18)" strokeWidth="2">
-          <circle cx="520" cy="300" r="150" />
-          <circle cx="520" cy="300" r="88" />
-          <path d="M520 140 L520 460" />
-          <path d="M360 300 L680 300" />
-        </g>
-        <g fill="rgba(100,116,139,0.14)">
-          <rect x="920" y="150" width="58" height="300" rx="10" />
-          <rect x="990" y="110" width="76" height="340" rx="10" />
-          <rect x="1080" y="170" width="64" height="280" rx="10" />
-          <rect x="1160" y="200" width="54" height="250" rx="10" />
-        </g>
-      </svg>
-    ),
-    sector: (
-      <svg viewBox="0 0 1600 620" className="h-full w-full">
-        <g fill="rgba(148,163,184,0.13)">
-          <rect x="230" y="170" width="200" height="200" rx="28" />
-          <rect x="500" y="130" width="220" height="240" rx="28" />
-          <rect x="790" y="180" width="200" height="200" rx="28" />
-          <rect x="1070" y="145" width="250" height="235" rx="28" />
-        </g>
-        <g fill="none" stroke="rgba(59,130,246,0.18)" strokeWidth="2">
-          <path d="M430 270 L500 250" />
-          <path d="M720 250 L790 280" />
-          <path d="M990 280 L1070 255" />
-        </g>
-      </svg>
-    ),
-    industries: (
-      <svg viewBox="0 0 1600 620" className="h-full w-full">
-        <g fill="rgba(148,163,184,0.12)" stroke="rgba(100,116,139,0.14)" strokeWidth="1">
-          <circle cx="420" cy="250" r="74" />
-          <circle cx="630" cy="220" r="58" />
-          <circle cx="810" cy="330" r="86" />
-          <circle cx="1015" cy="235" r="66" />
-          <circle cx="1225" cy="320" r="78" />
-        </g>
-        <g fill="none" stroke="rgba(59,130,246,0.18)" strokeWidth="2">
-          <path d="M494 250 L572 226" />
-          <path d="M686 245 L738 292" />
-          <path d="M896 300 L954 260" />
-          <path d="M1081 260 L1158 302" />
-        </g>
-      </svg>
-    ),
-    verification: (
-      <svg viewBox="0 0 1600 620" className="h-full w-full">
-        <g fill="rgba(148,163,184,0.12)">
-          <path d="M800 115 L1040 195 L1000 420 L800 520 L600 420 L560 195 Z" />
-        </g>
-        <g
-          fill="none"
-          stroke="rgba(59,130,246,0.18)"
-          strokeWidth="16"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M700 315 L780 395 L940 235" />
-        </g>
-      </svg>
-    ),
-  };
-
-  return arts[stage] || null;
-}
-
-function RotatingNode({
-  content,
-  size = 168,
-  floating = true,
-  outerRing = true,
-  textSize = "text-[13px]",
-  overlayClass = "bg-slate-900/18",
-  progress = 0,
+export default function SnakeSearchLoading({
+  token,
+  open = false,
+  onComplete,
 }) {
-  const progressPct = clamp(progress, 0, 100);
-  const strokeWidth = 8;
-  const radius = size / 2 - strokeWidth / 2 - 4;
-  const circumference = 2 * Math.PI * radius;
-  const dashOffset = circumference - (progressPct / 100) * circumference;
+  const [statusData, setStatusData] = useState(null);
+  const [displayProgress, setDisplayProgress] = useState(0);
+  const [isPolling, setIsPolling] = useState(false);
+  const completeCalledRef = useRef(false);
 
-  return (
-    <motion.div
-      animate={
-        floating
-          ? {
-              y: [0, -8, 0],
-              boxShadow: [
-                "0 22px 60px rgba(15,23,42,0.16)",
-                "0 30px 75px rgba(56,189,248,0.24)",
-                "0 22px 60px rgba(15,23,42,0.16)",
-              ],
-            }
-          : {}
-      }
-      transition={
-        floating
-          ? {
-              y: { repeat: Infinity, duration: 2.4, ease: "easeInOut" },
-              boxShadow: {
-                repeat: Infinity,
-                duration: 2.4,
-                ease: "easeInOut",
-              },
-            }
-          : {}
-      }
-      className="relative flex items-center justify-center"
-      style={{ width: size + 18, height: size + 18 }}
-    >
-      <svg
-        width={size + 18}
-        height={size + 18}
-        className="absolute inset-0 -rotate-90"
-      >
-        <circle
-          cx={(size + 18) / 2}
-          cy={(size + 18) / 2}
-          r={radius}
-          fill="none"
-          stroke="rgba(186,230,253,0.45)"
-          strokeWidth={strokeWidth}
-        />
-        <motion.circle
-          cx={(size + 18) / 2}
-          cy={(size + 18) / 2}
-          r={radius}
-          fill="none"
-          stroke="#7dd3fc"
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          animate={{ strokeDashoffset: dashOffset }}
-          transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-          style={{
-            filter: "drop-shadow(0 0 12px rgba(125,211,252,0.65))",
-          }}
-        />
-      </svg>
+  const progress = Number(statusData?.meta?.progress_percent ?? 0);
+  const activeStepKey = statusData?.meta?.active_step || "keyword";
 
-      <motion.div
-        className="relative flex items-center justify-center overflow-hidden rounded-full border-[6px] border-white/85"
-        style={{
-          width: size,
-          height: size,
-          backgroundImage: `${content.bg}, ${content.image}`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          boxShadow: "0 22px 60px rgba(15,23,42,0.16)",
-        }}
-      >
-        <div className={`absolute inset-0 ${overlayClass}`} />
-        <div className="absolute inset-0 rounded-full ring-1 ring-white/45" />
-        {outerRing && (
-          <div className="absolute -inset-4 rounded-full border border-sky-200/40" />
-        )}
+  const stepRows = useMemo(() => {
+    const rawSteps = statusData?.steps || {};
 
-        <div className="absolute top-4 z-20 rounded-full bg-white/82 px-3 py-1 text-[11px] font-black text-sky-700 shadow-sm backdrop-blur-md">
-          {Math.round(progressPct)}%
-        </div>
+    return ORDER.map((key) => {
+      const merged = {
+        ...EMPTY_STEP(key),
+        ...(rawSteps[key] || {}),
+        key,
+      };
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={content.label}
-            initial={{ rotateY: -90, opacity: 0, scale: 0.84 }}
-            animate={{ rotateY: 0, opacity: 1, scale: 1 }}
-            exit={{ rotateY: 90, opacity: 0, scale: 0.84 }}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute inset-0 flex items-center justify-center px-4 text-center"
-            style={{ transformStyle: "preserve-3d" }}
-          >
-            <div
-              className={`rounded-full bg-white/78 px-4 py-3 font-extrabold leading-tight text-slate-700 shadow-[0_8px_24px_rgba(15,23,42,0.12)] backdrop-blur-md ${textSize}`}
-            >
-              {content.label}
-            </div>
-          </motion.div>
-        </AnimatePresence>
-      </motion.div>
-    </motion.div>
-  );
-}
-
-function CenterShowcaseNode({ content, progress }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.92, y: 10 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-      className="absolute left-1/2 top-1/2 z-30 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-    >
-      <RotatingNode content={content} size={168} progress={progress} />
-    </motion.div>
-  );
-}
-
-export default function SnakeSearchLoading() {
-  const segments = useMemo(() => buildSnakePath(), []);
-  const pathD = useMemo(() => snakePathD(segments), [segments]);
-
-  const [screen, setScreen] = useState("intro");
-  const [introProgress, setIntroProgress] = useState(0);
-  const [activeStep, setActiveStep] = useState(0);
-  const [topIntra, setTopIntra] = useState(0);
-  const [snakeIntra, setSnakeIntra] = useState(0);
-  const [done, setDone] = useState(false);
-  const [badgeHistory, setBadgeHistory] = useState([]);
-  const [centerNodeIndex, setCenterNodeIndex] = useState(0);
-  const [introNodeIndex, setIntroNodeIndex] = useState(0);
-
-  const timeoutRefs = useRef([]);
-  const topControlsRef = useRef(null);
-  const snakeControlsRef = useRef(null);
-
-  const nodes = [
-    { x: 420, y: 285, step: 0 },
-    { x: 610, y: 285, step: 1 },
-    { x: 860, y: 455, step: 2 },
-    { x: 1040, y: 455, step: 3 },
-    { x: 1320, y: 270, step: 4 },
-    { x: 1425, y: 270, step: 5 },
-    { x: 1525, y: 270, step: 6 },
-  ];
-
-  useEffect(() => {
-    const intro = animate(0, 100, {
-      duration: INTRO_DURATION / 1000,
-      ease: [0.22, 1, 0.36, 1],
-      onUpdate: (v) => {
-        setIntroProgress(v);
-
-        const totalStops = NODE_ROTATIONS.length;
-        const progressRatio = v / 100;
-        const idx = Math.min(
-          totalStops - 1,
-          Math.floor(progressRatio * totalStops)
-        );
-        setIntroNodeIndex(idx);
-      },
-      onComplete: () => setScreen("search"),
+      return {
+        ...merged,
+        label: normalizeStepLabel(key, merged.label),
+      };
     });
+  }, [statusData]);
 
-    return () => intro.stop();
-  }, []);
+  const keywordStep =
+    stepRows.find((item) => item.key === "keyword") || EMPTY_STEP("keyword");
+  const keywordLabel = normalizeStepLabel("keyword", keywordStep.label);
+
+  const activeCard = useMemo(() => {
+    const currentStep =
+      stepRows.find((item) => item.key === activeStepKey) ||
+      stepRows[0] ||
+      EMPTY_STEP("keyword");
+
+    const meta = STEP_META[currentStep.key] || STEP_META.keyword;
+    const label = normalizeStepLabel(currentStep.key, currentStep.label);
+
+    return {
+      title:
+        currentStep.key === "keyword"
+          ? `Exact or Similar: ${label}`
+          : `${meta.title}: ${label}`,
+      image: meta.image,
+    };
+  }, [stepRows, activeStepKey]);
 
   useEffect(() => {
-    if (screen !== "search") return;
+    if (!open || !token) return;
 
-    let current = 0;
+    let mounted = true;
+    let pollTimer = null;
 
-    const clearAll = () => {
-      timeoutRefs.current.forEach(clearTimeout);
-      timeoutRefs.current = [];
-      topControlsRef.current?.stop();
-      snakeControlsRef.current?.stop();
-    };
+    const fetchStatus = async () => {
+      try {
+        if (!mounted) return;
+        setIsPolling(true);
 
-    const runStep = (index) => {
-      if (index >= STEPS.length) {
-        setDone(true);
-        setActiveStep(STEPS.length - 1);
-        setTopIntra(1);
-        setSnakeIntra(1);
-
-        const doneTimer = setTimeout(() => setScreen("result"), RESULT_DELAY);
-        timeoutRefs.current.push(doneTimer);
-        return;
-      }
-
-      setActiveStep(index);
-      setTopIntra(0);
-      setSnakeIntra(0);
-
-      const leadTimer = setTimeout(() => {
-        topControlsRef.current = animate(0, 1, {
-          duration: STEP_DURATION,
-          ease: [0.22, 1, 0.36, 1],
-          onUpdate: setTopIntra,
-        });
-      }, TOP_LEAD_DELAY);
-
-      const snakeTimer = setTimeout(() => {
-        snakeControlsRef.current = animate(0, 1, {
-          duration: STEP_DURATION + 0.2,
-          ease: [0.22, 1, 0.36, 1],
-          onUpdate: setSnakeIntra,
-          onComplete: () => {
-            setBadgeHistory((prev) =>
-              prev.includes(index) ? prev : [...prev, index]
-            );
-            current += 1;
-            const nextTimer = setTimeout(() => runStep(current), STEP_PAUSE);
-            timeoutRefs.current.push(nextTimer);
+        const response = await fetch(`/api/main-search-engine/status/${token}`, {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
           },
         });
-      }, SNAKE_FOLLOW_DELAY);
 
-      timeoutRefs.current.push(leadTimer, snakeTimer);
+        const json = await response.json();
+
+        if (!mounted) return;
+
+        if (response.ok && json?.ok && json?.data) {
+          setStatusData(json.data);
+
+          if (json.data?.meta?.is_completed) {
+            clearInterval(pollTimer);
+
+            if (!completeCalledRef.current && typeof onComplete === "function") {
+              completeCalledRef.current = true;
+              onComplete(json.data);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Search status polling failed:", error);
+      } finally {
+        if (mounted) {
+          setIsPolling(false);
+        }
+      }
     };
 
-    runStep(0);
-    return clearAll;
-  }, [screen]);
+    fetchStatus();
+    pollTimer = setInterval(fetchStatus, 700);
+
+    return () => {
+      mounted = false;
+      clearInterval(pollTimer);
+    };
+  }, [open, token, onComplete]);
 
   useEffect(() => {
-    if (screen !== "search") return;
+    let frameId;
 
-    const interval = setInterval(() => {
-      setCenterNodeIndex((prev) => (prev + 1) % NODE_ROTATIONS.length);
-    }, 1600);
+    const animate = () => {
+      setDisplayProgress((prev) => {
+        const diff = progress - prev;
 
-    return () => clearInterval(interval);
-  }, [screen]);
+        if (Math.abs(diff) < 0.2) {
+          return progress;
+        }
 
-  const snakeGlobalProgress =
-    screen === "search" ? (activeStep + snakeIntra) / STEPS.length : 0;
+        return prev + diff * 0.12;
+      });
 
-  const runner = pointAtProgress(segments, snakeGlobalProgress);
-  const centerNodeContent = NODE_ROTATIONS[centerNodeIndex];
-  const introNodeContent = NODE_ROTATIONS[introNodeIndex];
+      frameId = requestAnimationFrame(animate);
+    };
 
-  const elapsedSearchMs =
-    activeStep * STEP_TOTAL_MS +
-    SNAKE_FOLLOW_DELAY +
-    snakeIntra * ((STEP_DURATION + 0.2) * 1000);
+    frameId = requestAnimationFrame(animate);
 
-  const overallPercent =
-    screen === "intro"
-      ? (introProgress / 100) * (INTRO_DURATION / TOTAL_OPERATION_MS) * 100
-      : screen === "search"
-        ? ((INTRO_DURATION + elapsedSearchMs) / TOTAL_OPERATION_MS) * 100
-        : 100;
+    return () => cancelAnimationFrame(frameId);
+  }, [progress]);
 
-  const bgThemes = [
-    "from-[#fcfcfc] via-[#f4f5f6] to-[#ededee]",
-    "from-[#ffffff] via-[#f5f5f5] to-[#eceff1]",
-    "from-[#fbfbfb] via-[#f1f3f5] to-[#e9ecef]",
-    "from-[#ffffff] via-[#f4f4f5] to-[#ececec]",
-    "from-[#fcfcfd] via-[#f3f4f6] to-[#e8eaed]",
-    "from-[#fbfcfd] via-[#f4f6f8] to-[#e9edf1]",
-    "from-[#ffffff] via-[#f5f7f9] to-[#ebeff3]",
-  ];
-
-  if (screen === "intro") {
-    return (
-      <div className="min-h-screen bg-[#f4f4f4] flex flex-col items-center justify-center px-6">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 12 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="mb-8"
-        >
-          <RotatingNode
-            content={introNodeContent}
-            size={144}
-            textSize="text-[12px]"
-            outerRing={true}
-            floating={true}
-            progress={overallPercent}
-          />
-        </motion.div>
-
-        <h1 className="mb-8 text-center text-5xl font-semibold tracking-tight text-slate-700">
-          Let&apos;s Get Started
-        </h1>
-
-        <div className="w-full max-w-xl">
-          <div className="h-4 w-full overflow-hidden rounded-full bg-[#d8e2f8] shadow-inner">
-            <motion.div
-              className="h-full rounded-full bg-[#1458f5]"
-              animate={{ width: `${introProgress}%` }}
-              transition={{ ease: [0.22, 1, 0.36, 1], duration: 0.18 }}
-            />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (screen === "result") {
-    return (
-      <div className="min-h-screen bg-[#f6f7f8] flex items-center justify-center px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 18, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          className="w-full max-w-2xl rounded-[32px] border border-slate-200 bg-white p-10 shadow-[0_20px_60px_rgba(15,23,42,0.08)]"
-        >
-          <div className="mb-5 flex items-center gap-3 text-green-700">
-            <CheckCircle2 className="h-7 w-7" />
-            <span className="text-2xl font-bold">
-              Search completed successfully
-            </span>
-          </div>
-          <div className="text-lg text-slate-600">
-            We finished processing{" "}
-            <span className="font-semibold text-slate-800">{companyName}</span>.
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
+  const smoothProgress = Math.round(displayProgress);
 
   return (
-    <motion.div
-      className={`min-h-screen bg-gradient-to-br ${bgThemes[activeStep]} text-slate-700 transition-all duration-700`}
-      animate={{ opacity: 1 }}
-    >
-      <header className="border-b border-slate-200/80 bg-white/75 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div className="text-3xl font-black tracking-tight">
-            <span className="text-slate-700">Ray</span>
-            <span className="text-green-500">Search</span>
-          </div>
+    <>
+      <style>{styles}</style>
 
-          <div className="rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-500 shadow-sm">
-            Search in progress
-          </div>
-        </div>
-
-        <div className="h-2 w-full bg-[#e7edf8]">
-          <motion.div
-            className="h-full rounded-r-full bg-[#0f3a97]"
-            animate={{ width: `${topBarProgress(activeStep, topIntra)}%` }}
-            transition={{ ease: [0.22, 1, 0.36, 1], duration: 0.25 }}
-          />
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-7xl px-6 py-10">
-        <div className="mb-10 flex items-center justify-center gap-3 text-center text-4xl font-black text-slate-700">
-          <Search className="h-9 w-9" />
-          <span>{companyName}</span>
-        </div>
-
-        <div className="mb-8 flex flex-wrap items-center justify-center gap-3">
-          {STEPS.map((step, index) => {
-            const Icon = step.icon;
-            const visible = badgeHistory.includes(index) || index <= activeStep;
-
-            return (
-              <motion.div
-                key={step.id}
-                initial={false}
-                animate={{
-                  opacity: visible ? 1 : 0.32,
-                  scale: visible ? 1 : 0.95,
-                }}
-                className="flex items-center gap-2 rounded-xl border border-white/70 bg-white/70 px-3 py-2 text-xs font-bold text-[#1f5fff] shadow-sm backdrop-blur-md"
-              >
-                <Icon className="h-4 w-4" />
-                {step.badge}
-              </motion.div>
-            );
-          })}
-        </div>
-
-        <div className="relative overflow-hidden rounded-[36px] border border-white/70 bg-white/35 shadow-[0_20px_70px_rgba(15,23,42,0.06)] backdrop-blur-md">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={STEPS[activeStep].id}
-              initial={{ opacity: 0, scale: 1.08 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.03 }}
-              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-              className="absolute inset-0 z-[1] origin-center"
-            >
-              <div className="absolute inset-0 opacity-70">
-                <StageArt stage={STEPS[activeStep].id} />
+      <div className="rm-snake-root">
+        <div className="rm-snake-stage">
+          <div className="rm-snake-topbar">
+            <div className="rm-snake-topbar-left">
+              <div className="rm-snake-kicker">
+                <svg
+                  className="rm-snake-kicker-logo"
+                  width="22"
+                  height="22"
+                  viewBox="0 0 200 200"
+                  aria-hidden="true"
+                >
+                  <image
+                    href="/images/logo_preview_exact.svg"
+                    x="0"
+                    y="0"
+                    width="200"
+                    height="200"
+                    preserveAspectRatio="xMidYMid meet"
+                  />
+                </svg>
+                <span>RaySearch</span>
               </div>
-            </motion.div>
-          </AnimatePresence>
 
-          <div className="absolute inset-0 z-[2] bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.78),transparent_45%),radial-gradient(circle_at_bottom_right,rgba(226,232,240,0.58),transparent_38%)]" />
+              <div className="rm-snake-title">
+                {smoothProgress >= 100 ? "Search Completed" : "Search in progress"}
+              </div>
 
-          <CenterShowcaseNode
-            content={centerNodeContent}
-            progress={overallPercent}
-          />
+              <div className="rm-snake-subtitle-row">
+                <div className="rm-snake-subtitle-text">
+                  Search in progress...(Exact or Similar):{" "}
+                  <strong>{keywordLabel}</strong>
+                </div>
 
-          <svg viewBox="0 0 1600 620" className="relative z-10 h-[620px] w-full">
-            <path
-              d={pathD}
-              fill="none"
-              stroke="#d9e4f8"
-              strokeWidth="10"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-
-            <path
-              d={pathD}
-              fill="none"
-              stroke="#1658f5"
-              strokeWidth="10"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeDasharray="1700"
-              strokeDashoffset={1700 - snakeGlobalProgress * 1700}
-              style={{
-                filter: "drop-shadow(0 8px 18px rgba(22,88,245,0.18))",
-              }}
-            />
-
-            {nodes.map((node, index) => {
-              const Icon = STEPS[node.step].icon;
-              const active = index <= activeStep;
-              const pulse = nodeProgress(index, activeStep, snakeIntra);
-
-              return (
-                <g key={node.step} transform={`translate(${node.x}, ${node.y})`}>
-                  <circle r="28" fill={active ? "#1658f5" : "#dfe8f7"} />
-                  <foreignObject x={-12} y={-12} width="24" height="24">
-                    <div className="flex h-full w-full items-center justify-center">
-                      <Icon
-                        className={`h-6 w-6 ${
-                          active ? "text-white" : "text-slate-400"
-                        }`}
-                      />
-                    </div>
-                  </foreignObject>
-
-                  {active && (
-                    <circle
-                      r={36 + pulse * 5}
-                      fill="none"
-                      stroke="rgba(22,88,245,0.10)"
-                      strokeWidth="10"
-                    />
+                <div className="rm-snake-subtitle-mini">
+                  {smoothProgress >= 100 ? (
+                    <CheckCircle2 size={14} className="rm-done-icon" />
+                  ) : (
+                    <Loader2 size={14} className="rm-spin" />
                   )}
-                </g>
-              );
-            })}
-          </svg>
+                </div>
+              </div>
+            </div>
 
-          <motion.div
-            className="absolute z-20 text-[30px] leading-none drop-shadow-sm"
-            animate={{
-              x: runner.x - 14,
-              y: [runner.y - 18, runner.y - 24, runner.y - 18],
-              rotate: [0, -8, 0, 8, 0],
-            }}
-            transition={{
-              x: { ease: [0.22, 1, 0.36, 1], duration: 0.22 },
-              y: { repeat: Infinity, duration: 0.7, ease: "easeInOut" },
-              rotate: { repeat: Infinity, duration: 0.8, ease: "easeInOut" },
-            }}
-          >
-            🦇
-          </motion.div>
+            <div className="rm-snake-running-pill">
+              {smoothProgress >= 100 ? (
+                <>
+                  <span className="rm-snake-done-dot" />
+                  <span>Search complete</span>
+                </>
+              ) : (
+                <>
+                  <Loader2 size={15} className="rm-spin" />
+                  <span>{isPolling ? "Search running" : "Search running"}</span>
+                </>
+              )}
+            </div>
+          </div>
 
-          <div className="pointer-events-none absolute inset-0 z-20">
-            {STEPS.map((step, index) => (
-              <StepCard
-                key={step.id}
-                className={CARD_POSITIONS[index]}
-                step={step}
-                isActive={activeStep === index}
-                isPast={activeStep > index || done}
-              />
-            ))}
+          <div className="rm-snake-layout">
+            <aside className="rm-snake-left">
+              <div className="rm-snake-checks">
+                {stepRows.map((step) => {
+                  const meta = STEP_META[step.key] || STEP_META.keyword;
+                  const Icon = meta.icon;
+                  const isRunning = step.status === "running";
+                  const isDone = step.status === "done";
+
+                  return (
+                    <div
+                      key={step.key}
+                      className={`rm-snake-check-item ${
+                        isDone ? "done" : isRunning ? "running" : "idle"
+                      }`}
+                    >
+                      <div className="rm-snake-check-main">
+                        <span className="rm-snake-check-icon">
+                          <Icon size={18} />
+                        </span>
+
+                        <div className="rm-snake-check-content">
+                          <div className="rm-snake-check-title-row">
+                            <span className="rm-snake-check-title">
+                              {formatStepTitle(step, meta)}
+                            </span>
+
+                            <span className="rm-snake-check-state">
+                              {isRunning ? (
+                                <Loader2 size={14} className="rm-spin" />
+                              ) : isDone ? (
+                                <CheckCircle2 size={16} className="rm-done-icon" />
+                              ) : (
+                                <span className="rm-snake-idle-dot" />
+                              )}
+                            </span>
+                          </div>
+
+                          <div className="rm-snake-check-meta">
+                            <span>
+                              Results: <strong>{Number(step.found_count || 0)}</strong>
+                            </span>
+                            <span>
+                              Time: <strong>{Number(step.elapsed_ms || 0)} ms</strong>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="rm-snake-progress-wrap">
+                <motion.div
+                  className="rm-snake-progress-ring"
+                  animate={{
+                    background: `conic-gradient(#67c4f2 ${
+                      smoothProgress * 3.6
+                    }deg, #dbeafe 0deg)`,
+                  }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
+                >
+                  <div className="rm-snake-progress-hole">
+                    <div className="rm-snake-progress-value">
+                      {smoothProgress}%
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+            </aside>
+
+            <section className="rm-snake-main">
+              <div className="rm-snake-card-shell">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={`${activeCard.title}-${activeCard.image}`}
+                    className="rm-snake-card"
+                    initial={{ opacity: 0, scale: 1.02 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.985 }}
+                    transition={{
+                      opacity: { duration: 0.7, ease: "easeInOut" },
+                      scale: { duration: 0.9, ease: "easeInOut" },
+                    }}
+                  >
+                    <img
+                      src={activeCard.image}
+                      alt={activeCard.title}
+                      className="rm-snake-card-image"
+                    />
+                    <div className="rm-snake-card-overlay" />
+                    <div className="rm-snake-card-meta">
+                      <div className="rm-snake-card-percent">
+                        {smoothProgress}%
+                      </div>
+                      <div className="rm-snake-card-title">
+                        {activeCard.title}
+                      </div>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              <div className="rm-snake-summary-card">
+                <div className="rm-snake-summary-top">
+                  <div className="rm-snake-summary-title">Live Search Monitor</div>
+                  <div
+                    className={`rm-snake-summary-badge ${
+                      smoothProgress >= 100 ? "done" : "running"
+                    }`}
+                  >
+                    {smoothProgress >= 100 ? "Finished" : "Running"}
+                  </div>
+                </div>
+
+                <div className="rm-snake-summary-grid">
+                  {stepRows.map((step) => {
+                    const meta = STEP_META[step.key] || STEP_META.keyword;
+
+                    return (
+                      <div className="rm-snake-summary-box" key={step.key}>
+                        <div className="rm-snake-summary-box-title">
+                          {meta.title}
+                        </div>
+                        <div className="rm-snake-summary-box-value">
+                          {Number(step.found_count || 0)}
+                        </div>
+                        <div className="rm-snake-summary-box-sub">
+                          {step.status === "running"
+                            ? "Searching..."
+                            : step.status === "done"
+                              ? "Completed"
+                              : "Waiting"}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </section>
           </div>
         </div>
-      </main>
-    </motion.div>
-  );
-}
-
-function StepCard({ step, isActive, isPast, className }) {
-  const Icon = step.icon;
-
-  return (
-    <motion.div
-      initial={false}
-      animate={{
-        opacity: isActive || isPast ? 1 : 0.16,
-        scale: isActive ? 1 : 0.96,
-        y: isActive ? -6 : 0,
-      }}
-      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-      className={`absolute w-[220px] ${className}`}
-    >
-      <div className="rounded-2xl border border-white/80 bg-[rgba(255,255,255,0.62)] p-3 shadow-[0_10px_30px_rgba(15,23,42,0.05)] backdrop-blur-xl">
-        <div className="mb-2 flex items-center gap-2">
-          <div
-            className={`rounded-xl p-2 ${
-              isActive || isPast
-                ? "bg-blue-50 text-[#1658f5]"
-                : "bg-slate-100 text-slate-400"
-            }`}
-          >
-            <Icon className="h-4 w-4" />
-          </div>
-          <div className="text-sm font-extrabold leading-tight text-slate-700">
-            {step.title}
-          </div>
-        </div>
-
-        <p className="text-xs leading-5 text-slate-600">{step.description}</p>
       </div>
-    </motion.div>
+    </>
   );
 }
+
+const styles = `
+  * {
+    box-sizing: border-box;
+  }
+
+  .rm-snake-root {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    align-items: stretch;
+    justify-content: stretch;
+    padding: 20px;
+  }
+
+  .rm-snake-stage {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 24px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
+  }
+
+  .rm-snake-topbar {
+    min-height: 98px;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    background: rgba(255, 255, 255, 0.9);
+    flex-wrap: wrap;
+  }
+
+  .rm-snake-topbar-left {
+    min-width: 0;
+    flex: 1 1 520px;
+  }
+
+  .rm-snake-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+    letter-spacing: 0.04em;
+    flex-wrap: wrap;
+  }
+
+  .rm-snake-kicker-logo {
+    display: block;
+    flex: 0 0 auto;
+  }
+
+  .rm-snake-title {
+    font-size: 24px;
+    line-height: 1.15;
+    font-weight: 800;
+    color: #0f172a;
+    margin-top: 4px;
+  }
+
+  .rm-snake-subtitle-row {
+    margin-top: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+
+  .rm-snake-subtitle-text {
+    font-size: 14px;
+    color: #334155;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .rm-snake-subtitle-mini {
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+  }
+
+  .rm-snake-running-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: #ffffff;
+    border: 1px solid #dbeafe;
+    color: #2563eb;
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.08);
+    flex: 0 0 auto;
+  }
+
+  .rm-spin {
+    animation: rmspin 1s linear infinite;
+  }
+
+  .rm-done-icon {
+    color: #16a34a;
+  }
+
+  .rm-snake-done-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: #22c55e;
+    display: inline-block;
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.12);
+  }
+
+  .rm-snake-idle-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #cbd5e1;
+    display: inline-block;
+  }
+
+  @keyframes rmspin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .rm-snake-layout {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 380px minmax(0, 1fr);
+  }
+
+  .rm-snake-left {
+    padding: 22px 18px 18px 20px;
+    border-right: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+  }
+
+  .rm-snake-checks {
+    display: grid;
+    gap: 12px;
+    overflow: auto;
+    padding-right: 6px;
+    min-height: 0;
+  }
+
+  .rm-snake-check-item {
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 12px;
+    transition: all .2s ease;
+  }
+
+  .rm-snake-check-item.running {
+    border-color: #bfdbfe;
+    box-shadow: 0 8px 20px rgba(59,130,246,.08);
+  }
+
+  .rm-snake-check-item.done {
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+  }
+
+  .rm-snake-check-main {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    min-width: 0;
+  }
+
+  .rm-snake-check-icon {
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #2563eb;
+    flex: 0 0 22px;
+    margin-top: 2px;
+  }
+
+  .rm-snake-check-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .rm-snake-check-title-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    justify-content: space-between;
+    min-width: 0;
+  }
+
+  .rm-snake-check-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.35;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .rm-snake-check-state {
+    flex: 0 0 auto;
+    width: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .rm-snake-check-meta {
+    margin-top: 8px;
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: #64748b;
+  }
+
+  .rm-snake-progress-wrap {
+    margin-top: auto;
+    padding-top: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .rm-snake-progress-ring {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    will-change: background;
+    flex: 0 0 auto;
+  }
+
+  .rm-snake-progress-hole {
+    width: 128px;
+    height: 128px;
+    border-radius: 50%;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    display: grid;
+    place-items: center;
+  }
+
+  .rm-snake-progress-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  .rm-snake-main {
+    min-width: 0;
+    min-height: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 18px;
+  }
+
+  .rm-snake-card-shell {
+    width: 100%;
+    max-width: 760px;
+    height: 100%;
+    min-height: 300px;
+    margin: 0 auto;
+    position: relative;
+    flex: 1;
+    display: flex;
+  }
+
+  .rm-snake-card {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 24px;
+    overflow: hidden;
+    background: #dbeafe;
+    box-shadow: 0 18px 34px rgba(15, 23, 42, 0.12);
+    will-change: opacity, transform;
+  }
+
+  .rm-snake-card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transform: scale(1.01);
+  }
+
+  .rm-snake-card-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(2, 6, 23, 0.04) 0%, rgba(2, 6, 23, 0.42) 100%);
+  }
+
+  .rm-snake-card-meta {
+    position: absolute;
+    left: 18px;
+    right: 18px;
+    bottom: 18px;
+    z-index: 1;
+    color: white;
+  }
+
+  .rm-snake-card-percent {
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .rm-snake-card-title {
+    font-size: 18px;
+    font-weight: 700;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .rm-snake-summary-card {
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto;
+    border-radius: 24px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 18px 34px rgba(15, 23, 42, 0.08);
+    padding: 20px;
+  }
+
+  .rm-snake-summary-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+
+  .rm-snake-summary-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  .rm-snake-summary-badge {
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .rm-snake-summary-badge.running {
+    background: #eff6ff;
+    color: #2563eb;
+  }
+
+  .rm-snake-summary-badge.done {
+    background: #f0fdf4;
+    color: #15803d;
+  }
+
+  .rm-snake-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .rm-snake-summary-box {
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 14px;
+    background: #f8fafc;
+    min-width: 0;
+  }
+
+  .rm-snake-summary-box-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+  }
+
+  .rm-snake-summary-box-value {
+    margin-top: 8px;
+    font-size: 24px;
+    font-weight: 900;
+    color: #0f172a;
+  }
+
+  .rm-snake-summary-box-sub {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #64748b;
+  }
+
+  @media (max-width: 1200px) {
+    .rm-snake-layout {
+      grid-template-columns: 340px minmax(0, 1fr);
+    }
+
+    .rm-snake-card-shell {
+      min-height: 280px;
+    }
+  }
+
+  @media (max-width: 980px) {
+    .rm-snake-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .rm-snake-left {
+      border-right: 0;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 20px;
+    }
+
+    .rm-snake-main {
+      padding-top: 16px;
+    }
+
+    .rm-snake-summary-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .rm-snake-card-shell {
+      height: 260px;
+      min-height: 260px;
+      flex: 0 0 auto;
+    }
+
+    .rm-snake-progress-ring {
+      width: 150px;
+      height: 150px;
+    }
+
+    .rm-snake-progress-hole {
+      width: 118px;
+      height: 118px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .rm-snake-root {
+      padding: 14px;
+    }
+
+    .rm-snake-stage {
+      border-radius: 20px;
+    }
+
+    .rm-snake-topbar {
+      padding: 14px 16px;
+      gap: 12px;
+    }
+
+    .rm-snake-left {
+      padding: 16px;
+    }
+
+    .rm-snake-main {
+      padding: 16px;
+      gap: 16px;
+    }
+
+    .rm-snake-title {
+      font-size: 22px;
+    }
+
+    .rm-snake-subtitle-text {
+      font-size: 13px;
+    }
+
+    .rm-snake-card-shell {
+      height: 230px;
+      min-height: 230px;
+      flex: 0 0 auto;
+    }
+
+    .rm-snake-card,
+    .rm-snake-summary-card {
+      border-radius: 20px;
+    }
+
+    .rm-snake-summary-card {
+      padding: 16px;
+    }
+
+    .rm-snake-summary-title {
+      font-size: 18px;
+    }
+
+    .rm-snake-progress-ring {
+      width: 136px;
+      height: 136px;
+    }
+
+    .rm-snake-progress-hole {
+      width: 106px;
+      height: 106px;
+    }
+
+    .rm-snake-progress-value {
+      font-size: 24px;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .rm-snake-root {
+      padding: 10px;
+    }
+
+    .rm-snake-stage {
+      border-radius: 18px;
+    }
+
+    .rm-snake-topbar {
+      padding: 14px;
+      gap: 10px;
+    }
+
+    .rm-snake-title {
+      font-size: 20px;
+    }
+
+    .rm-snake-running-pill {
+      font-size: 13px;
+      padding: 8px 12px;
+      max-width: 100%;
+    }
+
+    .rm-snake-left {
+      padding: 14px;
+    }
+
+    .rm-snake-main {
+      padding: 14px;
+      gap: 14px;
+    }
+
+    .rm-snake-check-item {
+      padding: 10px;
+      border-radius: 14px;
+    }
+
+    .rm-snake-check-title {
+      font-size: 12px;
+    }
+
+    .rm-snake-check-meta {
+      gap: 8px 12px;
+      font-size: 11px;
+    }
+
+    .rm-snake-summary-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .rm-snake-summary-box {
+      padding: 12px;
+    }
+
+    .rm-snake-summary-box-value {
+      font-size: 22px;
+    }
+
+    .rm-snake-card-shell {
+      height: 210px;
+      min-height: 210px;
+      flex: 0 0 auto;
+    }
+
+    .rm-snake-card-meta {
+      left: 14px;
+      right: 14px;
+      bottom: 14px;
+    }
+
+    .rm-snake-card-percent {
+      font-size: 20px;
+      margin-bottom: 6px;
+    }
+
+    .rm-snake-card-title {
+      font-size: 15px;
+    }
+
+    .rm-snake-progress-ring {
+      width: 124px;
+      height: 124px;
+    }
+
+    .rm-snake-progress-hole {
+      width: 96px;
+      height: 96px;
+    }
+
+    .rm-snake-progress-value {
+      font-size: 22px;
+    }
+  }
+
+  @media (max-width: 420px) {
+    .rm-snake-root {
+      padding: 8px;
+    }
+
+    .rm-snake-stage {
+      border-radius: 16px;
+    }
+
+    .rm-snake-topbar,
+    .rm-snake-left,
+    .rm-snake-main {
+      padding-left: 12px;
+      padding-right: 12px;
+    }
+
+    .rm-snake-kicker {
+      font-size: 11px;
+    }
+
+    .rm-snake-title {
+      font-size: 18px;
+    }
+
+    .rm-snake-subtitle-text {
+      font-size: 12px;
+    }
+
+    .rm-snake-running-pill {
+      font-size: 12px;
+      padding: 8px 10px;
+    }
+
+    .rm-snake-check-main {
+      gap: 8px;
+    }
+
+    .rm-snake-check-icon {
+      width: 20px;
+      height: 20px;
+      flex-basis: 20px;
+    }
+
+    .rm-snake-card-shell {
+      height: 180px;
+      min-height: 180px;
+      flex: 0 0 auto;
+    }
+
+    .rm-snake-card,
+    .rm-snake-summary-card {
+      border-radius: 16px;
+    }
+
+    .rm-snake-summary-title {
+      font-size: 16px;
+    }
+
+    .rm-snake-summary-box-title,
+    .rm-snake-summary-box-sub {
+      font-size: 11px;
+    }
+
+    .rm-snake-summary-box-value {
+      font-size: 20px;
+    }
+
+    .rm-snake-progress-ring {
+      width: 112px;
+      height: 112px;
+    }
+
+    .rm-snake-progress-hole {
+      width: 84px;
+      height: 84px;
+    }
+
+    .rm-snake-progress-value {
+      font-size: 18px;
+    }
+  }
+`;

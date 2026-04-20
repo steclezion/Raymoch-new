@@ -15,9 +15,7 @@ use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\Api\CountryCodeController;
 use App\Http\Controllers\Api\SearchFilterController;
 use App\Http\Controllers\Api\ExploreTooltipController;
-
-
-
+use App\Http\Controllers\Api\MainSearchEngineController;
 
 
 
@@ -95,4 +93,11 @@ Route::prefix('companies/{company}')->group(function () {
     Route::get('/contact',    [CompanyDetailController::class, 'contact']);
     Route::get('/location',   [CompanyDetailController::class, 'location']); // 👈 NEW
     Route::post('/reactions', [CompanyReactionController::class, 'storeReaction']);
+});
+
+
+Route::prefix('main-search-engine')->group(function () {
+    Route::post('/start', [MainSearchEngineController::class, 'start']);
+    Route::post('/run/{token}', [MainSearchEngineController::class, 'run']);
+    Route::get('/status/{token}', [MainSearchEngineController::class, 'status']);
 });

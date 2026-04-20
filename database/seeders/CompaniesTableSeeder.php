@@ -24,10 +24,23 @@ class CompaniesTableSeeder extends Seeder
                 ->where('country_name', $c['Country'])
                 ->value('id');
 
+            $countries_all_id = DB::table('countries_africans')
+                ->where('country_name', $c['Country'])
+                ->value('countries_all_id');
+
+            $country_all_id = DB::table('countries_all')
+                ->where('id',  $countries_all_id)
+                ->value('id');
+
             $stageId = DB::table('stages')->inRandomOrder()->value('id');
 
-            $cityId = DB::table('cities_all')
-                ->where('country_id', $countryId)
+            $stateId = DB::table('states_all')->inRandomOrder()
+                ->where('country_id', $country_all_id)
+                ->value('id');
+
+
+            $cityId = DB::table('cities_all')->inRandomOrder()
+                ->where('state_id', $stateId)
                 ->value('id');
 
             $RegionId = DB::table('countries_africans')
@@ -40,6 +53,7 @@ class CompaniesTableSeeder extends Seeder
                 'industry_id'               => $industryId,
                 'Country'                => $countryId,
                 'City'                   => $cityId,
+                'state_id'                  => $stateId,
                 'FoundedYear'              => $c['FoundedYear'] ?? null,
                 'Stage'                  => $stageId,
                 'Region'                 =>   $RegionId ?? null,
