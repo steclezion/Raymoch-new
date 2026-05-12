@@ -10,6 +10,10 @@ import {
   BadgeCheck,
   Loader2,
   CheckCircle2,
+  ChevronDown,
+  ChevronRight,
+  Eye,
+  CreditCard,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -82,6 +86,7 @@ const EMPTY_STEP = (key) => ({
   elapsed_ms: 0,
   found_count: 0,
   found_ids: [],
+  grouped_results: [],
   started_at: null,
   finished_at: null,
 });
@@ -95,13 +100,7 @@ function normalizeStepLabel(stepKey, rawLabel) {
     return rawLabel ? "ON" : "OFF";
   }
 
-  const text = String(rawLabel).trim();
-
-  if (!text) {
-    return stepKey === "keyword" ? "(empty)" : "all";
-  }
-
-  return text;
+  return String(rawLabel).trim() || (stepKey === "keyword" ? "(empty)" : "all");
 }
 
 function formatStepTitle(step, meta) {
@@ -114,18 +113,39 @@ function formatStepTitle(step, meta) {
   return `${meta.title}: ${label}`;
 }
 
+function getCsrfToken() {
+  return document
+    .querySelector('meta[name="csrf-token"]')
+    ?.getAttribute("content");
+}
+
 export default function SnakeSearchLoading({
   token,
   open = false,
   onComplete,
+  onViewResults,
+  onPayToView,
 }) {
   const [statusData, setStatusData] = useState(null);
   const [displayProgress, setDisplayProgress] = useState(0);
   const [isPolling, setIsPolling] = useState(false);
+  const [expandedSteps, setExpandedSteps] = useState({});
+  const [subscriptionAccess, setSubscriptionAccess] = useState({
+    loading: true,
+    can_view: false,
+    plan: null,
+    status: null,
+    message: "",
+  });
+
   const completeCalledRef = useRef(false);
 
   const progress = Number(statusData?.meta?.progress_percent ?? 0);
   const activeStepKey = statusData?.meta?.active_step || "keyword";
+
+  const hasPremiumAccess = Boolean(subscriptionAccess.can_view);
+  const actionLabel = hasPremiumAccess ? "View" : "Pay to view";
+  const ActionIcon = hasPremiumAccess ? Eye : CreditCard;
 
   const stepRows = useMemo(() => {
     const rawSteps = statusData?.steps || {};
@@ -140,12 +160,16 @@ export default function SnakeSearchLoading({
       return {
         ...merged,
         label: normalizeStepLabel(key, merged.label),
+        grouped_results: Array.isArray(merged.grouped_results)
+          ? merged.grouped_results
+          : [],
       };
     });
   }, [statusData]);
 
   const keywordStep =
     stepRows.find((item) => item.key === "keyword") || EMPTY_STEP("keyword");
+
   const keywordLabel = normalizeStepLabel("keyword", keywordStep.label);
 
   const activeCard = useMemo(() => {
@@ -167,14 +191,81 @@ export default function SnakeSearchLoading({
   }, [stepRows, activeStepKey]);
 
   useEffect(() => {
+    if (!open) return;
+
+    let mounted = true;
+
+    const checkSubscriptionAccess = async () => {
+      try {
+        setSubscriptionAccess((prev) => ({
+          ...prev,
+          loading: true,
+        }));
+        const response = await fetch("subscription/access", {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "X-CSRF-TOKEN": getCsrfToken() || "",
+          },
+          credentials: "same-origin",
+        });
+
+        const json = await response.json();
+
+        if (!mounted) return;
+
+        if (response.ok && json?.ok) {
+          setSubscriptionAccess({
+            loading: false,
+            can_view: Boolean(json.can_view),
+            plan: json.plan || null,
+            status: json.status || null,
+            message: json.message || "",
+          });
+          return;
+        }
+
+        setSubscriptionAccess({
+          loading: false,
+          can_view: false,
+          plan: null,
+          status: null,
+          message: "Unable to verify subscription.",
+        });
+      } catch (error) {
+        console.error("Subscription access check failed:", error);
+
+        if (mounted) {
+          setSubscriptionAccess({
+            loading: false,
+            can_view: false,
+            plan: null,
+            status: null,
+            message: "Unable to verify subscription.",
+          });
+        }
+      }
+    };
+
+    checkSubscriptionAccess();
+
+    return () => {
+      mounted = false;
+    };
+  }, [open]);
+
+  useEffect(() => {
     if (!open || !token) return;
 
     let mounted = true;
     let pollTimer = null;
 
+    completeCalledRef.current = false;
+
     const fetchStatus = async () => {
       try {
         if (!mounted) return;
+
         setIsPolling(true);
 
         const response = await fetch(`/api/main-search-engine/status/${token}`, {
@@ -182,6 +273,7 @@ export default function SnakeSearchLoading({
           headers: {
             Accept: "application/json",
           },
+          credentials: "same-origin",
         });
 
         const json = await response.json();
@@ -242,6 +334,34 @@ export default function SnakeSearchLoading({
 
   const smoothProgress = Math.round(displayProgress);
 
+  const toggleStep = (key) => {
+    setExpandedSteps((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
+  const handleSummaryAction = () => {
+    if (subscriptionAccess.loading) return;
+
+    if (hasPremiumAccess) {
+      if (typeof onViewResults === "function") {
+        onViewResults(statusData);
+        return;
+      }
+
+      window.location.href = "/search/results";
+      return;
+    }
+
+    if (typeof onPayToView === "function") {
+      onPayToView(statusData);
+      return;
+    }
+
+    window.location.href = "/pricing";
+  };
+
   return (
     <>
       <style>{styles}</style>
@@ -271,7 +391,9 @@ export default function SnakeSearchLoading({
               </div>
 
               <div className="rm-snake-title">
-                {smoothProgress >= 100 ? "Search Completed" : "Search in progress"}
+                {smoothProgress >= 100
+                  ? "Search Completed"
+                  : "Search in progress"}
               </div>
 
               <div className="rm-snake-subtitle-row">
@@ -313,6 +435,8 @@ export default function SnakeSearchLoading({
                   const Icon = meta.icon;
                   const isRunning = step.status === "running";
                   const isDone = step.status === "done";
+                  const hasGroups = step.grouped_results.length > 0;
+                  const isExpanded = !!expandedSteps[step.key];
 
                   return (
                     <div
@@ -336,7 +460,10 @@ export default function SnakeSearchLoading({
                               {isRunning ? (
                                 <Loader2 size={14} className="rm-spin" />
                               ) : isDone ? (
-                                <CheckCircle2 size={16} className="rm-done-icon" />
+                                <CheckCircle2
+                                  size={16}
+                                  className="rm-done-icon"
+                                />
                               ) : (
                                 <span className="rm-snake-idle-dot" />
                               )}
@@ -345,12 +472,63 @@ export default function SnakeSearchLoading({
 
                           <div className="rm-snake-check-meta">
                             <span>
-                              Results: <strong>{Number(step.found_count || 0)}</strong>
+                              Results:{" "}
+                              <strong>{Number(step.found_count || 0)}</strong>
                             </span>
                             <span>
-                              Time: <strong>{Number(step.elapsed_ms || 0)} ms</strong>
+                              Time:{" "}
+                              <strong>{Number(step.elapsed_ms || 0)} ms</strong>
                             </span>
                           </div>
+
+                          {hasGroups && (
+                            <div className="rm-snake-groups-wrap">
+                              <button
+                                type="button"
+                                className="rm-snake-toggle-btn"
+                                onClick={() => toggleStep(step.key)}
+                              >
+                                {isExpanded ? (
+                                  <ChevronDown size={15} />
+                                ) : (
+                                  <ChevronRight size={15} />
+                                )}
+                                <span>
+                                  {step.grouped_results.length} grouped result
+                                  {step.grouped_results.length > 1 ? "s" : ""}
+                                </span>
+                              </button>
+
+                              <AnimatePresence initial={false}>
+                                {isExpanded && (
+                                  <motion.div
+                                    className="rm-snake-groups-list"
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: "auto", opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    transition={{
+                                      duration: 0.24,
+                                      ease: "easeOut",
+                                    }}
+                                  >
+                                    {step.grouped_results.map((item, idx) => (
+                                      <div
+                                        className="rm-snake-group-row"
+                                        key={`${step.key}-${idx}`}
+                                      >
+                                        <span className="rm-snake-group-name">
+                                          {item.name}
+                                        </span>
+                                        <span className="rm-snake-group-count">
+                                          {Number(item.count || 0)}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -383,12 +561,11 @@ export default function SnakeSearchLoading({
                   <motion.div
                     key={`${activeCard.title}-${activeCard.image}`}
                     className="rm-snake-card"
-                    initial={{ opacity: 0, scale: 1.02 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.985 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
                     transition={{
-                      opacity: { duration: 0.7, ease: "easeInOut" },
-                      scale: { duration: 0.9, ease: "easeInOut" },
+                      opacity: { duration: 0.5, ease: "easeInOut" },
                     }}
                   >
                     <img
@@ -396,7 +573,9 @@ export default function SnakeSearchLoading({
                       alt={activeCard.title}
                       className="rm-snake-card-image"
                     />
+
                     <div className="rm-snake-card-overlay" />
+
                     <div className="rm-snake-card-meta">
                       <div className="rm-snake-card-percent">
                         {smoothProgress}%
@@ -411,7 +590,10 @@ export default function SnakeSearchLoading({
 
               <div className="rm-snake-summary-card">
                 <div className="rm-snake-summary-top">
-                  <div className="rm-snake-summary-title">Live Search Monitor</div>
+                  <div className="rm-snake-summary-title">
+                    Live Search Monitor
+                  </div>
+
                   <div
                     className={`rm-snake-summary-badge ${
                       smoothProgress >= 100 ? "done" : "running"
@@ -443,6 +625,37 @@ export default function SnakeSearchLoading({
                       </div>
                     );
                   })}
+                </div>
+
+                <div className="rm-snake-action-wrap">
+                  <button
+                    type="button"
+                    disabled={subscriptionAccess.loading}
+                    className={`rm-snake-action-btn ${
+                      hasPremiumAccess ? "view" : "pay"
+                    } ${subscriptionAccess.loading ? "disabled" : ""}`}
+                    onClick={handleSummaryAction}
+                  >
+                    {subscriptionAccess.loading ? (
+                      <Loader2 size={17} className="rm-spin" />
+                    ) : (
+                      <ActionIcon size={17} />
+                    )}
+
+                    <span>
+                      {subscriptionAccess.loading
+                        ? "Checking plan..."
+                        : actionLabel}
+                    </span>
+                  </button>
+
+                  <div className="rm-snake-plan-note">
+                    {subscriptionAccess.loading
+                      ? "Checking your subscription access..."
+                      : hasPremiumAccess
+                        ? `Your ${subscriptionAccess.plan} plan is active. You can view the matched search results.`
+                        : "Basic, inactive, or missing subscription requires payment before viewing results."}
+                  </div>
                 </div>
               </div>
             </section>
@@ -493,6 +706,7 @@ const styles = `
     gap: 16px;
     background: rgba(255, 255, 255, 0.9);
     flex-wrap: wrap;
+    flex: 0 0 auto;
   }
 
   .rm-snake-topbar-left {
@@ -591,15 +805,21 @@ const styles = `
   }
 
   @keyframes rmspin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+      transform: rotate(0deg);
+    }
+
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   .rm-snake-layout {
-    flex: 1;
+    flex: 1 1 auto;
     min-height: 0;
     display: grid;
     grid-template-columns: 380px minmax(0, 1fr);
+    overflow: hidden;
   }
 
   .rm-snake-left {
@@ -609,14 +829,17 @@ const styles = `
     flex-direction: column;
     min-height: 0;
     min-width: 0;
+    overflow: hidden;
   }
 
   .rm-snake-checks {
     display: grid;
     gap: 12px;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
     padding-right: 6px;
     min-height: 0;
+    max-height: 100%;
   }
 
   .rm-snake-check-item {
@@ -624,12 +847,15 @@ const styles = `
     background: #ffffff;
     border-radius: 16px;
     padding: 12px;
-    transition: all .2s ease;
+    transition:
+      border-color 0.2s ease,
+      background-color 0.2s ease,
+      box-shadow 0.2s ease;
   }
 
   .rm-snake-check-item.running {
     border-color: #bfdbfe;
-    box-shadow: 0 8px 20px rgba(59,130,246,.08);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.08);
   }
 
   .rm-snake-check-item.done {
@@ -694,12 +920,60 @@ const styles = `
     color: #64748b;
   }
 
+  .rm-snake-groups-wrap {
+    margin-top: 10px;
+  }
+
+  .rm-snake-toggle-btn {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+    color: #2563eb;
+    font-size: 12px;
+    font-weight: 800;
+    text-align: left;
+  }
+
+  .rm-snake-groups-list {
+    overflow: hidden;
+    margin-top: 8px;
+    border-top: 1px dashed #dbeafe;
+    padding-top: 8px;
+  }
+
+  .rm-snake-group-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 0;
+    font-size: 12px;
+    color: #334155;
+  }
+
+  .rm-snake-group-name {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .rm-snake-group-count {
+    font-weight: 800;
+    color: #0f172a;
+    white-space: nowrap;
+  }
+
   .rm-snake-progress-wrap {
     margin-top: auto;
     padding-top: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex: 0 0 auto;
   }
 
   .rm-snake-progress-ring {
@@ -736,17 +1010,21 @@ const styles = `
     flex-direction: column;
     justify-content: flex-start;
     gap: 18px;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .rm-snake-card-shell {
     width: 100%;
     max-width: 760px;
-    height: 100%;
-    min-height: 300px;
+    height: clamp(280px, 42vh, 430px);
+    min-height: 280px;
+    max-height: 430px;
     margin: 0 auto;
     position: relative;
-    flex: 1;
-    display: flex;
+    flex: 0 0 auto;
+    display: block;
+    overflow: hidden;
   }
 
   .rm-snake-card {
@@ -758,7 +1036,9 @@ const styles = `
     overflow: hidden;
     background: #dbeafe;
     box-shadow: 0 18px 34px rgba(15, 23, 42, 0.12);
-    will-change: opacity, transform;
+    transform: none !important;
+    scale: 1 !important;
+    will-change: opacity;
   }
 
   .rm-snake-card-image {
@@ -766,13 +1046,20 @@ const styles = `
     height: 100%;
     object-fit: cover;
     display: block;
-    transform: scale(1.01);
+    transform: none !important;
+    scale: 1 !important;
+    max-width: 100%;
+    max-height: 100%;
   }
 
   .rm-snake-card-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(2, 6, 23, 0.04) 0%, rgba(2, 6, 23, 0.42) 100%);
+    background: linear-gradient(
+      180deg,
+      rgba(2, 6, 23, 0.04) 0%,
+      rgba(2, 6, 23, 0.42) 100%
+    );
   }
 
   .rm-snake-card-meta {
@@ -808,6 +1095,7 @@ const styles = `
     border: 1px solid #e2e8f0;
     box-shadow: 0 18px 34px rgba(15, 23, 42, 0.08);
     padding: 20px;
+    flex: 0 0 auto;
   }
 
   .rm-snake-summary-top {
@@ -875,29 +1163,85 @@ const styles = `
     color: #64748b;
   }
 
-  @media (max-width: 1200px) {
-    .rm-snake-layout {
-      grid-template-columns: 340px minmax(0, 1fr);
-    }
+  .rm-snake-action-wrap {
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
 
-    .rm-snake-card-shell {
-      min-height: 280px;
-    }
+  .rm-snake-action-btn {
+    border: 0;
+    outline: none;
+    cursor: pointer;
+    min-height: 44px;
+    padding: 11px 18px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 900;
+    transition:
+      transform 0.18s ease,
+      box-shadow 0.18s ease,
+      opacity 0.18s ease;
+  }
+
+  .rm-snake-action-btn:hover {
+    transform: translateY(-1px);
+  }
+
+  .rm-snake-action-btn.disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+    transform: none;
+  }
+
+  .rm-snake-action-btn.view {
+    color: #ffffff;
+    background: linear-gradient(135deg, #2563eb, #0ea5e9);
+    box-shadow: 0 12px 24px rgba(37, 99, 235, 0.22);
+  }
+
+  .rm-snake-action-btn.pay {
+    color: #ffffff;
+    background: linear-gradient(135deg, #0f172a, #334155);
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.22);
+  }
+
+  .rm-snake-plan-note {
+    flex: 1 1 260px;
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.45;
   }
 
   @media (max-width: 980px) {
     .rm-snake-layout {
       grid-template-columns: 1fr;
+      overflow-y: auto;
     }
 
     .rm-snake-left {
       border-right: 0;
       border-bottom: 1px solid #e5e7eb;
       padding-bottom: 20px;
+      overflow: visible;
+    }
+
+    .rm-snake-checks {
+      max-height: 360px;
     }
 
     .rm-snake-main {
       padding-top: 16px;
+      overflow: visible;
     }
 
     .rm-snake-summary-grid {
@@ -907,82 +1251,7 @@ const styles = `
     .rm-snake-card-shell {
       height: 260px;
       min-height: 260px;
-      flex: 0 0 auto;
-    }
-
-    .rm-snake-progress-ring {
-      width: 150px;
-      height: 150px;
-    }
-
-    .rm-snake-progress-hole {
-      width: 118px;
-      height: 118px;
-    }
-  }
-
-  @media (max-width: 768px) {
-    .rm-snake-root {
-      padding: 14px;
-    }
-
-    .rm-snake-stage {
-      border-radius: 20px;
-    }
-
-    .rm-snake-topbar {
-      padding: 14px 16px;
-      gap: 12px;
-    }
-
-    .rm-snake-left {
-      padding: 16px;
-    }
-
-    .rm-snake-main {
-      padding: 16px;
-      gap: 16px;
-    }
-
-    .rm-snake-title {
-      font-size: 22px;
-    }
-
-    .rm-snake-subtitle-text {
-      font-size: 13px;
-    }
-
-    .rm-snake-card-shell {
-      height: 230px;
-      min-height: 230px;
-      flex: 0 0 auto;
-    }
-
-    .rm-snake-card,
-    .rm-snake-summary-card {
-      border-radius: 20px;
-    }
-
-    .rm-snake-summary-card {
-      padding: 16px;
-    }
-
-    .rm-snake-summary-title {
-      font-size: 18px;
-    }
-
-    .rm-snake-progress-ring {
-      width: 136px;
-      height: 136px;
-    }
-
-    .rm-snake-progress-hole {
-      width: 106px;
-      height: 106px;
-    }
-
-    .rm-snake-progress-value {
-      font-size: 24px;
+      max-height: 260px;
     }
   }
 
@@ -991,175 +1260,22 @@ const styles = `
       padding: 10px;
     }
 
-    .rm-snake-stage {
-      border-radius: 18px;
-    }
-
-    .rm-snake-topbar {
-      padding: 14px;
-      gap: 10px;
-    }
-
     .rm-snake-title {
       font-size: 20px;
-    }
-
-    .rm-snake-running-pill {
-      font-size: 13px;
-      padding: 8px 12px;
-      max-width: 100%;
-    }
-
-    .rm-snake-left {
-      padding: 14px;
-    }
-
-    .rm-snake-main {
-      padding: 14px;
-      gap: 14px;
-    }
-
-    .rm-snake-check-item {
-      padding: 10px;
-      border-radius: 14px;
-    }
-
-    .rm-snake-check-title {
-      font-size: 12px;
-    }
-
-    .rm-snake-check-meta {
-      gap: 8px 12px;
-      font-size: 11px;
     }
 
     .rm-snake-summary-grid {
       grid-template-columns: 1fr;
     }
 
-    .rm-snake-summary-box {
-      padding: 12px;
-    }
-
-    .rm-snake-summary-box-value {
-      font-size: 22px;
-    }
-
     .rm-snake-card-shell {
       height: 210px;
       min-height: 210px;
-      flex: 0 0 auto;
+      max-height: 210px;
     }
 
-    .rm-snake-card-meta {
-      left: 14px;
-      right: 14px;
-      bottom: 14px;
-    }
-
-    .rm-snake-card-percent {
-      font-size: 20px;
-      margin-bottom: 6px;
-    }
-
-    .rm-snake-card-title {
-      font-size: 15px;
-    }
-
-    .rm-snake-progress-ring {
-      width: 124px;
-      height: 124px;
-    }
-
-    .rm-snake-progress-hole {
-      width: 96px;
-      height: 96px;
-    }
-
-    .rm-snake-progress-value {
-      font-size: 22px;
-    }
-  }
-
-  @media (max-width: 420px) {
-    .rm-snake-root {
-      padding: 8px;
-    }
-
-    .rm-snake-stage {
-      border-radius: 16px;
-    }
-
-    .rm-snake-topbar,
-    .rm-snake-left,
-    .rm-snake-main {
-      padding-left: 12px;
-      padding-right: 12px;
-    }
-
-    .rm-snake-kicker {
-      font-size: 11px;
-    }
-
-    .rm-snake-title {
-      font-size: 18px;
-    }
-
-    .rm-snake-subtitle-text {
-      font-size: 12px;
-    }
-
-    .rm-snake-running-pill {
-      font-size: 12px;
-      padding: 8px 10px;
-    }
-
-    .rm-snake-check-main {
-      gap: 8px;
-    }
-
-    .rm-snake-check-icon {
-      width: 20px;
-      height: 20px;
-      flex-basis: 20px;
-    }
-
-    .rm-snake-card-shell {
-      height: 180px;
-      min-height: 180px;
-      flex: 0 0 auto;
-    }
-
-    .rm-snake-card,
-    .rm-snake-summary-card {
-      border-radius: 16px;
-    }
-
-    .rm-snake-summary-title {
-      font-size: 16px;
-    }
-
-    .rm-snake-summary-box-title,
-    .rm-snake-summary-box-sub {
-      font-size: 11px;
-    }
-
-    .rm-snake-summary-box-value {
-      font-size: 20px;
-    }
-
-    .rm-snake-progress-ring {
-      width: 112px;
-      height: 112px;
-    }
-
-    .rm-snake-progress-hole {
-      width: 84px;
-      height: 84px;
-    }
-
-    .rm-snake-progress-value {
-      font-size: 18px;
+    .rm-snake-action-btn {
+      width: 100%;
     }
   }
 `;

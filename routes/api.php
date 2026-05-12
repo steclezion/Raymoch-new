@@ -16,7 +16,7 @@ use App\Http\Controllers\Api\CountryCodeController;
 use App\Http\Controllers\Api\SearchFilterController;
 use App\Http\Controllers\Api\ExploreTooltipController;
 use App\Http\Controllers\Api\MainSearchEngineController;
-
+use App\Http\Controllers\Api\SubscriptionController;
 
 
 
@@ -36,6 +36,10 @@ Route::middleware('auth')->get('/me', function (\Illuminate\Http\Request $reques
         ],
     ]);
 });
+
+
+
+
 
 
 Route::post('/company-search-logs', [CompanySearchLogController::class, 'store']);
@@ -95,6 +99,7 @@ Route::prefix('companies/{company}')->group(function () {
     Route::post('/reactions', [CompanyReactionController::class, 'storeReaction']);
 });
 
+Route::middleware('auth')->get('/subscription/access', [SubscriptionController::class, 'access']);
 
 Route::prefix('main-search-engine')->group(function () {
     Route::post('/start', [MainSearchEngineController::class, 'start']);

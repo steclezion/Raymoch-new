@@ -54,6 +54,10 @@ use App\Mail\HelloMail;
 use App\Mail\EmailTestMailGun;
 use App\Mail\GoogleVerifyMail;
 
+use App\Http\Controllers\Api\SubscriptionController;
+
+
+
 /*
 |--------------------------------------------------------------------------
 | Public routes (NO auth)
@@ -116,14 +120,16 @@ Route::post('/stripe/webhook/custom', [StripeWebhookController::class, 'handle']
 | Guest-only routes (auth pages, signup flows)
 |--------------------------------------------------------------------------
 */
+
+Route::middleware(['web', 'auth'])->get('/subscription/access', [SubscriptionController::class, 'access'])
+    ->name('subscription.access');
+
 Route::middleware(['guest', 'throttle:50,1'])->group(function () {
     // Login (choose ONE system; I recommend LoginController)
     Route::get('/login', [LoginController::class, 'showLogin'])->name('login');
     Route::post('/login/json', [LoginController::class, 'loginJson'])->name('auth.login.json');
 
     //   Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
-
-
 
     // If you still need legacy AuthController login, keep it but don’t duplicate /login
     // Route::post('/login', [AuthController::class, 'loginPost'])->name('login.post');
