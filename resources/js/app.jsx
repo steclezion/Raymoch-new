@@ -22,7 +22,9 @@ import Entire from "./pages/Entire.jsx";
 import Services from "./pages/Services.jsx";
 import Market_Insight from "./pages/Market_Insight.jsx";
 import About from "./pages/About.jsx";
-
+import Pricing from "./pages/Pricing.jsx";
+import PriceHowToPay  from "./pages/Pricehowtopay.jsx";
+import MembershipSuccess from "./pages/membership_success.jsx";
 /* =========================================================
    Auth Context
 ========================================================= */
@@ -371,6 +373,18 @@ mount(
 mount(
   "signup-root",
   <SignupPage routes={window.ROUTES || window.APP?.routes || {}} />
+);
+
+mount(
+  "pricing-root", <Pricing routes={window.ROUTES || window.APP?.routes || {}} />
+);
+
+mount(
+  "price-how-to-pay-root", <PriceHowToPay  routes={window.ROUTES || window.APP?.routes || {}} />
+);
+
+mount(
+  "membership-success-root", <MembershipSuccess  routes={window.ROUTES || window.APP?.routes || {}} />
 );
 
 /* =========================================================

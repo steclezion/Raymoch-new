@@ -55,6 +55,7 @@ use App\Mail\EmailTestMailGun;
 use App\Mail\GoogleVerifyMail;
 
 use App\Http\Controllers\Api\SubscriptionController;
+use App\Http\Controllers\StripePaymentController;
 
 
 
@@ -201,7 +202,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/auth/user', [ProfileController::class, 'authUser'])
         ->name('auth.user');
-
+    Route::post('/stripe/create-payment-intent', [StripePaymentController::class, 'createPaymentIntent'])->name('stripe.create.payment.intent');
+    Route::get('/membership-success', [StripePaymentController::class, 'membershipSuccess'])->middleware('auth')->name('membership.success');
+    Route::view('/membership-success-page', 'pages.membership_success')->middleware('auth')->name('membership.success.page');
 
     // Logout must be POST
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
@@ -245,6 +248,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('/services', 'pages.services')->name('services'); // temp → point to real page later 
     Route::view('/insights', 'pages.market-insight')->name('insights'); // temp // services sub-pages 
     Route::view('/partner-programs', 'pages.services.partner-programs')->name('partner-programs'); // partner programs page
+    Route::view('/pricing', 'pages.Pricing')->name('pricing');
+    Route::view('/price-how-to-pay', 'pages.price_how_to_pay')->name('price.how.to.pay');
+
+
 
 
 
