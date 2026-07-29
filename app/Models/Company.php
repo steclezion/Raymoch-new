@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\CompanyFinancial;
 use App\Models\CompanyTeamMember;
 use App\Models\CompanyDocument;
@@ -77,6 +78,14 @@ class Company extends Model
         'latitude',
         'longitude',
     ];
+    /**
+     * Investment opportunities published by this company.
+     */
+    public function investmentOpportunities(): HasMany
+    {
+        return $this->hasMany(InvestmentOpportunity::class);
+    }
+
     public function OrganizationMedias()
     {
         return $this->hasMany(OrganizationMedia::class, 'company_id');

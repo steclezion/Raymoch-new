@@ -47,6 +47,8 @@ use Illuminate\Support\Facades\Auth;
 use Laravel\Cashier\Http\Controllers\WebhookController;
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\StoreSessionSearchController;
+
 
 
 use App\Mail\TestPostmarkMail;
@@ -199,6 +201,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('/profile/update', [ProfileController::class, 'updateProfilePicture'])
         ->name('profile.update');
+
+
+    Route::post('/search-session/store', [StoreSessionSearchController::class, 'store']);
+    Route::get('/search-session/current', [StoreSessionSearchController::class, 'current']);
 
     Route::get('/auth/user', [ProfileController::class, 'authUser'])
         ->name('auth.user');

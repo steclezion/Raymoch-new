@@ -29,7 +29,10 @@ class AllCompaniesController extends Controller
             $query->where('VerificationStatus', 'Verified');
         } else {
             // Default: show only NOT YET VERIFIED (Pending or Unverified)
-            $query->whereIn('VerificationStatus', ['Pending', 'Unverified']);
+            $query->where(function ($q) {
+                $q->where('VerificationStatus', 'Pending')
+                    ->orWhere('VerificationStatus', 'Unverified');
+            });
         }
 
         // -------- SECTOR FILTER (?sector=Agriculture) --------
@@ -60,7 +63,7 @@ class AllCompaniesController extends Controller
 
         // -------- ORDER + PAGINATION --------
         $companies = $query
-            ->orderBy('CompanyName')   // make sure this matches your column name
+            ->orderBy('CompanyName', 'asc')   // make sure this matches your column name
             ->paginate(20);
 
         return response()->json([
@@ -68,7 +71,7 @@ class AllCompaniesController extends Controller
         ]);
     }
 
-    public function show($id)
+    public function show(Request $request, int $id)
     {
         $company = Company::findOrFail($id);
 

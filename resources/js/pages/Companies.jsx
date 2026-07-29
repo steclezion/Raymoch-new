@@ -9,16 +9,14 @@ import Footer from "../components/layout_master/Footer.jsx";
 import { Box, Alert, Breadcrumbs, Link as MLink, Typography } from "@mui/material";
 
 // Local
-import "../styles/companies.css"; // keep your global companies styles
+import "../styles/companies.css";
 import CompanyDetailDialog from "../components/companies/CompanyDetailDialog.jsx";
 import { API_BASE, fetchJSON } from "../utils/api.js";
 
-import FilterPanel from "../pages/companies/Filter_panel.jsx";
+// import FilterPanel from "../pages/companies/Filter_panel.jsx"; // removed
+import TopSearchPanelCompanies from "../pages/companies/Top_search_panel_companies.jsx";
 import MainLoadPanel from "../pages/companies/Main_load_panel.jsx";
 
-/* ----------------------------- HELPERS ----------------------------- */
-
-// Simple ASCII normalizer
 function ascii(s) {
   return (s || "")
     .normalize("NFD")
@@ -26,11 +24,11 @@ function ascii(s) {
     .replace(/’/g, "'")
     .trim();
 }
+
 function lowerAscii(s) {
   return ascii(s).toLowerCase();
 }
 
-// Country aliases for better grouping
 const COUNTRY_ALIASES = new Map([
   ["côte d’ivoire", "Cote d'Ivoire"],
   ["cote d’ivoire", "Cote d'Ivoire"],
@@ -54,9 +52,9 @@ function canonicalizeCountry(input) {
   return ascii(input);
 }
 
-// Normalize company record to stable shape
 function normalizeCompany(c) {
   if (!c) return {};
+
   const rawStatus = c.VerificationStatus ?? c.verification_status ?? "";
   const statusStr = String(rawStatus).trim().toLowerCase();
   const isVerified = /\bverified\b/.test(statusStr) || !!c.Verified;
@@ -78,36 +76,46 @@ function normalizeCompany(c) {
   };
 }
 
-// Grouping helpers
 function groupByCountry(items) {
   const groups = new Map();
+
   items.forEach((x) => {
     const key = (x.country || "Unspecified country").trim() || "Unspecified country";
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(x);
   });
 
-  const out = Array.from(groups.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-  out.forEach(([_, arr]) => arr.sort((u, v) => (u.name || "").localeCompare(v.name || "")));
+  const out = Array.from(groups.entries()).sort((a, b) =>
+    a[0].localeCompare(b[0])
+  );
+
+  out.forEach(([_, arr]) =>
+    arr.sort((u, v) => (u.name || "").localeCompare(v.name || ""))
+  );
+
   return out;
 }
 
 function groupBySector(items) {
   const groups = new Map();
+
   items.forEach((x) => {
     const key = (x.sector || "Unspecified sector").trim() || "Unspecified sector";
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(x);
   });
 
-  const out = Array.from(groups.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-  out.forEach(([_, arr]) => arr.sort((u, v) => (u.name || "").localeCompare(v.name || "")));
+  const out = Array.from(groups.entries()).sort((a, b) =>
+    a[0].localeCompare(b[0])
+  );
+
+  out.forEach(([_, arr]) =>
+    arr.sort((u, v) => (u.name || "").localeCompare(v.name || ""))
+  );
+
   return out;
 }
 
-/**
- * All inputs empty → Country → Sector → Companies[]
- */
 function groupByCountryAndSector(items) {
   const countryMap = new Map();
 
@@ -122,20 +130,23 @@ function groupByCountryAndSector(items) {
     sectorMap.get(sector).push(c);
   });
 
-  const countries = Array.from(countryMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  const countries = Array.from(countryMap.entries()).sort((a, b) =>
+    a[0].localeCompare(b[0])
+  );
 
   return countries.map(([countryName, sectorMap]) => {
     const sectors = Array.from(sectorMap.entries())
       .sort((a, b) => a[0].localeCompare(b[0]))
       .map(([sectorName, companies]) => ({
         sector: sectorName,
-        companies: companies.slice().sort((u, v) => (u.name || "").localeCompare(v.name || "")),
+        companies: companies
+          .slice()
+          .sort((u, v) => (u.name || "").localeCompare(v.name || "")),
       }));
+
     return { country: countryName, sectors };
   });
 }
-
-/* ============================== MAIN PAGE ============================== */
 
 export default function Companies() {
   const ROUTES = useMemo(
@@ -155,12 +166,10 @@ export default function Companies() {
     []
   );
 
-  /* ---------------------------- FILTER STATE ---------------------------- */
   const [q, setQ] = useState("");
   const [sector, setSector] = useState("");
   const [country, setCountry] = useState("");
   const [verified, setVerified] = useState(false);
-
   const [localFilter, setLocalFilter] = useState("");
 
   const [companies, setCompanies] = useState([]);
@@ -174,42 +183,42 @@ export default function Companies() {
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(10);
   const [error, setError] = useState("");
-
   const [fromParam, setFromParam] = useState("");
 
-  /* ------------------------- DETAIL DIALOG STATE ------------------------- */
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState(null);
 
-  /* --------------------------- INIT FROM URL --------------------------- */
   useEffect(() => {
     const qs = new URLSearchParams(window.location.search);
 
-    const qParam = (qs.get("q") || qs.get("search") || "").trim();
+    const qParam = (qs.get("q") || qs.get("search") || qs.get("keyword") || "").trim();
     const sectorParam = (qs.get("sector") || "").trim();
     const countryParam = canonicalizeCountry(qs.get("country") || "");
     const pageParam = parseInt(qs.get("page") || "1", 10);
-    const verifiedParam = qs.get("verified");
+    const verifiedParam = qs.get("verified") || qs.get("verification");
     const from = (qs.get("from") || "").toLowerCase();
 
     if (qParam) setQ(qParam);
     if (sectorParam) setSector(sectorParam);
     if (countryParam) setCountry(countryParam);
     if (!Number.isNaN(pageParam) && pageParam > 0) setPage(pageParam);
-    if (verifiedParam === "1" || verifiedParam === "true") setVerified(true);
+    if (verifiedParam === "1" || verifiedParam === "true" || verifiedParam === "ON") {
+      setVerified(true);
+    }
+
     setFromParam(from);
   }, []);
 
-  /* ------------------------ LOAD FILTER OPTIONS ------------------------ */
   useEffect(() => {
     let cancelled = false;
 
-    (async () => {
+    async function loadOptions() {
       try {
         const [sectorRes, countryRes] = await Promise.all([
           fetchJSON(`${API_BASE}/business-sectors`).catch(() => null),
           fetchJSON(`${API_BASE}/countries`).catch(() => null),
         ]);
+
         if (cancelled) return;
 
         if (sectorRes && Array.isArray(sectorRes.data)) {
@@ -217,6 +226,7 @@ export default function Companies() {
             .map((s) => s.title || s.sector_name || s.name)
             .filter(Boolean)
             .sort();
+
           setSectorOptions(list);
         }
 
@@ -225,44 +235,50 @@ export default function Companies() {
             .map((c) => c.country_name || c.name)
             .filter(Boolean)
             .sort();
+
           setCountryOptions(list);
         }
       } catch (e) {
         console.error("Filter options error", e);
       }
-    })();
+    }
+
+    loadOptions();
 
     return () => {
       cancelled = true;
     };
   }, []);
 
-  /* ------------------------- LOADING ANIMATION ------------------------- */
   useEffect(() => {
     if (!loading) {
       setProgress(100);
       return;
     }
+
     setProgress(10);
-    const id = setInterval(() => setProgress((p) => (p < 90 ? p + 10 : p)), 200);
+
+    const id = setInterval(() => {
+      setProgress((p) => (p < 90 ? p + 10 : p));
+    }, 200);
+
     return () => clearInterval(id);
   }, [loading]);
 
-  /* ---------------------------- FLAGS / MODES ---------------------------- */
   const isAllInputsEmpty = !q && !sector && !country && !verified && !localFilter.trim();
   const hasAnyFilter = !!(q || sector || country || verified);
 
-  /* --------------------------- MAIN LIST FETCH --------------------------- */
   useEffect(() => {
     let cancelled = false;
 
-    async function load() {
+    async function loadCompanies() {
       try {
         setLoading(true);
         setError("");
 
         const params = new URLSearchParams();
         params.set("page", String(page));
+
         if (q) params.set("q", q);
         if (sector) params.set("sector", sector);
         if (country) params.set("country", country);
@@ -270,6 +286,7 @@ export default function Companies() {
 
         const url = `${API_BASE}/companies?${params.toString()}`;
         const js = await fetchJSON(url);
+
         if (cancelled) return;
 
         let payload = js.data;
@@ -286,21 +303,24 @@ export default function Companies() {
         }
 
         const normalized = list.map(normalizeCompany);
+
         setCompanies(normalized);
         setPage(payload.current_page || 1);
         setTotalPages(payload.last_page || 1);
         setTotal(payload.total || normalized.length || 0);
 
-        // Keep URL in sync
         const qp = new URLSearchParams();
+
         if (page > 1) qp.set("page", String(page));
         if (q) qp.set("q", q);
         if (sector) qp.set("sector", sector);
         if (country) qp.set("country", country);
         if (verified) qp.set("verified", "1");
         if (fromParam) qp.set("from", fromParam);
+
         const qs = qp.toString();
-        const newUrl = window.location.pathname + (qs ? "?" + qs : "");
+        const newUrl = window.location.pathname + (qs ? `?${qs}` : "");
+
         window.history.replaceState(null, "", newUrl);
       } catch (e) {
         if (cancelled) return;
@@ -311,24 +331,25 @@ export default function Companies() {
       }
     }
 
-    load();
+    loadCompanies();
+
     return () => {
       cancelled = true;
     };
   }, [page, q, sector, country, verified, fromParam]);
 
-  
-
-  /* -------------------------- DERIVED LISTS -------------------------- */
   const visibleCompanies = useMemo(() => {
     let list = companies;
 
-    if (verified) list = list.filter((c) => c.verified);
+    if (verified) {
+      list = list.filter((c) => c.verified);
+    }
 
     if (!q && localFilter.trim()) {
       const term = localFilter.trim().toLowerCase();
       list = list.filter((c) => (c.name || "").toLowerCase().includes(term));
     }
+
     return list;
   }, [companies, verified, q, localFilter]);
 
@@ -338,7 +359,10 @@ export default function Companies() {
   );
 
   const flatGrouped = useMemo(
-    () => (shouldGroupBySector ? groupBySector(visibleCompanies) : groupByCountry(visibleCompanies)),
+    () =>
+      shouldGroupBySector
+        ? groupBySector(visibleCompanies)
+        : groupByCountry(visibleCompanies),
     [visibleCompanies, shouldGroupBySector]
   );
 
@@ -347,21 +371,26 @@ export default function Companies() {
     [isAllInputsEmpty, visibleCompanies]
   );
 
-  const hasResults = isAllInputsEmpty ? nestedGrouped.length > 0 : flatGrouped.length > 0;
+  const hasResults = isAllInputsEmpty
+    ? nestedGrouped.length > 0
+    : flatGrouped.length > 0;
 
-  /* ----------------------------- PAGINATION ----------------------------- */
   const pageNumbers = useMemo(() => {
     const pages = [];
     const max = 7;
+
     if (totalPages <= max) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
+      for (let i = 1; i <= totalPages; i += 1) pages.push(i);
     } else {
       let start = Math.max(1, page - 2);
       let end = Math.min(totalPages, page + 2);
+
       if (start === 1) end = 5;
       if (end === totalPages) start = totalPages - 4;
-      for (let i = start; i <= end; i++) pages.push(i);
+
+      for (let i = start; i <= end; i += 1) pages.push(i);
     }
+
     return pages;
   }, [page, totalPages]);
 
@@ -369,7 +398,6 @@ export default function Companies() {
   const goPrev = () => page > 1 && setPage(page - 1);
   const goNext = () => page < totalPages && setPage(page + 1);
 
-  /* --------------------------- BREADCRUMB LINK --------------------------- */
   const { backHref } = useMemo(() => {
     function baseFor(from) {
       switch (from) {
@@ -390,17 +418,22 @@ export default function Companies() {
           return { href: "/explore" };
       }
     }
+
     const dest = baseFor(fromParam || "explore");
     const p = new URLSearchParams();
+
     if (q) p.set("q", q);
     if (sector) p.set("sector", sector);
     if (country) p.set("country", country);
     if (verified) p.set("verified", "1");
+
     const extra = p.toString();
-    return { backHref: dest.href + (extra ? "?" + extra : "") };
+
+    return {
+      backHref: dest.href + (extra ? `?${extra}` : ""),
+    };
   }, [fromParam, q, sector, country, verified]);
 
-  /* ------------------------------ HANDLERS ------------------------------ */
   const onClearFilters = () => {
     setQ("");
     setSector("");
@@ -415,34 +448,32 @@ export default function Companies() {
     setDialogOpen(true);
   };
 
-  /* ================================ UI ================================ */
   return (
     <div className="page">
       <Header routes={ROUTES} />
 
       <Box className="container">
-        {/* Breadcrumb */}
         <Box sx={{ mb: 1 }}>
           <Breadcrumbs aria-label="breadcrumb" separator="›">
             <MLink color="inherit" underline="hover" href={ROUTES.home} sx={{ fontSize: 13 }}>
               Home
             </MLink>
+
             <MLink color="inherit" underline="hover" href={backHref} sx={{ fontSize: 13 }}>
               Explore businesses
             </MLink>
+
             <Typography color="text.primary" sx={{ fontSize: 13, fontWeight: 600 }}>
               Companies
             </Typography>
           </Breadcrumbs>
         </Box>
 
-        {/* Hero */}
         <header className="explore-hero">
           <h1>Companies</h1>
           <p>Filter and browse companies by country, sector, and verification.</p>
         </header>
 
-        {/* Error */}
         {error && (
           <Box sx={{ my: 1 }}>
             <Alert severity="error" variant="filled">
@@ -451,8 +482,7 @@ export default function Companies() {
           </Box>
         )}
 
-        {/* ✅ FILTER PANEL (split file) */}
-        <FilterPanel
+        <TopSearchPanelCompanies
           q={q}
           setQ={setQ}
           sector={sector}
@@ -470,7 +500,6 @@ export default function Companies() {
           setPage={setPage}
         />
 
-        {/* ✅ EVERYTHING ELSE (split file) */}
         <MainLoadPanel
           loading={loading}
           progress={progress}
@@ -491,7 +520,6 @@ export default function Companies() {
         />
       </Box>
 
-      {/* Detail Dialog */}
       <CompanyDetailDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}

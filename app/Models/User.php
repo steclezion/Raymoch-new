@@ -11,6 +11,7 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Laravel\Cashier\Billable;
 use App\Models\Industry;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -69,5 +70,10 @@ class User extends Authenticatable
     public function industry()
     {
         return $this->hasMany(Industry::class);
+    }
+
+    public function investorPreferences(): HasMany
+    {
+        return $this->hasMany(InvestorPreference::class);
     }
 }

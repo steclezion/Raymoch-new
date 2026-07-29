@@ -477,57 +477,127 @@ export default function TopSearchPanel({
     };
   };
 
+  // const submitSearch = async (e) => {
+  //   e.preventDefault();
+
+  //   if (isSearching) return;
+  //   if (!validateBeforeSearch()) return;
+
+  //   const payload = buildPayload();
+
+  //   try {
+  //     setIsSearching(true);
+  //     setSearchPayload(payload);
+
+  //     const startRes = await fetch("/api/main-search-engine/start", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Accept: "application/json",
+  //         "X-CSRF-TOKEN": getCsrfToken(),
+  //       },
+  //       body: JSON.stringify(payload),
+  //     });
+
+  //     const startData = await startRes.json();
+
+  //     if (!startRes.ok || !startData?.ok || !startData?.token) {
+  //       throw new Error(startData?.message || "Unable to start search.");
+  //     }
+
+  //     const token = startData.token;
+
+  //     setSearchToken(token);
+  //     setShowSearchModal(true);
+
+  //     fetch(`/api/main-search-engine/run/${token}`, {
+  //       method: "POST",
+  //       headers: {
+  //         Accept: "application/json",
+  //         "X-CSRF-TOKEN": getCsrfToken(),
+  //       },
+  //     }).catch((err) => {
+  //       console.error("Search execution failed:", err);
+  //     });
+  //   } catch (error) {
+  //     console.error(error);
+  //     toast.error(error.message || "Search could not be started.");
+  //     setIsSearching(false);
+  //     setShowSearchModal(false);
+  //     setSearchToken("");
+  //   }
+  // };
+
+
   const submitSearch = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (isSearching) return;
-    if (!validateBeforeSearch()) return;
+  if (isSearching) return;
+  if (!validateBeforeSearch()) return;
 
-    const payload = buildPayload();
+  const payload = buildPayload();
 
-    try {
-      setIsSearching(true);
-      setSearchPayload(payload);
+  try {
+    setIsSearching(true);
+    setSearchPayload(payload);
 
-      const startRes = await fetch("/api/main-search-engine/start", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "X-CSRF-TOKEN": getCsrfToken(),
-        },
-        body: JSON.stringify(payload),
-      });
+    const sessionRes = await fetch("/search-session/store", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "X-CSRF-TOKEN": getCsrfToken(),
+      },
+      credentials: "same-origin",
+      body: JSON.stringify(payload),
+    });
 
-      const startData = await startRes.json();
+    const sessionData = await sessionRes.json();
 
-      if (!startRes.ok || !startData?.ok || !startData?.token) {
-        throw new Error(startData?.message || "Unable to start search.");
-      }
-
-      const token = startData.token;
-
-      setSearchToken(token);
-      setShowSearchModal(true);
-
-      fetch(`/api/main-search-engine/run/${token}`, {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "X-CSRF-TOKEN": getCsrfToken(),
-        },
-      }).catch((err) => {
-        console.error("Search execution failed:", err);
-      });
-    } catch (error) {
-      console.error(error);
-      toast.error(error.message || "Search could not be started.");
-      setIsSearching(false);
-      setShowSearchModal(false);
-      setSearchToken("");
+    if (!sessionRes.ok || !sessionData?.ok) {
+      throw new Error(sessionData?.message || "Unable to store search session.");
     }
-  };
 
+    const startRes = await fetch("/api/main-search-engine/start", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "X-CSRF-TOKEN": getCsrfToken(),
+      },
+      credentials: "same-origin",
+      body: JSON.stringify(payload),
+    });
+
+    const startData = await startRes.json();
+
+    if (!startRes.ok || !startData?.ok || !startData?.token) {
+      throw new Error(startData?.message || "Unable to start search.");
+    }
+
+    const token = startData.token;
+
+    setSearchToken(token);
+    setShowSearchModal(true);
+
+    fetch(`/api/main-search-engine/run/${token}`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "X-CSRF-TOKEN": getCsrfToken(),
+      },
+      credentials: "same-origin",
+    }).catch((err) => {
+      console.error("Search execution failed:", err);
+    });
+  } catch (error) {
+    console.error(error);
+    toast.error(error.message || "Search could not be started.");
+    setIsSearching(false);
+    setShowSearchModal(false);
+    setSearchToken("");
+  }
+};
   return (
     <>
       <style>{css}</style>

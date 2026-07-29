@@ -13,13 +13,13 @@ class ServiceController extends Controller
     {
         // Adjust column names if your countries table differs
         // Common: id, name (or country_name)
-        $countries = DB::table('countries')
+        $countries = DB::table('countries_africans')
             ->select('id', 'country_name as name')
             ->orderBy('name', 'asc')
             ->get();
 
         $sectors = DB::table('sectors')
-            ->select('id', 'name')
+            ->select('id', 'title as name')
             ->orderBy('name', 'asc')
             ->get();
 

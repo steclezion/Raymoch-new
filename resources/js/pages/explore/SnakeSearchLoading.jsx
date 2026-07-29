@@ -119,6 +119,40 @@ function getCsrfToken() {
     ?.getAttribute("content");
 }
 
+/**
+ * This function converts the completed search status into:
+ *
+ * /companies?sector=Accounting+%26+Audit&from=explore&search_token=...
+ *
+ * It only includes filters that have real values.
+ * It ignores empty, all, unknown, null, and undefined values.
+ */
+async function buildCompaniesUrlFromSession(token) {
+  try {
+    const response = await fetch("/search-session/current", {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        "X-CSRF-TOKEN": getCsrfToken() || "",
+      },
+      credentials: "same-origin",
+    });
+
+    const json = await response.json();
+
+    if (response.ok && json?.ok && json?.url) {
+      const joiner = json.url.includes("?") ? "&" : "?";
+      return token ? `${json.url}${joiner}search_token=${encodeURIComponent(token)}` : json.url;
+    }
+  } catch (error) {
+    console.error("Unable to read search session:", error);
+  }
+
+  return token
+    ? `/companies?from=explore&search_token=${encodeURIComponent(token)}`
+    : "/companies?from=explore";
+}
+
 export default function SnakeSearchLoading({
   token,
   open = false,
@@ -144,8 +178,12 @@ export default function SnakeSearchLoading({
   const activeStepKey = statusData?.meta?.active_step || "keyword";
 
   const hasPremiumAccess = Boolean(subscriptionAccess.can_view);
-  const actionLabel = hasPremiumAccess ? "View" : "Pay to view";
+
   const ActionIcon = hasPremiumAccess ? Eye : CreditCard;
+
+  const actionLabel = hasPremiumAccess
+    ? "View Results"
+    : "Pay To View Results";
 
   const stepRows = useMemo(() => {
     const rawSteps = statusData?.steps || {};
@@ -201,7 +239,8 @@ export default function SnakeSearchLoading({
           ...prev,
           loading: true,
         }));
-        const response = await fetch("subscription/access", {
+
+        const response = await fetch("/subscription/access", {
           method: "GET",
           headers: {
             Accept: "application/json",
@@ -341,26 +380,26 @@ export default function SnakeSearchLoading({
     }));
   };
 
-  const handleSummaryAction = () => {
-    if (subscriptionAccess.loading) return;
+const handleSummaryAction = async () => {
+  if (subscriptionAccess.loading) return;
 
-    if (hasPremiumAccess) {
-      if (typeof onViewResults === "function") {
-        onViewResults(statusData);
-        return;
-      }
-
-      window.location.href = "/search/results";
+  if (hasPremiumAccess) {
+    if (typeof onViewResults === "function") {
+      onViewResults(statusData);
       return;
     }
 
-    if (typeof onPayToView === "function") {
-      onPayToView(statusData);
-      return;
-    }
+    window.location.href = await buildCompaniesUrlFromSession(token);
+    return;
+  }
 
-    window.location.href = "/pricing";
-  };
+  if (typeof onPayToView === "function") {
+    onPayToView(statusData);
+    return;
+  }
+
+  window.location.href = "/pricing";
+};
 
   return (
     <>

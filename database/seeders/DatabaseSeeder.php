@@ -22,6 +22,12 @@ use App\Models\CompanyInfos;
 use App\Models\CompanyClassification;
 use App\Models\Sector;
 use App\Models\BusinessModel;
+use App\Models\Industry;
+use App\Models\Stage;
+use App\Models\VerificationType;
+use App\Models\TrustDimension;
+use App\Models\Capability;
+use App\Models\FundingInstrument;
 
 class DatabaseSeeder extends Seeder
 {
@@ -55,5 +61,6 @@ class DatabaseSeeder extends Seeder
         $this->call(BusinessModelsTableSeeder::class);
         $this->call(ExistingCompaniesRelationsSeeder::class);
         $this->call(VerificationDocumentSeeder::class);
+        $this->call(FundingInstrumentSeeder::class);
     }
 }

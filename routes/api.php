@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\SearchFilterController;
 use App\Http\Controllers\Api\ExploreTooltipController;
 use App\Http\Controllers\Api\MainSearchEngineController;
 use App\Http\Controllers\Api\SubscriptionController;
+use App\Http\Controllers\Api\CompanySearchFilterResolveController;
 
 
 
@@ -85,6 +86,9 @@ Route::get('/sectors', [SearchFilterController::class, 'sectors']);
 Route::get('/industries', [SearchFilterController::class, 'industries']);
 
 
+
+
+Route::get('/companies/resolve-search-filters', [CompanySearchFilterResolveController::class, 'resolve']);
 
 Route::get('/explore-card-stats', [ExploreTooltipController::class, 'show']);
 
