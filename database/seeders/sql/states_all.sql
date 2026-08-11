@@ -4926,9 +4926,9 @@ INSERT INTO `states_all` (`id`, `name`, `country_id`, `country_code`, `fips_code
 --
 -- Indexes for table `states_all`
 --
-ALTER TABLE `states_all`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `country_region` (`country_id`);
+-- ALTER TABLE `states_all`
+--   ADD PRIMARY KEY (`id`),
+--   ADD KEY `country_region` (`country_id`);
 
 --
 -- AUTO_INCREMENT for dumped tables
@@ -4937,8 +4937,8 @@ ALTER TABLE `states_all`
 --
 -- AUTO_INCREMENT for table `states_all`
 --
-ALTER TABLE `states_all`
-  MODIFY `id` mediumint(8) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4926;
+-- ALTER TABLE `states_all`
+--   MODIFY `id` mediumint(8) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4926;
 
 --
 -- Constraints for dumped tables
