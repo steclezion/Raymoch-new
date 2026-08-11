@@ -4948,7 +4948,7 @@ ALTER TABLE `states_all`
 -- Constraints for table `states_all`
 --
 ALTER TABLE `states_all`
-  ADD CONSTRAINT `country_region_final` FOREIGN KEY (`country_id`) REFERENCES `countries` (`id`);
+  ADD CONSTRAINT `country_region_final` FOREIGN KEY (`country_id`) REFERENCES `countries_all` (`id`);
 SET FOREIGN_KEY_CHECKS=1;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
