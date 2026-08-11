@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('companyinfos', function (Blueprint $table) {
             //
-            $table->foreignId('country_id')->nullable()->constrained('countries')->onDelete('set null');
+            $table->foreignId('country_id')->nullable()->constrained('countries_all')->onDelete('set null');
         });
     }
 
@@ -24,6 +24,8 @@ return new class extends Migration
     {
         Schema::table('companyinfos', function (Blueprint $table) {
             //
+            $table->dropForeign('companyinfos_country_id_foreign');
+            $table->dropColumn('country_id');
         });
     }
 };
