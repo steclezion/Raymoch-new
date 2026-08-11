@@ -16,7 +16,7 @@ return new class extends Migration
             function (Blueprint $table) {
                 $table->uuid('investor_preference_id');
 
-                // Assumes business_sectors.id is BIGINT UNSIGNED.
+                // Assumes sectors.id is BIGINT UNSIGNED.
                 $table->unsignedBigInteger('business_sector_id');
 
                 $table->foreign(
@@ -32,7 +32,7 @@ return new class extends Migration
                     'ipbs_sector_fk'
                 )
                     ->references('id')
-                    ->on('business_sectors')
+                    ->on('sectors')
                     ->cascadeOnDelete();
 
                 // One sector may appear only once per preference.

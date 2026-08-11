@@ -30,7 +30,7 @@ return new class extends Migration
                     'iobs_sector_fk'
                 )
                     ->references('id')
-                    ->on('business_sectors')
+                    ->on('sectors')
                     ->cascadeOnDelete();
 
                 $table->primary(

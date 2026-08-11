@@ -374,8 +374,7 @@ export default function MatchingModal({
        *      ↓
        * Database and scoring algorithm
        */
-      const response =
-        await createMatchSearch(requestPayload);
+      const response =  await createMatchSearch(requestPayload);
 
       setResultPayload(response);
       setResultsOpen(true);

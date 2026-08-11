@@ -46,6 +46,7 @@ return new class extends Migration
                     ],
                     'ipfi_primary'
                 );
+                $table->timestamps();
 
                 // Supports reverse searches by funding instrument.
                 $table->index(

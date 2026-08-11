@@ -116,11 +116,11 @@ class StoreInvestorPreferenceRequest extends FormRequest
                 'min:1',
             ],
 
-            'business_sector_ids.*' => [
+            'sector_ids.*' => [
                 'required',
                 'integer',
                 'distinct',
-                'exists:business_sectors,id',
+                'exists:sectors,id',
             ],
 
             // At least one country must be selected.
@@ -134,7 +134,7 @@ class StoreInvestorPreferenceRequest extends FormRequest
                 'required',
                 'integer',
                 'distinct',
-                'exists:countries,id',
+                'exists:countries_africans,id',
             ],
 
             'verified_companies_only' => [

@@ -1,64 +1,43 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\File;
-
+use App\Http\Controllers\Api\SubscriptionController;
+use App\Http\Controllers\Auth\BusinessAccountController;
+use App\Http\Controllers\Auth\BusinessOtpController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\ForgotPasswordController;
-use App\Http\Controllers\ResetPasswordController;
-
-use App\Http\Controllers\GoogleAuthController;
-use App\Http\Controllers\OneTapController;
-
-use App\Http\Controllers\ChatbotController;
-use App\Http\Controllers\TrialRequestController;
-use App\Http\Controllers\RequestTrialController;
-use App\Http\Controllers\SignupController;
-use App\Http\Controllers\PremiumSignupController;
-
-use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Billing\StripeWebhookController;
-
+use App\Http\Controllers\ChatbotController;
+use App\Http\Controllers\company_description;
+use App\Http\Controllers\company_description_type_controller;
+use App\Http\Controllers\CompanyClassificationController;
+use App\Http\Controllers\CompanyInfosController;
 use App\Http\Controllers\ControlLayoutController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\RoleController;
-use App\Http\Controllers\PermissionController;
-
+use App\Http\Controllers\ExploreController;
+use App\Http\Controllers\ForgotPasswordController;
+use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\HomePageWelcomeController;
 use App\Http\Controllers\HomeWelcomeSecondPageController;
 use App\Http\Controllers\HomeWelcomeThirdPageController;
-
-use App\Http\Controllers\CompanyInfosController;
-use App\Http\Controllers\CompanyClassificationController;
-use App\Http\Controllers\company_description;
-use App\Http\Controllers\company_description_type_controller;
-
-use App\Http\Controllers\ExploreController;
+use App\Http\Controllers\OneTapController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\PremiumSignupController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RequestTrialController;
+use App\Http\Controllers\ResetPasswordController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RoutePdfController;
 use App\Http\Controllers\ServiceController;
-
-use App\Http\Controllers\Auth\BusinessOtpController;
-use App\Http\Controllers\Auth\BusinessAccountController;
-
-use Illuminate\Support\Facades\Auth;
-
-use Laravel\Cashier\Http\Controllers\WebhookController;
-
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SignupController;
 use App\Http\Controllers\StoreSessionSearchController;
-
-
-
-use App\Mail\TestPostmarkMail;
-use App\Mail\HelloMail;
-use App\Mail\EmailTestMailGun;
-use App\Mail\GoogleVerifyMail;
-
-use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\StripePaymentController;
-
+use App\Http\Controllers\TrialRequestController;
+use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Route;
+use Laravel\Cashier\Http\Controllers\WebhookController;
+use App\Http\Controllers\Services\InvestorMatchingController;
 
 
 /*
@@ -78,7 +57,6 @@ Route::view('/trial/verify', 'pages.auth.trial-verify')->name('trial.verify.page
 Route::view('/trial/success', 'pages.auth.trial-success')->name('trial.success.page');
 Route::get('/request', [RequestTrialController::class, 'show'])->name('request.show');
 
-
 Route::view('/partner-programs', 'pages.services.partner-programs')->name('partner-programs');
 Route::view('/matching', 'pages.services.matching')->name('matching');
 Route::view('/visibility-listing', 'pages.services.visibility-listing')->name('visibility-listing');
@@ -86,7 +64,6 @@ Route::view('/verification', 'pages.services.verification')->name('verification'
 
 Route::get('/explore', [ExploreController::class, 'index'])->name('explore.index');
 Route::get('/explore/data', [ExploreController::class, 'data'])->name('explore.data');
-
 
 Route::view('/careers', 'pages.entire')->name('careers');
 Route::view('/press', 'pages.entire')->name('press');
@@ -100,11 +77,9 @@ Route::get('/privacy', fn() => view('pages.entire'))->name('privacy');
 Route::get('/terms', fn() => view('pages.entire'))->name('terms');
 Route::get('/cookies', fn() => view('pages.entire'))->name('cookies');
 
-
 Route::get('/services/options', [ServiceController::class, 'options'])->name('services.options');
 
 Route::post('/chatbot', [ChatbotController::class, 'respond'])->name('chatbot.respond');
-
 
 /*
 |--------------------------------------------------------------------------
@@ -116,7 +91,6 @@ Route::post('/webhooks/stripe', [PaymentController::class, 'webhook'])->name('we
 Route::post('/stripe/webhook', [WebhookController::class, 'handleWebhook'])->name('cashier.webhook');
 // If you use your own webhook controller:
 Route::post('/stripe/webhook/custom', [StripeWebhookController::class, 'handle'])->name('stripe.webhook.custom');
-
 
 /*
 |--------------------------------------------------------------------------
@@ -144,12 +118,10 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
     Route::get('reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
     Route::post('reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
 
-
     // Signup entry
     Route::get('/signup', [SignupController::class, 'index'])->name('signup.index');
     Route::get('/signup/investor/create', [SignupController::class, 'createInvestor'])->name('signup.investor.create');
     Route::get('/signup/basic/create/individual', [SignupController::class, 'showPaymentPlansCreate'])->name('signup.basic.create.individual'); // Store the Basic account (JSON) Route::get('/signup/premium/create/individual/', [SignupController::class, 'showPaymentPlansCreate'])->name('signup.premium.create.individual');
-
 
     // Basic signup
     Route::get('/signup/basic/pricing', fn() => view('pages.auth.signup.basic.pricing'))->name('signup.basic.pricing');
@@ -166,7 +138,6 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
     // Premium finalize after payment success
     Route::post('/signup/premium/complete', [PaymentController::class, 'finalizePremiumSignup'])->name('signup.premium.complete');
 
-
     // Business signup
     Route::post('/auth/check-email', BusinessAccountController::class)->name('auth.check-email');
     Route::get('/signup/business/create', [BusinessAccountController::class, 'createBusiness'])->name('signup.business.create');
@@ -174,14 +145,13 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
     Route::post('/signup/business/verify-otp', [BusinessOtpController::class, 'verifyOtp'])->name('signup.business.verify_otp');
 });
 
-
 /*
 |--------------------------------------------------------------------------
 | Authenticated routes (must be logged in)
 |--------------------------------------------------------------------------
 */
 Route::get('/auth/user', function () {
-    if (!Auth::check()) {
+    if (! Auth::check()) {
         return response()->json(['authenticated' => false], 200);
     }
 
@@ -191,7 +161,7 @@ Route::get('/auth/user', function () {
             'id' => Auth::id(),
             'name' => Auth::user()->name,
             'email' => Auth::user()->email,
-        ]
+        ],
     ], 200);
 })->name('auth.user');
 
@@ -201,7 +171,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('/profile/update', [ProfileController::class, 'updateProfilePicture'])
         ->name('profile.update');
-
 
     Route::post('/search-session/store', [StoreSessionSearchController::class, 'store']);
     Route::get('/search-session/current', [StoreSessionSearchController::class, 'current']);
@@ -250,16 +219,95 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/descriptions/{id}', [company_description::class, 'destroy'])->name('descriptions.destroy');
     Route::post('/company_classifications/import', [CompanyClassificationController::class, 'import'])->name('company_classifications.import');
     Route::resource('company_classifications', CompanyClassificationController::class);
-    Route::view('/companies', 'pages.companies')->name('companies'); // main companies listing page // Static placeholders used in header/footer links (wire up later as you build them) 
-    Route::view('/services', 'pages.services')->name('services'); // temp → point to real page later 
-    Route::view('/insights', 'pages.market-insight')->name('insights'); // temp // services sub-pages 
+    Route::view('/companies', 'pages.companies')->name('companies'); // main companies listing page // Static placeholders used in header/footer links (wire up later as you build them)
+    Route::view('/services', 'pages.services')->name('services'); // temp → point to real page later
+    Route::view('/insights', 'pages.market-insight')->name('insights'); // temp // services sub-pages
     Route::view('/partner-programs', 'pages.services.partner-programs')->name('partner-programs'); // partner programs page
     Route::view('/pricing', 'pages.Pricing')->name('pricing');
     Route::view('/price-how-to-pay', 'pages.price_how_to_pay')->name('price.how.to.pay');
 
+    /*
+         * Load funding instruments, sectors, and countries.
+         */
 
+    Route::middleware('auth')
+        ->prefix('services')
+        ->name('services.')
+        ->controller(InvestorMatchingController::class)
+        ->group(function (): void {
 
+            /*
+         * Load funding instruments, sectors, and countries.
+         *
+         * GET /services/options
+         *
+         * Route name:
+         * services.options
+         */
+            Route::get(
+                '/options',
+                'options'
+            )->name('options');
 
+            /*
+         * Save a new investor preference and execute
+         * the company-matching algorithm.
+         *
+         * POST /services/matches
+         *
+         * Route name:
+         * services.matches.store
+         */
+            Route::post(
+                '/matches',
+                'storeAndMatch'
+            )->name('matches.store');
+
+            /*
+         * Retrieve all previous searches belonging
+         * to the authenticated investor.
+         *
+         * GET /services/matches/history
+         *
+         * Route name:
+         * services.matches.history
+         */
+            Route::get(
+                '/matches/history',
+                'history'
+            )->name('matches.history');
+
+            /*
+         * Retrieve one previous search and its
+         * previously generated matching results.
+         *
+         * GET /services/matches/history/{investorPreference}
+         *
+         * Route name:
+         * services.matches.history.show
+         */
+            Route::get(
+                '/matches/history/{investorPreference}',
+                'showHistory'
+            )->name('matches.history.show');
+
+            /*
+         * Rerun a previous search against current
+         * company and opportunity data.
+         *
+         * Add this route because MatchingModal calls
+         * rerunSavedSearch().
+         *
+         * POST /services/matches/history/{investorPreference}/rerun
+         *
+         * Route name:
+         * services.matches.history.rerun
+         */
+            Route::post(
+                '/matches/history/{investorPreference}/rerun',
+                'rerunHistory'
+            )->name('matches.history.rerun');
+        });
 
     // PDF export
     Route::get('/routes/pdf', [RoutePdfController::class, 'export'])->name('routes.pdf');
@@ -267,11 +315,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Protected documents
     Route::get('/documents/{filename}', function ($filename) {
         $path = storage_path('app/public/documents/' . $filename);
-        if (!File::exists($path)) abort(404);
+        if (! File::exists($path)) {
+            abort(404);
+        }
+
         return response()->file($path);
     })->where('filename', '.*')->name('documents.show');
 });
-
 
 /*
 |--------------------------------------------------------------------------
@@ -285,7 +335,6 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::resource('permissions', PermissionController::class);
 });
 
-
 /*
 |--------------------------------------------------------------------------
 | Google auth (can be public, but callback usually logs user in)
@@ -294,7 +343,6 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 Route::get('/auth/google', [GoogleAuthController::class, 'redirectToGoogle'])->name('auth_google');
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleCallback'])->name('auth_google_callback');
 Route::post('/auth/google/onetap', [OneTapController::class, 'login'])->name('onetap.login');
-
 
 /*
 |--------------------------------------------------------------------------

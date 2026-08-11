@@ -12,6 +12,7 @@ use Spatie\Permission\Models\Permission;
 use Laravel\Cashier\Billable;
 use App\Models\Industry;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\InvestorPreference;
 
 class User extends Authenticatable
 {
@@ -55,6 +56,7 @@ class User extends Authenticatable
      */
     protected function casts(): array
     {
+
         return [
             'name',
             'email',
@@ -74,6 +76,8 @@ class User extends Authenticatable
 
     public function investorPreferences(): HasMany
     {
-        return $this->hasMany(InvestorPreference::class);
+        return $this->hasMany(
+            InvestorPreference::class
+        );
     }
 }

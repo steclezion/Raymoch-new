@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\CountryAfrican;
 
 class InvestmentOpportunity extends Model
 {
@@ -85,14 +86,23 @@ class InvestmentOpportunity extends Model
     /**
      * Countries in which the project will operate.
      */
+    /**
+     * Countries in which the investment opportunity operates.
+     */
     public function countries(): BelongsToMany
     {
         return $this->belongsToMany(
             CountryAfrican::class,
+
+            // Pivot table
             'investment_opportunity_country',
+
+            // Pivot column referring to InvestmentOpportunity
             'investment_opportunity_id',
-            'country_id'
-        );
+
+            // Pivot column referring to CountryAfrican
+            'country_african_id'
+        )->withTimestamps();
     }
 
     /**

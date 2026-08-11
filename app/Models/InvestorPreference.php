@@ -7,25 +7,23 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\CountryAll;
-use App\Models\Sector;
 
 class InvestorPreference extends Model
 {
     use HasUuids;
 
     /**
-     * The model uses a UUID rather than an auto-incrementing number.
+     * This model uses UUID primary keys.
      */
     public $incrementing = false;
 
     /**
-     * UUID primary keys are strings.
+     * UUID values are stored as strings.
      */
     protected $keyType = 'string';
 
     /**
-     * Fields that may be mass assigned.
+     * Fields allowed for mass assignment.
      */
     protected $fillable = [
         'user_id',
@@ -42,12 +40,11 @@ class InvestorPreference extends Model
     ];
 
     /**
-     * Convert database values into appropriate PHP values.
+     * Convert database values into appropriate PHP types.
      */
     protected function casts(): array
     {
         return [
-            // Keep money precise when stored and displayed.
             'ticket_min' => 'decimal:2',
             'ticket_max' => 'decimal:2',
 
@@ -61,11 +58,14 @@ class InvestorPreference extends Model
     }
 
     /**
-     * User who owns the preference.
+     * User who owns this preference.
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(
+            User::class,
+            'user_id'
+        );
     }
 
     /**
@@ -75,38 +75,70 @@ class InvestorPreference extends Model
     {
         return $this->belongsToMany(
             FundingInstrument::class,
-            'investor_preference_funding_instrument'
-        );
+
+            // Pivot table
+            'investor_preference_funding_instrument',
+
+            // Pivot key referring to InvestorPreference
+            'investor_preference_id',
+
+            // Pivot key referring to FundingInstrument
+            'funding_instrument_id'
+        )->withTimestamps();
     }
 
     /**
-     * Business sectors selected by the investor.
+     * Sectors selected by the investor.
+     *
+     * The inverse relationship in Sector.php must use:
+     *
+     * - investor_preference_business_sector
+     * - business_sector_id
+     * - investor_preference_id
      */
     public function sectors(): BelongsToMany
     {
         return $this->belongsToMany(
             Sector::class,
+
+            // Pivot table
             'investor_preference_business_sector',
+
+            // Pivot key referring to InvestorPreference
             'investor_preference_id',
+
+            // Pivot key referring to Sector
             'business_sector_id'
-        );
+        )->withTimestamps();
     }
 
     /**
-     * Countries selected by the investor.
+     * African countries selected by the investor.
+     *
+     * Your CountryAfrican model indicates that the pivot
+     * column is countries_africans_id, not country_id.
+     */
+    /**
+     * African countries selected by the investor.
      */
     public function countries(): BelongsToMany
     {
         return $this->belongsToMany(
             CountryAfrican::class,
+
+            // Pivot table
             'investor_preference_country',
+
+            // Pivot column referring to InvestorPreference
             'investor_preference_id',
-            'country_id'
-        );
+
+            // Pivot column referring to CountryAfrican
+            'country_african_id'
+        )->withTimestamps();
     }
 
     /**
-     * Calculated matching results for this preference.
+     * Matching results generated for this preference.
      */
     public function matches(): HasMany
     {
