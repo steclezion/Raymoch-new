@@ -27,25 +27,25 @@ SET time_zone = "+00:00";
 -- Table structure for table `states_all`
 --
 
-DROP TABLE IF EXISTS `states_all`;
-CREATE TABLE `states_all` (
-  `id` mediumint(8) UNSIGNED NOT NULL,
-  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `country_id` mediumint(8) UNSIGNED NOT NULL,
-  `country_code` char(2) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `fips_code` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `iso2` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `latitude` decimal(10,8) DEFAULT NULL,
-  `longitude` decimal(11,8) DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `flag` tinyint(1) NOT NULL DEFAULT '1',
-  `wikiDataId` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Rapid API GeoDB Cities'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=COMPACT;
+-- DROP TABLE IF EXISTS `states_all`;
+-- CREATE TABLE `states_all` (
+--   `id` mediumint(8) UNSIGNED NOT NULL,
+--   `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+--   `country_id` mediumint(8) UNSIGNED NOT NULL,
+--   `country_code` char(2) COLLATE utf8mb4_unicode_ci NOT NULL,
+--   `fips_code` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+--   `iso2` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+--   `latitude` decimal(10,8) DEFAULT NULL,
+--   `longitude` decimal(11,8) DEFAULT NULL,
+--   `created_at` timestamp NULL DEFAULT NULL,
+--   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+--   `flag` tinyint(1) NOT NULL DEFAULT '1',
+--   `wikiDataId` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Rapid API GeoDB Cities'
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=COMPACT;
 
---
--- Dumping data for table `states_all`
---
+-- --
+-- -- Dumping data for table `states_all`
+-- --
 
 INSERT INTO `states_all` (`id`, `name`, `country_id`, `country_code`, `fips_code`, `iso2`, `latitude`, `longitude`, `created_at`, `updated_at`, `flag`, `wikiDataId`) VALUES
 (1, 'Southern Nations, Nationalities, and Peoples\' Region', 70, 'ET', '54', 'SN', '6.51569110', '36.95410700', '2019-10-05 17:48:35', '2020-12-21 15:50:21', 1, 'Q203193'),
