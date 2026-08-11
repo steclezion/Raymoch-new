@@ -32,7 +32,7 @@ return new class extends Migration
                     'ipc_country_fk'
                 )
                     ->references('id')
-                    ->on('countries')
+                    ->on('countries_all')
                     ->cascadeOnDelete();
 
                 // Prevent duplicate country selections.
