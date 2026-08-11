@@ -51,14 +51,14 @@ return new class extends Migration {
         Schema::dropIfExists('matches');
         Schema::dropIfExists('match_preference_exclusions');
         Schema::dropIfExists('match_preference_capabilities');
-        Schema::dropIfExists('match_preference_countries');
+        Schema::dropIfExists('match_preference_countries_all');
         Schema::dropIfExists('match_preference_industries');
         Schema::dropIfExists('match_preferences');
         Schema::dropIfExists('organization_interest_tags');
         Schema::dropIfExists('organization_needs');
         Schema::dropIfExists('product_services');
         Schema::dropIfExists('organization_capabilities');
-        Schema::dropIfExists('organization_operating_countries');
+        Schema::dropIfExists('organization_operating_countries_all');
         Schema::dropIfExists('organization_locations');
         Schema::dropIfExists('organization_profiles');
         Schema::dropIfExists('trust_dimensions');
@@ -67,7 +67,7 @@ return new class extends Migration {
         Schema::dropIfExists('annual_revenue_ranges');
         Schema::dropIfExists('stages');
         Schema::dropIfExists('organization_sizes');
-        // Schema::dropIfExists('countries');
+        // Schema::dropIfExists('countries_all');
         // Schema::dropIfExists('regions');
 
 
@@ -116,7 +116,7 @@ return new class extends Migration {
 
 
 
-        // Schema::create('countries', function (Blueprint $table) {
+        // Schema::create('countries_all', function (Blueprint $table) {
         //     $table->id();
         //     $table->string('name');
         //     $table->string('iso2', 2)->unique();
@@ -223,7 +223,7 @@ return new class extends Migration {
         Schema::create('organization_locations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
-            $table->foreignId('country_id')->constrained('countries')->cascadeOnDelete();
+            $table->foreignId('country_id')->constrained('countries_all')->cascadeOnDelete();
             $table->foreignId('region_id')->nullable()->constrained('regions')->nullOnDelete();
             $table->string('city')->nullable();
             $table->string('address_line_1')->nullable();
@@ -236,10 +236,10 @@ return new class extends Migration {
             $table->timestamps();
         });
 
-        Schema::create('organization_operating_countries', function (Blueprint $table) {
+        Schema::create('organization_operating_countries_all', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
-            $table->foreignId('country_id')->constrained('countries')->cascadeOnDelete();
+            $table->foreignId('country_id')->constrained('countries_all')->cascadeOnDelete();
             $table->enum('market_role', ['origin', 'destination', 'operating', 'target']);
             $table->timestamps();
             $table->unique(['company_id', 'country_id', 'market_role'], 'org_country_market_role_unique');
@@ -282,7 +282,7 @@ return new class extends Migration {
             $table->string('title');
             $table->longText('description')->nullable();
             $table->unsignedBigInteger('industry_id')->nullable();
-            $table->foreignId('country_id')->nullable()->constrained('countries')->nullOnDelete();
+            $table->foreignId('country_id')->nullable()->constrained('countries_all')->nullOnDelete();
             $table->decimal('budget_min', 18, 2)->nullable();
             $table->decimal('budget_max', 18, 2)->nullable();
             $table->string('currency_code', 3)->nullable();
@@ -329,10 +329,10 @@ return new class extends Migration {
             $table->timestamps();
         });
 
-        Schema::create('match_preference_countries', function (Blueprint $table) {
+        Schema::create('match_preference_countries_all', function (Blueprint $table) {
             $table->id();
             $table->foreignId('match_preference_id')->constrained('match_preferences')->cascadeOnDelete();
-            $table->foreignId('country_id')->constrained('countries')->cascadeOnDelete();
+            $table->foreignId('country_id')->constrained('countries_all')->cascadeOnDelete();
             $table->decimal('weight', 5, 2)->default(1.00);
             $table->timestamps();
         });
@@ -534,7 +534,7 @@ return new class extends Migration {
             $table->decimal('budget_min', 18, 2)->nullable();
             $table->decimal('budget_max', 18, 2)->nullable();
             $table->string('currency_code', 3)->nullable();
-            $table->foreignId('country_id')->nullable()->constrained('countries')->nullOnDelete();
+            $table->foreignId('country_id')->nullable()->constrained('countries_all')->nullOnDelete();
             $table->date('deadline')->nullable();
             $table->enum('status', ['draft', 'published', 'closed', 'awarded'])->default('draft');
             $table->timestamps();
@@ -735,14 +735,14 @@ return new class extends Migration {
         Schema::dropIfExists('matches');
         Schema::dropIfExists('match_preference_exclusions');
         Schema::dropIfExists('match_preference_capabilities');
-        Schema::dropIfExists('match_preference_countries');
+        Schema::dropIfExists('match_preference_countries_all');
         Schema::dropIfExists('match_preference_industries');
         Schema::dropIfExists('match_preferences');
         Schema::dropIfExists('organization_interest_tags');
         Schema::dropIfExists('organization_needs');
         Schema::dropIfExists('product_services');
         Schema::dropIfExists('organization_capabilities');
-        Schema::dropIfExists('organization_operating_countries');
+        Schema::dropIfExists('organization_operating_countries_all');
         Schema::dropIfExists('organization_locations');
         Schema::dropIfExists('organization_profiles');
         Schema::dropIfExists('trust_dimensions');
@@ -751,7 +751,7 @@ return new class extends Migration {
         Schema::dropIfExists('annual_revenue_ranges');
         Schema::dropIfExists('stages');
         Schema::dropIfExists('organization_sizes');
-        // Schema::dropIfExists('countries');
+        // Schema::dropIfExists('countries_all');
         Schema::dropIfExists('regions');
         // Schema::dropIfExists('permission_role');
         // Schema::dropIfExists('role_user');
@@ -773,7 +773,7 @@ The software should answer these questions well:
 Who is this business?
 What does it want?
 What can it offer?
-In which countries/markets does it operate?
+In which countries_all/markets does it operate?
 How trustworthy is it?
 Which other businesses, investors, suppliers, buyers, or service providers match it?
 What actions happened after a match?
@@ -922,7 +922,7 @@ cover_image nullable
 created_at
 updated_at
 C. Geographic modeling
-countries
+countries_all
 id
 name
 iso2 unique
@@ -959,7 +959,7 @@ location_type enum('head_office','branch','factory','warehouse','service_area')
 is_primary boolean default false
 created_at
 updated_at
-organization_operating_countries
+organization_operating_countries_all
 id
 organization_id
 country_id
@@ -1129,7 +1129,7 @@ industry_id
 weight decimal(5,2) default 1.00
 created_at
 updated_at
-match_preference_countries
+match_preference_countries_all
 id
 match_preference_id
 country_id
@@ -1563,7 +1563,7 @@ users
 roles
 organizations
 organization_profiles
-countries
+countries_all
 industries
 organization_industries
 organization_locations
@@ -1642,7 +1642,7 @@ Phase 1
 auth and roles
 organization onboarding
 company profiles
-industries/countries
+industries/countries_all
 needs and capabilities
 Phase 2
 preferences
