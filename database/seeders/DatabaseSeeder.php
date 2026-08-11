@@ -54,7 +54,6 @@ class DatabaseSeeder extends Seeder
         $this->call(IndustrySeeder::class);
         $this->call(StageSeeder::class);
         $this->call(DefaultUserSeeder::class);
-        $this->call(RegionSeeder::class);
         $this->call(CompaniesTableSeeder::class);
         $this->call(VerificationTypeSeeder::class);
         $this->call(TrustDimensionSeeder::class);
