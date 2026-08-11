@@ -28,11 +28,11 @@ return new class extends Migration {
             $table->string('wikiDataId')->nullable();
 
             // optional foreign key
-        //     $table->foreign('country_id')
-        //         ->references('id')
-        //         ->on('countries_all')
-        //         ->cascadeOnDelete();
-        // });
+            //     $table->foreign('country_id')
+            //         ->references('id')
+            //         ->on('countries_all')
+            //         ->cascadeOnDelete();
+        });
     }
 
     public function down(): void
