@@ -11,7 +11,7 @@ class CountriesAllSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::table('countries_all')->truncate();
+        //DB::table('countries_all')->truncate();
 
         // $iso = new ISO3166();
         // $phoneUtil = PhoneNumberUtil::getInstance();
