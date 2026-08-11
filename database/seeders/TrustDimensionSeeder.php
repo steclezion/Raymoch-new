@@ -140,7 +140,7 @@ class TrustDimensionSeeder extends Seeder
             ->values()
             ->toArray();
 
-        DB::table('trust_dimensions')->truncate(); // reset IDs
+        // DB::table('trust_dimensions')->truncate(); // reset IDs
         DB::table('trust_dimensions')->insert($data);
     }
 }
