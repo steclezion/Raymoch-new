@@ -30,7 +30,7 @@ return new class extends Migration {
             // optional foreign key
             $table->foreign('country_id')
                 ->references('id')
-                ->on('countries')
+                ->on('countries_all')
                 ->cascadeOnDelete();
         });
     }
