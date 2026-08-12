@@ -37,6 +37,7 @@ use App\Models\ActivityLog;
 use App\Models\AuditLog;
 use App\Models\OrganizationAtsScore;
 use App\Models\OrganizationCtiScore;
+use App\Models\OrganizationSize;
 // use App\Models\SystemSetting;
 // use App\Models\ScoringRule;
 use App\Models\User;
@@ -167,15 +168,16 @@ class ExistingCompaniesRelationsSeeder extends Seeder
                     //     MatchPreference::factory()->count($faker->numberBetween(1, 4))
                     //         ->create(['company_id' => $company->id]);
                     // }
-                    if (! $company->MatchPreference()->exists()) {
-    MatchPreference::factory()
-        ->count($faker->numberBetween(1, 4))
-        ->create([
-            'company_id' => $company->id,
-            'preferred_company_size_id' =>
-                OrganizationSize::inRandomOrder()->value('id'),
-        ]);
 
+                    if (! $company->MatchPreference()->exists()) {
+                        MatchPreference::factory()
+                            ->count($faker->numberBetween(1, 4))
+                            ->create([
+                                'company_id' => $company->id,
+                                'preferred_company_size_id' =>
+                                OrganizationSize::inRandomOrder()->value('id'),
+                            ]);
+                    }
                     // Verification
                     // if (class_exists(OrganizationVerification::class) && method_exists($company, 'OrganizationVerification') && ! $company->OrganizationVerification()->exists()) {
                     if (! $company->OrganizationVerification()->exists()) {
