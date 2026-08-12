@@ -48,7 +48,7 @@ class ExistingCompaniesRelationsSeeder extends Seeder
     {
         $faker = fake();
 
-        $total = Company::count();
+        $total = Company::count('id');
 
         $this->command->info("Seeding relations for {$total} companies...");
 
@@ -58,7 +58,7 @@ class ExistingCompaniesRelationsSeeder extends Seeder
 
         // Process companies in chunks so it works with 10,000+ rows
         Company::query()
-            ->orderBy('id')
+            ->orderBy('id', 'asc')
             ->chunkById(500, function ($companies) use ($faker, $bar) {
 
                 foreach ($companies as $company) {
