@@ -48,7 +48,7 @@ class ExistingCompaniesRelationsSeeder extends Seeder
     {
         $faker = fake();
 
-        $total = Company::count('id');
+        $total = Company::count();
 
         $this->command->info("Seeding relations for {$total} companies...");
 
@@ -58,7 +58,7 @@ class ExistingCompaniesRelationsSeeder extends Seeder
 
         // Process companies in chunks so it works with 10,000+ rows
         Company::query()
-            ->orderBy('id', 'asc')
+            ->orderBy('id')
             ->chunkById(500, function ($companies) use ($faker, $bar) {
 
                 foreach ($companies as $company) {
@@ -159,13 +159,23 @@ class ExistingCompaniesRelationsSeeder extends Seeder
                             ->count($faker->numberBetween(1, 4))
                             ->create(['company_id' => $company->id]);
                     }
+
                     // Match Preferences (1:1)
                     // if (class_exists(MatchPreference::class) && method_exists($company, 'MatchPreference') && ! $company->MatchPreference()->exists()) {
 
+                    // if (! $company->MatchPreference()->exists()) {
+                    //     MatchPreference::factory()->count($faker->numberBetween(1, 4))
+                    //         ->create(['company_id' => $company->id]);
+                    // }
                     if (! $company->MatchPreference()->exists()) {
-                        MatchPreference::factory()->count($faker->numberBetween(1, 4))
-                            ->create(['company_id' => $company->id]);
-                    }
+    MatchPreference::factory()
+        ->count($faker->numberBetween(1, 4))
+        ->create([
+            'company_id' => $company->id,
+            'preferred_company_size_id' =>
+                OrganizationSize::inRandomOrder()->value('id'),
+        ]);
+
                     // Verification
                     // if (class_exists(OrganizationVerification::class) && method_exists($company, 'OrganizationVerification') && ! $company->OrganizationVerification()->exists()) {
                     if (! $company->OrganizationVerification()->exists()) {
