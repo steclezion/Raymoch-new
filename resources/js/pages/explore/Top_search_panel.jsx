@@ -180,11 +180,11 @@ function buildSelectStyles(hasError = false) {
     }),
     menuPortal: (base) => ({
       ...base,
-      zIndex: 99999,
+      zIndex: 10000,
     }),
     menu: (base) => ({
       ...base,
-      zIndex: 99999,
+      zIndex:1000,
       borderRadius: 18,
       overflow: "hidden",
       border: "1px solid #e5e7eb",

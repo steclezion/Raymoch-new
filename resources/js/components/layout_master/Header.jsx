@@ -65,37 +65,58 @@ function absoluteImageUrl(path) {
 /* =========================================================
    Router-safe primitives
 ========================================================= */
+// function SafeLink({ to, children, ...rest }) {
+//   const hasRouter = useInRouterContext?.() ?? false;
+
+//   if (hasRouter) {
+//     return (
+//       <Link to={to} {...rest}>
+//         {children}
+//       </Link>
+//     );
+//   }
+
+//   return (
+//     <a href={typeof to === "string" ? to : "/"} {...rest}>
+//       {children}
+//     </a>
+//   );
+// }
+
 function SafeLink({ to, children, ...rest }) {
-  const hasRouter = useInRouterContext?.() ?? false;
-
-  if (hasRouter) {
-    return (
-      <Link to={to} {...rest}>
-        {children}
-      </Link>
-    );
-  }
-
   return (
-    <a href={typeof to === "string" ? to : "/"} {...rest}>
+    <a href={to} {...rest}>
       {children}
     </a>
   );
 }
 
+// function RouterSafeButton({ to, children, sx, ...rest }) {
+//   const hasRouter = useInRouterContext?.() ?? false;
+
+//   if (hasRouter) {
+//     return (
+//       <Button component={Link} to={to} sx={sx} {...rest}>
+//         {children}
+//       </Button>
+//     );
+//   }
+
+//   return (
+//     <Button component="a" href={to} sx={sx} {...rest}>
+//       {children}
+//     </Button>
+//   );
+// }
+
 function RouterSafeButton({ to, children, sx, ...rest }) {
-  const hasRouter = useInRouterContext?.() ?? false;
-
-  if (hasRouter) {
-    return (
-      <Button component={Link} to={to} sx={sx} {...rest}>
-        {children}
-      </Button>
-    );
-  }
-
   return (
-    <Button component="a" href={to} sx={sx} {...rest}>
+    <Button
+      component="a"
+      href={to}
+      sx={sx}
+      {...rest}
+    >
       {children}
     </Button>
   );
@@ -215,6 +236,9 @@ function HamburgerIcon({ open }) {
           borderRadius: 2,
           backgroundColor: "text.primary",
           transition: "transform .18s ease, top .18s ease, opacity .18s ease",
+           position: "relative",
+  zIndex: 999999,
+  pointerEvents: "auto",
         },
         "& span:nth-of-type(1)": {
           top: open ? "10px" : "5px",
