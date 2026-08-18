@@ -24,36 +24,75 @@ const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
 const ACCEPTED_FILES =
   ".pdf,.doc,.docx,.xls,.xlsx,.csv,.jpg,.jpeg,.png";
 
-const countries = [
-  "Ethiopia",
-  "Ghana",
-  "Kenya",
-  "Nigeria",
-  "Rwanda",
-  "South Africa",
-  "Tanzania",
-  "Uganda",
-  "Other",
-];
+const locationData = {
+  "East Africa": {
+    Ethiopia: {
+      AddisAbaba: ["Addis Ababa"],
+      Oromia: ["Adama", "Jimma"],
+    },
+    Kenya: {
+      Nairobi: ["Nairobi"],
+      Mombasa: ["Mombasa"],
+      Kisumu: ["Kisumu"],
+    },
+    Rwanda: {
+      Kigali: ["Kigali"],
+      Northern: ["Musanze"],
+      Southern: ["Huye"],
+    },
+    Tanzania: {
+      "Dar es Salaam": ["Dar es Salaam"],
+      Dodoma: ["Dodoma"],
+      Arusha: ["Arusha"],
+    },
+    Uganda: {
+      Central: ["Kampala", "Entebbe"],
+      Eastern: ["Jinja"],
+      Western: ["Mbarara"],
+    },
+  },
+  "West Africa": {
+    Ghana: {
+      "Greater Accra": ["Accra", "Tema"],
+      Ashanti: ["Kumasi"],
+    },
+    Nigeria: {
+      Lagos: ["Lagos", "Ikeja"],
+      "Federal Capital Territory": ["Abuja"],
+      Rivers: ["Port Harcourt"],
+    },
+  },
+  "Southern Africa": {
+    "South Africa": {
+      Gauteng: ["Johannesburg", "Pretoria"],
+      "Western Cape": ["Cape Town"],
+      "KwaZulu-Natal": ["Durban"],
+    },
+  },
+};
 
-const sectors = [
-  "Agriculture",
-  "Construction",
-  "Education",
-  "Energy",
-  "Financial Services",
-  "FinTech",
-  "Food & Beverage",
-  "Healthcare",
-  "Logistics",
-  "Manufacturing",
-  "Media",
-  "Real Estate",
-  "Retail",
-  "Technology",
-  "Telecommunications",
-  "Other",
-];
+const regions = Object.keys(locationData);
+
+const industryOptionsBySector = {
+  Agriculture: ["Crop production", "Livestock", "Agribusiness", "Forestry"],
+  Construction: ["Commercial construction", "Residential construction", "Infrastructure", "Engineering"],
+  Education: ["Early education", "Higher education", "Professional training", "EdTech"],
+  Energy: ["Renewable energy", "Oil and gas", "Utilities", "Energy storage"],
+  "Financial Services": ["Banking", "Insurance", "Asset management", "Payments"],
+  FinTech: ["Digital banking", "Payments", "Lending", "WealthTech"],
+  "Food & Beverage": ["Food processing", "Beverages", "Restaurants", "Food distribution"],
+  Healthcare: ["Hospitals and clinics", "Pharmaceuticals", "Medical devices", "HealthTech"],
+  Logistics: ["Freight", "Warehousing", "Last-mile delivery", "Supply-chain services"],
+  Manufacturing: ["Automotive", "Chemicals", "Consumer goods", "Industrial equipment"],
+  Media: ["Advertising", "Broadcasting", "Digital media", "Publishing"],
+  "Real Estate": ["Commercial property", "Residential property", "Property management", "PropTech"],
+  Retail: ["E-commerce", "Grocery", "Specialty retail", "Wholesale"],
+  Technology: ["Artificial intelligence", "Cybersecurity", "Enterprise software", "Cloud services"],
+  Telecommunications: ["Mobile networks", "Internet services", "Network infrastructure", "Satellite communications"],
+  Other: ["Other"],
+};
+
+const sectors = Object.keys(industryOptionsBySector);
 
 const stepMeta = {
   1: {
@@ -99,14 +138,17 @@ const initialFormData = {
   tax_id: "",
   established_date: "",
   legal_structure: "",
-  country: "",
   region: "",
+  country: "",
+  state: "",
+  city: "",
   registered_address: "",
-  city_postal: "",
+  postal_code: "",
   website: "",
   external_identifier: "",
 
   sector: "",
+  industry: "",
   business_model: "",
   products_services: "",
   operating_countries: "",
@@ -327,13 +369,45 @@ export default function VerificationModal() {
   const currentStep = stepMeta[step];
   const progress = Math.round((step / 8) * 100);
 
+  const countryOptions = formData.region
+    ? Object.keys(locationData[formData.region] || {})
+    : [];
+  const stateOptions =
+    formData.region && formData.country
+      ? Object.keys(locationData[formData.region]?.[formData.country] || {})
+      : [];
+  const cityOptions =
+    formData.region && formData.country && formData.state
+      ? locationData[formData.region]?.[formData.country]?.[formData.state] || []
+      : [];
+  const industryOptions = formData.sector
+    ? industryOptionsBySector[formData.sector] || []
+    : [];
+
   const updateField = (event) => {
     const { name, value, type, checked } = event.target;
 
-    setFormData((current) => ({
-      ...current,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+    setFormData((current) => {
+      const next = {
+        ...current,
+        [name]: type === "checkbox" ? checked : value,
+      };
+
+      if (name === "region") {
+        next.country = "";
+        next.state = "";
+        next.city = "";
+      } else if (name === "country") {
+        next.state = "";
+        next.city = "";
+      } else if (name === "state") {
+        next.city = "";
+      } else if (name === "sector") {
+        next.industry = "";
+      }
+
+      return next;
+    });
   };
 
   const goToStep = (stepNumber) => {
@@ -647,6 +721,26 @@ export default function VerificationModal() {
                     </div>
 
                     <div className="vr-row">
+                      <SelectField
+                        label="Sector"
+                        name="sector"
+                        value={formData.sector}
+                        required
+                        onChange={updateField}
+                        options={sectors}
+                      />
+
+                      <SelectField
+                        label="Industry"
+                        name="industry"
+                        value={formData.industry}
+                        required
+                        onChange={updateField}
+                        options={industryOptions}
+                      />
+                    </div>
+
+                    <div className="vr-row">
                       <Field
                         label="Legal or full name"
                         name="legal_name"
@@ -711,20 +805,41 @@ export default function VerificationModal() {
 
                     <div className="vr-row">
                       <SelectField
-                        label="Country of incorporation or residence"
-                        name="country"
-                        value={formData.country}
-                        required
-                        onChange={updateField}
-                        options={countries}
-                      />
-
-                      <Field
-                        label="State, province or region"
+                        label="Region"
                         name="region"
                         value={formData.region}
                         required
                         onChange={updateField}
+                        options={regions}
+                      />
+
+                      <SelectField
+                        label="Country"
+                        name="country"
+                        value={formData.country}
+                        required
+                        onChange={updateField}
+                        options={countryOptions}
+                      />
+                    </div>
+
+                    <div className="vr-row">
+                      <SelectField
+                        label="State or province"
+                        name="state"
+                        value={formData.state}
+                        required
+                        onChange={updateField}
+                        options={stateOptions}
+                      />
+
+                      <SelectField
+                        label="City"
+                        name="city"
+                        value={formData.city}
+                        required
+                        onChange={updateField}
+                        options={cityOptions}
                       />
                     </div>
 
@@ -738,9 +853,9 @@ export default function VerificationModal() {
                       />
 
                       <Field
-                        label="City and postal code"
-                        name="city_postal"
-                        value={formData.city_postal}
+                        label="Postal code"
+                        name="postal_code"
+                        value={formData.postal_code}
                         required
                         onChange={updateField}
                       />
@@ -772,15 +887,6 @@ export default function VerificationModal() {
                     title="Business and operating profile"
                   >
                     <div className="vr-row">
-                      <SelectField
-                        label="Primary sector"
-                        name="sector"
-                        value={formData.sector}
-                        required
-                        onChange={updateField}
-                        options={sectors}
-                      />
-
                       <Field
                         label="Business model"
                         name="business_model"
