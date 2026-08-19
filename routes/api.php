@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\ExploreTooltipController;
 use App\Http\Controllers\Api\MainSearchEngineController;
 use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\CompanySearchFilterResolveController;
+use App\Http\Controllers\Api\VerificationOptionsController;
 
 
 
@@ -109,4 +110,13 @@ Route::prefix('main-search-engine')->group(function () {
     Route::post('/start', [MainSearchEngineController::class, 'start']);
     Route::post('/run/{token}', [MainSearchEngineController::class, 'run']);
     Route::get('/status/{token}', [MainSearchEngineController::class, 'status']);
+});
+
+
+Route::prefix('verification/options')->group(function () {
+    Route::get('/', [VerificationOptionsController::class, 'index']);
+    Route::get('/industries', [VerificationOptionsController::class, 'industries']);
+    Route::get('/countries', [VerificationOptionsController::class, 'countries']);
+    Route::get('/states', [VerificationOptionsController::class, 'states']);
+    Route::get('/cities', [VerificationOptionsController::class, 'cities']);
 });

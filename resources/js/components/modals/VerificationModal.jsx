@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -14,7 +14,6 @@ import {
   UploadCloud,
   UserRound,
   UsersRound,
-  WalletCards,
 } from "lucide-react";
 
 import "./verificationModal.css";
@@ -23,76 +22,6 @@ const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
 
 const ACCEPTED_FILES =
   ".pdf,.doc,.docx,.xls,.xlsx,.csv,.jpg,.jpeg,.png";
-
-const locationData = {
-  "East Africa": {
-    Ethiopia: {
-      AddisAbaba: ["Addis Ababa"],
-      Oromia: ["Adama", "Jimma"],
-    },
-    Kenya: {
-      Nairobi: ["Nairobi"],
-      Mombasa: ["Mombasa"],
-      Kisumu: ["Kisumu"],
-    },
-    Rwanda: {
-      Kigali: ["Kigali"],
-      Northern: ["Musanze"],
-      Southern: ["Huye"],
-    },
-    Tanzania: {
-      "Dar es Salaam": ["Dar es Salaam"],
-      Dodoma: ["Dodoma"],
-      Arusha: ["Arusha"],
-    },
-    Uganda: {
-      Central: ["Kampala", "Entebbe"],
-      Eastern: ["Jinja"],
-      Western: ["Mbarara"],
-    },
-  },
-  "West Africa": {
-    Ghana: {
-      "Greater Accra": ["Accra", "Tema"],
-      Ashanti: ["Kumasi"],
-    },
-    Nigeria: {
-      Lagos: ["Lagos", "Ikeja"],
-      "Federal Capital Territory": ["Abuja"],
-      Rivers: ["Port Harcourt"],
-    },
-  },
-  "Southern Africa": {
-    "South Africa": {
-      Gauteng: ["Johannesburg", "Pretoria"],
-      "Western Cape": ["Cape Town"],
-      "KwaZulu-Natal": ["Durban"],
-    },
-  },
-};
-
-const regions = Object.keys(locationData);
-
-const industryOptionsBySector = {
-  Agriculture: ["Crop production", "Livestock", "Agribusiness", "Forestry"],
-  Construction: ["Commercial construction", "Residential construction", "Infrastructure", "Engineering"],
-  Education: ["Early education", "Higher education", "Professional training", "EdTech"],
-  Energy: ["Renewable energy", "Oil and gas", "Utilities", "Energy storage"],
-  "Financial Services": ["Banking", "Insurance", "Asset management", "Payments"],
-  FinTech: ["Digital banking", "Payments", "Lending", "WealthTech"],
-  "Food & Beverage": ["Food processing", "Beverages", "Restaurants", "Food distribution"],
-  Healthcare: ["Hospitals and clinics", "Pharmaceuticals", "Medical devices", "HealthTech"],
-  Logistics: ["Freight", "Warehousing", "Last-mile delivery", "Supply-chain services"],
-  Manufacturing: ["Automotive", "Chemicals", "Consumer goods", "Industrial equipment"],
-  Media: ["Advertising", "Broadcasting", "Digital media", "Publishing"],
-  "Real Estate": ["Commercial property", "Residential property", "Property management", "PropTech"],
-  Retail: ["E-commerce", "Grocery", "Specialty retail", "Wholesale"],
-  Technology: ["Artificial intelligence", "Cybersecurity", "Enterprise software", "Cloud services"],
-  Telecommunications: ["Mobile networks", "Internet services", "Network infrastructure", "Satellite communications"],
-  Other: ["Other"],
-};
-
-const sectors = Object.keys(industryOptionsBySector);
 
 const stepMeta = {
   1: {
@@ -112,43 +41,35 @@ const stepMeta = {
     description: "Identify beneficial owners, directors and controllers.",
   },
   5: {
-    title: "Investor Profile and Funding Preferences",
-    description: "Provide the applicant's investment profile and mandate.",
-  },
-  6: {
-    title: "Financial, Banking and Compliance",
-    description: "Provide financial, banking and regulatory information.",
-  },
-  7: {
     title: "Supporting Documents",
     description: "Upload the evidence required for verification.",
   },
-  8: {
+  6: {
     title: "Primary Contact and Confirmation",
     description: "Enter contact details, review the declarations and submit.",
   },
 };
 
 const initialFormData = {
-  account_type: "",
-  applicant_profile: "",
+  account_type_id: "",
+  applicant_profile_id: "",
   legal_name: "",
   trading_name: "",
   registration_number: "",
   tax_id: "",
   established_date: "",
-  legal_structure: "",
-  region: "",
-  country: "",
-  state: "",
-  city: "",
+  legal_structure_id: "",
+  region_id: "",
+  country_id: "",
+  state_id: "",
+  city_id: "",
   registered_address: "",
   postal_code: "",
   website: "",
   external_identifier: "",
 
-  sector: "",
-  industry: "",
+  sector_id: "",
+  industry_id: "",
   business_model: "",
   products_services: "",
   operating_countries: "",
@@ -168,37 +89,6 @@ const initialFormData = {
   signatory_title: "",
   signatory_id_number: "",
   signatory_id_expiry: "",
-
-  investor_status: "",
-  investment_role: "",
-  aum: "",
-  aum_currency: "",
-  minimum_ticket: "",
-  maximum_ticket: "",
-  ticket_currency: "",
-  preferred_stages: "",
-  preferred_sectors: "",
-  preferred_geographies: "",
-  investment_horizon: "",
-  target_return: "",
-  risk_tolerance: "",
-  investment_mandate: "",
-
-  bank_name: "",
-  bank_country: "",
-  bank_account_name: "",
-  bank_account_number: "",
-  swift_bic: "",
-  source_of_funds: "",
-  audited_financials: "",
-  regulated_entity: "",
-  regulator_license: "",
-  compliance_officer: "",
-  pep_exposure: false,
-  sanctions_exposure: false,
-  adverse_media: false,
-  legal_proceedings: false,
-  compliance_notes: "",
 
   contact_name: "",
   contact_role: "",
@@ -263,11 +153,16 @@ function SelectField({
       >
         <option value="">Select…</option>
 
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
+        {options.map((option) => {
+          const optionValue = typeof option === "object" ? option.id : option;
+          const optionLabel = typeof option === "object" ? option.name : option;
+
+          return (
+            <option key={optionValue} value={optionValue}>
+              {optionLabel}
+            </option>
+          );
+        })}
       </select>
     </Field>
   );
@@ -297,6 +192,13 @@ function TextareaField({
   );
 }
 
+function selectedOptionName(options, selectedId) {
+  return (
+    options.find((option) => String(option.id) === String(selectedId))?.name ||
+    "Not provided"
+  );
+}
+
 function Section({ icon, title, children }) {
   return (
     <section className="vr-innerCard vr-stepSection">
@@ -315,10 +217,8 @@ function ReviewChecklist({ step }) {
     2: "Make sure the legal name and registration number match official records.",
     3: "Use the most recent operating and revenue information available.",
     4: "List every beneficial owner and controller required by your jurisdiction.",
-    5: "Ensure investment limits and preferences reflect the current mandate.",
-    6: "Explain any PEP, sanctions, litigation or adverse-media exposure.",
-    7: "Upload clear, readable and unexpired documents.",
-    8: "Confirm that the applicant has authorized the named representative.",
+    5: "Upload clear, readable and unexpired documents.",
+    6: "Confirm that the applicant has authorized the named representative.",
   };
 
   return (
@@ -344,7 +244,7 @@ function ReviewChecklist({ step }) {
       <h3>Current step</h3>
 
       <p className="small">
-        Step {step} of 8: {stepMeta[step].title}
+        Step {step} of 6: {stepMeta[step].title}
       </p>
 
       <hr className="vr-hr" />
@@ -365,24 +265,148 @@ export default function VerificationModal() {
   const [files, setFiles] = useState([]);
   const [fileError, setFileError] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [optionError, setOptionError] = useState("");
+  const [lookupOptions, setLookupOptions] = useState({
+    accountTypes: [],
+    applicantProfiles: [],
+    sectors: [],
+    industries: [],
+    legalStructures: [],
+    regions: [],
+    countries: [],
+    states: [],
+    cities: [],
+  });
+
+  // useRef keeps the request cache stable across renders without rerendering.
+  const requestCacheRef = useRef(new Map());
+  const fetchOptionsRef = useRef(async (url, signal) => {
+    if (requestCacheRef.current.has(url)) {
+      return requestCacheRef.current.get(url);
+    }
+
+    const response = await fetch(url, {
+      headers: { Accept: "application/json" },
+      signal,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Unable to load options (${response.status}).`);
+    }
+
+    const data = await response.json();
+    requestCacheRef.current.set(url, data);
+    return data;
+  });
 
   const currentStep = stepMeta[step];
-  const progress = Math.round((step / 8) * 100);
+  const progress = Math.round((step / 6) * 100);
 
-  const countryOptions = formData.region
-    ? Object.keys(locationData[formData.region] || {})
-    : [];
-  const stateOptions =
-    formData.region && formData.country
-      ? Object.keys(locationData[formData.region]?.[formData.country] || {})
-      : [];
-  const cityOptions =
-    formData.region && formData.country && formData.state
-      ? locationData[formData.region]?.[formData.country]?.[formData.state] || []
-      : [];
-  const industryOptions = formData.sector
-    ? industryOptionsBySector[formData.sector] || []
-    : [];
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetchOptionsRef.current("/api/verification/options", controller.signal)
+      .then((data) => {
+        setLookupOptions((current) => ({
+          ...current,
+          accountTypes: data.account_types || [],
+          applicantProfiles: data.applicant_profiles || [],
+          sectors: data.sectors || [],
+          legalStructures: data.legal_structures || [],
+          regions: data.regions || [],
+        }));
+        setOptionError("");
+      })
+      .catch((error) => {
+        if (error.name !== "AbortError") setOptionError(error.message);
+      });
+
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    if (!formData.sector_id) {
+      setLookupOptions((current) => ({ ...current, industries: [] }));
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    fetchOptionsRef.current(
+      `/api/verification/options/industries?sector_id=${formData.sector_id}`,
+      controller.signal,
+    )
+      .then((data) => {
+        setLookupOptions((current) => ({ ...current, industries: data }));
+        setOptionError("");
+      })
+      .catch((error) => {
+        if (error.name !== "AbortError") setOptionError(error.message);
+      });
+    return () => controller.abort();
+  }, [formData.sector_id]);
+
+  useEffect(() => {
+    if (!formData.region_id) {
+      setLookupOptions((current) => ({ ...current, countries: [] }));
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    fetchOptionsRef.current(
+      `/api/verification/options/countries?region_id=${formData.region_id}`,
+      controller.signal,
+    )
+      .then((data) => {
+        setLookupOptions((current) => ({ ...current, countries: data }));
+        setOptionError("");
+      })
+      .catch((error) => {
+        if (error.name !== "AbortError") setOptionError(error.message);
+      });
+    return () => controller.abort();
+  }, [formData.region_id]);
+
+  useEffect(() => {
+    if (!formData.country_id) {
+      setLookupOptions((current) => ({ ...current, states: [] }));
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    fetchOptionsRef.current(
+      `/api/verification/options/states?country_id=${formData.country_id}`,
+      controller.signal,
+    )
+      .then((data) => {
+        setLookupOptions((current) => ({ ...current, states: data }));
+        setOptionError("");
+      })
+      .catch((error) => {
+        if (error.name !== "AbortError") setOptionError(error.message);
+      });
+    return () => controller.abort();
+  }, [formData.country_id]);
+
+  useEffect(() => {
+    if (!formData.state_id) {
+      setLookupOptions((current) => ({ ...current, cities: [] }));
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    fetchOptionsRef.current(
+      `/api/verification/options/cities?state_id=${formData.state_id}`,
+      controller.signal,
+    )
+      .then((data) => {
+        setLookupOptions((current) => ({ ...current, cities: data }));
+        setOptionError("");
+      })
+      .catch((error) => {
+        if (error.name !== "AbortError") setOptionError(error.message);
+      });
+    return () => controller.abort();
+  }, [formData.state_id]);
 
   const updateField = (event) => {
     const { name, value, type, checked } = event.target;
@@ -393,17 +417,17 @@ export default function VerificationModal() {
         [name]: type === "checkbox" ? checked : value,
       };
 
-      if (name === "region") {
-        next.country = "";
-        next.state = "";
-        next.city = "";
-      } else if (name === "country") {
-        next.state = "";
-        next.city = "";
-      } else if (name === "state") {
-        next.city = "";
-      } else if (name === "sector") {
-        next.industry = "";
+      if (name === "region_id") {
+        next.country_id = "";
+        next.state_id = "";
+        next.city_id = "";
+      } else if (name === "country_id") {
+        next.state_id = "";
+        next.city_id = "";
+      } else if (name === "state_id") {
+        next.city_id = "";
+      } else if (name === "sector_id") {
+        next.industry_id = "";
       }
 
       return next;
@@ -427,7 +451,7 @@ export default function VerificationModal() {
       return false;
     }
 
-    if (step === 7 && files.length === 0) {
+    if (step === 5 && files.length === 0) {
       setFileError("Upload at least one supporting document.");
       return false;
     }
@@ -519,7 +543,7 @@ export default function VerificationModal() {
 
     if (files.length === 0) {
       setFileError("Upload at least one supporting document.");
-      goToStep(7);
+      goToStep(5);
       return;
     }
 
@@ -562,7 +586,7 @@ export default function VerificationModal() {
         </div>
 
         <div className="vr-crumbs">
-          <span className="vr-step">Step {step} of 8</span>
+          <span className="vr-step">Step {step} of 6</span>
         </div>
 
         <div
@@ -646,7 +670,7 @@ export default function VerificationModal() {
         </section>
       )}
 
-      {step >= 2 && step <= 8 && (
+      {step >= 2 && step <= 6 && (
         <section className="vr-stepwrap vr-formGrid">
           <article className="vr-card">
             {submitted ? (
@@ -682,61 +706,49 @@ export default function VerificationModal() {
                     icon={<Building2 size={20} />}
                     title="Account and legal identity"
                   >
+                    {optionError && (
+                      <p className="vr-error" role="alert">
+                        {optionError}
+                      </p>
+                    )}
+
                     <div className="vr-row">
                       <SelectField
                         label="Account type"
-                        name="account_type"
-                        value={formData.account_type}
+                        name="account_type_id"
+                        value={formData.account_type_id}
                         required
                         onChange={updateField}
-                        options={[
-                          "Business",
-                          "Institutional investor",
-                          "Fund",
-                          "Family office",
-                          "Angel investor",
-                          "Syndicate",
-                          "Government or development institution",
-                          "Other",
-                        ]}
+                        options={lookupOptions.accountTypes}
                       />
 
                       <SelectField
                         label="Applicant profile"
-                        name="applicant_profile"
-                        value={formData.applicant_profile}
+                        name="applicant_profile_id"
+                        value={formData.applicant_profile_id}
                         required
                         onChange={updateField}
-                        options={[
-                          "Company",
-                          "Partnership",
-                          "Sole proprietor",
-                          "Nonprofit",
-                          "Trust",
-                          "Cooperative",
-                          "Public body",
-                          "Individual investor",
-                        ]}
+                        options={lookupOptions.applicantProfiles}
                       />
                     </div>
 
                     <div className="vr-row">
                       <SelectField
                         label="Sector"
-                        name="sector"
-                        value={formData.sector}
+                        name="sector_id"
+                        value={formData.sector_id}
                         required
                         onChange={updateField}
-                        options={sectors}
+                        options={lookupOptions.sectors}
                       />
 
                       <SelectField
                         label="Industry"
-                        name="industry"
-                        value={formData.industry}
+                        name="industry_id"
+                        value={formData.industry_id}
                         required
                         onChange={updateField}
-                        options={industryOptions}
+                        options={lookupOptions.industries}
                       />
                     </div>
 
@@ -786,60 +798,51 @@ export default function VerificationModal() {
 
                       <SelectField
                         label="Legal structure"
-                        name="legal_structure"
-                        value={formData.legal_structure}
+                        name="legal_structure_id"
+                        value={formData.legal_structure_id}
                         required
                         onChange={updateField}
-                        options={[
-                          "Private limited",
-                          "Public limited",
-                          "Partnership",
-                          "Sole proprietorship",
-                          "Nonprofit",
-                          "Trust",
-                          "Fund",
-                          "Other",
-                        ]}
+                        options={lookupOptions.legalStructures}
                       />
                     </div>
 
                     <div className="vr-row">
                       <SelectField
                         label="Region"
-                        name="region"
-                        value={formData.region}
+                        name="region_id"
+                        value={formData.region_id}
                         required
                         onChange={updateField}
-                        options={regions}
+                        options={lookupOptions.regions}
                       />
 
                       <SelectField
                         label="Country"
-                        name="country"
-                        value={formData.country}
+                        name="country_id"
+                        value={formData.country_id}
                         required
                         onChange={updateField}
-                        options={countryOptions}
+                        options={lookupOptions.countries}
                       />
                     </div>
 
                     <div className="vr-row">
                       <SelectField
                         label="State or province"
-                        name="state"
-                        value={formData.state}
+                        name="state_id"
+                        value={formData.state_id}
                         required
                         onChange={updateField}
-                        options={stateOptions}
+                        options={lookupOptions.states}
                       />
 
                       <SelectField
                         label="City"
-                        name="city"
-                        value={formData.city}
+                        name="city_id"
+                        value={formData.city_id}
                         required
                         onChange={updateField}
-                        options={cityOptions}
+                        options={lookupOptions.cities}
                       />
                     </div>
 
@@ -1069,318 +1072,6 @@ export default function VerificationModal() {
 
                 {step === 5 && (
                   <Section
-                    icon={<WalletCards size={20} />}
-                    title="Investor profile and funding preferences"
-                  >
-                    <div className="vr-row">
-                      <SelectField
-                        label="Investor status"
-                        name="investor_status"
-                        value={formData.investor_status}
-                        required
-                        onChange={updateField}
-                        options={[
-                          "Not an investor",
-                          "Retail",
-                          "Accredited or qualified",
-                          "Professional",
-                          "Institutional",
-                        ]}
-                      />
-
-                      <SelectField
-                        label="Investment role"
-                        name="investment_role"
-                        value={formData.investment_role}
-                        required
-                        onChange={updateField}
-                        options={[
-                          "Investor",
-                          "Fund manager",
-                          "Advisor",
-                          "Limited partner",
-                          "Lead investor",
-                          "Co-investor",
-                          "Other",
-                        ]}
-                      />
-                    </div>
-
-                    <div className="vr-row">
-                      <Field
-                        label="Assets under management"
-                        name="aum"
-                        value={formData.aum}
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        required
-                        onChange={updateField}
-                      />
-
-                      <Field
-                        label="AUM currency"
-                        name="aum_currency"
-                        value={formData.aum_currency}
-                        placeholder="USD"
-                        maxLength="3"
-                        required
-                        onChange={updateField}
-                      />
-                    </div>
-
-                    <div className="vr-row">
-                      <Field
-                        label="Minimum investment or ticket"
-                        name="minimum_ticket"
-                        value={formData.minimum_ticket}
-                        type="number"
-                        min="0"
-                        required
-                        onChange={updateField}
-                      />
-
-                      <Field
-                        label="Maximum investment or ticket"
-                        name="maximum_ticket"
-                        value={formData.maximum_ticket}
-                        type="number"
-                        min="0"
-                        required
-                        onChange={updateField}
-                      />
-                    </div>
-
-                    <div className="vr-row">
-                      <Field
-                        label="Ticket currency"
-                        name="ticket_currency"
-                        value={formData.ticket_currency}
-                        placeholder="USD"
-                        maxLength="3"
-                        required
-                        onChange={updateField}
-                      />
-
-                      <Field
-                        label="Preferred investment stages"
-                        name="preferred_stages"
-                        value={formData.preferred_stages}
-                        required
-                        placeholder="Seed, Series A, growth..."
-                        onChange={updateField}
-                      />
-                    </div>
-
-                    <div className="vr-row">
-                      <Field
-                        label="Preferred sectors"
-                        name="preferred_sectors"
-                        value={formData.preferred_sectors}
-                        required
-                        onChange={updateField}
-                      />
-
-                      <Field
-                        label="Preferred geographies"
-                        name="preferred_geographies"
-                        value={formData.preferred_geographies}
-                        required
-                        onChange={updateField}
-                      />
-                    </div>
-
-                    <div className="vr-row">
-                      <Field
-                        label="Investment horizon in years"
-                        name="investment_horizon"
-                        value={formData.investment_horizon}
-                        type="number"
-                        min="0"
-                        required
-                        onChange={updateField}
-                      />
-
-                      <Field
-                        label="Target return or IRR percentage"
-                        name="target_return"
-                        value={formData.target_return}
-                        type="number"
-                        step="0.01"
-                        required
-                        onChange={updateField}
-                      />
-                    </div>
-
-                    <Field
-                      label="Risk tolerance"
-                      name="risk_tolerance"
-                      value={formData.risk_tolerance}
-                      required
-                      placeholder="Low, moderate or high"
-                      onChange={updateField}
-                    />
-
-                    <TextareaField
-                      label="Investment mandate, restrictions and ESG criteria"
-                      name="investment_mandate"
-                      value={formData.investment_mandate}
-                      required
-                      onChange={updateField}
-                    />
-                  </Section>
-                )}
-
-                {step === 6 && (
-                  <Section
-                    icon={<ShieldCheck size={20} />}
-                    title="Financial, banking and compliance"
-                  >
-                    <div className="vr-row">
-                      <Field
-                        label="Bank name"
-                        name="bank_name"
-                        value={formData.bank_name}
-                        required
-                        onChange={updateField}
-                      />
-
-                      <Field
-                        label="Bank country"
-                        name="bank_country"
-                        value={formData.bank_country}
-                        required
-                        onChange={updateField}
-                      />
-                    </div>
-
-                    <div className="vr-row">
-                      <Field
-                        label="Account holder name"
-                        name="bank_account_name"
-                        value={formData.bank_account_name}
-                        required
-                        onChange={updateField}
-                      />
-
-                      <Field
-                        label="IBAN or account number"
-                        name="bank_account_number"
-                        value={formData.bank_account_number}
-                        required
-                        onChange={updateField}
-                      />
-                    </div>
-
-                    <div className="vr-row">
-                      <Field
-                        label="SWIFT or BIC"
-                        name="swift_bic"
-                        value={formData.swift_bic}
-                        required
-                        onChange={updateField}
-                      />
-
-                      <Field
-                        label="Source of funds or wealth"
-                        name="source_of_funds"
-                        value={formData.source_of_funds}
-                        required
-                        onChange={updateField}
-                      />
-                    </div>
-
-                    <div className="vr-row">
-                      <SelectField
-                        label="Audited financial statements available?"
-                        name="audited_financials"
-                        value={formData.audited_financials}
-                        required
-                        onChange={updateField}
-                        options={["Yes", "No", "Not applicable"]}
-                      />
-
-                      <SelectField
-                        label="Regulated entity?"
-                        name="regulated_entity"
-                        value={formData.regulated_entity}
-                        required
-                        onChange={updateField}
-                        options={["Yes", "No"]}
-                      />
-                    </div>
-
-                    <div className="vr-row">
-                      <Field
-                        label="Regulator and license number"
-                        name="regulator_license"
-                        value={formData.regulator_license}
-                        onChange={updateField}
-                      />
-
-                      <Field
-                        label="AML or compliance officer"
-                        name="compliance_officer"
-                        value={formData.compliance_officer}
-                        onChange={updateField}
-                      />
-                    </div>
-
-                    <div className="vr-checkGrid">
-                      <label>
-                        <input
-                          type="checkbox"
-                          name="pep_exposure"
-                          checked={formData.pep_exposure}
-                          onChange={updateField}
-                        />
-                        Owner or controller is a politically exposed person
-                      </label>
-
-                      <label>
-                        <input
-                          type="checkbox"
-                          name="sanctions_exposure"
-                          checked={formData.sanctions_exposure}
-                          onChange={updateField}
-                        />
-                        Sanctions exposure exists
-                      </label>
-
-                      <label>
-                        <input
-                          type="checkbox"
-                          name="adverse_media"
-                          checked={formData.adverse_media}
-                          onChange={updateField}
-                        />
-                        Material adverse media exists
-                      </label>
-
-                      <label>
-                        <input
-                          type="checkbox"
-                          name="legal_proceedings"
-                          checked={formData.legal_proceedings}
-                          onChange={updateField}
-                        />
-                        Material litigation or insolvency exists
-                      </label>
-                    </div>
-
-                    <TextareaField
-                      label="Compliance disclosures and explanations"
-                      name="compliance_notes"
-                      value={formData.compliance_notes}
-                      placeholder="Explain every selected disclosure or enter 'None'."
-                      required
-                      onChange={updateField}
-                    />
-                  </Section>
-                )}
-
-                {step === 7 && (
-                  <Section
                     icon={<FileCheck2 size={20} />}
                     title="Supporting documents"
                   >
@@ -1453,7 +1144,7 @@ export default function VerificationModal() {
                   </Section>
                 )}
 
-                {step === 8 && (
+                {step === 6 && (
                   <>
                     <Section
                       icon={<UserRound size={20} />}
@@ -1531,13 +1222,21 @@ export default function VerificationModal() {
                         <div>
                           <span>Account type</span>
                           <strong>
-                            {formData.account_type || "Not provided"}
+                            {selectedOptionName(
+                              lookupOptions.accountTypes,
+                              formData.account_type_id,
+                            )}
                           </strong>
                         </div>
 
                         <div>
                           <span>Country</span>
-                          <strong>{formData.country || "Not provided"}</strong>
+                          <strong>
+                            {selectedOptionName(
+                              lookupOptions.countries,
+                              formData.country_id,
+                            )}
+                          </strong>
                         </div>
 
                         <div>
@@ -1598,7 +1297,7 @@ export default function VerificationModal() {
 
                   {step === 2 && <span />}
 
-                  {step < 8 ? (
+                  {step < 6 ? (
                     <button
                       className="vr-btn"
                       type="button"
@@ -1624,3 +1323,5 @@ export default function VerificationModal() {
     </main>
   );
 }
+
+
