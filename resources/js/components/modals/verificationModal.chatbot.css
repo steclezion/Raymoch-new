@@ -1,0 +1,172 @@
+.vr-assistant {
+  margin-top: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(91, 91, 214, 0.18);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(101, 93, 255, 0.16), transparent 42%),
+    linear-gradient(145deg, #ffffff 0%, #f7f8ff 100%);
+  box-shadow: 0 18px 45px rgba(39, 44, 99, 0.12);
+}
+
+.vr-assistantHeader {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding: 13px 14px;
+  border: 0;
+  color: #20233d;
+  text-align: left;
+  background: transparent;
+  cursor: pointer;
+}
+
+.vr-assistantHeader > span:nth-child(2) {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.vr-assistantHeader small {
+  margin-top: 2px;
+  color: #71758d;
+  font-size: 0.72rem;
+}
+
+.vr-assistantAvatar {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 13px;
+  color: #fff;
+  background: linear-gradient(135deg, #655dff, #8f4ce8);
+  box-shadow: 0 8px 18px rgba(101, 93, 255, 0.3);
+}
+
+.vr-assistantStatus {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  color: #247a52;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.vr-assistantStatus::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2fc47c;
+  box-shadow: 0 0 0 4px rgba(47, 196, 124, 0.13);
+  content: "";
+}
+
+.vr-assistantBody {
+  padding: 0 12px 12px;
+  border-top: 1px solid rgba(91, 91, 214, 0.1);
+}
+
+.vr-assistantMessages {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 260px;
+  padding: 12px 2px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.vr-chatMessage {
+  max-width: 90%;
+  padding: 10px 12px;
+  border-radius: 14px 14px 14px 4px;
+  color: #343750;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  background: #eef0ff;
+}
+
+.vr-chatMessage.is-user {
+  align-self: flex-end;
+  border-radius: 14px 14px 4px;
+  color: #fff;
+  background: linear-gradient(135deg, #655dff, #7b54db);
+}
+
+.vr-chatMessage.is-error {
+  color: #8a2532;
+  background: #fff0f2;
+  box-shadow: inset 3px 0 #e65364;
+}
+
+.vr-chatMessage.is-warning {
+  color: #79551b;
+  background: #fff7df;
+  box-shadow: inset 3px 0 #e8aa34;
+}
+
+.vr-assistantComposer {
+  position: relative;
+}
+
+.vr-assistantComposer textarea {
+  width: 100%;
+  min-height: 64px;
+  padding: 11px 48px 11px 12px;
+  resize: vertical;
+  border: 1px solid #d9dcf0;
+  border-radius: 14px;
+  outline: none;
+  color: #292c43;
+  font: inherit;
+  font-size: 0.82rem;
+  background: rgba(255, 255, 255, 0.92);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.vr-assistantComposer textarea:focus {
+  border-color: #756cff;
+  box-shadow: 0 0 0 4px rgba(101, 93, 255, 0.12);
+}
+
+.vr-assistantComposer button {
+  position: absolute;
+  right: 9px;
+  bottom: 9px;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 11px;
+  color: #fff;
+  background: linear-gradient(135deg, #655dff, #8f4ce8);
+  box-shadow: 0 7px 15px rgba(101, 93, 255, 0.28);
+  cursor: pointer;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 680px) {
+  .vr-assistantHeader {
+    grid-template-columns: auto 1fr;
+  }
+
+  .vr-assistantStatus {
+    display: none;
+  }
+}

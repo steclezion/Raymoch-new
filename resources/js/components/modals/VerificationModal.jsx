@@ -9,6 +9,8 @@ import {
   FileUp,
   Landmark,
   Lightbulb,
+  MessageCircle,
+  Send,
   SearchCheck,
   ShieldCheck,
   UploadCloud,
@@ -17,11 +19,60 @@ import {
 } from "lucide-react";
 
 import "./verificationModal.css";
+import "./verificationModal.chatbot.css";
 
 const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
 
 const ACCEPTED_FILES =
   ".pdf,.doc,.docx,.xls,.xlsx,.csv,.jpg,.jpeg,.png";
+
+const VERIFICATION_GLOSSARY = {
+  "account type":
+    "The category that best describes how this account will be used, such as a business, fund, or institutional investor.",
+  "applicant profile":
+    "The legal form of the person or organization applying, such as a company, partnership, nonprofit, or individual investor.",
+  sector:
+    "A broad area of economic activity. Choose the sector that contains the applicant's main business activity.",
+  industry:
+    "A more specific activity within a sector. Select a sector first so the matching industries can be loaded.",
+  "legal structure":
+    "The legally registered form of the organization, such as private limited, partnership, trust, or nonprofit.",
+  "registration number":
+    "The official number issued by the authority that registered or licensed the applicant.",
+  "tax id":
+    "The tax identification, TIN, or VAT number issued by the relevant tax authority.",
+  lei:
+    "A Legal Entity Identifier is a 20-character global identifier for organizations participating in financial transactions.",
+  "beneficial owner":
+    "A person who ultimately owns, controls, or benefits from the organization, even when ownership is indirect.",
+  "authorized signatory":
+    "A person legally authorized to sign documents and act for the applicant.",
+  "fiscal year end":
+  "The final date of the applicant's annual accounting period.",
+};
+
+const DATA_SCOPE_RULES = {
+  legal_name: {
+    valid: (value) => value.trim().length >= 2,
+    message: "Legal or full name must contain at least two characters.",
+  },
+  registration_number: {
+    valid: (value) => value.trim().length >= 3,
+    message: "Registration or license number is too short to be valid.",
+  },
+  established_date: {
+    valid: (value) => new Date(`${value}T00:00:00`) <= new Date(),
+    message: "Date established or date of birth cannot be in the future.",
+  },
+  postal_code: {
+    valid: (value) => /^[A-Za-z0-9][A-Za-z0-9 -]{1,11}$/.test(value.trim()),
+    message: "Postal code must be 2–12 letters, numbers, spaces, or hyphens.",
+  },
+  contact_phone: {
+    valid: (value) => /^\+?[0-9 ()-]{7,20}$/.test(value.trim()),
+    message: "Phone number must contain 7–20 valid international phone characters.",
+  },
+};
 
 const stepMeta = {
   1: {
@@ -212,7 +263,15 @@ function Section({ icon, title, children }) {
   );
 }
 
-function ReviewChecklist({ step }) {
+function ReviewChecklist({
+  step,
+  assistantMessages,
+  assistantOpen,
+  assistantQuestion,
+  onAssistantQuestionChange,
+  onAssistantSubmit,
+  onAssistantToggle,
+}) {
   const stepSpecificTips = {
     2: "Make sure the legal name and registration number match official records.",
     3: "Use the most recent operating and revenue information available.",
@@ -255,6 +314,62 @@ function ReviewChecklist({ step }) {
         Banking and identity information must be transmitted and stored using
         appropriate encryption and access controls.
       </p>
+
+      <div className={`vr-assistant ${assistantOpen ? "is-open" : ""}`}>
+        <button
+          type="button"
+          className="vr-assistantHeader"
+          onClick={onAssistantToggle}
+          aria-expanded={assistantOpen}
+          aria-controls="verification-assistant-chat"
+        >
+          <span className="vr-assistantAvatar">
+            <MessageCircle size={18} />
+          </span>
+
+          <span>
+            <strong>Clarity Assistant</strong>
+            <small>Validation and form guidance</small>
+          </span>
+
+          <span className="vr-assistantStatus">Online</span>
+        </button>
+
+        {assistantOpen && (
+          <div id="verification-assistant-chat" className="vr-assistantBody">
+            <div className="vr-assistantMessages" aria-live="polite">
+              {assistantMessages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`vr-chatMessage is-${message.sender} ${
+                    message.tone ? `is-${message.tone}` : ""
+                  }`}
+                >
+                  {message.text}
+                </div>
+              ))}
+            </div>
+
+            <form className="vr-assistantComposer" onSubmit={onAssistantSubmit}>
+              <label className="sr-only" htmlFor="assistant-question">
+                Ask about the verification form
+              </label>
+
+              <textarea
+                id="assistant-question"
+                value={assistantQuestion}
+                rows="2"
+                placeholder="Ask what a term means…"
+                onChange={onAssistantQuestionChange}
+              />
+
+              <button type="submit" aria-label="Send question">
+                <Send size={17} />
+              </button>
+            </form>
+          </div>
+        )}
+      </div>
     </aside>
   );
 }
@@ -266,6 +381,15 @@ export default function VerificationModal() {
   const [fileError, setFileError] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [optionError, setOptionError] = useState("");
+  const [assistantOpen, setAssistantOpen] = useState(false);
+  const [assistantQuestion, setAssistantQuestion] = useState("");
+  const [assistantMessages, setAssistantMessages] = useState([
+    {
+      id: 1,
+      sender: "assistant",
+      text: "Hello! I can explain form terms and show exactly what needs correction before you continue.",
+    },
+  ]);
   const [lookupOptions, setLookupOptions] = useState({
     accountTypes: [],
     applicantProfiles: [],
@@ -280,6 +404,7 @@ export default function VerificationModal() {
 
   // useRef keeps the request cache stable across renders without rerendering.
   const requestCacheRef = useRef(new Map());
+  const assistantMessageIdRef = useRef(2);
   const fetchOptionsRef = useRef(async (url, signal) => {
     if (requestCacheRef.current.has(url)) {
       return requestCacheRef.current.get(url);
@@ -443,16 +568,114 @@ export default function VerificationModal() {
     });
   };
 
+  const pushAssistantMessage = (text, sender = "assistant", tone = "") => {
+    setAssistantMessages((current) => [
+      ...current,
+      {
+        id: assistantMessageIdRef.current++,
+        sender,
+        tone,
+        text,
+      },
+    ]);
+    setAssistantOpen(true);
+  };
+
+  const handleAssistantSubmit = (event) => {
+    event.preventDefault();
+
+    const question = assistantQuestion.trim();
+    if (!question) return;
+
+    pushAssistantMessage(question, "user");
+    setAssistantQuestion("");
+
+    const normalizedQuestion = question.toLowerCase();
+    const matchingTerm = Object.keys(VERIFICATION_GLOSSARY).find((term) =>
+      normalizedQuestion.includes(term),
+    );
+
+    if (matchingTerm) {
+      pushAssistantMessage(
+        `${matchingTerm.replace(/\b\w/g, (letter) =>
+          letter.toUpperCase(),
+        )}: ${VERIFICATION_GLOSSARY[matchingTerm]}`,
+      );
+      return;
+    }
+
+    if (
+      normalizedQuestion.includes("required") ||
+      normalizedQuestion.includes("invalid") ||
+      normalizedQuestion.includes("wrong") ||
+      normalizedQuestion.includes("error")
+    ) {
+      pushAssistantMessage(
+        "Required fields must be completed with current, official information. Click Next and I will list every missing or invalid field on this step.",
+      );
+      return;
+    }
+
+    pushAssistantMessage(
+      "That question appears outside this verification form. I can explain account, legal, location, business, ownership, document, and contact fields. Try asking, for example, “What does beneficial owner mean?”",
+      "assistant",
+      "warning",
+    );
+  };
+
   const validateCurrentStep = (event) => {
     const form = event.currentTarget.closest("form");
 
     if (!form.checkValidity()) {
+      const invalidFields = [...form.querySelectorAll(":invalid")];
+      const invalidLabels = [
+        ...new Set(
+          invalidFields.map((field) => {
+            const label = form.querySelector(`label[for="${field.id}"]`);
+            return label?.textContent?.replace("*", "").trim() || field.name;
+          }),
+        ),
+      ];
+
+      pushAssistantMessage(
+        `Please correct ${invalidLabels.length} field${
+          invalidLabels.length === 1 ? "" : "s"
+        } before continuing: ${invalidLabels.join(", ")}. Each highlighted field is empty or does not match the expected format.`,
+        "assistant",
+        "error",
+      );
       form.reportValidity();
+      return false;
+    }
+
+    const scopeIssues = Object.entries(DATA_SCOPE_RULES).flatMap(
+      ([fieldName, rule]) => {
+        const field = form.elements.namedItem(fieldName);
+
+        if (!field || !field.value || rule.valid(field.value)) return [];
+        return [{ field, message: rule.message }];
+      },
+    );
+
+    if (scopeIssues.length > 0) {
+      pushAssistantMessage(
+        `These values are outside the accepted scope: ${scopeIssues
+          .map((issue) => issue.message)
+          .join(" ")}`,
+        "assistant",
+        "error",
+      );
+      scopeIssues[0].field.focus();
       return false;
     }
 
     if (step === 5 && files.length === 0) {
       setFileError("Upload at least one supporting document.");
+      pushAssistantMessage(
+        "Supporting documents are required. Upload at least one readable PDF, Word, Excel, CSV, JPG, or PNG file before continuing.",
+        "assistant",
+        "error",
+      );
       return false;
     }
 
@@ -666,7 +889,17 @@ export default function VerificationModal() {
             </article>
           </div>
 
-          <ReviewChecklist step={1} />
+          <ReviewChecklist
+            step={1}
+            assistantMessages={assistantMessages}
+            assistantOpen={assistantOpen}
+            assistantQuestion={assistantQuestion}
+            onAssistantQuestionChange={(event) =>
+              setAssistantQuestion(event.target.value)
+            }
+            onAssistantSubmit={handleAssistantSubmit}
+            onAssistantToggle={() => setAssistantOpen((current) => !current)}
+          />
         </section>
       )}
 
@@ -1317,7 +1550,21 @@ export default function VerificationModal() {
             )}
           </article>
 
-          {!submitted && <ReviewChecklist step={step} />}
+          {!submitted && (
+            <ReviewChecklist
+              step={step}
+              assistantMessages={assistantMessages}
+              assistantOpen={assistantOpen}
+              assistantQuestion={assistantQuestion}
+              onAssistantQuestionChange={(event) =>
+                setAssistantQuestion(event.target.value)
+              }
+              onAssistantSubmit={handleAssistantSubmit}
+              onAssistantToggle={() =>
+                setAssistantOpen((current) => !current)
+              }
+            />
+          )}
         </section>
       )}
     </main>
