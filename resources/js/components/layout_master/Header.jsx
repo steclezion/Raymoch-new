@@ -228,17 +228,16 @@ function HamburgerIcon({ open }) {
         width: 24,
         height: 24,
         position: "relative",
+        color: "#0a2a6b",
         "& span": {
-          // position: "absolute",
+          position: "absolute",
+          display: "block",
           left: 0,
           width: "100%",
           height: 3,
           borderRadius: 2,
-          backgroundColor: "text.primary",
+          backgroundColor: "currentColor",
           transition: "transform .18s ease, top .18s ease, opacity .18s ease",
-          position: "relative",
-  zIndex: 999999,
-  pointerEvents: "auto",
         },
         "& span:nth-of-type(1)": {
           top: open ? "10px" : "5px",
@@ -859,7 +858,14 @@ setTimeout(() => {
                   <IconButton
                     aria-label="Open menu"
                     onClick={() => setMobileOpen(true)}
-                    sx={{ borderRadius: 2 }}
+                    sx={{
+                      borderRadius: 2,
+                      color: "#0a2a6b",
+                      "&:hover": {
+                        color: "#0a2a6b",
+                        bgcolor: "action.hover",
+                      },
+                    }}
                   >
                     <HamburgerIcon open={mobileOpen} />
                   </IconButton>

@@ -351,7 +351,7 @@ function ReviewChecklist({
             </div>
 
             <form className="vr-assistantComposer" onSubmit={onAssistantSubmit}>
-              <label className="sr-only" htmlFor="assistant-question">
+              <label className="vr-assistantSrOnly" htmlFor="assistant-question">
                 Ask about the verification form
               </label>
 
