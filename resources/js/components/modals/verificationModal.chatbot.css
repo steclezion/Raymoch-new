@@ -22,7 +22,7 @@
 .vr-assistantComposer { position: relative; }
 .vr-assistantComposer textarea { width: 100%; min-height: 64px; padding: 11px 48px 11px 12px; resize: vertical; border: 1px solid #d9dcf0; border-radius: 14px; outline: none; color: #292c43; font: inherit; font-size: .82rem; background: rgba(255,255,255,.92); transition: border-color 160ms ease, box-shadow 160ms ease; }
 .vr-assistantComposer textarea:focus { border-color: #756cff; box-shadow: 0 0 0 4px rgba(101, 93, 255, .12); }
-.vr-assistantComposer button { position: absolute; right: 9px; bottom: 9px; display: grid; width: 34px; height: 34px; padding: 0; place-items: center; border: 0; border-radius: 11px; color: #fff; background: linear-gradient(135deg, #655dff, #8f4ce8); box-shadow: 0 7px 15px rgba(101, 93, 255, .28); cursor: pointer; }
+.vr-assistantComposer button { position: absolute; right: 9px; bottom: 9px; z-index: 2; display: grid; width: 34px; height: 34px; padding: 0; place-items: center; border: 0; border-radius: 11px; color: #fff; background: linear-gradient(135deg, #655dff, #8f4ce8); box-shadow: 0 7px 15px rgba(101, 93, 255, .28); cursor: pointer; pointer-events: auto; touch-action: manipulation; }
 .vr-assistantComposer button:disabled { cursor: not-allowed; opacity: .5; box-shadow: none; }
 .vr-assistantThinking { margin: 8px 2px 0; color: #71758d; font-size: .75rem; }
 .vr-assistantSrOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }

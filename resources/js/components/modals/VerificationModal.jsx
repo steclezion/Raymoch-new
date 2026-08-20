@@ -23,33 +23,15 @@ import "./verificationModal.chatbot.css";
 
 const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
 
+// Leave VITE_API_URL empty when React and Laravel use the same origin.
+// Example for separate Vite/Laravel development servers:
+// VITE_API_URL=http://127.0.0.1:8000
+const API_BASE_URL = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+const ASSISTANT_ENDPOINT = `${API_BASE_URL}/api/verification/assistant`;
+const VERIFICATION_ENDPOINT = `${API_BASE_URL}/api/verification`;
+
 const ACCEPTED_FILES =
   ".pdf,.doc,.docx,.xls,.xlsx,.csv,.jpg,.jpeg,.png";
-
-const VERIFICATION_GLOSSARY = {
-  "account type":
-    "The category that best describes how this account will be used, such as a business, fund, or institutional investor.",
-  "applicant profile":
-    "The legal form of the person or organization applying, such as a company, partnership, nonprofit, or individual investor.",
-  sector:
-    "A broad area of economic activity. Choose the sector that contains the applicant's main business activity.",
-  industry:
-    "A more specific activity within a sector. Select a sector first so the matching industries can be loaded.",
-  "legal structure":
-    "The legally registered form of the organization, such as private limited, partnership, trust, or nonprofit.",
-  "registration number":
-    "The official number issued by the authority that registered or licensed the applicant.",
-  "tax id":
-    "The tax identification, TIN, or VAT number issued by the relevant tax authority.",
-  lei:
-    "A Legal Entity Identifier is a 20-character global identifier for organizations participating in financial transactions.",
-  "beneficial owner":
-    "A person who ultimately owns, controls, or benefits from the organization, even when ownership is indirect.",
-  "authorized signatory":
-    "A person legally authorized to sign documents and act for the applicant.",
-  "fiscal year end":
-  "The final date of the applicant's annual accounting period.",
-};
 
 const DATA_SCOPE_RULES = {
   legal_name: {
@@ -271,6 +253,8 @@ function ReviewChecklist({
   onAssistantQuestionChange,
   onAssistantSubmit,
   onAssistantToggle,
+  assistantLoading,
+  assistantMessagesRef,
 }) {
   const stepSpecificTips = {
     2: "Make sure the legal name and registration number match official records.",
@@ -337,7 +321,11 @@ function ReviewChecklist({
 
         {assistantOpen && (
           <div id="verification-assistant-chat" className="vr-assistantBody">
-            <div className="vr-assistantMessages" aria-live="polite">
+            <div
+              ref={assistantMessagesRef}
+              className="vr-assistantMessages"
+              aria-live="polite"
+            >
               {assistantMessages.map((message) => (
                 <div
                   key={message.id}
@@ -361,12 +349,23 @@ function ReviewChecklist({
                 rows="2"
                 placeholder="Ask what a term means…"
                 onChange={onAssistantQuestionChange}
+                disabled={assistantLoading}
               />
 
-              <button type="submit" aria-label="Send question">
+              <button
+                type="submit"
+                aria-label="Send question"
+                disabled={assistantLoading}
+              >
                 <Send size={17} />
               </button>
             </form>
+
+            {assistantLoading && (
+              <p className="vr-assistantThinking" role="status">
+                Clarity Assistant is thinking…
+              </p>
+            )}
           </div>
         )}
       </div>
@@ -380,9 +379,13 @@ export default function VerificationModal() {
   const [files, setFiles] = useState([]);
   const [fileError, setFileError] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [submissionLoading, setSubmissionLoading] = useState(false);
+  const [submissionError, setSubmissionError] = useState("");
+  const [submissionReference, setSubmissionReference] = useState("");
   const [optionError, setOptionError] = useState("");
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [assistantQuestion, setAssistantQuestion] = useState("");
+  const [assistantLoading, setAssistantLoading] = useState(false);
   const [assistantMessages, setAssistantMessages] = useState([
     {
       id: 1,
@@ -405,6 +408,8 @@ export default function VerificationModal() {
   // useRef keeps the request cache stable across renders without rerendering.
   const requestCacheRef = useRef(new Map());
   const assistantMessageIdRef = useRef(2);
+  const assistantAbortRef = useRef(null);
+  const assistantMessagesRef = useRef(null);
   const fetchOptionsRef = useRef(async (url, signal) => {
     if (requestCacheRef.current.has(url)) {
       return requestCacheRef.current.get(url);
@@ -581,46 +586,139 @@ export default function VerificationModal() {
     setAssistantOpen(true);
   };
 
-  const handleAssistantSubmit = (event) => {
+  useEffect(() => {
+    const container = assistantMessagesRef.current;
+    if (container) container.scrollTop = container.scrollHeight;
+  }, [assistantMessages, assistantLoading]);
+
+  useEffect(() => () => assistantAbortRef.current?.abort(), []);
+
+  useEffect(() => {
+    console.info("[Clarity] VerificationModal loaded", {
+      assistantEndpoint: ASSISTANT_ENDPOINT,
+    });
+  }, []);
+
+  const handleAssistantSubmit = async (event) => {
     event.preventDefault();
+    event.stopPropagation();
 
     const question = assistantQuestion.trim();
-    if (!question) return;
 
+    console.info("[Clarity] submit event received", {
+      questionLength: question.length,
+      assistantLoading,
+      currentStep: step,
+      endpoint: ASSISTANT_ENDPOINT,
+    });
+
+    if (!question) {
+      console.warn("[Clarity] request stopped: question is empty");
+      pushAssistantMessage(
+        "Please enter a question before pressing Send.",
+        "assistant",
+        "warning",
+      );
+      return;
+    }
+
+    if (assistantLoading) {
+      console.warn("[Clarity] request stopped: a request is already running");
+      return;
+    }
+
+    const recentHistory = assistantMessages.slice(-8).map(({ sender, text }) => ({
+      role: sender === "user" ? "user" : "assistant",
+      content: text,
+    }));
     pushAssistantMessage(question, "user");
     setAssistantQuestion("");
+    setAssistantLoading(true);
+    assistantAbortRef.current?.abort();
+    const controller = new AbortController();
+    assistantAbortRef.current = controller;
 
-    const normalizedQuestion = question.toLowerCase();
-    const matchingTerm = Object.keys(VERIFICATION_GLOSSARY).find((term) =>
-      normalizedQuestion.includes(term),
+    // Never send uploaded files or raw identity numbers to the language model.
+    const safeFormContext = Object.fromEntries(
+      Object.entries(formData)
+        .filter(([key]) => !["signatory_id_number", "tax_id"].includes(key))
+        .map(([key, value]) => [
+          key,
+          typeof value === "string" && value.length > 500
+            ? `${value.slice(0, 500)}…`
+            : value,
+        ]),
     );
 
-    if (matchingTerm) {
-      pushAssistantMessage(
-        `${matchingTerm.replace(/\b\w/g, (letter) =>
-          letter.toUpperCase(),
-        )}: ${VERIFICATION_GLOSSARY[matchingTerm]}`,
-      );
-      return;
-    }
+    try {
+      console.info("[Clarity] invoking Laravel API", {
+        endpoint: ASSISTANT_ENDPOINT,
+        currentStep: step,
+      });
 
-    if (
-      normalizedQuestion.includes("required") ||
-      normalizedQuestion.includes("invalid") ||
-      normalizedQuestion.includes("wrong") ||
-      normalizedQuestion.includes("error")
-    ) {
-      pushAssistantMessage(
-        "Required fields must be completed with current, official information. Click Next and I will list every missing or invalid field on this step.",
-      );
-      return;
-    }
+      const response = await fetch(ASSISTANT_ENDPOINT, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          question,
+          current_step: step,
+          form_context: safeFormContext,
+          conversation: recentHistory,
+        }),
+        signal: controller.signal,
+      });
 
-    pushAssistantMessage(
-      "That question appears outside this verification form. I can explain account, legal, location, business, ownership, document, and contact fields. Try asking, for example, “What does beneficial owner mean?”",
-      "assistant",
-      "warning",
-    );
+      const responseText = await response.text();
+      let data = {};
+
+      if (responseText) {
+        try {
+          data = JSON.parse(responseText);
+        } catch {
+          throw new Error(
+            `Laravel returned non-JSON content (HTTP ${response.status}). Check the Laravel URL and server log.`,
+          );
+        }
+      }
+
+      console.info("[Clarity] Laravel API responded", {
+        status: response.status,
+        ok: response.ok,
+        traceId: data.trace_id || null,
+      });
+
+      if (!response.ok) {
+        const validationMessage = Object.values(data.errors || {})[0]?.[0];
+        throw new Error(
+          validationMessage ||
+            data.message ||
+            `The assistant request failed (HTTP ${response.status}).`,
+        );
+      }
+
+      if (!data.answer || typeof data.answer !== "string") {
+        throw new Error("Laravel returned a successful response without an answer.");
+      }
+
+      pushAssistantMessage(data.answer);
+    } catch (error) {
+      if (error.name !== "AbortError") {
+        console.error("[Clarity] assistant request failed", error);
+        pushAssistantMessage(
+          error.message || "The assistant could not answer. Please try again.",
+          "assistant",
+          "error",
+        );
+      }
+    } finally {
+      if (assistantAbortRef.current === controller) {
+        assistantAbortRef.current = null;
+        setAssistantLoading(false);
+      }
+    }
   };
 
   const validateCurrentStep = (event) => {
@@ -780,18 +878,32 @@ export default function VerificationModal() {
       payload.append("documents[]", file);
     });
 
-    /*
-     * Connect this to your API:
-     *
-     * await axios.post("/api/verification", payload, {
-     *   headers: {
-     *     "Content-Type": "multipart/form-data",
-     *   },
-     * });
-     */
+    setSubmissionLoading(true);
+    setSubmissionError("");
 
-    setSubmitted(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    try {
+      const response = await fetch(VERIFICATION_ENDPOINT, {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        body: payload,
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const firstValidationError = Object.values(data.errors || {})[0]?.[0];
+        throw new Error(
+          firstValidationError || data.message || "Submission failed.",
+        );
+      }
+
+      setSubmissionReference(data.reference || "");
+      setSubmitted(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (error) {
+      setSubmissionError(error.message || "Submission failed. Please try again.");
+    } finally {
+      setSubmissionLoading(false);
+    }
   };
 
   return (
@@ -894,6 +1006,8 @@ export default function VerificationModal() {
             assistantMessages={assistantMessages}
             assistantOpen={assistantOpen}
             assistantQuestion={assistantQuestion}
+            assistantLoading={assistantLoading}
+            assistantMessagesRef={assistantMessagesRef}
             onAssistantQuestionChange={(event) =>
               setAssistantQuestion(event.target.value)
             }
@@ -920,6 +1034,12 @@ export default function VerificationModal() {
                   Your request is under review. Status updates will be sent to{" "}
                   <strong>{formData.contact_email}</strong>.
                 </p>
+
+                {submissionReference && (
+                  <p className="vr-reference">
+                    Reference: <strong>{submissionReference}</strong>
+                  </p>
+                )}
 
                 <button
                   type="button"
@@ -1540,12 +1660,22 @@ export default function VerificationModal() {
                       <ArrowRight size={17} />
                     </button>
                   ) : (
-                    <button className="vr-btn" type="submit">
-                      Submit for Verification
+                    <button
+                      className="vr-btn"
+                      type="submit"
+                      disabled={submissionLoading}
+                    >
+                      {submissionLoading ? "Submitting…" : "Submit for Verification"}
                       <CheckCircle2 size={17} />
                     </button>
                   )}
                 </div>
+
+                {submissionError && (
+                  <p className="vr-error" role="alert">
+                    {submissionError}
+                  </p>
+                )}
               </form>
             )}
           </article>
@@ -1556,6 +1686,8 @@ export default function VerificationModal() {
               assistantMessages={assistantMessages}
               assistantOpen={assistantOpen}
               assistantQuestion={assistantQuestion}
+              assistantLoading={assistantLoading}
+              assistantMessagesRef={assistantMessagesRef}
               onAssistantQuestionChange={(event) =>
                 setAssistantQuestion(event.target.value)
               }
