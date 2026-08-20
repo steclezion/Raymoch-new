@@ -1,715 +1,1640 @@
-// resources/js/components/services/modals/VisibilityListingModal.jsx
-import React, { useEffect, useMemo, useState } from "react";
-import "./visibilityListingModal.css";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  BadgeCheck,
+  Building2,
+  CheckCircle2,
+  FileCheck2,
+  FileUp,
+  Landmark,
+  Lightbulb,
+  MessageCircle,
+  Send,
+  SearchCheck,
+  ShieldCheck,
+  UploadCloud,
+  UserRound,
+  UsersRound,
+} from "lucide-react";
 
-/**
- * Visibility & Listing Modal
- * - Professional "profile completeness" wizard
- * - Multi-step with stable layout (no jumping)
- * - Prepared to connect to backend later
- */
-export default function VisibilityListingModal() {
-  const steps = useMemo(
-    () => [
-      { id: 1, title: "Business Basics", desc: "Who you are and what you do." },
-      { id: 2, title: "Location & Contacts", desc: "Where to find you." },
-      { id: 3, title: "Documents & Proof", desc: "Upload and verify essentials." },
-      { id: 4, title: "Publish Listing", desc: "Preview and go live." },
-    ],
-    []
+import "./verificationModal.css";
+import "./verificationModal.chatbot.css";
+
+const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
+
+const ACCEPTED_FILES =
+  ".pdf,.doc,.docx,.xls,.xlsx,.csv,.jpg,.jpeg,.png";
+
+const DATA_SCOPE_RULES = {
+  legal_name: {
+    valid: (value) => value.trim().length >= 2,
+    message: "Legal or full name must contain at least two characters.",
+  },
+  registration_number: {
+    valid: (value) => value.trim().length >= 3,
+    message: "Registration or license number is too short to be valid.",
+  },
+  established_date: {
+    valid: (value) => new Date(`${value}T00:00:00`) <= new Date(),
+    message: "Date established or date of birth cannot be in the future.",
+  },
+  postal_code: {
+    valid: (value) => /^[A-Za-z0-9][A-Za-z0-9 -]{1,11}$/.test(value.trim()),
+    message: "Postal code must be 2–12 letters, numbers, spaces, or hyphens.",
+  },
+  contact_phone: {
+    valid: (value) => /^\+?[0-9 ()-]{7,20}$/.test(value.trim()),
+    message: "Phone number must contain 7–20 valid international phone characters.",
+  },
+};
+
+const stepMeta = {
+  1: {
+    title: "Verification",
+    description: "Confirm your business or investor identity.",
+  },
+  2: {
+    title: "Account and Legal Identity",
+    description: "Provide the applicant's legal and registration details.",
+  },
+  3: {
+    title: "Business and Operating Profile",
+    description: "Describe the organization and its business activities.",
+  },
+  4: {
+    title: "Ownership, Leadership and Control",
+    description: "Identify beneficial owners, directors and controllers.",
+  },
+  5: {
+    title: "Supporting Documents",
+    description: "Upload the evidence required for verification.",
+  },
+  6: {
+    title: "Primary Contact and Confirmation",
+    description: "Enter contact details, review the declarations and submit.",
+  },
+};
+
+const initialFormData = {
+  account_type_id: "",
+  applicant_profile_id: "",
+  legal_name: "",
+  trading_name: "",
+  registration_number: "",
+  tax_id: "",
+  established_date: "",
+  legal_structure_id: "",
+  region_id: "",
+  country_id: "",
+  state_id: "",
+  city_id: "",
+  registered_address: "",
+  postal_code: "",
+  website: "",
+  external_identifier: "",
+
+  sector_id: "",
+  industry_id: "",
+  business_model: "",
+  products_services: "",
+  operating_countries: "",
+  employee_count: "",
+  company_stage: "",
+  annual_revenue: "",
+  revenue_currency: "",
+  fiscal_year_end: "",
+  listing_ticker: "",
+  business_description: "",
+
+  parent_company: "",
+  ownership_type: "",
+  beneficial_owners: "",
+  directors: "",
+  authorized_signatory: "",
+  signatory_title: "",
+  signatory_id_number: "",
+  signatory_id_expiry: "",
+
+  contact_name: "",
+  contact_role: "",
+  contact_email: "",
+  contact_phone: "",
+  preferred_contact: "",
+  referral_source: "",
+  accuracy_consent: false,
+  privacy_consent: false,
+};
+
+function Field({
+  label,
+  name,
+  value,
+  required = false,
+  type = "text",
+  placeholder,
+  onChange,
+  children,
+  ...props
+}) {
+  return (
+    <div className="vr-field">
+      <label htmlFor={name}>
+        {label}
+        {required && " *"}
+      </label>
+
+      {children || (
+        <input
+          id={name}
+          name={name}
+          type={type}
+          value={value}
+          required={required}
+          placeholder={placeholder}
+          onChange={onChange}
+          {...props}
+        />
+      )}
+    </div>
   );
+}
 
+function SelectField({
+  label,
+  name,
+  value,
+  options,
+  required = false,
+  onChange,
+}) {
+  return (
+    <Field label={label} name={name} required={required}>
+      <select
+        id={name}
+        name={name}
+        value={value}
+        required={required}
+        onChange={onChange}
+      >
+        <option value="">Select…</option>
+
+        {options.map((option) => {
+          const optionValue = typeof option === "object" ? option.id : option;
+          const optionLabel = typeof option === "object" ? option.name : option;
+
+          return (
+            <option key={optionValue} value={optionValue}>
+              {optionLabel}
+            </option>
+          );
+        })}
+      </select>
+    </Field>
+  );
+}
+
+function TextareaField({
+  label,
+  name,
+  value,
+  required = false,
+  placeholder,
+  rows = 4,
+  onChange,
+}) {
+  return (
+    <Field label={label} name={name} required={required}>
+      <textarea
+        id={name}
+        name={name}
+        value={value}
+        required={required}
+        placeholder={placeholder}
+        rows={rows}
+        onChange={onChange}
+      />
+    </Field>
+  );
+}
+
+function selectedOptionName(options, selectedId) {
+  return (
+    options.find((option) => String(option.id) === String(selectedId))?.name ||
+    "Not provided"
+  );
+}
+
+function Section({ icon, title, children }) {
+  return (
+    <section className="vr-innerCard vr-stepSection">
+      <div className="vr-sectionHeading">
+        <span className="vr-smallIcon">{icon}</span>
+        <h3>{title}</h3>
+      </div>
+
+      {children}
+    </section>
+  );
+}
+
+function ReviewChecklist({
+  step,
+  assistantMessages,
+  assistantOpen,
+  assistantQuestion,
+  onAssistantQuestionChange,
+  onAssistantSubmit,
+  onAssistantToggle,
+  assistantLoading,
+  assistantMessagesRef,
+}) {
+  const stepSpecificTips = {
+    2: "Make sure the legal name and registration number match official records.",
+    3: "Use the most recent operating and revenue information available.",
+    4: "List every beneficial owner and controller required by your jurisdiction.",
+    5: "Upload clear, readable and unexpired documents.",
+    6: "Confirm that the applicant has authorized the named representative.",
+  };
+
+  return (
+    <aside className="vr-card vr-sticky vr-reviewChecklist">
+      <div className="vr-sectionHeading">
+        <span className="vr-smallIcon">
+          <Lightbulb size={20} />
+        </span>
+
+        <h3>Review checklist</h3>
+      </div>
+
+      <ul className="vr-infoList">
+        <li>Complete every field marked with an asterisk.</li>
+        <li>{stepSpecificTips[step]}</li>
+        <li>Names and identification numbers must match the documents.</li>
+        <li>Provide accurate and current information.</li>
+        <li>You can use Back without losing information already entered.</li>
+      </ul>
+
+      <hr className="vr-hr" />
+
+      <h3>Current step</h3>
+
+      <p className="small">
+        Step {step} of 6: {stepMeta[step].title}
+      </p>
+
+      <hr className="vr-hr" />
+
+      <h3>Privacy reminder</h3>
+
+      <p className="small">
+        Banking and identity information must be transmitted and stored using
+        appropriate encryption and access controls.
+      </p>
+
+      <div className={`vr-assistant ${assistantOpen ? "is-open" : ""}`}>
+        <button
+          type="button"
+          className="vr-assistantHeader"
+          onClick={onAssistantToggle}
+          aria-expanded={assistantOpen}
+          aria-controls="verification-assistant-chat"
+        >
+          <span className="vr-assistantAvatar">
+            <MessageCircle size={18} />
+          </span>
+
+          <span>
+            <strong>Clarity Assistant</strong>
+            <small>Validation and form guidance</small>
+          </span>
+
+          <span className="vr-assistantStatus">Online</span>
+        </button>
+
+        {assistantOpen && (
+          <div id="verification-assistant-chat" className="vr-assistantBody">
+            <div
+              ref={assistantMessagesRef}
+              className="vr-assistantMessages"
+              aria-live="polite"
+            >
+              {assistantMessages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`vr-chatMessage is-${message.sender} ${
+                    message.tone ? `is-${message.tone}` : ""
+                  }`}
+                >
+                  {message.text}
+                </div>
+              ))}
+            </div>
+
+            <form className="vr-assistantComposer" onSubmit={onAssistantSubmit}>
+              <label className="vr-assistantSrOnly" htmlFor="assistant-question">
+                Ask about the verification form
+              </label>
+
+              <textarea
+                id="assistant-question"
+                value={assistantQuestion}
+                rows="2"
+                placeholder="Ask what a term means…"
+                onChange={onAssistantQuestionChange}
+                disabled={assistantLoading}
+              />
+
+              <button
+                type="submit"
+                aria-label="Send question"
+                disabled={assistantLoading || !assistantQuestion.trim()}
+              >
+                <Send size={17} />
+              </button>
+            </form>
+
+            {assistantLoading && (
+              <p className="vr-assistantThinking" role="status">
+                Clarity Assistant is thinking…
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    </aside>
+  );
+}
+
+export default function VerificationModal() {
   const [step, setStep] = useState(1);
-  const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState({ show: false, type: "ok", msg: "" });
-
-  // Stable form state (no step-jump)
-  const [form, setForm] = useState({
-    companyName: "",
-    tagline: "",
-    sector: "",
-    stage: "",
-    website: "",
-    email: "",
-    phone: "",
-    country: "",
-    city: "",
-    address: "",
-    foundedYear: "",
-    teamSize: "",
-    description: "",
-    // listing toggles
-    publicProfile: true,
-    showFinancials: false,
-    allowInvestorContact: true,
+  const [formData, setFormData] = useState(initialFormData);
+  const [files, setFiles] = useState([]);
+  const [fileError, setFileError] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const [submissionLoading, setSubmissionLoading] = useState(false);
+  const [submissionError, setSubmissionError] = useState("");
+  const [submissionReference, setSubmissionReference] = useState("");
+  const [optionError, setOptionError] = useState("");
+  const [assistantOpen, setAssistantOpen] = useState(false);
+  const [assistantQuestion, setAssistantQuestion] = useState("");
+  const [assistantLoading, setAssistantLoading] = useState(false);
+  const [assistantMessages, setAssistantMessages] = useState([
+    {
+      id: 1,
+      sender: "assistant",
+      text: "Hello! I can explain form terms and show exactly what needs correction before you continue.",
+    },
+  ]);
+  const [lookupOptions, setLookupOptions] = useState({
+    accountTypes: [],
+    applicantProfiles: [],
+    sectors: [],
+    industries: [],
+    legalStructures: [],
+    regions: [],
+    countries: [],
+    states: [],
+    cities: [],
   });
 
-  const [uploads, setUploads] = useState({
-    registration: null,
-    taxId: null,
-    pitchDeck: null,
-    logo: null,
-    gallery: [],
+  // useRef keeps the request cache stable across renders without rerendering.
+  const requestCacheRef = useRef(new Map());
+  const assistantMessageIdRef = useRef(2);
+  const assistantAbortRef = useRef(null);
+  const assistantMessagesRef = useRef(null);
+  const fetchOptionsRef = useRef(async (url, signal) => {
+    if (requestCacheRef.current.has(url)) {
+      return requestCacheRef.current.get(url);
+    }
+
+    const response = await fetch(url, {
+      headers: { Accept: "application/json" },
+      signal,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Unable to load options (${response.status}).`);
+    }
+
+    const data = await response.json();
+    requestCacheRef.current.set(url, data);
+    return data;
   });
 
-  const [previewUrl, setPreviewUrl] = useState({
-    logo: "",
-  });
+  const currentStep = stepMeta[step];
+  const progress = Math.round((step / 6) * 100);
 
-  const [errors, setErrors] = useState({});
-
-  const showToast = (type, msg) => {
-    setToast({ show: true, type, msg });
-    setTimeout(() => setToast((t) => ({ ...t, show: false })), 2500);
-  };
-
-  // Create object URLs for previews
   useEffect(() => {
-    if (uploads.logo) {
-      const url = URL.createObjectURL(uploads.logo);
-      setPreviewUrl((p) => ({ ...p, logo: url }));
-      return () => URL.revokeObjectURL(url);
-    } else {
-      setPreviewUrl((p) => ({ ...p, logo: "" }));
-    }
-  }, [uploads.logo]);
+    const controller = new AbortController();
 
-  const current = steps.find((s) => s.id === step);
-  const pct = Math.round((step / steps.length) * 100);
+    fetchOptionsRef.current("/api/verification/options", controller.signal)
+      .then((data) => {
+        setLookupOptions((current) => ({
+          ...current,
+          accountTypes: data.account_types || [],
+          applicantProfiles: data.applicant_profiles || [],
+          sectors: data.sectors || [],
+          legalStructures: data.legal_structures || [],
+          regions: data.regions || [],
+        }));
+        setOptionError("");
+      })
+      .catch((error) => {
+        if (error.name !== "AbortError") setOptionError(error.message);
+      });
 
-  const setField = (k, v) => setForm((prev) => ({ ...prev, [k]: v }));
+    return () => controller.abort();
+  }, []);
 
-  const validateStep = () => {
-    const e = {};
-    if (step === 1) {
-      if (!form.companyName.trim()) e.companyName = "Company name is required";
-      if (!form.sector.trim()) e.sector = "Sector is required";
-      if (!form.description.trim() || form.description.trim().length < 30)
-        e.description = "Please add at least 30 characters";
+  useEffect(() => {
+    if (!formData.sector_id) {
+      setLookupOptions((current) => ({ ...current, industries: [] }));
+      return undefined;
     }
-    if (step === 2) {
-      if (!form.country.trim()) e.country = "Country is required";
-      if (!form.city.trim()) e.city = "City is required";
-      if (!form.email.trim()) e.email = "Email is required";
+
+    const controller = new AbortController();
+    fetchOptionsRef.current(
+      `/api/verification/options/industries?sector_id=${formData.sector_id}`,
+      controller.signal,
+    )
+      .then((data) => {
+        setLookupOptions((current) => ({ ...current, industries: data }));
+        setOptionError("");
+      })
+      .catch((error) => {
+        if (error.name !== "AbortError") setOptionError(error.message);
+      });
+    return () => controller.abort();
+  }, [formData.sector_id]);
+
+  useEffect(() => {
+    if (!formData.region_id) {
+      setLookupOptions((current) => ({ ...current, countries: [] }));
+      return undefined;
     }
-    if (step === 3) {
-      // Docs are optional, but encourage at least one
-      const hasAny =
-        uploads.registration || uploads.taxId || uploads.pitchDeck || uploads.logo || (uploads.gallery?.length || 0) > 0;
-      if (!hasAny) e.docs = "Upload at least one item (logo, deck, registration, etc.)";
+
+    const controller = new AbortController();
+    fetchOptionsRef.current(
+      `/api/verification/options/countries?region_id=${formData.region_id}`,
+      controller.signal,
+    )
+      .then((data) => {
+        setLookupOptions((current) => ({ ...current, countries: data }));
+        setOptionError("");
+      })
+      .catch((error) => {
+        if (error.name !== "AbortError") setOptionError(error.message);
+      });
+    return () => controller.abort();
+  }, [formData.region_id]);
+
+  useEffect(() => {
+    if (!formData.country_id) {
+      setLookupOptions((current) => ({ ...current, states: [] }));
+      return undefined;
     }
-    setErrors(e);
-    return Object.keys(e).length === 0;
+
+    const controller = new AbortController();
+    fetchOptionsRef.current(
+      `/api/verification/options/states?country_id=${formData.country_id}`,
+      controller.signal,
+    )
+      .then((data) => {
+        setLookupOptions((current) => ({ ...current, states: data }));
+        setOptionError("");
+      })
+      .catch((error) => {
+        if (error.name !== "AbortError") setOptionError(error.message);
+      });
+    return () => controller.abort();
+  }, [formData.country_id]);
+
+  useEffect(() => {
+    if (!formData.state_id) {
+      setLookupOptions((current) => ({ ...current, cities: [] }));
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    fetchOptionsRef.current(
+      `/api/verification/options/cities?state_id=${formData.state_id}`,
+      controller.signal,
+    )
+      .then((data) => {
+        setLookupOptions((current) => ({ ...current, cities: data }));
+        setOptionError("");
+      })
+      .catch((error) => {
+        if (error.name !== "AbortError") setOptionError(error.message);
+      });
+    return () => controller.abort();
+  }, [formData.state_id]);
+
+  const updateField = (event) => {
+    const { name, value, type, checked } = event.target;
+
+    setFormData((current) => {
+      const next = {
+        ...current,
+        [name]: type === "checkbox" ? checked : value,
+      };
+
+      if (name === "region_id") {
+        next.country_id = "";
+        next.state_id = "";
+        next.city_id = "";
+      } else if (name === "country_id") {
+        next.state_id = "";
+        next.city_id = "";
+      } else if (name === "state_id") {
+        next.city_id = "";
+      } else if (name === "sector_id") {
+        next.industry_id = "";
+      }
+
+      return next;
+    });
   };
 
-  const next = () => {
-    if (!validateStep()) {
-      showToast("err", "Please fix the highlighted fields.");
-      return;
-    }
-    setStep((s) => Math.min(s + 1, steps.length));
+  const goToStep = (stepNumber) => {
+    setStep(stepNumber);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
-  const back = () => setStep((s) => Math.max(s - 1, 1));
+  const pushAssistantMessage = (text, sender = "assistant", tone = "") => {
+    setAssistantMessages((current) => [
+      ...current,
+      {
+        id: assistantMessageIdRef.current++,
+        sender,
+        tone,
+        text,
+      },
+    ]);
+    setAssistantOpen(true);
+  };
 
-  // Fake save — replace with real API call later
-  const saveDraft = async () => {
-    if (!validateStep()) {
-      showToast("err", "Please fix the highlighted fields.");
-      return;
-    }
-    setSaving(true);
+  useEffect(() => {
+    const container = assistantMessagesRef.current;
+    if (container) container.scrollTop = container.scrollHeight;
+  }, [assistantMessages, assistantLoading]);
+
+  useEffect(() => () => assistantAbortRef.current?.abort(), []);
+
+  const handleAssistantSubmit = async (event) => {
+    event.preventDefault();
+
+    const question = assistantQuestion.trim();
+    if (!question || assistantLoading) return;
+
+    const recentHistory = assistantMessages.slice(-8).map(({ sender, text }) => ({
+      role: sender === "user" ? "user" : "assistant",
+      content: text,
+    }));
+    pushAssistantMessage(question, "user");
+    setAssistantQuestion("");
+    setAssistantLoading(true);
+    assistantAbortRef.current?.abort();
+    const controller = new AbortController();
+    assistantAbortRef.current = controller;
+
+    // Never send uploaded files or raw identity numbers to the language model.
+    const safeFormContext = Object.fromEntries(
+      Object.entries(formData)
+        .filter(([key]) => !["signatory_id_number", "tax_id"].includes(key))
+        .map(([key, value]) => [
+          key,
+          typeof value === "string" && value.length > 500
+            ? `${value.slice(0, 500)}…`
+            : value,
+        ]),
+    );
+
     try {
-      // Example payload: use FormData later when you connect backend
-      await new Promise((r) => setTimeout(r, 700));
-      showToast("ok", "Draft saved.");
-    } catch (e) {
-      showToast("err", "Failed to save. Try again.");
+      const response = await fetch("/api/verification/assistant", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          question,
+          current_step: step,
+          form_context: safeFormContext,
+          conversation: recentHistory,
+        }),
+        signal: controller.signal,
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(
+          data.message || "The assistant is temporarily unavailable.",
+        );
+      }
+
+      pushAssistantMessage(data.answer);
+    } catch (error) {
+      if (error.name !== "AbortError") {
+        pushAssistantMessage(
+          error.message || "The assistant could not answer. Please try again.",
+          "assistant",
+          "error",
+        );
+      }
     } finally {
-      setSaving(false);
+      if (assistantAbortRef.current === controller) {
+        assistantAbortRef.current = null;
+        setAssistantLoading(false);
+      }
     }
   };
 
-  const publish = async () => {
-    // validate all steps quickly
-    const allErrors = {};
-    if (!form.companyName.trim()) allErrors.companyName = "Company name is required";
-    if (!form.sector.trim()) allErrors.sector = "Sector is required";
-    if (!form.description.trim() || form.description.trim().length < 30) allErrors.description = "Add more description";
-    if (!form.country.trim()) allErrors.country = "Country is required";
-    if (!form.city.trim()) allErrors.city = "City is required";
-    if (!form.email.trim()) allErrors.email = "Email is required";
+  const validateCurrentStep = (event) => {
+    const form = event.currentTarget.closest("form");
 
-    setErrors(allErrors);
-    if (Object.keys(allErrors).length) {
-      showToast("err", "Please complete required fields before publishing.");
+    if (!form.checkValidity()) {
+      const invalidFields = [...form.querySelectorAll(":invalid")];
+      const invalidLabels = [
+        ...new Set(
+          invalidFields.map((field) => {
+            const label = form.querySelector(`label[for="${field.id}"]`);
+            return label?.textContent?.replace("*", "").trim() || field.name;
+          }),
+        ),
+      ];
+
+      pushAssistantMessage(
+        `Please correct ${invalidLabels.length} field${
+          invalidLabels.length === 1 ? "" : "s"
+        } before continuing: ${invalidLabels.join(", ")}. Each highlighted field is empty or does not match the expected format.`,
+        "assistant",
+        "error",
+      );
+      form.reportValidity();
+      return false;
+    }
+
+    const scopeIssues = Object.entries(DATA_SCOPE_RULES).flatMap(
+      ([fieldName, rule]) => {
+        const field = form.elements.namedItem(fieldName);
+
+        if (!field || !field.value || rule.valid(field.value)) return [];
+        return [{ field, message: rule.message }];
+      },
+    );
+
+    if (scopeIssues.length > 0) {
+      pushAssistantMessage(
+        `These values are outside the accepted scope: ${scopeIssues
+          .map((issue) => issue.message)
+          .join(" ")}`,
+        "assistant",
+        "error",
+      );
+      scopeIssues[0].field.focus();
+      return false;
+    }
+
+    if (step === 5 && files.length === 0) {
+      setFileError("Upload at least one supporting document.");
+      pushAssistantMessage(
+        "Supporting documents are required. Upload at least one readable PDF, Word, Excel, CSV, JPG, or PNG file before continuing.",
+        "assistant",
+        "error",
+      );
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleNext = (event) => {
+    if (!validateCurrentStep(event)) {
       return;
     }
 
-    setSaving(true);
+    goToStep(step + 1);
+  };
+
+  const handleBack = () => {
+    goToStep(step - 1);
+  };
+
+  const handleFiles = (event) => {
+    const selectedFiles = Array.from(event.target.files || []);
+
+    const oversizedFile = selectedFiles.find(
+      (file) => file.size > MAX_UPLOAD_BYTES,
+    );
+
+    if (oversizedFile) {
+      setFileError(
+        `“${oversizedFile.name}” exceeds the 100 MB per-file limit.`,
+      );
+
+      event.target.value = "";
+      return;
+    }
+
+    /*
+     * This combines newly selected files with existing files,
+     * allowing users to select documents in multiple batches.
+     */
+    const combinedFiles = [...files];
+
+    selectedFiles.forEach((selectedFile) => {
+      const alreadyExists = combinedFiles.some(
+        (existingFile) =>
+          existingFile.name === selectedFile.name &&
+          existingFile.size === selectedFile.size &&
+          existingFile.lastModified === selectedFile.lastModified,
+      );
+
+      if (!alreadyExists) {
+        combinedFiles.push(selectedFile);
+      }
+    });
+
+    const combinedSize = combinedFiles.reduce(
+      (total, file) => total + file.size,
+      0,
+    );
+
+    if (combinedSize > MAX_UPLOAD_BYTES) {
+      setFileError(
+        "The combined size of all uploaded files must not exceed 100 MB.",
+      );
+
+      event.target.value = "";
+      return;
+    }
+
+    setFiles(combinedFiles);
+    setFileError("");
+    event.target.value = "";
+  };
+
+  const removeFile = (fileIndex) => {
+    setFiles((currentFiles) =>
+      currentFiles.filter((_, index) => index !== fileIndex),
+    );
+
+    setFileError("");
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    if (!event.currentTarget.checkValidity()) {
+      event.currentTarget.reportValidity();
+      return;
+    }
+
+    if (files.length === 0) {
+      setFileError("Upload at least one supporting document.");
+      goToStep(5);
+      return;
+    }
+
+    const payload = new FormData();
+
+    Object.entries(formData).forEach(([key, value]) => {
+      payload.append(key, value);
+    });
+
+    files.forEach((file) => {
+      payload.append("documents[]", file);
+    });
+
+    setSubmissionLoading(true);
+    setSubmissionError("");
+
     try {
-      await new Promise((r) => setTimeout(r, 900));
-      showToast("ok", "Listing published (demo).");
-    } catch (e) {
-      showToast("err", "Publish failed. Try again.");
+      const response = await fetch("/api/verification", {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        body: payload,
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const firstValidationError = Object.values(data.errors || {})[0]?.[0];
+        throw new Error(
+          firstValidationError || data.message || "Submission failed.",
+        );
+      }
+
+      setSubmissionReference(data.reference || "");
+      setSubmitted(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (error) {
+      setSubmissionError(error.message || "Submission failed. Please try again.");
     } finally {
-      setSaving(false);
+      setSubmissionLoading(false);
     }
   };
 
   return (
-    <div className="vl-wrap">
-      {/* Toast */}
-      <div className={`vl-toast ${toast.show ? "show" : ""} ${toast.type}`}>
-        <span className="dot" />
-        <span>{toast.msg}</span>
-      </div>
+    <main className="vr-container">
+      <header className="vr-hero vr-gradient">
+        <div className="vr-heroContent">
+          <span className="vr-heroIcon">
+            <ShieldCheck size={28} />
+          </span>
 
-      {/* Header panel */}
-      <section className="vl-hero">
-        <div className="vl-heroTop">
           <div>
-            <h3 className="vl-title">Visibility &amp; Listing</h3>
-            <p className="vl-sub">
-              Build your public profile for discovery, trust, and investor access.
-            </p>
-          </div>
-
-          <div className="vl-badges">
-            <span className="vl-badge">Public Profile</span>
-            <span className="vl-badge soft">Draft Mode</span>
+            <h2>{currentStep.title}</h2>
+            <p>{currentStep.description}</p>
           </div>
         </div>
 
-        <div className="vl-progress">
-          <div className="vl-progressBar" aria-hidden="true">
-            <span style={{ width: `${pct}%` }} />
-          </div>
-          <div className="vl-progressMeta">
-            <span className="vl-stepLabel">
-              Step {step} / {steps.length} — {current?.title}
-            </span>
-            <span className="vl-pct">{pct}%</span>
-          </div>
+        <div className="vr-crumbs">
+          <span className="vr-step">Step {step} of 6</span>
         </div>
 
-        <div className="vl-steps">
-          {steps.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              className={`vl-stepPill ${s.id === step ? "active" : ""} ${s.id < step ? "done" : ""}`}
-              onClick={() => setStep(s.id)}
-              aria-current={s.id === step ? "step" : undefined}
-            >
-              <span className="num">{s.id}</span>
-              <span className="txt">{s.title}</span>
-            </button>
-          ))}
+        <div
+          className="vr-progress"
+          role="progressbar"
+          aria-label="Verification progress"
+          aria-valuemin="1"
+          aria-valuemax="8"
+          aria-valuenow={step}
+        >
+          <span style={{ width: `${progress}%` }} />
         </div>
-      </section>
+      </header>
 
-      {/* Stable body grid */}
-      <section className="vl-grid" aria-label="Listing form">
-        {/* Main */}
-        <article className="vl-card">
-          <div className="vl-cardHead">
-            <div>
-              <h4 className="vl-h4">{current?.title}</h4>
-              <p className="vl-desc">{current?.desc}</p>
-            </div>
-            <button
-              type="button"
-              className="vl-btn secondary"
-              onClick={saveDraft}
-              disabled={saving}
-              title="Save your progress"
-            >
-              {saving ? "Saving..." : "Save Draft"}
-            </button>
+      {step === 1 && (
+        <section className="vr-stepwrap vr-grid">
+          <div className="vr-leftColumn">
+            <article className="vr-card">
+              <div className="vr-sectionHeading">
+                <span className="vr-smallIcon">
+                  <Building2 size={20} />
+                </span>
+
+                <h3>Business and investor verification</h3>
+              </div>
+
+              <p className="muted">
+                Complete this eight-step process to provide legal, operational,
+                ownership, investment, financial and compliance information.
+              </p>
+            </article>
+
+            <article className="vr-card vr-spacingTop">
+              <div className="vr-flow">
+                <div className="vr-flowItem">
+                  <span className="vr-icon">
+                    <FileUp />
+                  </span>
+
+                  <strong>Submit</strong>
+                  <span className="small">Profile and evidence</span>
+                </div>
+
+                <ArrowRight className="vr-arrow" />
+
+                <div className="vr-flowItem">
+                  <span className="vr-icon">
+                    <SearchCheck />
+                  </span>
+
+                  <strong>Review</strong>
+                  <span className="small">Identity, KYB and AML</span>
+                </div>
+
+                <ArrowRight className="vr-arrow" />
+
+                <div className="vr-flowItem">
+                  <span className="vr-icon">
+                    <BadgeCheck />
+                  </span>
+
+                  <strong>Verify</strong>
+                  <span className="small">Receive a decision</span>
+                </div>
+              </div>
+
+              <div className="vr-btnrow vr-requestButton vr-navigationRight">
+                <button
+                  className="vr-btn"
+                  type="button"
+                  onClick={() => goToStep(2)}
+                >
+                  Start verification
+                  <ArrowRight size={17} />
+                </button>
+              </div>
+            </article>
           </div>
 
-          {/* STEP 1 */}
-          {step === 1 && (
-            <div className="vl-form">
-              <div className="vl-row two">
-                <Field
-                  label="Company Name *"
-                  value={form.companyName}
-                  onChange={(v) => setField("companyName", v)}
-                  error={errors.companyName}
-                  placeholder="Raymoch Ltd."
-                />
-                <Field
-                  label="Tagline"
-                  value={form.tagline}
-                  onChange={(v) => setField("tagline", v)}
-                  placeholder="Redefining African Potential"
-                />
+          <ReviewChecklist
+            step={1}
+            assistantMessages={assistantMessages}
+            assistantOpen={assistantOpen}
+            assistantQuestion={assistantQuestion}
+            assistantLoading={assistantLoading}
+            assistantMessagesRef={assistantMessagesRef}
+            onAssistantQuestionChange={(event) =>
+              setAssistantQuestion(event.target.value)
+            }
+            onAssistantSubmit={handleAssistantSubmit}
+            onAssistantToggle={() => setAssistantOpen((current) => !current)}
+          />
+        </section>
+      )}
+
+      {step >= 2 && step <= 6 && (
+        <section className="vr-stepwrap vr-formGrid">
+          <article className="vr-card">
+            {submitted ? (
+              <div className="vr-submittedState">
+                <span className="vr-checkwrap">
+                  <CheckCircle2 size={58} />
+                </span>
+
+                <h2 className="vr-successTitle">
+                  Verification request submitted
+                </h2>
+
+                <p className="vr-successText">
+                  Your request is under review. Status updates will be sent to{" "}
+                  <strong>{formData.contact_email}</strong>.
+                </p>
+
+                {submissionReference && (
+                  <p className="vr-reference">
+                    Reference: <strong>{submissionReference}</strong>
+                  </p>
+                )}
+
+                <button
+                  type="button"
+                  className="vr-btn"
+                  onClick={() => {
+                    setSubmitted(false);
+                    setStep(1);
+                  }}
+                >
+                  Done
+                </button>
               </div>
+            ) : (
+              <form onSubmit={handleSubmit}>
+                {step === 2 && (
+                  <Section
+                    icon={<Building2 size={20} />}
+                    title="Account and legal identity"
+                  >
+                    {optionError && (
+                      <p className="vr-error" role="alert">
+                        {optionError}
+                      </p>
+                    )}
 
-              <div className="vl-row two">
-                <Field
-                  label="Sector *"
-                  value={form.sector}
-                  onChange={(v) => setField("sector", v)}
-                  error={errors.sector}
-                  placeholder="FinTech, Logistics, AgriTech..."
-                />
-                <SelectField
-                  label="Stage"
-                  value={form.stage}
-                  onChange={(v) => setField("stage", v)}
-                  options={["Pre-seed", "Seed", "Series A", "Series B+", "Growth"]}
-                  placeholder="Select..."
-                />
-              </div>
+                    <div className="vr-row">
+                      <SelectField
+                        label="Account type"
+                        name="account_type_id"
+                        value={formData.account_type_id}
+                        required
+                        onChange={updateField}
+                        options={lookupOptions.accountTypes}
+                      />
 
-              <div className="vl-row two">
-                <Field
-                  label="Website"
-                  value={form.website}
-                  onChange={(v) => setField("website", v)}
-                  placeholder="https://example.com"
-                />
-                <Field
-                  label="Founded Year"
-                  value={form.foundedYear}
-                  onChange={(v) => setField("foundedYear", v)}
-                  placeholder="2021"
-                  type="number"
-                />
-              </div>
-
-              <div className="vl-row two">
-                <Field
-                  label="Team Size"
-                  value={form.teamSize}
-                  onChange={(v) => setField("teamSize", v)}
-                  placeholder="10"
-                  type="number"
-                />
-                <div className="vl-blank" />
-              </div>
-
-              <TextareaField
-                label="Description *"
-                value={form.description}
-                onChange={(v) => setField("description", v)}
-                error={errors.description}
-                placeholder="Describe your company, traction, market, and what you’re raising..."
-                hint="Minimum 30 characters."
-              />
-            </div>
-          )}
-
-          {/* STEP 2 */}
-          {step === 2 && (
-            <div className="vl-form">
-              <div className="vl-row two">
-                <Field
-                  label="Country *"
-                  value={form.country}
-                  onChange={(v) => setField("country", v)}
-                  error={errors.country}
-                  placeholder="Ethiopia"
-                />
-                <Field
-                  label="City *"
-                  value={form.city}
-                  onChange={(v) => setField("city", v)}
-                  error={errors.city}
-                  placeholder="Addis Ababa"
-                />
-              </div>
-
-              <Field
-                label="Address"
-                value={form.address}
-                onChange={(v) => setField("address", v)}
-                placeholder="Street / area / district"
-              />
-
-              <div className="vl-row two">
-                <Field
-                  label="Contact Email *"
-                  value={form.email}
-                  onChange={(v) => setField("email", v)}
-                  error={errors.email}
-                  placeholder="contact@company.com"
-                  type="email"
-                />
-                <Field
-                  label="Phone"
-                  value={form.phone}
-                  onChange={(v) => setField("phone", v)}
-                  placeholder="+251 9..."
-                />
-              </div>
-
-              <div className="vl-toggles">
-                <Toggle
-                  label="Public Profile"
-                  desc="Allow your listing to appear in search results."
-                  checked={form.publicProfile}
-                  onChange={(v) => setField("publicProfile", v)}
-                />
-                <Toggle
-                  label="Allow Investor Contact"
-                  desc="Let verified investors contact you via Raymoch."
-                  checked={form.allowInvestorContact}
-                  onChange={(v) => setField("allowInvestorContact", v)}
-                />
-                <Toggle
-                  label="Show Financial Summary"
-                  desc="Optional: show summarized financials to verified users."
-                  checked={form.showFinancials}
-                  onChange={(v) => setField("showFinancials", v)}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* STEP 3 */}
-          {step === 3 && (
-            <div className="vl-form">
-              {errors.docs ? <div className="vl-errorBanner">{errors.docs}</div> : null}
-
-              <div className="vl-uploads">
-                <Upload
-                  label="Logo"
-                  accept=".png,.jpg,.jpeg,.webp"
-                  file={uploads.logo}
-                  onPick={(file) => setUploads((u) => ({ ...u, logo: file }))}
-                  hint="Recommended: square 512×512"
-                />
-
-                <Upload
-                  label="Pitch Deck"
-                  accept=".pdf,.ppt,.pptx"
-                  file={uploads.pitchDeck}
-                  onPick={(file) => setUploads((u) => ({ ...u, pitchDeck: file }))}
-                  hint="PDF preferred"
-                />
-
-                <Upload
-                  label="Business Registration"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  file={uploads.registration}
-                  onPick={(file) => setUploads((u) => ({ ...u, registration: file }))}
-                  hint="License / certificate"
-                />
-
-                <Upload
-                  label="Tax ID"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  file={uploads.taxId}
-                  onPick={(file) => setUploads((u) => ({ ...u, taxId: file }))}
-                  hint="TIN/VAT"
-                />
-              </div>
-
-              <GalleryUpload
-                files={uploads.gallery}
-                onPick={(files) => setUploads((u) => ({ ...u, gallery: files }))}
-              />
-
-              <div className="vl-note">
-                Uploading more documents increases trust and improves ranking in discovery.
-              </div>
-            </div>
-          )}
-
-          {/* STEP 4 */}
-          {step === 4 && (
-            <div className="vl-form">
-              <div className="vl-preview">
-                <div className="vl-previewCard">
-                  <div className="vl-previewTop">
-                    <div className="vl-logo">
-                      {previewUrl.logo ? (
-                        <img src={previewUrl.logo} alt="Company logo preview" />
-                      ) : (
-                        <div className="vl-logoFallback">LOGO</div>
-                      )}
+                      <SelectField
+                        label="Applicant profile"
+                        name="applicant_profile_id"
+                        value={formData.applicant_profile_id}
+                        required
+                        onChange={updateField}
+                        options={lookupOptions.applicantProfiles}
+                      />
                     </div>
 
-                    <div className="vl-previewMeta">
-                      <div className="nm">{form.companyName || "Company Name"}</div>
-                      <div className="tg">{form.tagline || "Tagline goes here"}</div>
-                      <div className="mini">
-                        <span>{form.country || "Country"}</span> • <span>{form.sector || "Sector"}</span>
-                      </div>
-                    </div>
-                  </div>
+                    <div className="vr-row">
+                      <SelectField
+                        label="Sector"
+                        name="sector_id"
+                        value={formData.sector_id}
+                        required
+                        onChange={updateField}
+                        options={lookupOptions.sectors}
+                      />
 
-                  <div className="vl-previewBody">
-                    <div className="vl-chipRow">
-                      <span className="vl-chip">{form.publicProfile ? "Public" : "Private"}</span>
-                      <span className="vl-chip soft">{form.stage || "Stage: —"}</span>
-                      <span className="vl-chip soft">{form.teamSize ? `Team: ${form.teamSize}` : "Team: —"}</span>
+                      <SelectField
+                        label="Industry"
+                        name="industry_id"
+                        value={formData.industry_id}
+                        required
+                        onChange={updateField}
+                        options={lookupOptions.industries}
+                      />
                     </div>
 
-                    <p className="vl-previewDesc">
-                      {form.description || "Your company description will show here."}
+                    <div className="vr-row">
+                      <Field
+                        label="Legal or full name"
+                        name="legal_name"
+                        value={formData.legal_name}
+                        required
+                        onChange={updateField}
+                      />
+
+                      <Field
+                        label="Trading name"
+                        name="trading_name"
+                        value={formData.trading_name}
+                        onChange={updateField}
+                      />
+                    </div>
+
+                    <div className="vr-row">
+                      <Field
+                        label="Registration or license number"
+                        name="registration_number"
+                        value={formData.registration_number}
+                        required
+                        onChange={updateField}
+                      />
+
+                      <Field
+                        label="Tax ID / TIN / VAT number"
+                        name="tax_id"
+                        value={formData.tax_id}
+                        onChange={updateField}
+                      />
+                    </div>
+
+                    <div className="vr-row">
+                      <Field
+                        label="Date established or date of birth"
+                        name="established_date"
+                        value={formData.established_date}
+                        type="date"
+                        required
+                        onChange={updateField}
+                      />
+
+                      <SelectField
+                        label="Legal structure"
+                        name="legal_structure_id"
+                        value={formData.legal_structure_id}
+                        required
+                        onChange={updateField}
+                        options={lookupOptions.legalStructures}
+                      />
+                    </div>
+
+                    <div className="vr-row">
+                      <SelectField
+                        label="Region"
+                        name="region_id"
+                        value={formData.region_id}
+                        required
+                        onChange={updateField}
+                        options={lookupOptions.regions}
+                      />
+
+                      <SelectField
+                        label="Country"
+                        name="country_id"
+                        value={formData.country_id}
+                        required
+                        onChange={updateField}
+                        options={lookupOptions.countries}
+                      />
+                    </div>
+
+                    <div className="vr-row">
+                      <SelectField
+                        label="State or province"
+                        name="state_id"
+                        value={formData.state_id}
+                        required
+                        onChange={updateField}
+                        options={lookupOptions.states}
+                      />
+
+                      <SelectField
+                        label="City"
+                        name="city_id"
+                        value={formData.city_id}
+                        required
+                        onChange={updateField}
+                        options={lookupOptions.cities}
+                      />
+                    </div>
+
+                    <div className="vr-row">
+                      <Field
+                        label="Registered address"
+                        name="registered_address"
+                        value={formData.registered_address}
+                        required
+                        onChange={updateField}
+                      />
+
+                      <Field
+                        label="Postal code"
+                        name="postal_code"
+                        value={formData.postal_code}
+                        required
+                        onChange={updateField}
+                      />
+                    </div>
+
+                    <div className="vr-row">
+                      <Field
+                        label="Website"
+                        name="website"
+                        value={formData.website}
+                        type="url"
+                        placeholder="https://example.com"
+                        onChange={updateField}
+                      />
+
+                      <Field
+                        label="LEI or D-U-N-S number"
+                        name="external_identifier"
+                        value={formData.external_identifier}
+                        onChange={updateField}
+                      />
+                    </div>
+                  </Section>
+                )}
+
+                {step === 3 && (
+                  <Section
+                    icon={<Landmark size={20} />}
+                    title="Business and operating profile"
+                  >
+                    <div className="vr-row">
+                      <Field
+                        label="Business model"
+                        name="business_model"
+                        value={formData.business_model}
+                        required
+                        placeholder="B2B, B2C, marketplace..."
+                        onChange={updateField}
+                      />
+                    </div>
+
+                    <div className="vr-row">
+                      <Field
+                        label="Products or services"
+                        name="products_services"
+                        value={formData.products_services}
+                        required
+                        onChange={updateField}
+                      />
+
+                      <Field
+                        label="Countries of operation"
+                        name="operating_countries"
+                        value={formData.operating_countries}
+                        required
+                        onChange={updateField}
+                      />
+                    </div>
+
+                    <div className="vr-row">
+                      <Field
+                        label="Number of employees"
+                        name="employee_count"
+                        value={formData.employee_count}
+                        type="number"
+                        min="0"
+                        required
+                        onChange={updateField}
+                      />
+
+                      <Field
+                        label="Company stage"
+                        name="company_stage"
+                        value={formData.company_stage}
+                        required
+                        placeholder="Pre-revenue, growth, mature..."
+                        onChange={updateField}
+                      />
+                    </div>
+
+                    <div className="vr-row">
+                      <Field
+                        label="Annual revenue"
+                        name="annual_revenue"
+                        value={formData.annual_revenue}
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        required
+                        onChange={updateField}
+                      />
+
+                      <Field
+                        label="Revenue currency"
+                        name="revenue_currency"
+                        value={formData.revenue_currency}
+                        placeholder="USD"
+                        maxLength="3"
+                        required
+                        onChange={updateField}
+                      />
+                    </div>
+
+                    <div className="vr-row">
+                      <Field
+                        label="Fiscal year end"
+                        name="fiscal_year_end"
+                        value={formData.fiscal_year_end}
+                        type="date"
+                        required
+                        onChange={updateField}
+                      />
+
+                      <Field
+                        label="Public listing or ticker"
+                        name="listing_ticker"
+                        value={formData.listing_ticker}
+                        onChange={updateField}
+                      />
+                    </div>
+
+                    <TextareaField
+                      label="Business description"
+                      name="business_description"
+                      value={formData.business_description}
+                      required
+                      onChange={updateField}
+                    />
+                  </Section>
+                )}
+
+                {step === 4 && (
+                  <Section
+                    icon={<UsersRound size={20} />}
+                    title="Ownership, leadership and control"
+                  >
+                    <div className="vr-row">
+                      <Field
+                        label="Ultimate parent company"
+                        name="parent_company"
+                        value={formData.parent_company}
+                        onChange={updateField}
+                      />
+
+                      <Field
+                        label="Ownership type"
+                        name="ownership_type"
+                        value={formData.ownership_type}
+                        required
+                        placeholder="Private, public, state-owned..."
+                        onChange={updateField}
+                      />
+                    </div>
+
+                    <TextareaField
+                      label="Beneficial owners"
+                      name="beneficial_owners"
+                      value={formData.beneficial_owners}
+                      required
+                      placeholder="Enter each owner's name, nationality and ownership percentage."
+                      onChange={updateField}
+                    />
+
+                    <TextareaField
+                      label="Directors, trustees or general partners"
+                      name="directors"
+                      value={formData.directors}
+                      required
+                      placeholder="Enter each person's name, title and nationality."
+                      onChange={updateField}
+                    />
+
+                    <div className="vr-row">
+                      <Field
+                        label="Authorized signatory"
+                        name="authorized_signatory"
+                        value={formData.authorized_signatory}
+                        required
+                        onChange={updateField}
+                      />
+
+                      <Field
+                        label="Signatory title"
+                        name="signatory_title"
+                        value={formData.signatory_title}
+                        required
+                        onChange={updateField}
+                      />
+                    </div>
+
+                    <div className="vr-row">
+                      <Field
+                        label="National ID or passport number"
+                        name="signatory_id_number"
+                        value={formData.signatory_id_number}
+                        required
+                        onChange={updateField}
+                      />
+
+                      <Field
+                        label="ID expiry date"
+                        name="signatory_id_expiry"
+                        value={formData.signatory_id_expiry}
+                        type="date"
+                        required
+                        onChange={updateField}
+                      />
+                    </div>
+                  </Section>
+                )}
+
+                {step === 5 && (
+                  <Section
+                    icon={<FileCheck2 size={20} />}
+                    title="Supporting documents"
+                  >
+                    <p className="small">
+                      Upload registration, tax, ownership, identity, address,
+                      financial, banking, source-of-funds, investment-mandate
+                      and regulatory documents.
                     </p>
 
-                    <div className="vl-miniCols">
-                      <div>
-                        <div className="k">Website</div>
-                        <div className="v">{form.website || "—"}</div>
+                    <p className="vr-uploadRule">
+                      Accepted: PDF, Word, Excel, CSV, JPG and PNG. Maximum 100
+                      MB per file and 100 MB combined.
+                    </p>
+
+                    <label
+                      className="vr-upload"
+                      htmlFor="verification_documents"
+                    >
+                      <UploadCloud size={28} />
+
+                      <span className="vr-uploadText">
+                        <strong>Choose one or more documents</strong>
+                        <span>
+                          You may select multiple documents in one or more
+                          batches.
+                        </span>
+                      </span>
+
+                      <input
+                        id="verification_documents"
+                        name="documents[]"
+                        type="file"
+                        accept={ACCEPTED_FILES}
+                        multiple
+                        onChange={handleFiles}
+                      />
+                    </label>
+
+                    {fileError && (
+                      <p className="vr-error" role="alert">
+                        {fileError}
+                      </p>
+                    )}
+
+                    {files.length > 0 && (
+                      <ul className="vr-fileList">
+                        {files.map((file, index) => (
+                          <li
+                            key={`${file.name}-${file.size}-${file.lastModified}`}
+                          >
+                            <span className="vr-fileMeta">
+                              <strong>{file.name}</strong>
+                              <span>
+                                {(file.size / 1024 / 1024).toFixed(2)} MB
+                              </span>
+                            </span>
+
+                            <button
+                              className="vr-fileRemove"
+                              type="button"
+                              aria-label={`Remove ${file.name}`}
+                              onClick={() => removeFile(index)}
+                            >
+                              ×
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </Section>
+                )}
+
+                {step === 6 && (
+                  <>
+                    <Section
+                      icon={<UserRound size={20} />}
+                      title="Primary contact"
+                    >
+                      <div className="vr-row">
+                        <Field
+                          label="Full name"
+                          name="contact_name"
+                          value={formData.contact_name}
+                          required
+                          onChange={updateField}
+                        />
+
+                        <Field
+                          label="Job title or relationship"
+                          name="contact_role"
+                          value={formData.contact_role}
+                          required
+                          onChange={updateField}
+                        />
                       </div>
-                      <div>
-                        <div className="k">Contact</div>
-                        <div className="v">{form.email || "—"}</div>
+
+                      <div className="vr-row">
+                        <Field
+                          label="Work email"
+                          name="contact_email"
+                          value={formData.contact_email}
+                          type="email"
+                          required
+                          onChange={updateField}
+                        />
+
+                        <Field
+                          label="Phone number"
+                          name="contact_phone"
+                          value={formData.contact_phone}
+                          type="tel"
+                          required
+                          onChange={updateField}
+                        />
                       </div>
-                    </div>
-                  </div>
+
+                      <div className="vr-row">
+                        <SelectField
+                          label="Preferred contact method"
+                          name="preferred_contact"
+                          value={formData.preferred_contact}
+                          required
+                          onChange={updateField}
+                          options={["Email", "Phone", "SMS", "WhatsApp"]}
+                        />
+
+                        <Field
+                          label="Referral or source"
+                          name="referral_source"
+                          value={formData.referral_source}
+                          onChange={updateField}
+                        />
+                      </div>
+                    </Section>
+
+                    <Section
+                      icon={<CheckCircle2 size={20} />}
+                      title="Confirmation and acknowledgment"
+                    >
+                      <div className="vr-finalSummary">
+                        <div>
+                          <span>Applicant</span>
+                          <strong>
+                            {formData.legal_name || "Not provided"}
+                          </strong>
+                        </div>
+
+                        <div>
+                          <span>Account type</span>
+                          <strong>
+                            {selectedOptionName(
+                              lookupOptions.accountTypes,
+                              formData.account_type_id,
+                            )}
+                          </strong>
+                        </div>
+
+                        <div>
+                          <span>Country</span>
+                          <strong>
+                            {selectedOptionName(
+                              lookupOptions.countries,
+                              formData.country_id,
+                            )}
+                          </strong>
+                        </div>
+
+                        <div>
+                          <span>Documents</span>
+                          <strong>{files.length} selected</strong>
+                        </div>
+                      </div>
+
+                      <div className="vr-consent">
+                        <input
+                          id="accuracy_consent"
+                          name="accuracy_consent"
+                          type="checkbox"
+                          required
+                          checked={formData.accuracy_consent}
+                          onChange={updateField}
+                        />
+
+                        <label htmlFor="accuracy_consent">
+                          I confirm that the information and documents are
+                          accurate, complete and current. I am authorized to
+                          submit them and consent to identity, KYB/KYC, AML,
+                          sanctions and document checks. *
+                        </label>
+                      </div>
+
+                      <div className="vr-consent">
+                        <input
+                          id="privacy_consent"
+                          name="privacy_consent"
+                          type="checkbox"
+                          required
+                          checked={formData.privacy_consent}
+                          onChange={updateField}
+                        />
+
+                        <label htmlFor="privacy_consent">
+                          I acknowledge the privacy notice and consent to the
+                          secure processing and retention of the submitted
+                          information. *
+                        </label>
+                      </div>
+                    </Section>
+                  </>
+                )}
+
+                <div className="vr-stepNavigation">
+                  {step > 2 && (
+                    <button
+                      className="vr-btn vr-btnGhost"
+                      type="button"
+                      onClick={handleBack}
+                    >
+                      <ArrowLeft size={17} />
+                      Back
+                    </button>
+                  )}
+
+                  {step === 2 && <span />}
+
+                  {step < 6 ? (
+                    <button
+                      className="vr-btn"
+                      type="button"
+                      onClick={handleNext}
+                    >
+                      Next
+                      <ArrowRight size={17} />
+                    </button>
+                  ) : (
+                    <button
+                      className="vr-btn"
+                      type="submit"
+                      disabled={submissionLoading}
+                    >
+                      {submissionLoading ? "Submitting…" : "Submit for Verification"}
+                      <CheckCircle2 size={17} />
+                    </button>
+                  )}
                 </div>
 
-                <div className="vl-publishPanel">
-                  <h4>Ready to publish?</h4>
-                  <p className="muted">
-                    Publishing makes your listing visible based on your privacy settings.
+                {submissionError && (
+                  <p className="vr-error" role="alert">
+                    {submissionError}
                   </p>
+                )}
+              </form>
+            )}
+          </article>
 
-                  <div className="vl-stat">
-                    <span>Completeness</span>
-                    <b>{computeCompleteness(form, uploads)}%</b>
-                  </div>
-
-                  <button className="vl-btn primary" type="button" onClick={publish} disabled={saving}>
-                    {saving ? "Publishing..." : "Publish Listing"}
-                  </button>
-
-                  <div className="vl-small">
-                    Tip: Add documents for a better trust tier later.
-                  </div>
-                </div>
-              </div>
-            </div>
+          {!submitted && (
+            <ReviewChecklist
+              step={step}
+              assistantMessages={assistantMessages}
+              assistantOpen={assistantOpen}
+              assistantQuestion={assistantQuestion}
+              assistantLoading={assistantLoading}
+              assistantMessagesRef={assistantMessagesRef}
+              onAssistantQuestionChange={(event) =>
+                setAssistantQuestion(event.target.value)
+              }
+              onAssistantSubmit={handleAssistantSubmit}
+              onAssistantToggle={() =>
+                setAssistantOpen((current) => !current)
+              }
+            />
           )}
-
-          {/* Footer buttons (inside modal content) */}
-          <div className="vl-actions">
-            <button className="vl-btn" type="button" onClick={back} disabled={step === 1 || saving}>
-              Back
-            </button>
-
-            <div className="vl-actionsRight">
-              {step < steps.length ? (
-                <button className="vl-btn primary" type="button" onClick={next} disabled={saving}>
-                  Next
-                </button>
-              ) : (
-                <button className="vl-btn primary" type="button" onClick={publish} disabled={saving}>
-                  {saving ? "Publishing..." : "Publish"}
-                </button>
-              )}
-            </div>
-          </div>
-        </article>
-
-        {/* Side panel */}
-        <aside className="vl-side">
-          <div className="vl-sideCard">
-            <h4>Why Listing Matters</h4>
-            <ul>
-              <li>Improves discovery in Raymoch search</li>
-              <li>Builds trust through completeness</li>
-              <li>Unlocks faster investor matching</li>
-              <li>Enables partner program eligibility</li>
-            </ul>
-          </div>
-
-          <div className="vl-sideCard">
-            <h4>Checklist</h4>
-            <ul className="check">
-              <li className={form.companyName ? "ok" : ""}>Company Name</li>
-              <li className={form.sector ? "ok" : ""}>Sector</li>
-              <li className={form.description?.length >= 30 ? "ok" : ""}>Description (30+ chars)</li>
-              <li className={form.country ? "ok" : ""}>Country</li>
-              <li className={form.city ? "ok" : ""}>City</li>
-              <li className={form.email ? "ok" : ""}>Email</li>
-              <li className={uploads.logo ? "ok" : ""}>Logo</li>
-              <li className={uploads.pitchDeck ? "ok" : ""}>Pitch Deck</li>
-              <li className={uploads.registration ? "ok" : ""}>Registration</li>
-            </ul>
-          </div>
-
-          <div className="vl-sideCard">
-            <h4>Note</h4>
-            <p className="muted">
-              When you connect backend, submit with <code>FormData</code> to support files.
-            </p>
-          </div>
-        </aside>
-      </section>
-    </div>
+        </section>
+      )}
+    </main>
   );
 }
 
-/* ======================== Small UI helpers ======================== */
 
-function Field({ label, value, onChange, placeholder, type = "text", error }) {
-  return (
-    <label className={`vl-field ${error ? "hasError" : ""}`}>
-      <span className="vl-lbl">{label}</span>
-      <input
-        type={type}
-        value={value}
-        placeholder={placeholder}
-        onChange={(e) => onChange(e.target.value)}
-      />
-      {error ? <span className="vl-err">{error}</span> : null}
-    </label>
-  );
-}
-
-function TextareaField({ label, value, onChange, placeholder, error, hint }) {
-  return (
-    <label className={`vl-field ${error ? "hasError" : ""}`}>
-      <span className="vl-lbl">{label}</span>
-      <textarea value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} rows={5} />
-      <div className="vl-hintRow">
-        {error ? <span className="vl-err">{error}</span> : <span className="vl-hint">{hint}</span>}
-      </div>
-    </label>
-  );
-}
-
-function SelectField({ label, value, onChange, options, placeholder }) {
-  return (
-    <label className="vl-field">
-      <span className="vl-lbl">{label}</span>
-      <select value={value} onChange={(e) => onChange(e.target.value)}>
-        <option value="">{placeholder || "Select..."}</option>
-        {options.map((o) => (
-          <option key={o} value={o}>
-            {o}
-          </option>
-        ))}
-      </select>
-    </label>
-  );
-}
-
-function Toggle({ label, desc, checked, onChange }) {
-  return (
-    <div className="vl-toggle">
-      <div>
-        <div className="vl-tTitle">{label}</div>
-        <div className="vl-tDesc">{desc}</div>
-      </div>
-      <button type="button" className={`vl-switch ${checked ? "on" : ""}`} onClick={() => onChange(!checked)}>
-        <span />
-      </button>
-    </div>
-  );
-}
-
-function Upload({ label, accept, file, onPick, hint }) {
-  return (
-    <div className="vl-upCard">
-      <div className="vl-upTop">
-        <div>
-          <div className="vl-upLbl">{label}</div>
-          <div className="vl-upHint">{hint}</div>
-        </div>
-
-        <label className="vl-upBtn">
-          <input
-            type="file"
-            accept={accept}
-            onChange={(e) => {
-              const f = e.target.files?.[0] || null;
-              onPick(f);
-              e.target.value = "";
-            }}
-          />
-          Choose file
-        </label>
-      </div>
-
-      <div className="vl-upMeta">
-        {file ? (
-          <>
-            <span className="vl-fileName">{file.name}</span>
-            <span className="vl-fileSize">{humanSize(file.size)}</span>
-          </>
-        ) : (
-          <span className="vl-none">No file selected</span>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function GalleryUpload({ files, onPick }) {
-  return (
-    <div className="vl-gallery">
-      <div className="vl-galleryTop">
-        <div>
-          <div className="vl-upLbl">Gallery</div>
-          <div className="vl-upHint">Upload up to 8 images (JPG/PNG/WEBP)</div>
-        </div>
-
-        <label className="vl-upBtn">
-          <input
-            type="file"
-            accept=".png,.jpg,.jpeg,.webp"
-            multiple
-            onChange={(e) => {
-              const arr = Array.from(e.target.files || []).slice(0, 8);
-              onPick(arr);
-              e.target.value = "";
-            }}
-          />
-          Add images
-        </label>
-      </div>
-
-      <div className="vl-galleryList">
-        {(files || []).length ? (
-          files.map((f, idx) => (
-            <div key={idx} className="vl-gItem">
-              <span className="nm">{f.name}</span>
-              <span className="sz">{humanSize(f.size)}</span>
-            </div>
-          ))
-        ) : (
-          <div className="vl-none">No gallery images selected</div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/* ======================== helpers ======================== */
-
-function humanSize(bytes) {
-  const b = Number(bytes || 0);
-  if (b < 1024) return `${b} B`;
-  const kb = b / 1024;
-  if (kb < 1024) return `${kb.toFixed(1)} KB`;
-  const mb = kb / 1024;
-  return `${mb.toFixed(1)} MB`;
-}
-
-function computeCompleteness(form, uploads) {
-  // simple scoring: 10 items → 100%
-  const checks = [
-    !!form.companyName,
-    !!form.sector,
-    (form.description || "").length >= 30,
-    !!form.country,
-    !!form.city,
-    !!form.email,
-    !!form.website,
-    !!form.phone,
-    !!uploads.logo,
-    !!uploads.pitchDeck || !!uploads.registration || !!uploads.taxId,
-  ];
-  const ok = checks.filter(Boolean).length;
-  return Math.round((ok / checks.length) * 100);
-}

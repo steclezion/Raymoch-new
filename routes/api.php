@@ -19,6 +19,9 @@ use App\Http\Controllers\Api\MainSearchEngineController;
 use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\CompanySearchFilterResolveController;
 use App\Http\Controllers\Api\VerificationOptionsController;
+use App\Http\Controllers\Api\VerificationAssistantController;
+use App\Http\Controllers\Api\VerificationController;
+
 
 
 
@@ -120,3 +123,9 @@ Route::prefix('verification/options')->group(function () {
     Route::get('/states', [VerificationOptionsController::class, 'states']);
     Route::get('/cities', [VerificationOptionsController::class, 'cities']);
 });
+
+Route::post('/verification/assistant', VerificationAssistantController::class)
+    ->middleware('throttle:20,1');
+
+Route::post('/verification', [VerificationController::class, 'store'])
+    ->middleware('throttle:5,1');
