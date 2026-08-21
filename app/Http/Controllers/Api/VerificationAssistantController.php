@@ -91,20 +91,26 @@ class VerificationAssistantController extends Controller
         ]);
 
         try {
-            $response = Http::withToken($apiKey)
-                ->withHeaders([
-                    'X-Client-Request-Id' => $traceId,
-                ])
+            $response = Http::withToken(config('openai.api_key'))
                 ->acceptJson()
-                ->asJson()
-                ->timeout(60)
                 ->connectTimeout(10)
-                ->retry(2, 300, throw: false)
+                ->timeout(30)
                 ->post('https://api.openai.com/v1/responses', [
-                    'model' => $model,
+                    'model' => config('openai.model', 'gpt-5.4-mini'),
+
                     'instructions' => $instructions,
                     'input' => $input,
-                    'max_output_tokens' => 500,
+
+                    // Optimize short verification-form answers
+                    'reasoning' => [
+                        'effort' => 'low',
+                    ],
+                    'text' => [
+                        'verbosity' => 'low',
+                    ],
+
+                    // 500 is unnecessarily large for this assistant
+                    'max_output_tokens' => 220,
                     'store' => false,
                 ]);
         } catch (ConnectionException $exception) {
@@ -144,7 +150,8 @@ class VerificationAssistantController extends Controller
             ]);
 
             return response()->json([
-                'message' => 'The assistant returned no answer.',
+                //'message' => 'The assistant returned no answer.',
+                'message' => 'I don\'\t currently have enough verified information in Raymoch to answer that accurately. Please provide more details or clarify your question.',
                 'trace_id' => $traceId,
             ], 502);
         }
