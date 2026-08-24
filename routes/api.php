@@ -18,7 +18,7 @@ use App\Http\Controllers\Api\ExploreTooltipController;
 use App\Http\Controllers\Api\MainSearchEngineController;
 use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\CompanySearchFilterResolveController;
-use App\Http\Controllers\api\VerificationOptionsController;
+use App\Http\Controllers\Api\VerificationOptionsController;
 use App\Http\Controllers\Api\VerificationAssistantController;
 use App\Http\Controllers\Api\VerificationController;
 
