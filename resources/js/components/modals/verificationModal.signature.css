@@ -1,0 +1,146 @@
+.vr-signatureBackdrop {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgb(15 23 42 / 68%);
+  z-index: 1000;
+}
+
+.vr-signatureDialog {
+  width: min(42rem, 100%);
+  max-height: calc(100vh - 2rem);
+  overflow: auto;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 24px 70px rgb(15 23 42 / 35%);
+  color: #0f172a;
+}
+
+.vr-signatureHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.vr-signatureHeader h2,
+.vr-signatureHeader p {
+  margin: 0;
+}
+
+.vr-signatureHeader p {
+  margin-top: 0.35rem;
+  color: #64748b;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.vr-signatureHeader > button {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #334155;
+  font-size: 1.35rem;
+  cursor: pointer;
+}
+
+.vr-signatureName {
+  display: grid;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+  font-weight: 650;
+}
+
+.vr-signatureName input {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.55rem;
+  font: inherit;
+}
+
+.vr-signatureCanvasHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.4rem;
+}
+
+.vr-signatureCanvasHeader span {
+  font-weight: 650;
+}
+
+.vr-signatureCanvasHeader small {
+  color: #64748b;
+}
+
+.vr-signatureCanvas {
+  display: block;
+  width: 100%;
+  height: 15rem;
+  border: 1px solid #94a3b8;
+  border-radius: 0.65rem;
+  background-color: #fff;
+  background-image: linear-gradient(
+    to bottom,
+    transparent calc(75% - 1px),
+    #cbd5e1 calc(75% - 1px),
+    #cbd5e1 75%,
+    transparent 75%
+  );
+  cursor: crosshair;
+  touch-action: none;
+  user-select: none;
+}
+
+.vr-signatureActions {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 600px) {
+  .vr-signatureDialog {
+    padding: 1rem;
+  }
+
+  .vr-signatureCanvas {
+    height: 12rem;
+  }
+
+  .vr-signatureCanvasHeader,
+  .vr-signatureActions {
+    align-items: stretch;
+  }
+
+  .vr-signatureCanvasHeader {
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .vr-signatureActions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .vr-signatureActions > span {
+    display: none;
+  }
+
+  .vr-signatureActions .vr-btn:first-child {
+    grid-column: 1 / -1;
+  }
+}

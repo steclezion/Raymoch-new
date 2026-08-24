@@ -1,0 +1,138 @@
+.vr-labelWithHelp {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.vr-requiredHelp {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+  z-index: 4;
+}
+
+.vr-requiredHelpInfo,
+.vr-requiredHelpAsk {
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: transparent;
+  color: #2563eb;
+  font: 700 0.72rem/1 system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.vr-requiredHelpInfo {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.vr-requiredHelpInfo:hover,
+.vr-requiredHelpInfo:focus-visible,
+.vr-requiredHelpAsk:hover,
+.vr-requiredHelpAsk:focus-visible {
+  background: #2563eb;
+  color: #fff;
+  outline: none;
+}
+
+.vr-requiredHelpInfo:focus-visible,
+.vr-requiredHelpAsk:focus-visible {
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 22%);
+}
+
+.vr-requiredHelpPopover {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 0.65rem);
+  display: none;
+  width: min(19rem, calc(100vw - 2rem));
+  padding: 0.85rem 0.9rem 2.4rem;
+  border: 1px solid rgb(148 163 184 / 45%);
+  border-radius: 0.75rem;
+  background: #fff;
+  box-shadow: 0 14px 35px rgb(15 23 42 / 18%);
+  color: #334155;
+  font: 400 0.82rem/1.45 system-ui, sans-serif;
+  text-align: left;
+  transform: translateX(-50%);
+  white-space: normal;
+  z-index: 50;
+}
+
+.vr-requiredHelpPopover::after {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-right: 1px solid rgb(148 163 184 / 45%);
+  border-bottom: 1px solid rgb(148 163 184 / 45%);
+  background: #fff;
+  content: "";
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.vr-requiredHelpPopover strong,
+.vr-requiredHelpPopover > span {
+  display: block;
+}
+
+.vr-requiredHelpPopover strong {
+  margin-bottom: 0.3rem;
+  color: #0f172a;
+  font-size: 0.88rem;
+}
+
+.vr-requiredHelp:hover .vr-requiredHelpPopover,
+.vr-requiredHelp:focus-within .vr-requiredHelpPopover,
+.vr-labelWithHelp:hover .vr-requiredHelpPopover,
+.vr-consentLabelWithHelp:hover .vr-requiredHelpPopover {
+  display: block;
+}
+
+.vr-requiredHelpAsk {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.65rem;
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.vr-consentLabelWithHelp {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+}
+
+@media (max-width: 640px) {
+  .vr-requiredHelpPopover {
+    left: auto;
+    right: -0.5rem;
+    transform: none;
+  }
+
+  .vr-requiredHelpPopover::after {
+    left: auto;
+    right: 0.7rem;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .vr-requiredHelpPopover,
+  .vr-requiredHelpPopover::after {
+    border-color: rgb(148 163 184 / 35%);
+    background: #0f172a;
+    color: #cbd5e1;
+  }
+
+  .vr-requiredHelpPopover strong {
+    color: #f8fafc;
+  }
+}

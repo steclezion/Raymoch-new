@@ -20,6 +20,9 @@ import {
 
 import "./verificationModal.css";
 import "./verificationModal.chatbot.css";
+import "./verificationModal.fieldHelp.css";
+import "./verificationModal.signature.css";
+import ConfirmationDialog from "./ConfirmationDialog";
 
 const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
 
@@ -32,6 +35,109 @@ const VERIFICATION_ENDPOINT = `${API_BASE_URL}/api/verification`;
 
 const ACCEPTED_FILES =
   ".pdf,.doc,.docx,.xls,.xlsx,.csv,.jpg,.jpeg,.png";
+
+const FIELD_HELP_EVENT = "verification:ask-field-help";
+
+const REQUIRED_FIELD_HELP = {
+  account_type_id: "The type of account being verified, such as a business, institution, or investor account. Choose the option that best matches how this account will be used.",
+  applicant_profile_id: "The category that describes the person or organization applying. This helps determine the identity and compliance checks that apply.",
+  sector_id: "The broad area of the economy in which the organization operates.",
+  industry_id: "The more specific line of business within the selected sector.",
+  legal_name: "The official name shown on government-issued identity, incorporation, registration, or licensing records.",
+  registration_number: "The unique number assigned by the authority that registered or licensed the applicant.",
+  established_date: "The organization’s official formation date, or the individual applicant’s date of birth, as shown on supporting records.",
+  legal_structure_id: "The applicant’s legal form, such as corporation, partnership, nonprofit, trust, or sole proprietorship.",
+  region_id: "The geographic region containing the applicant’s registered location.",
+  country_id: "The country where the applicant is legally registered or ordinarily resident.",
+  state_id: "The state, province, territory, or equivalent administrative area of the registered address.",
+  city_id: "The city or locality of the applicant’s registered address.",
+  registered_address: "The official address recorded for the applicant by a government, registry, regulator, or other competent authority.",
+  postal_code: "The postal or ZIP code belonging to the registered address.",
+  business_model: "A concise description of how the organization creates value and earns revenue, such as B2B, B2C, subscription, or marketplace.",
+  products_services: "The principal products or services the organization provides to customers.",
+  operating_countries: "Every country in which the organization currently conducts business, serves customers, maintains offices, or has material operations. This field is not retained after the form is dismissed.",
+  employee_count: "The current total number of people employed by the organization. Use the most recent reliable figure.",
+  company_stage: "The organization’s current development stage, such as pre-revenue, early-stage, growth, mature, or publicly listed.",
+  annual_revenue: "The organization’s revenue for its most recently completed financial year, before expenses are deducted.",
+  revenue_currency: "The currency in which annual revenue is reported.",
+  fiscal_year_end: "The final date of the organization’s annual accounting period.",
+  business_description: "A clear overview of the organization’s activities, customers, markets, delivery model, and sources of revenue.",
+  ownership_type: "The general ownership classification, such as privately held, publicly traded, state-owned, cooperative, or nonprofit.",
+  beneficial_owners: "The individuals who ultimately own or control the applicant. Include the identifying and ownership details requested by your jurisdiction.",
+  directors: "The directors, trustees, general partners, or equivalent people responsible for governing the organization.",
+  authorized_signatory: "The person legally authorized to sign and submit this verification request for the applicant.",
+  signatory_title: "The authorized signatory’s official role or position in relation to the applicant.",
+  signatory_id_number: "The identifying number printed on the authorized signatory’s valid passport or national identity document.",
+  signatory_id_expiry: "The expiration date printed on the authorized signatory’s identity document.",
+  contact_name: "The full name of the person who should be contacted about this verification request.",
+  contact_role: "The primary contact’s job title or relationship to the applicant.",
+  contact_email: "A monitored email address where verification questions and status updates can be received.",
+  contact_phone: "A telephone number, including country code, where the primary contact can be reached.",
+  preferred_contact: "The communication channel the primary contact prefers for verification correspondence.",
+  accuracy_consent: "Confirmation that the submitted information is accurate, current, complete, authorized, and may be used for the stated verification checks.",
+  privacy_consent: "Acknowledgment that submitted personal and business information may be securely processed and retained according to the privacy notice.",
+};
+
+function RequiredFieldHelp({ name, label }) {
+  const description =
+    REQUIRED_FIELD_HELP[name] ||
+    `${label} is required to complete the verification review. Provide accurate, current information that matches your supporting records.`;
+
+  const askClarityAssistant = () => {
+    window.dispatchEvent(
+      new CustomEvent(FIELD_HELP_EVENT, {
+        detail: {
+          label,
+          question: `What is the meaning of ${label}?`,
+        },
+      }),
+    );
+  };
+
+  return (
+    <span className="vr-requiredHelp">
+      <button
+        className="vr-requiredHelpInfo"
+        type="button"
+        aria-label={`Information about ${label}`}
+        aria-describedby={`${name}-required-help`}
+      >
+        i
+      </button>
+
+      <span
+        id={`${name}-required-help`}
+        className="vr-requiredHelpPopover"
+        role="tooltip"
+      >
+        <strong>{label}</strong>
+        <span>{description}</span>
+
+        <button
+          className="vr-requiredHelpAsk"
+          type="button"
+          aria-label={`Ask Clarity Assistant about ${label}`}
+          title={`Ask Clarity Assistant: What is the meaning of ${label}?`}
+          onClick={askClarityAssistant}
+        >
+          ?
+        </button>
+      </span>
+    </span>
+  );
+}
+
+function FieldLabel({ label, name, required }) {
+  return (
+    <div className="vr-labelWithHelp">
+      <label htmlFor={name}>
+        {label}
+        {required && " *"}
+      </label>
+      {required && <RequiredFieldHelp name={name} label={label} />}
+    </div>
+  );
+}
 
 const DATA_SCOPE_RULES = {
   legal_name: {
@@ -105,7 +211,7 @@ const initialFormData = {
   industry_id: "",
   business_model: "",
   products_services: "",
-  operating_countries: "",
+  operating_countries: [],
   employee_count: "",
   company_stage: "",
   annual_revenue: "",
@@ -133,6 +239,380 @@ const initialFormData = {
   privacy_consent: false,
 };
 
+function createEmptyFormData() {
+  return {
+    ...initialFormData,
+    operating_countries: [],
+  };
+}
+
+function sanitizeVerificationStep(value) {
+  const parsedStep = Number(value);
+
+  return Number.isInteger(parsedStep) && parsedStep >= 1 && parsedStep <= 6
+    ? parsedStep
+    : 1;
+}
+
+function sanitizeOperatingCountries(value) {
+  if (!Array.isArray(value)) return [];
+
+  return [
+    ...new Set(
+      value
+        .filter((countryName) => typeof countryName === "string")
+        .map((countryName) => countryName.trim())
+        .filter(Boolean),
+    ),
+  ];
+}
+
+function asArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function sanitizeVerificationFiles(value) {
+  if (!Array.isArray(value)) return [];
+
+  return value.filter(
+    (file) =>
+      file &&
+      typeof file === "object" &&
+      typeof file.name === "string" &&
+      typeof file.size === "number",
+  );
+}
+
+function sanitizeVerificationFormData(value) {
+  const empty = createEmptyFormData();
+  let hadRecoveryIssue = false;
+
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {
+      formData: empty,
+      hadRecoveryIssue: value != null,
+    };
+  }
+
+  const safe = { ...empty };
+
+  Object.entries(empty).forEach(([key, defaultValue]) => {
+    const retainedValue = value[key];
+
+    if (key === "operating_countries") {
+      safe[key] = sanitizeOperatingCountries(retainedValue);
+
+      if (retainedValue != null && !Array.isArray(retainedValue)) {
+        hadRecoveryIssue = true;
+      }
+
+      return;
+    }
+
+    if (typeof defaultValue === "boolean") {
+      if (typeof retainedValue === "boolean") {
+        safe[key] = retainedValue;
+      } else if (retainedValue != null) {
+        hadRecoveryIssue = true;
+      }
+
+      return;
+    }
+
+    if (typeof retainedValue === "string") {
+      safe[key] = retainedValue;
+      return;
+    }
+
+    // Select values can sometimes be numeric IDs. Convert them safely for inputs.
+    if (typeof retainedValue === "number" && Number.isFinite(retainedValue)) {
+      safe[key] = String(retainedValue);
+      return;
+    }
+
+    if (retainedValue != null) {
+      hadRecoveryIssue = true;
+    }
+  });
+
+  return { formData: safe, hadRecoveryIssue };
+}
+
+function currentVerificationPageKey() {
+  if (typeof window === "undefined") return "";
+
+  return `${window.location.pathname}${window.location.search}${window.location.hash}`;
+}
+
+/*
+ * Temporary in-memory draft:
+ * - survives modal/component close and reopen on the same page
+ * - disappears on browser refresh because the JavaScript module reloads
+ * - is cleared when this component unmounts because the page URL changed
+ * - intentionally does NOT use localStorage/sessionStorage
+ */
+let verificationDraftCache = {
+  pageKey: null,
+  step: 1,
+  formData: null,
+  files: [],
+};
+
+function readVerificationDraft(pageKey) {
+  try {
+    if (
+      verificationDraftCache.pageKey !== pageKey ||
+      !verificationDraftCache.formData
+    ) {
+      return {
+        step: 1,
+        formData: createEmptyFormData(),
+        files: [],
+        hadRecoveryIssue: false,
+      };
+    }
+
+    const safeStep = sanitizeVerificationStep(verificationDraftCache.step);
+    const { formData, hadRecoveryIssue: formHadIssue } =
+      sanitizeVerificationFormData(verificationDraftCache.formData);
+    const safeFiles = sanitizeVerificationFiles(verificationDraftCache.files);
+
+    const stepHadIssue = safeStep !== Number(verificationDraftCache.step);
+    const filesHadIssue =
+      !Array.isArray(verificationDraftCache.files) ||
+      safeFiles.length !== verificationDraftCache.files.length;
+
+    return {
+      step: safeStep,
+      // Never restore countries of operation after Escape/X dismissal.
+      formData: { ...formData, operating_countries: [] },
+      files: [...safeFiles],
+      hadRecoveryIssue: formHadIssue || stepHadIssue || filesHadIssue,
+    };
+  } catch (error) {
+    console.error("[Verification] Unable to restore retained form data", error);
+    clearVerificationDraftCache();
+
+    return {
+      step: 1,
+      formData: createEmptyFormData(),
+      files: [],
+      hadRecoveryIssue: true,
+    };
+  }
+}
+
+function clearVerificationDraftCache() {
+  verificationDraftCache = {
+    pageKey: null,
+    step: 1,
+    formData: null,
+    files: [],
+  };
+}
+
+function SignatureDialog({
+  open,
+  initialName,
+  initialSignature,
+  onCancel,
+  onSave,
+}) {
+  const canvasRef = useRef(null);
+  const drawingRef = useRef(false);
+  const lastPointRef = useRef(null);
+  const [signatoryName, setSignatoryName] = useState(initialName || "");
+  const [hasInk, setHasInk] = useState(Boolean(initialSignature));
+  const [inputMethod, setInputMethod] = useState("mouse, touch, or pen");
+  const [signatureError, setSignatureError] = useState("");
+
+  const prepareCanvas = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+    canvas.width = Math.max(Math.round(rect.width * ratio), 1);
+    canvas.height = Math.max(Math.round(rect.height * ratio), 1);
+
+    const context = canvas.getContext("2d");
+    context.setTransform(ratio, 0, 0, ratio, 0, 0);
+    context.lineCap = "round";
+    context.lineJoin = "round";
+    context.lineWidth = 2.25;
+    context.strokeStyle = "#0f172a";
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, rect.width, rect.height);
+
+    if (initialSignature) {
+      const image = new Image();
+      image.onload = () => {
+        context.drawImage(image, 0, 0, rect.width, rect.height);
+        setHasInk(true);
+      };
+      image.src = initialSignature;
+    } else {
+      setHasInk(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!open) return undefined;
+
+    setSignatoryName(initialName || "");
+    setSignatureError("");
+    const frame = window.requestAnimationFrame(prepareCanvas);
+
+    const handleEscape = (event) => {
+      if (event.key === "Escape") onCancel();
+    };
+
+    window.addEventListener("keydown", handleEscape);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [open]);
+
+  const canvasPoint = (event) => {
+    const rect = canvasRef.current.getBoundingClientRect();
+    return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+  };
+
+  const beginSignature = (event) => {
+    event.preventDefault();
+    const canvas = canvasRef.current;
+    canvas.setPointerCapture?.(event.pointerId);
+    drawingRef.current = true;
+    lastPointRef.current = canvasPoint(event);
+    setInputMethod(
+      event.pointerType === "pen"
+        ? "pen or signature device"
+        : event.pointerType === "touch"
+          ? "touch"
+          : "mouse",
+    );
+  };
+
+  const drawSignature = (event) => {
+    if (!drawingRef.current) return;
+    event.preventDefault();
+
+    const nextPoint = canvasPoint(event);
+    const previousPoint = lastPointRef.current;
+    const context = canvasRef.current.getContext("2d");
+
+    context.beginPath();
+    context.moveTo(previousPoint.x, previousPoint.y);
+    context.lineTo(nextPoint.x, nextPoint.y);
+    context.stroke();
+
+    lastPointRef.current = nextPoint;
+    setHasInk(true);
+    setSignatureError("");
+  };
+
+  const endSignature = (event) => {
+    drawingRef.current = false;
+    lastPointRef.current = null;
+    const canvas = canvasRef.current;
+    if (canvas?.hasPointerCapture?.(event.pointerId)) {
+      canvas.releasePointerCapture(event.pointerId);
+    }
+  };
+
+  const clearSignature = () => {
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
+    const rect = canvas.getBoundingClientRect();
+    context.clearRect(0, 0, rect.width, rect.height);
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, rect.width, rect.height);
+    context.strokeStyle = "#0f172a";
+    setHasInk(false);
+    setSignatureError("");
+  };
+
+  const saveSignature = () => {
+    const cleanName = signatoryName.trim();
+
+    if (!cleanName) {
+      setSignatureError("Enter the authorized signatory’s full name.");
+      return;
+    }
+
+    if (!hasInk) {
+      setSignatureError("Provide a signature using a pen, touch, or mouse.");
+      return;
+    }
+
+    onSave({
+      name: cleanName,
+      dataUrl: canvasRef.current.toDataURL("image/png"),
+    });
+  };
+
+  if (!open) return null;
+
+  return (
+    <div className="vr-signatureBackdrop" role="presentation">
+      <section
+        className="vr-signatureDialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="signature-dialog-title"
+      >
+        <div className="vr-signatureHeader">
+          <div>
+            <h2 id="signature-dialog-title">Authorized signatory</h2>
+            <p>Sign with a connected pen or signature device. If none is available, use touch or your mouse.</p>
+          </div>
+          <button type="button" aria-label="Close signature form" onClick={onCancel}>×</button>
+        </div>
+
+        <label className="vr-signatureName" htmlFor="signature-name">
+          Authorized signatory’s full name *
+          <input
+            id="signature-name"
+            type="text"
+            value={signatoryName}
+            autoFocus
+            onChange={(event) => setSignatoryName(event.target.value)}
+          />
+        </label>
+
+        <div className="vr-signatureCanvasHeader">
+          <span>Signature *</span>
+          <small>Input detected: {inputMethod}</small>
+        </div>
+
+        <canvas
+          ref={canvasRef}
+          className="vr-signatureCanvas"
+          aria-label="Signature drawing area"
+          onPointerDown={beginSignature}
+          onPointerMove={drawSignature}
+          onPointerUp={endSignature}
+          onPointerCancel={endSignature}
+          onPointerLeave={(event) => {
+            if (drawingRef.current) endSignature(event);
+          }}
+        />
+
+        {signatureError && <p className="vr-error" role="alert">{signatureError}</p>}
+
+        <div className="vr-signatureActions">
+          <button className="vr-btn vr-btnGhost" type="button" onClick={clearSignature}>Clear signature</button>
+          <span />
+          <button className="vr-btn vr-btnGhost" type="button" onClick={onCancel}>Cancel</button>
+          <button className="vr-btn" type="button" onClick={saveSignature}>Use signature</button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+
 function Field({
   label,
   name,
@@ -146,17 +626,14 @@ function Field({
 }) {
   return (
     <div className="vr-field">
-      <label htmlFor={name}>
-        {label}
-        {required && " *"}
-      </label>
+      <FieldLabel label={label} name={name} required={required} />
 
       {children || (
         <input
           id={name}
           name={name}
           type={type}
-          value={value}
+          value={value ?? ""}
           required={required}
           placeholder={placeholder}
           onChange={onChange}
@@ -171,24 +648,28 @@ function SelectField({
   label,
   name,
   value,
-  options,
+  options = [],
   required = false,
   onChange,
 }) {
+  const safeOptions = asArray(options);
+
   return (
     <Field label={label} name={name} required={required}>
       <select
         id={name}
         name={name}
-        value={value}
+        value={value ?? ""}
         required={required}
         onChange={onChange}
       >
         <option value="">Select…</option>
 
-        {options.map((option) => {
-          const optionValue = typeof option === "object" ? option.id : option;
-          const optionLabel = typeof option === "object" ? option.name : option;
+        {safeOptions.map((option) => {
+          const optionValue = typeof option === "object" ? option?.id : option;
+          const optionLabel = typeof option === "object" ? option?.name : option;
+
+          if (optionValue == null || !optionLabel) return null;
 
           return (
             <option key={optionValue} value={optionValue}>
@@ -198,6 +679,132 @@ function SelectField({
         })}
       </select>
     </Field>
+  );
+}
+
+function MultiCountryDatalist({
+  label,
+  name,
+  value = [],
+  options = [],
+  required = false,
+  onChange,
+}) {
+  const [inputValue, setInputValue] = useState("");
+  const datalistId = `${name}-datalist`;
+  const safeValue = sanitizeOperatingCountries(value);
+  const safeOptions = asArray(options);
+
+  const countryNames = safeOptions
+    .map((option) => (typeof option === "object" ? option?.name : option))
+    .filter((countryName) => typeof countryName === "string" && countryName.trim())
+    .map((countryName) => countryName.trim());
+
+  const emitChange = (nextCountries) => {
+    onChange({
+      target: {
+        name,
+        value: nextCountries,
+        type: "multiselect",
+      },
+    });
+  };
+
+  const addCountry = (rawValue) => {
+    const typedName = typeof rawValue === "string" ? rawValue.trim() : "";
+    if (!typedName) return;
+
+    const matchedName = countryNames.find(
+      (countryName) => countryName.toLowerCase() === typedName.toLowerCase(),
+    );
+
+    // Only accept country names supplied by countries_all.
+    if (!matchedName) return;
+
+    const alreadySelected = safeValue.some(
+      (countryName) => countryName.toLowerCase() === matchedName.toLowerCase(),
+    );
+
+    if (!alreadySelected) {
+      emitChange([...safeValue, matchedName]);
+    }
+
+    setInputValue("");
+  };
+
+  const removeCountry = (countryToRemove) => {
+    emitChange(
+      safeValue.filter((countryName) => countryName !== countryToRemove),
+    );
+  };
+
+  const handleInputChange = (event) => {
+    const nextValue = event.target.value;
+    setInputValue(nextValue);
+
+    const exactMatch = countryNames.find(
+      (countryName) => countryName.toLowerCase() === nextValue.trim().toLowerCase(),
+    );
+
+    if (exactMatch) {
+      addCountry(exactMatch);
+    }
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter" || event.key === ",") {
+      event.preventDefault();
+      addCountry(inputValue);
+    }
+  };
+
+  return (
+    <div className="vr-field">
+      <FieldLabel label={label} name={name} required={required} />
+
+      <input
+        id={name}
+        name={`${name}_search`}
+        type="text"
+        list={datalistId}
+        value={inputValue}
+        required={required && safeValue.length === 0}
+        placeholder="Start typing a country name..."
+        autoComplete="off"
+        onChange={handleInputChange}
+        onKeyDown={handleKeyDown}
+        onBlur={() => addCountry(inputValue)}
+      />
+
+      <datalist id={datalistId}>
+        {countryNames.map((countryName) => (
+          <option key={countryName} value={countryName}>
+            {countryName}
+          </option>
+        ))}
+      </datalist>
+
+      {safeValue.length > 0 && (
+        <ul className="vr-fileList">
+          {safeValue.map((countryName) => (
+            <li key={countryName}>
+              <span className="vr-fileMeta">
+                <strong>{countryName}</strong>
+              </span>
+
+              <button
+                className="vr-fileRemove"
+                type="button"
+                aria-label={`Remove ${countryName}`}
+                onClick={() => removeCountry(countryName)}
+              >
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
@@ -215,7 +822,7 @@ function TextareaField({
       <textarea
         id={name}
         name={name}
-        value={value}
+        value={value ?? ""}
         required={required}
         placeholder={placeholder}
         rows={rows}
@@ -227,7 +834,9 @@ function TextareaField({
 
 function selectedOptionName(options, selectedId) {
   return (
-    options.find((option) => String(option.id) === String(selectedId))?.name ||
+    asArray(options).find(
+      (option) => String(option?.id) === String(selectedId),
+    )?.name ||
     "Not provided"
   );
 }
@@ -374,9 +983,19 @@ function ReviewChecklist({
 }
 
 export default function VerificationModal() {
-  const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState(initialFormData);
-  const [files, setFiles] = useState([]);
+  const initialPageKeyRef = useRef(currentVerificationPageKey());
+  const initialDraftRef = useRef(
+    readVerificationDraft(initialPageKeyRef.current),
+  );
+
+  const [step, setStep] = useState(() => initialDraftRef.current.step);
+  const [formData, setFormData] = useState(
+    () => initialDraftRef.current.formData,
+  );
+  const [files, setFiles] = useState(() => initialDraftRef.current.files);
+  const [draftRecoveryWarning, setDraftRecoveryWarning] = useState(
+    () => initialDraftRef.current.hadRecoveryIssue,
+  );
   const [fileError, setFileError] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [submissionLoading, setSubmissionLoading] = useState(false);
@@ -386,6 +1005,17 @@ export default function VerificationModal() {
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [assistantQuestion, setAssistantQuestion] = useState("");
   const [assistantLoading, setAssistantLoading] = useState(false);
+  const [signatureOpen, setSignatureOpen] = useState(false);
+  const [signatureDataUrl, setSignatureDataUrl] = useState("");
+  const [confirmation, setConfirmation] = useState({
+    open: false,
+    title: "",
+    message: "",
+    confirmLabel: "Confirm",
+    cancelLabel: "Cancel",
+    tone: "danger",
+    action: null,
+  });
   const [assistantMessages, setAssistantMessages] = useState([
     {
       id: 1,
@@ -401,8 +1031,10 @@ export default function VerificationModal() {
     legalStructures: [],
     regions: [],
     countries: [],
+    countriesAll: [],
     states: [],
     cities: [],
+    currencies: [],
   });
 
   // useRef keeps the request cache stable across renders without rerendering.
@@ -429,21 +1061,93 @@ export default function VerificationModal() {
     return data;
   });
 
-  const currentStep = stepMeta[step];
-  const progress = Math.round((step / 6) * 100);
+  const safeStep = sanitizeVerificationStep(step);
+  const currentStep = stepMeta[safeStep] || stepMeta[1];
+  const progress = Math.round((safeStep / 6) * 100);
+
+  useEffect(() => {
+    const openFieldHelpInAssistant = (event) => {
+      const label = event.detail?.label;
+      if (typeof label !== "string" || !label.trim()) return;
+
+      const question =
+        typeof event.detail?.question === "string"
+          ? event.detail.question
+          : `What is the meaning of ${label}?`;
+
+      setAssistantQuestion(question);
+      setAssistantOpen(true);
+
+      window.requestAnimationFrame(() => {
+        document.getElementById("assistant-question")?.focus();
+      });
+    };
+
+    window.addEventListener(FIELD_HELP_EVENT, openFieldHelpInAssistant);
+    return () =>
+      window.removeEventListener(FIELD_HELP_EVENT, openFieldHelpInAssistant);
+  }, []);
+
+  /*
+   * Persist the current in-progress form only for this loaded page.
+   * This protects data when the modal is closed with Esc or the X button.
+   */
+  useEffect(() => {
+    try {
+      const { formData: safeFormData } = sanitizeVerificationFormData(formData);
+      const safeFiles = sanitizeVerificationFiles(files);
+
+      verificationDraftCache = {
+        pageKey: initialPageKeyRef.current,
+        step: sanitizeVerificationStep(step),
+        formData: {
+          ...safeFormData,
+          // Do not retain this field across Escape/X dismissal and reopening.
+          operating_countries: [],
+        },
+        files: [...safeFiles],
+      };
+    } catch (error) {
+      // Retention must never be allowed to crash the verification form.
+      console.error("[Verification] Unable to retain in-progress form data", error);
+      clearVerificationDraftCache();
+      setDraftRecoveryWarning(true);
+    }
+  }, [step, formData, files]);
+
+  /*
+   * If the component disappears because the URL changed, discard the draft.
+   * If it disappears only because the modal was closed, the URL is unchanged,
+   * so the draft remains available when the modal is reopened.
+   */
+  useEffect(
+    () => () => {
+      if (currentVerificationPageKey() !== initialPageKeyRef.current) {
+        clearVerificationDraftCache();
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     const controller = new AbortController();
 
-    fetchOptionsRef.current("/api/verification/options", controller.signal)
+    fetchOptionsRef.current(
+      `${API_BASE_URL}/api/verification/options`,
+      controller.signal,
+    )
       .then((data) => {
         setLookupOptions((current) => ({
           ...current,
-          accountTypes: data.account_types || [],
-          applicantProfiles: data.applicant_profiles || [],
-          sectors: data.sectors || [],
-          legalStructures: data.legal_structures || [],
-          regions: data.regions || [],
+          accountTypes: asArray(data?.account_types),
+          applicantProfiles: asArray(data?.applicant_profiles),
+          sectors: asArray(data?.sectors),
+          legalStructures: asArray(data?.legal_structures),
+          regions: asArray(data?.regions),
+          countriesAll: asArray(data?.countries_all),
+          currencies: asArray(
+            data?.ticket_currency ?? data?.ticket_currencies,
+          ),
         }));
         setOptionError("");
       })
@@ -462,11 +1166,14 @@ export default function VerificationModal() {
 
     const controller = new AbortController();
     fetchOptionsRef.current(
-      `/api/verification/options/industries?sector_id=${formData.sector_id}`,
+      `${API_BASE_URL}/api/verification/options/industries?sector_id=${encodeURIComponent(formData.sector_id)}`,
       controller.signal,
     )
       .then((data) => {
-        setLookupOptions((current) => ({ ...current, industries: data }));
+        setLookupOptions((current) => ({
+          ...current,
+          industries: asArray(data),
+        }));
         setOptionError("");
       })
       .catch((error) => {
@@ -483,11 +1190,14 @@ export default function VerificationModal() {
 
     const controller = new AbortController();
     fetchOptionsRef.current(
-      `/api/verification/options/countries?region_id=${formData.region_id}`,
+      `${API_BASE_URL}/api/verification/options/countries?region_id=${encodeURIComponent(formData.region_id)}`,
       controller.signal,
     )
       .then((data) => {
-        setLookupOptions((current) => ({ ...current, countries: data }));
+        setLookupOptions((current) => ({
+          ...current,
+          countries: asArray(data),
+        }));
         setOptionError("");
       })
       .catch((error) => {
@@ -504,11 +1214,14 @@ export default function VerificationModal() {
 
     const controller = new AbortController();
     fetchOptionsRef.current(
-      `/api/verification/options/states?country_id=${formData.country_id}`,
+      `${API_BASE_URL}/api/verification/options/states?country_id=${encodeURIComponent(formData.country_id)}`,
       controller.signal,
     )
       .then((data) => {
-        setLookupOptions((current) => ({ ...current, states: data }));
+        setLookupOptions((current) => ({
+          ...current,
+          states: asArray(data),
+        }));
         setOptionError("");
       })
       .catch((error) => {
@@ -525,11 +1238,14 @@ export default function VerificationModal() {
 
     const controller = new AbortController();
     fetchOptionsRef.current(
-      `/api/verification/options/cities?state_id=${formData.state_id}`,
+      `${API_BASE_URL}/api/verification/options/cities?state_id=${encodeURIComponent(formData.state_id)}`,
       controller.signal,
     )
       .then((data) => {
-        setLookupOptions((current) => ({ ...current, cities: data }));
+        setLookupOptions((current) => ({
+          ...current,
+          cities: asArray(data),
+        }));
         setOptionError("");
       })
       .catch((error) => {
@@ -541,10 +1257,25 @@ export default function VerificationModal() {
   const updateField = (event) => {
     const { name, value, type, checked } = event.target;
 
+    if (!Object.prototype.hasOwnProperty.call(initialFormData, name)) {
+      return;
+    }
+
     setFormData((current) => {
+      const safeCurrent = sanitizeVerificationFormData(current).formData;
+      let nextValue;
+
+      if (name === "operating_countries") {
+        nextValue = sanitizeOperatingCountries(value);
+      } else if (type === "checkbox") {
+        nextValue = Boolean(checked);
+      } else {
+        nextValue = value == null ? "" : String(value);
+      }
+
       const next = {
-        ...current,
-        [name]: type === "checkbox" ? checked : value,
+        ...safeCurrent,
+        [name]: nextValue,
       };
 
       if (name === "region_id") {
@@ -565,7 +1296,7 @@ export default function VerificationModal() {
   };
 
   const goToStep = (stepNumber) => {
-    setStep(stepNumber);
+    setStep(sanitizeVerificationStep(stepNumber));
 
     window.scrollTo({
       top: 0,
@@ -767,6 +1498,16 @@ export default function VerificationModal() {
       return false;
     }
 
+    if (step === 4 && !signatureDataUrl) {
+      setSignatureOpen(true);
+      pushAssistantMessage(
+        "The authorized signatory must provide a handwritten signature before continuing.",
+        "assistant",
+        "error",
+      );
+      return false;
+    }
+
     if (step === 5 && files.length === 0) {
       setFileError("Upload at least one supporting document.");
       pushAssistantMessage(
@@ -790,6 +1531,74 @@ export default function VerificationModal() {
 
   const handleBack = () => {
     goToStep(step - 1);
+  };
+
+  const closeConfirmation = () => {
+    setConfirmation((current) => ({
+      ...current,
+      open: false,
+      action: null,
+    }));
+  };
+
+  const requestConfirmation = ({
+    title,
+    message,
+    confirmLabel = "Confirm",
+    cancelLabel = "Cancel",
+    tone = "danger",
+    onConfirm,
+  }) => {
+    setConfirmation({
+      open: true,
+      title,
+      message,
+      confirmLabel,
+      cancelLabel,
+      tone,
+      action: onConfirm,
+    });
+  };
+
+  const handleConfirmedAction = () => {
+    const action = confirmation.action;
+    closeConfirmation();
+    action?.();
+  };
+
+  const clearEntireForm = () => {
+    clearVerificationDraftCache();
+
+    setFormData(createEmptyFormData());
+    setFiles([]);
+    setDraftRecoveryWarning(false);
+    setFileError("");
+    setSubmissionError("");
+    setSubmissionReference("");
+    setSubmitted(false);
+    setAssistantQuestion("");
+    setSignatureOpen(false);
+    setSignatureDataUrl("");
+
+    // Return to the first form-filling step after clearing everything.
+    setStep(2);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  const handleClearForm = () => {
+    requestConfirmation({
+      title: "Clear verification form?",
+      message:
+        "This will permanently remove all information entered in this verification form, including selected countries and uploaded documents. This action cannot be undone.",
+      confirmLabel: "Clear form",
+      cancelLabel: "Keep information",
+      tone: "danger",
+      onConfirm: clearEntireForm,
+    });
   };
 
   const handleFiles = (event) => {
@@ -871,12 +1680,35 @@ export default function VerificationModal() {
     const payload = new FormData();
 
     Object.entries(formData).forEach(([key, value]) => {
+      if (key === "operating_countries" && Array.isArray(value)) {
+        value.forEach((countryName) => {
+          payload.append("operating_countries[]", countryName);
+        });
+        return;
+      }
+
       payload.append(key, value);
     });
 
     files.forEach((file) => {
       payload.append("documents[]", file);
     });
+
+    if (!signatureDataUrl) {
+      setSubmissionError("The authorized signatory’s handwritten signature is required.");
+      goToStep(4);
+      setSignatureOpen(true);
+      return;
+    }
+
+    const signatureBlob = await fetch(signatureDataUrl).then((response) =>
+      response.blob(),
+    );
+    payload.append(
+      "authorized_signatory_signature",
+      signatureBlob,
+      "authorized-signatory-signature.png",
+    );
 
     setSubmissionLoading(true);
     setSubmissionError("");
@@ -936,7 +1768,15 @@ export default function VerificationModal() {
         </div>
       </header>
 
-      {step === 1 && (
+      {draftRecoveryWarning && (
+        <p className="vr-uploadRule" role="status">
+          Some previously entered information could not be restored safely.
+          The affected values were reset so the form can continue without an
+          error. Please review the fields before continuing.
+        </p>
+      )}
+
+      {safeStep === 1 && (
         <section className="vr-stepwrap vr-grid">
           <div className="vr-leftColumn">
             <article className="vr-card">
@@ -1017,7 +1857,7 @@ export default function VerificationModal() {
         </section>
       )}
 
-      {step >= 2 && step <= 6 && (
+      {safeStep >= 2 && safeStep <= 6 && (
         <section className="vr-stepwrap vr-formGrid">
           <article className="vr-card">
             {submitted ? (
@@ -1262,10 +2102,11 @@ export default function VerificationModal() {
                         onChange={updateField}
                       />
 
-                      <Field
+                      <MultiCountryDatalist
                         label="Countries of operation"
                         name="operating_countries"
                         value={formData.operating_countries}
+                        options={lookupOptions.countriesAll}
                         required
                         onChange={updateField}
                       />
@@ -1304,12 +2145,11 @@ export default function VerificationModal() {
                         onChange={updateField}
                       />
 
-                      <Field
+                     <SelectField
                         label="Revenue currency"
                         name="revenue_currency"
                         value={formData.revenue_currency}
-                        placeholder="USD"
-                        maxLength="3"
+                        options={lookupOptions.currencies}
                         required
                         onChange={updateField}
                       />
@@ -1329,6 +2169,7 @@ export default function VerificationModal() {
                         label="Public listing or ticker"
                         name="listing_ticker"
                         value={formData.listing_ticker}
+                        placeholder="Pre-revenue, growth, mature..."
                         onChange={updateField}
                       />
                     </div>
@@ -1390,7 +2231,12 @@ export default function VerificationModal() {
                         name="authorized_signatory"
                         value={formData.authorized_signatory}
                         required
-                        onChange={updateField}
+                        readOnly
+                        placeholder="Click to enter a name and sign"
+                        title="Open the handwritten signature form"
+                        aria-haspopup="dialog"
+                        onClick={() => setSignatureOpen(true)}
+                        onFocus={() => setSignatureOpen(true)}
                       />
 
                       <Field
@@ -1608,12 +2454,18 @@ export default function VerificationModal() {
                           onChange={updateField}
                         />
 
-                        <label htmlFor="accuracy_consent">
-                          I confirm that the information and documents are
-                          accurate, complete and current. I am authorized to
-                          submit them and consent to identity, KYB/KYC, AML,
-                          sanctions and document checks. *
-                        </label>
+                        <div className="vr-consentLabelWithHelp">
+                          <label htmlFor="accuracy_consent">
+                            I confirm that the information and documents are
+                            accurate, complete and current. I am authorized to
+                            submit them and consent to identity, KYB/KYC, AML,
+                            sanctions and document checks. *
+                          </label>
+                          <RequiredFieldHelp
+                            name="accuracy_consent"
+                            label="Accuracy and authorization confirmation"
+                          />
+                        </div>
                       </div>
 
                       <div className="vr-consent">
@@ -1626,11 +2478,17 @@ export default function VerificationModal() {
                           onChange={updateField}
                         />
 
-                        <label htmlFor="privacy_consent">
-                          I acknowledge the privacy notice and consent to the
-                          secure processing and retention of the submitted
-                          information. *
-                        </label>
+                        <div className="vr-consentLabelWithHelp">
+                          <label htmlFor="privacy_consent">
+                            I acknowledge the privacy notice and consent to the
+                            secure processing and retention of the submitted
+                            information. *
+                          </label>
+                          <RequiredFieldHelp
+                            name="privacy_consent"
+                            label="Privacy acknowledgment and consent"
+                          />
+                        </div>
                       </div>
                     </Section>
                   </>
@@ -1650,25 +2508,49 @@ export default function VerificationModal() {
 
                   {step === 2 && <span />}
 
-                  {step < 6 ? (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      marginLeft: "auto",
+                    }}
+                  >
                     <button
-                      className="vr-btn"
+                      className="vr-btn vr-btnGhost"
                       type="button"
-                      onClick={handleNext}
+                      onClick={handleClearForm}
+                      style={{
+                        padding: "7px 10px",
+                        fontSize: "12px",
+                        minHeight: "auto",
+                      }}
                     >
-                      Next
-                      <ArrowRight size={17} />
+                      Clear form
                     </button>
-                  ) : (
-                    <button
-                      className="vr-btn"
-                      type="submit"
-                      disabled={submissionLoading}
-                    >
-                      {submissionLoading ? "Submitting…" : "Submit for Verification"}
-                      <CheckCircle2 size={17} />
-                    </button>
-                  )}
+
+                    {step < 6 ? (
+                      <button
+                        className="vr-btn"
+                        type="button"
+                        onClick={handleNext}
+                      >
+                        Next
+                        <ArrowRight size={17} />
+                      </button>
+                    ) : (
+                      <button
+                        className="vr-btn"
+                        type="submit"
+                        disabled={submissionLoading}
+                      >
+                        {submissionLoading
+                          ? "Submitting…"
+                          : "Submit for Verification"}
+                        <CheckCircle2 size={17} />
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {submissionError && (
@@ -1699,8 +2581,32 @@ export default function VerificationModal() {
           )}
         </section>
       )}
+
+      <ConfirmationDialog
+        open={confirmation.open}
+        title={confirmation.title}
+        message={confirmation.message}
+        confirmLabel={confirmation.confirmLabel}
+        cancelLabel={confirmation.cancelLabel}
+        tone={confirmation.tone}
+        onConfirm={handleConfirmedAction}
+        onCancel={closeConfirmation}
+      />
+
+      <SignatureDialog
+        open={signatureOpen}
+        initialName={formData.authorized_signatory}
+        initialSignature={signatureDataUrl}
+        onCancel={() => setSignatureOpen(false)}
+        onSave={({ name, dataUrl }) => {
+          setFormData((current) => ({
+            ...sanitizeVerificationFormData(current).formData,
+            authorized_signatory: name,
+          }));
+          setSignatureDataUrl(dataUrl);
+          setSignatureOpen(false);
+        }}
+      />
     </main>
   );
 }
-
-

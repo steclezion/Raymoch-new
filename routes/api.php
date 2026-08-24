@@ -18,7 +18,7 @@ use App\Http\Controllers\Api\ExploreTooltipController;
 use App\Http\Controllers\Api\MainSearchEngineController;
 use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\CompanySearchFilterResolveController;
-use App\Http\Controllers\Api\VerificationOptionsController;
+use App\Http\Controllers\api\VerificationOptionsController;
 use App\Http\Controllers\Api\VerificationAssistantController;
 use App\Http\Controllers\Api\VerificationController;
 
@@ -122,6 +122,7 @@ Route::prefix('verification/options')->group(function () {
     Route::get('/countries', [VerificationOptionsController::class, 'countries']);
     Route::get('/states', [VerificationOptionsController::class, 'states']);
     Route::get('/cities', [VerificationOptionsController::class, 'cities']);
+    Route::get('/countries_all', [VerificationOptionsController::class, 'countriesAll']);
 });
 
 Route::post('/verification/assistant', VerificationAssistantController::class)

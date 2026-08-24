@@ -17,6 +17,8 @@ class VerificationOptionsController extends Controller
             'sectors' => $this->options('sectors'),
             'legal_structures' => $this->options('legal_structure'),
             'regions' => $this->options('regions'),
+            'ticket_currency' => $this->options('ticket_currency'),
+            'countries_all' => $this->options('countries_all'),
         ]);
     }
 
@@ -49,7 +51,11 @@ class VerificationOptionsController extends Controller
     public function states(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'country_id' => ['required', 'integer', 'exists:countries_africans,countries_all_id'],
+            'country_id' => [
+                'required',
+                'integer',
+                'exists:countries_africans,countries_all_id',
+            ],
         ]);
 
         return response()->json(
@@ -76,19 +82,29 @@ class VerificationOptionsController extends Controller
         $nameColumn = match ($table) {
             'sectors' => 'title',
             'countries_africans' => 'country_name',
+            'ticket_currency' => 'code',
+            default => 'name',
+        };
+
+        $displayNameColumn = match ($table) {
+            'sectors' => 'title',
+            'countries_africans' => 'country_name',
+            'ticket_currency' => 'country_name',
             default => 'name',
         };
 
         $idColumn = match ($table) {
             'countries_africans' => 'countries_all_id',
-            // 'states_all' => 'country_id',
             default => 'id',
         };
 
+        // $idColumn = match ($table) {
+        //     'countries_all' => 'name',
+        //     default => 'id',
+        // };
 
-
-        $return  = DB::table($table)
-            ->selectRaw("{$idColumn} as id , {$nameColumn} as name")
+        return DB::table($table)
+            ->selectRaw("{$idColumn} as id, {$nameColumn} as name, {$displayNameColumn} as display_name")
             ->when(
                 $foreignKey !== null,
                 fn($query) => $query->where($foreignKey, $foreignValue)
@@ -98,8 +114,8 @@ class VerificationOptionsController extends Controller
             ->map(fn($row) => [
                 'id' => $row->id,
                 'name' => $row->name,
+                'display_name' => @$row->display_name ?? $row->name,
             ])
             ->all();
-        return $return;
     }
 }
