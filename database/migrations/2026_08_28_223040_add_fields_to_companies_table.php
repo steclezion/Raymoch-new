@@ -13,13 +13,13 @@ return new class extends Migration
     {
         Schema::table('companies', function (Blueprint $table) {
 
-            // $table->dateTime('date_established')->nullable();
+            $table->dateTime('date_established')->nullable();
 
-            // $table->integer('number_of_employees')->nullable();
+            $table->integer('number_of_employees')->nullable();
 
-            // $table->string('revenue_currency', 50)->nullable();
+            $table->string('revenue_currency', 50)->nullable();
 
-            // $table->dateTime('fiscal_year_end')->nullable();
+
 
             $table->boolean('is_ultimate_parent_company')
                 ->default(false);
