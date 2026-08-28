@@ -79,17 +79,44 @@ class VerificationOptionsController extends Controller
         ?string $foreignKey = null,
         int|string|null $foreignValue = null
     ): array {
+        if ($table === 'ticket_currency') {
+            return DB::table('ticket_currency')
+                ->selectRaw('MIN(id) as id')
+                ->selectRaw('UPPER(TRIM(code)) as code')
+                ->selectRaw(
+                    "GROUP_CONCAT(DISTINCT TRIM(name) "
+                        . "ORDER BY name SEPARATOR ', ') as country_names"
+                )
+                ->whereNotNull('code')
+                ->whereRaw("TRIM(code) <> ''")
+                ->whereNotNull('country_name')
+                ->whereRaw("TRIM(country_name) <> ''")
+                ->when(
+                    $foreignKey !== null,
+                    fn($query) => $query->where($foreignKey, $foreignValue)
+                )
+                ->groupByRaw('UPPER(TRIM(code))')
+                ->orderBy('code')
+                ->get()
+                ->map(static function ($row): array {
+                    $code = trim((string) $row->code);
+                    $countryNames = trim((string) $row->country_names);
+                    $displayName = "{$code} — {$countryNames}";
+
+                    return [
+                        'id' => $row->id,
+                        'code' => $code,
+                        'country_names' => $countryNames,
+                        'name' => $displayName,
+                        'display_name' => $displayName,
+                    ];
+                })
+                ->all();
+        }
+
         $nameColumn = match ($table) {
             'sectors' => 'title',
             'countries_africans' => 'country_name',
-            'ticket_currency' => 'code',
-            default => 'name',
-        };
-
-        $displayNameColumn = match ($table) {
-            'sectors' => 'title',
-            'countries_africans' => 'country_name',
-            'ticket_currency' => 'country_name',
             default => 'name',
         };
 
@@ -98,23 +125,18 @@ class VerificationOptionsController extends Controller
             default => 'id',
         };
 
-        // $idColumn = match ($table) {
-        //     'countries_all' => 'name',
-        //     default => 'id',
-        // };
-
         return DB::table($table)
-            ->selectRaw("{$idColumn} as id, {$nameColumn} as name, {$displayNameColumn} as display_name")
+            ->selectRaw("{$idColumn} as id, {$nameColumn} as name")
             ->when(
                 $foreignKey !== null,
                 fn($query) => $query->where($foreignKey, $foreignValue)
             )
             ->orderBy($nameColumn)
             ->get()
-            ->map(fn($row) => [
+            ->map(static fn($row): array => [
                 'id' => $row->id,
                 'name' => $row->name,
-                'display_name' => @$row->display_name ?? $row->name,
+                'display_name' => $row->name,
             ])
             ->all();
     }

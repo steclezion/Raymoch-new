@@ -123,10 +123,32 @@ Route::prefix('verification/options')->group(function () {
     Route::get('/states', [VerificationOptionsController::class, 'states']);
     Route::get('/cities', [VerificationOptionsController::class, 'cities']);
     Route::get('/countries_all', [VerificationOptionsController::class, 'countriesAll']);
+    Route::get('/currencies', [VerificationOptionsController::class, 'currencies']);
 });
 
 Route::post('/verification/assistant', VerificationAssistantController::class)
     ->middleware('throttle:20,1');
 
+Route::post('verification/assistant_business_description', [VerificationAssistantController::class, 'businessDescription'])
+    ->middleware('throttle:20,1');
+
 Route::post('/verification', [VerificationController::class, 'store'])
     ->middleware('throttle:5,1');
+
+
+Route::post(
+    '/verification/generate_business_description',
+    [VerificationAssistantController::class, 'generate_business_description']
+)->middleware('throttle:20,1');
+
+
+Route::post(
+    '/verification/generate_product_suggestions',
+    [VerificationAssistantController::class, 'generate_product_suggestions']
+)->middleware('throttle:20,1');
+
+
+Route::post(
+    '/verification/review_document',
+    [VerificationAssistantController::class, 'review_document']
+)->middleware('throttle:20,1');

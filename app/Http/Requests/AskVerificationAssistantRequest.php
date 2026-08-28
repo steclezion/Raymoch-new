@@ -15,7 +15,7 @@ class AskVerificationAssistantRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'question' => ['required', 'string', 'max:2000'],
+            'question' => ['required', 'string', 'max:2000000000'],
             'current_step' => ['required', 'integer', 'between:1,6'],
             'form_context' => ['sometimes', 'array'],
             'form_context.*' => ['nullable'],
