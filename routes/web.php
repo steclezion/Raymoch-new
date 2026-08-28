@@ -38,6 +38,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 use Laravel\Cashier\Http\Controllers\WebhookController;
 use App\Http\Controllers\Services\InvestorMatchingController;
+use App\Http\Controllers\VerificationSubmissionFormController;
 
 
 /*
@@ -225,6 +226,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('/partner-programs', 'pages.services.partner-programs')->name('partner-programs'); // partner programs page
     Route::view('/pricing', 'pages.Pricing')->name('pricing');
     Route::view('/price-how-to-pay', 'pages.price_how_to_pay')->name('price.how.to.pay');
+
+
+
+    Route::post(
+        '/verificationsubmissionform',
+        [VerificationSubmissionFormController::class, 'store']
+    )->middleware('auth')->name('verificationsubmissionform.store');
+
 
     /*
          * Load funding instruments, sectors, and countries.

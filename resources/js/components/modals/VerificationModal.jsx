@@ -5,6 +5,7 @@ import {
   BadgeCheck,
   Building2,
   CheckCircle2,
+  ChevronDown,
   FileCheck2,
   FileUp,
   Landmark,
@@ -14,6 +15,7 @@ import {
   SearchCheck,
   ShieldCheck,
   Sparkles,
+  RefreshCw,
   UploadCloud,
   UserRound,
   UsersRound,
@@ -41,7 +43,7 @@ const GENERATE_PRODUCT_SUGGESTIONS_ENDPOINT =
   `${API_BASE_URL}/api/verification/generate_product_suggestions`;
 const REVIEW_VERIFICATION_DOCUMENT_ENDPOINT =
   `${API_BASE_URL}/api/verification/review_document`;
-const VERIFICATION_ENDPOINT = `${API_BASE_URL}/api/verification`;
+const VERIFICATION_ENDPOINT = `${API_BASE_URL}/verificationsubmissionform`;
 
 const REVIEWABLE_DOCUMENT_FILES = ".pdf,.jpg,.jpeg,.png,.webp";
 
@@ -1330,6 +1332,28 @@ function Section({ icon, title, children }) {
   );
 }
 
+function ReviewAccordion({ stepNumber, title, rows, defaultOpen = false }) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <details open={open} onToggle={(event) => setOpen(event.currentTarget.open)} style={{ border: "1px solid #dbe3ef", borderRadius: "14px", background: "#fff", overflow: "hidden", boxShadow: "0 4px 14px rgba(15, 23, 42, .05)" }}>
+      <summary style={{ display: "flex", alignItems: "center", gap: "10px", padding: "14px 16px", background: "linear-gradient(135deg, #f8fafc, #eff6ff)", color: "#0f2747", cursor: "pointer", listStyle: "none", fontWeight: 800 }}>
+        <span style={{ display: "grid", placeItems: "center", width: "28px", height: "28px", borderRadius: "9px", background: "#2563eb", color: "#fff", fontSize: "12px" }}>{stepNumber}</span>
+        <span style={{ flex: 1 }}>{title}</span>
+        <ChevronDown size={17} aria-hidden="true" />
+      </summary>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1px", padding: "1px", background: "#e2e8f0" }}>
+        {rows.map(([label, value]) => (
+          <div key={label} style={{ minWidth: 0, padding: "12px 14px", background: "#fff" }}>
+            <span style={{ display: "block", color: "#64748b", fontSize: "10px", fontWeight: 800, letterSpacing: ".04em", textTransform: "uppercase" }}>{label}</span>
+            <strong style={{ display: "block", marginTop: "4px", overflowWrap: "anywhere", whiteSpace: "pre-wrap", color: "#1e293b", fontSize: "12px", lineHeight: 1.5 }}>{value || "Not provided"}</strong>
+          </div>
+        ))}
+      </div>
+    </details>
+  );
+}
+
 function ReviewChecklist({
   step,
   assistantMessages,
@@ -1465,8 +1489,8 @@ export default function VerificationModal() {
     readVerificationDraft(initialPageKeyRef.current),
   );
 
-  // Temporary testing mode: open the verification flow directly on Step 5.
-  const [step, setStep] = useState(() => 5);
+  // Production flow: always begin at Step 1 and continue sequentially.
+  const [step, setStep] = useState(() => 1);
   const [formData, setFormData] = useState(
     () => initialDraftRef.current.formData,
   );
@@ -1491,6 +1515,11 @@ export default function VerificationModal() {
   const [submissionLoading, setSubmissionLoading] = useState(false);
   const [submissionError, setSubmissionError] = useState("");
   const [submissionReference, setSubmissionReference] = useState("");
+  const [isOnline, setIsOnline] = useState(() =>
+    typeof navigator === "undefined" ? true : navigator.onLine,
+  );
+  const [reviewPreparationRun, setReviewPreparationRun] = useState(0);
+  const [reviewPreparation, setReviewPreparation] = useState({ 2: "pending", 3: "pending", 4: "pending", 5: "pending" });
   const [optionError, setOptionError] = useState("");
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [assistantQuestion, setAssistantQuestion] = useState("");
@@ -1566,6 +1595,34 @@ export default function VerificationModal() {
   const safeStep = sanitizeVerificationStep(step);
   const currentStep = stepMeta[safeStep] || stepMeta[1];
   const progress = Math.round((safeStep / 6) * 100);
+
+  useEffect(() => {
+    const updateConnection = () => setIsOnline(navigator.onLine);
+    window.addEventListener("online", updateConnection);
+    window.addEventListener("offline", updateConnection);
+    return () => {
+      window.removeEventListener("online", updateConnection);
+      window.removeEventListener("offline", updateConnection);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (step !== 6) return undefined;
+
+    setReviewPreparation({ 2: "loading", 3: "pending", 4: "pending", 5: "pending" });
+    const timers = [];
+    [2, 3, 4, 5].forEach((stepNumber, index) => {
+      timers.push(window.setTimeout(() => {
+        setReviewPreparation((current) => ({
+          ...current,
+          [stepNumber]: "success",
+          ...(stepNumber < 5 ? { [stepNumber + 1]: "loading" } : {}),
+        }));
+      }, 600 * (index + 1)));
+    });
+
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
+  }, [step, reviewPreparationRun]);
 
   useEffect(() => {
     const openFieldHelpInAssistant = (event) => {
@@ -2761,6 +2818,11 @@ ${description}`,
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    if (!navigator.onLine) {
+      setSubmissionError("No internet connection was detected. Your information remains in the form; reconnect before submitting.");
+      return;
+    }
+
     if (!event.currentTarget.checkValidity()) {
       event.currentTarget.reportValidity();
       return;
@@ -2783,11 +2845,18 @@ ${description}`,
         return;
       }
 
+      if (typeof value === "boolean") {
+        payload.append(key, value ? "1" : "0");
+        return;
+      }
+
       payload.append(key, value);
     });
 
-    files.forEach((file) => {
-      payload.append("documents[]", file);
+    Object.entries(verificationDocuments).forEach(([slotKey, documents]) => {
+      documents.forEach((document) => {
+        payload.append(`documents[${slotKey}][]`, document.file);
+      });
     });
 
     if (!signatureDataUrl) {
@@ -2812,7 +2881,10 @@ ${description}`,
     try {
       const response = await fetch(VERIFICATION_ENDPOINT, {
         method: "POST",
-        headers: { Accept: "application/json" },
+        headers: {
+          Accept: "application/json",
+          "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.content || "",
+        },
         body: payload,
       });
 
@@ -2828,11 +2900,86 @@ ${description}`,
       setSubmitted(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) {
-      setSubmissionError(error.message || "Submission failed. Please try again.");
+      setSubmissionError(
+        !navigator.onLine || error instanceof TypeError
+          ? "The connection was interrupted before the server confirmed submission. Nothing is marked as submitted; reconnect and try again."
+          : error.message || "Submission failed. The server transaction was not confirmed; please try again.",
+      );
     } finally {
       setSubmissionLoading(false);
     }
   };
+
+  const reviewSections = [
+    {
+      stepNumber: 2,
+      title: "Account and Legal Identity",
+      rows: [
+        ["Account type", selectedOptionName(lookupOptions.accountTypes, formData.account_type_id)],
+        ["Legal or full name", formData.legal_name],
+        ["Trading name", formData.trading_name],
+        ["Legal structure", selectedOptionName(lookupOptions.legalStructures, formData.legal_structure_id)],
+        ["Sector", selectedOptionName(lookupOptions.sectors, formData.sector_id)],
+        ["Industry", selectedOptionName(lookupOptions.industries, formData.industry_id)],
+        ["Region", selectedOptionName(lookupOptions.regions, formData.region_id)],
+        ["Country", selectedOptionName(lookupOptions.countries, formData.country_id)],
+        ["State or province", selectedOptionName(lookupOptions.states, formData.state_id)],
+        ["City", selectedOptionName(lookupOptions.cities, formData.city_id)],
+        ["Registration or license number", formData.registration_number],
+        ["Tax ID / TIN / VAT number", formData.tax_id],
+        ["Date established", formData.established_date],
+        ["LEI or D-U-N-S number", formData.external_identifier],
+        ["Registered address", formData.registered_address],
+        ["Postal code", formData.postal_code],
+        ["Website", formData.website],
+      ],
+    },
+    {
+      stepNumber: 3,
+      title: "Business and Operating Profile",
+      rows: [
+        ["Business model", formData.business_model],
+        ["Products or services", formData.products_services],
+        ["Countries of operation", formData.operating_countries.join(", ")],
+        ["Number of employees", formData.employee_count],
+        ["Company stage", formData.company_stage],
+        ["Annual revenue", formData.annual_revenue],
+        ["Revenue currency", selectedOptionName(lookupOptions.currencies, formData.revenue_currency)],
+        ["Fiscal year end", formData.fiscal_year_end],
+        ["Public listing or ticker", formData.listing_ticker],
+        ["Business description", formData.business_description],
+      ],
+    },
+    {
+      stepNumber: 4,
+      title: "Ownership, Leadership and Control",
+      rows: [
+        ["Has ultimate parent company", formData.has_parent_company ? "Yes" : "No"],
+        ["Ultimate parent company", formData.parent_company],
+        ["Ownership type", formData.ownership_type],
+        ["Beneficial owners", formData.beneficial_owners],
+        ["Authorized signatory", formData.authorized_signatory],
+        ["Signatory title", formData.signatory_title],
+        ["National ID or passport number", formData.signatory_id_number],
+        ["ID expiry date", formData.signatory_id_expiry],
+      ],
+    },
+    {
+      stepNumber: 5,
+      title: "Verification Documents",
+      rows: [
+        ["Verification path", verificationType ? verificationType.toUpperCase() : "Not selected"],
+        ...Object.entries(verificationDocuments).map(([slotKey, documents]) => [
+          (VERIFICATION_DOCUMENTS[verificationType] || []).find(([key]) => key === slotKey)?.[1] || slotKey,
+          documents.map((document) => `${document.file.name} — ${document.reviewStatus === "passed" ? "Clarity Review passed" : "Review pending"}`).join("\n"),
+        ]),
+      ],
+    },
+  ];
+
+  const preparedStepCount = Object.values(reviewPreparation).filter((status) => status === "success").length;
+  const reviewReady = preparedStepCount === 4;
+  const consentsComplete = formData.accuracy_consent && formData.privacy_consent;
 
   return (
     <main className="vr-container">
@@ -3524,6 +3671,7 @@ ${description}`,
 
                 {step === 6 && (
                   <>
+                    <style>{`@keyframes rrSpin{to{transform:rotate(360deg)}}@keyframes finalSubmitPulse{0%,100%{box-shadow:0 0 0 0 rgba(22,163,74,.38)}50%{box-shadow:0 0 0 11px rgba(22,163,74,0)}}`}</style>
                     <Section
                       icon={<UserRound size={20} />}
                       title="Primary contact"
@@ -3586,43 +3734,49 @@ ${description}`,
                     </Section>
 
                     <Section
-                      icon={<CheckCircle2 size={20} />}
-                      title="Confirmation and acknowledgment"
+                      icon={<RefreshCw size={20} />}
+                      title="Review submitted information"
                     >
-                      <div className="vr-finalSummary">
-                        <div>
-                          <span>Applicant</span>
-                          <strong>
-                            {formData.legal_name || "Not provided"}
-                          </strong>
+                      <div style={{ padding: "14px", border: "1px solid #dbe3ef", borderRadius: "14px", background: "#f8fafc" }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
+                          <div>
+                            <strong style={{ color: "#0f2747" }}>Preparing Steps 2–5</strong>
+                            <span style={{ display: "block", marginTop: "3px", color: "#64748b", fontSize: "11px" }}>{preparedStepCount} of 4 sections prepared</span>
+                          </div>
+                          <button type="button" title="Refresh the review summary" aria-label="Refresh review summary" onClick={() => setReviewPreparationRun((current) => current + 1)} style={{ display: "grid", placeItems: "center", width: "34px", height: "34px", border: "1px solid #bfdbfe", borderRadius: "10px", background: "#eff6ff", color: "#2563eb", cursor: "pointer" }}>
+                            <RefreshCw size={17} style={!reviewReady ? { animation: "rrSpin .9s linear infinite" } : undefined} />
+                          </button>
                         </div>
-
-                        <div>
-                          <span>Account type</span>
-                          <strong>
-                            {selectedOptionName(
-                              lookupOptions.accountTypes,
-                              formData.account_type_id,
-                            )}
-                          </strong>
+                        <div role="progressbar" aria-label="Review preparation progress" aria-valuemin="0" aria-valuemax="4" aria-valuenow={preparedStepCount} style={{ height: "8px", marginTop: "12px", overflow: "hidden", borderRadius: "999px", background: "#dbeafe" }}>
+                          <span style={{ display: "block", width: `${preparedStepCount * 25}%`, height: "100%", borderRadius: "inherit", background: reviewReady ? "#16a34a" : "linear-gradient(90deg, #2563eb, #6366f1)", transition: "width 420ms ease" }} />
                         </div>
-
-                        <div>
-                          <span>Country</span>
-                          <strong>
-                            {selectedOptionName(
-                              lookupOptions.countries,
-                              formData.country_id,
-                            )}
-                          </strong>
-                        </div>
-
-                        <div>
-                          <span>Documents</span>
-                          <strong>{files.length} selected</strong>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: "7px", marginTop: "12px" }}>
+                          {[2, 3, 4, 5].map((stepNumber) => (
+                            <div key={stepNumber} style={{ display: "flex", alignItems: "center", gap: "7px", color: reviewPreparation[stepNumber] === "success" ? "#15803d" : "#64748b", fontSize: "11px", fontWeight: 700 }}>
+                              {reviewPreparation[stepNumber] === "success" ? <CheckCircle2 size={15} /> : <RefreshCw size={14} style={reviewPreparation[stepNumber] === "loading" ? { animation: "rrSpin .9s linear infinite" } : undefined} />}
+                              Step {stepNumber} {reviewPreparation[stepNumber] === "success" ? "submission successful" : reviewPreparation[stepNumber] === "loading" ? "is loading…" : "is waiting"}
+                            </div>
+                          ))}
                         </div>
                       </div>
 
+                      {!isOnline && (
+                        <p role="alert" style={{ margin: "12px 0 0", padding: "11px 13px", border: "1px solid #fecaca", borderRadius: "10px", background: "#fef2f2", color: "#b91c1c", fontSize: "12px", fontWeight: 700 }}>
+                          Internet connection unavailable. Review remains available, but final submission is disabled until connectivity returns.
+                        </p>
+                      )}
+
+                      <div style={{ display: "grid", gap: "10px", marginTop: "14px" }}>
+                        {reviewSections.map((section, index) => (
+                          <ReviewAccordion key={section.stepNumber} {...section} defaultOpen={index === 0} />
+                        ))}
+                      </div>
+                    </Section>
+
+                    <Section
+                      icon={<CheckCircle2 size={20} />}
+                      title="Confirmation and acknowledgment"
+                    >
                       <div className="vr-consent">
                         <input
                           id="accuracy_consent"
@@ -3722,7 +3876,9 @@ ${description}`,
                       <button
                         className="vr-btn"
                         type="submit"
-                        disabled={submissionLoading}
+                        disabled={submissionLoading || !consentsComplete || !reviewReady || !isOnline}
+                        title={!isOnline ? "Reconnect to the internet before submitting" : !consentsComplete ? "Complete both confirmations before submitting" : "Submit for Verification"}
+                        style={consentsComplete && reviewReady && isOnline ? { background: "#16a34a", borderColor: "#16a34a", animation: "finalSubmitPulse 1.45s ease-in-out infinite" } : undefined}
                       >
                         {submissionLoading
                           ? "Submitting…"
