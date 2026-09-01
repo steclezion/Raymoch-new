@@ -21,13 +21,13 @@ use App\Http\Controllers\Api\CompanySearchFilterResolveController;
 use App\Http\Controllers\Api\VerificationOptionsController;
 use App\Http\Controllers\Api\VerificationAssistantController;
 use App\Http\Controllers\Api\VerificationController;
+use App\Http\Controllers\Api\ApplicantInfoController;
 
 
 
 
 
-
-Route::middleware('auth')->get('/me', function (\Illuminate\Http\Request $request) {
+Route::middleware('auth::sanctum')->get('/me', function (\Illuminate\Http\Request $request) {
     $u = $request->user();
     return response()->json([
         'ok' => true,
@@ -152,3 +152,14 @@ Route::post(
     '/verification/review_document',
     [VerificationAssistantController::class, 'review_document']
 )->middleware('throttle:20,1');
+
+
+//Route::middleware('auth')->get('/grab_applicants_info', [ApplicantInfoController::class, 'grabApplicantsInfo'])->name('grab_applicants_info');
+
+
+Route::middleware(['web', 'auth'])
+    ->get(
+        '/grab_applicants_info',
+        [ApplicantInfoController::class, 'grabApplicantsInfo']
+    )
+    ->name('grab_applicants_info');

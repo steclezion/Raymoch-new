@@ -60,7 +60,7 @@ class VerificationSubmissionFormController extends Controller
             'documents' => ['required', 'array'],
             'documents.*' => ['required', 'array', 'min:1'],
             'documents.*.*' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:102400'],
-            'authorized_signatory_signature' => ['required', 'image', 'mimes:png', 'max:5120'],
+            'singatory_image_holder' => ['required', 'string', 'max:7000000'],
 
             'contact_name' => ['required', 'string', 'max:255'],
             'contact_role' => ['required', 'string', 'max:255'],
@@ -73,6 +73,28 @@ class VerificationSubmissionFormController extends Controller
         ]);
 
         $user = $request->user();
+        $signatureDataUrl = $validated['singatory_image_holder'];
+        $signatureParts = explode(',', $signatureDataUrl, 2);
+        $signatureBinary = count($signatureParts) === 2
+            && $signatureParts[0] === 'data:image/png;base64'
+            ? base64_decode($signatureParts[1], true)
+            : false;
+        $signatureImageInfo = $signatureBinary !== false
+            ? @getimagesizefromstring($signatureBinary)
+            : false;
+
+        if (
+            $signatureBinary === false
+            || strlen($signatureBinary) > 5 * 1024 * 1024
+            || ($signatureImageInfo['mime'] ?? null) !== 'image/png'
+        ) {
+            throw ValidationException::withMessages([
+                'singatory_image_holder' => [
+                    'The authorized signatory signature must be a valid Base64 PNG image no larger than 5 MB.',
+                ],
+            ]);
+        }
+
         $verificationType = $validated['verification_type'] === 'cit'
             ? 'cti'
             : $validated['verification_type'];
@@ -162,21 +184,6 @@ class VerificationSubmissionFormController extends Controller
                 }
             }
 
-            $signatureFolder = $baseRelativePath . '/Authorized Signature';
-            File::ensureDirectoryExists(
-                Storage::disk('public')->path($signatureFolder),
-                0770,
-                true
-            );
-            $signaturePath = $request->file('authorized_signatory_signature')
-                ->storeAs(
-                    $signatureFolder,
-                    'signature_' . now()->format('Ymd_His_u') . '.png',
-                    'public'
-                );
-            $storedPaths[] = $signaturePath;
-            @chmod(Storage::disk('public')->path($signaturePath), 0660);
-
             $companyId = DB::table('companies')->insertGetId([
                 'user_id' => $user->getAuthIdentifier(),
                 'account_type_id' => $validated['account_type_id'],
@@ -213,6 +220,7 @@ class VerificationSubmissionFormController extends Controller
                 'ownership_type' => $validated['ownership_type'],
                 'beneficial_owners' => $validated['beneficial_owners'],
                 'authorized_signatory' => $validated['authorized_signatory'],
+                'singatory_image_holder' => $signatureDataUrl,
                 'signatory_title' => $validated['signatory_title'],
                 'national_id_or_passport_number' => $validated['signatory_id_number'],
                 'id_expiry_date' => $validated['signatory_id_expiry'],

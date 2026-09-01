@@ -43,6 +43,8 @@ const GENERATE_PRODUCT_SUGGESTIONS_ENDPOINT =
   `${API_BASE_URL}/api/verification/generate_product_suggestions`;
 const REVIEW_VERIFICATION_DOCUMENT_ENDPOINT =
   `${API_BASE_URL}/api/verification/review_document`;
+const GRAB_APPLICANTS_INFO_ENDPOINT =
+  `${API_BASE_URL}/api/grab_applicants_info`;
 const VERIFICATION_ENDPOINT = `${API_BASE_URL}/verificationsubmissionform`;
 
 const REVIEWABLE_DOCUMENT_FILES = ".pdf,.jpg,.jpeg,.png,.webp";
@@ -1031,6 +1033,18 @@ function VerificationDocumentSlot({ slotKey, label, example, documents = [], onS
 
   return (
     <div style={{ minWidth: 0, padding: "14px", border: `1px solid ${allPassed ? "#86efac" : "#cbd5e1"}`, borderRadius: "14px", background: allPassed ? "#f0fdf4" : "#fff", transition: "all 180ms ease" }}>
+      <style>{`
+        @keyframes rrHeartbeat {
+          0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(248, 113, 113, 0); }
+          14% { transform: scale(1.12); box-shadow: 0 0 0 5px rgba(248, 113, 113, .22); }
+          28% { transform: scale(1); box-shadow: 0 0 0 8px rgba(250, 204, 21, .14); }
+          42% { transform: scale(1.08); box-shadow: 0 0 0 4px rgba(250, 204, 21, .22); }
+          70% { transform: scale(1); box-shadow: 0 0 0 0 rgba(248, 113, 113, 0); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .vr-rrNeedsReview { animation: none !important; }
+        }
+      `}</style>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "10px" }}>
         <div style={{ minWidth: 0 }}>
           <strong style={{ display: "block", color: "#0f2747", fontSize: "14px" }}>{label} (required)</strong>
@@ -1043,13 +1057,40 @@ function VerificationDocumentSlot({ slotKey, label, example, documents = [], onS
         <ul style={{ display: "grid", gap: "7px", margin: "11px 0 0", padding: 0, listStyle: "none" }}>
           {documents.map((document) => {
             const tone = document.reviewStatus === "passed" ? "#166534" : document.reviewStatus === "failed" ? "#b91c1c" : "#475569";
+            const reviewPassed = document.reviewStatus === "passed";
+            const needsReview = document.reviewStatus === "unreviewed" || document.reviewStatus === "idle";
             return (
               <li key={document.id} style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto auto", alignItems: "center", gap: "7px", padding: "8px 9px", border: "1px solid #e2e8f0", borderRadius: "9px", background: "#f8fafc", fontSize: "11px" }}>
                 <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: tone }} title={document.file.name}>
                   {document.file.name}
                 </span>
-                <button type="button" title="Raymoch Clarity Review" aria-label={`Raymoch Clarity Review ${document.file.name}`} onClick={() => onReview(document)} style={{ display: "inline-grid", placeItems: "center", width: "28px", height: "25px", border: "1px solid #93c5fd", borderRadius: "7px", background: document.reviewStatus === "passed" ? "#dcfce7" : "#eff6ff", color: document.reviewStatus === "passed" ? "#15803d" : "#1d4ed8", fontSize: "10px", fontWeight: 900, cursor: "pointer" }}>
-                  RR
+                <button
+                  type="button"
+                  className={needsReview ? "vr-rrNeedsReview" : undefined}
+                  title={reviewPassed ? "Raymoch Clarity Review passed" : "Raymoch Clarity Review"}
+                  aria-label={`${reviewPassed ? "Raymoch Clarity Review passed for" : "Raymoch Clarity Review"} ${document.file.name}`}
+                  onClick={() => onReview(document)}
+                  style={{
+                    display: "inline-grid",
+                    placeItems: "center",
+                    width: "28px",
+                    height: "25px",
+                    border: `1px solid ${reviewPassed ? "#22c55e" : needsReview ? "#fca5a5" : "#f87171"}`,
+                    borderRadius: "7px",
+                    background: reviewPassed
+                      ? "#dcfce7"
+                      : needsReview
+                        ? "linear-gradient(135deg, #fee2e2, #fef9c3)"
+                        : "#fef2f2",
+                    color: reviewPassed ? "#15803d" : "#b91c1c",
+                    fontSize: "10px",
+                    fontWeight: 900,
+                    cursor: "pointer",
+                    animation: needsReview ? "rrHeartbeat 1.35s ease-in-out infinite" : undefined,
+                    transformOrigin: "center",
+                  }}
+                >
+                  {reviewPassed ? <CheckCircle2 size={16} strokeWidth={3} aria-hidden="true" /> : "RR"}
                 </button>
                 <button type="button" onClick={() => onRemove(document.id)} aria-label={`Delete ${document.file.name}`} title="Delete and upload again" style={{ border: 0, background: "transparent", color: "#b91c1c", cursor: "pointer", fontSize: "16px", fontWeight: 800 }}>×</button>
               </li>
@@ -1187,7 +1228,7 @@ function TextareaField({
   );
 }
 
-function BusinessDescriptionEditor({ value, required = false, minLength, busy = false, reviewStatus = "idle", suggestion = "", onAcceptSuggestion, onChange }) {
+function BusinessDescriptionEditor({ value, required = false, minLength, busy = false, generating = false, reviewStatus = "idle", suggestion = "", onAcceptSuggestion, onChange }) {
   const editorRef = useRef(null);
   const characterCount = String(value ?? "").trim().length;
 
@@ -1237,6 +1278,7 @@ function BusinessDescriptionEditor({ value, required = false, minLength, busy = 
   return (
     <Field label="Business description" name="business_description" required={required} fullWidth>
       <div style={{ position: "relative" }}>
+        <style>{`@keyframes raymochAiSpin{to{transform:rotate(360deg)}}`}</style>
         <textarea
           id="business_description"
           name="business_description"
@@ -1274,12 +1316,12 @@ function BusinessDescriptionEditor({ value, required = false, minLength, busy = 
         <div
           ref={editorRef}
           id="business_description-editor"
-          contentEditable
+          contentEditable={!generating}
           suppressContentEditableWarning
           role="textbox"
           aria-multiline="true"
           aria-required={required}
-          aria-busy={busy}
+          aria-busy={busy || generating}
           onInput={emitValue}
           onBlur={emitValue}
           onPaste={(event) => {
@@ -1287,10 +1329,22 @@ function BusinessDescriptionEditor({ value, required = false, minLength, busy = 
             document.execCommand("insertText", false, event.clipboardData.getData("text/plain"));
             emitValue();
           }}
-          style={{ boxSizing: "border-box", width: "100%", minHeight: "420px", padding: "48px 54px", overflowWrap: "anywhere", border: "1px solid #dbe3ef", borderRadius: "0 0 8px 8px", outline: "none", background: "#fff", boxShadow: "0 8px 24px rgba(15, 23, 42, .08)", color: "#172033", fontFamily: "Arial, sans-serif", fontSize: "14px", lineHeight: 1.75, textAlign: "justify" }}
+          style={{ boxSizing: "border-box", width: "100%", minHeight: "420px", padding: "48px 54px", overflowWrap: "anywhere", border: "1px solid #dbe3ef", borderRadius: "0 0 8px 8px", outline: "none", background: "#fff", boxShadow: "0 8px 24px rgba(15, 23, 42, .08)", color: "#172033", fontFamily: "Arial, sans-serif", fontSize: "14px", lineHeight: 1.75, textAlign: "justify", filter: generating ? "blur(5px)" : "none", opacity: generating ? 0.55 : 1, pointerEvents: generating ? "none" : "auto", transition: "filter 180ms ease, opacity 180ms ease" }}
         />
 
-        {suggestion && (
+        {generating && (
+          <div
+            role="status"
+            aria-live="polite"
+            style={{ position: "absolute", top: "45px", right: 0, bottom: 0, left: 0, zIndex: 2, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "12px", borderRadius: "0 0 8px 8px", background: "rgba(248, 250, 252, 0.38)", color: "#1d4ed8", cursor: "progress" }}
+          >
+            <RefreshCw size={46} strokeWidth={2.2} aria-hidden="true" style={{ animation: "raymochAiSpin 0.9s linear infinite" }} />
+            <strong>Raymoch AI is thinking…</strong>
+            <span style={{ color: "#475569", fontSize: "12px" }}>Gathering information and creating your professional description.</span>
+          </div>
+        )}
+
+        {suggestion && !generating && (
           <button type="button" onClick={onAcceptSuggestion} style={{ position: "absolute", top: "52px", right: "12px", border: "1px solid #16a34a", borderRadius: "6px", background: "#f0fdf4", color: "#166534", padding: "5px 9px", fontWeight: 700, cursor: "pointer" }}>
             Accept correction
           </button>
@@ -1489,7 +1543,7 @@ export default function VerificationModal() {
     readVerificationDraft(initialPageKeyRef.current),
   );
 
-  // Production flow: always begin at Step 1 and continue sequentially.
+  // Begin at Step 1 and continue sequentially through Step 6.
   const [step, setStep] = useState(() => 1);
   const [formData, setFormData] = useState(
     () => initialDraftRef.current.formData,
@@ -1515,6 +1569,8 @@ export default function VerificationModal() {
   const [submissionLoading, setSubmissionLoading] = useState(false);
   const [submissionError, setSubmissionError] = useState("");
   const [submissionReference, setSubmissionReference] = useState("");
+  const [applicantInfoLoading, setApplicantInfoLoading] = useState(false);
+  const [applicantInfoError, setApplicantInfoError] = useState("");
   const [isOnline, setIsOnline] = useState(() =>
     typeof navigator === "undefined" ? true : navigator.onLine,
   );
@@ -1623,6 +1679,48 @@ export default function VerificationModal() {
 
     return () => timers.forEach((timer) => window.clearTimeout(timer));
   }, [step, reviewPreparationRun]);
+
+  useEffect(() => {
+    if (step !== 6) return undefined;
+
+    const controller = new AbortController();
+    setApplicantInfoLoading(true);
+    setApplicantInfoError("");
+
+    fetch(GRAB_APPLICANTS_INFO_ENDPOINT, {
+      method: "GET",
+      credentials: "include",
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(
+            data.message || "Unable to load the logged-in applicant information.",
+          );
+        }
+
+        setFormData((current) => ({
+          ...current,
+          contact_name: data.full_name ?? "",
+          contact_phone: data.phone_number ?? "",
+        }));
+      })
+      .catch((error) => {
+        if (error.name !== "AbortError") {
+          setApplicantInfoError(error.message);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setApplicantInfoLoading(false);
+        }
+      });
+
+    return () => controller.abort();
+  }, [step]);
 
   useEffect(() => {
     const openFieldHelpInAssistant = (event) => {
@@ -2866,14 +2964,7 @@ ${description}`,
       return;
     }
 
-    const signatureBlob = await fetch(signatureDataUrl).then((response) =>
-      response.blob(),
-    );
-    payload.append(
-      "authorized_signatory_signature",
-      signatureBlob,
-      "authorized-signatory-signature.png",
-    );
+    payload.append("singatory_image_holder", signatureDataUrl);
 
     setSubmissionLoading(true);
     setSubmissionError("");
@@ -3429,6 +3520,7 @@ ${description}`,
                       required
                       minLength={500}
                       busy={businessDescriptionReviewing}
+                      generating={businessDescriptionGenerating}
                       reviewStatus={businessDescriptionReviewStatus}
                       suggestion={businessDescriptionSuggestion}
                       showCharacterCount
@@ -3456,13 +3548,16 @@ ${description}`,
                           color: "#ffffff",
                         }}
                       >
-                        <Sparkles size={14} aria-hidden="true" />
+                        {businessDescriptionGenerated ? (
+                          <RefreshCw size={14} strokeWidth={2.5} aria-hidden="true" />
+                        ) : (
+                          <Sparkles size={14} aria-hidden="true" />
+                        )}
                         {businessDescriptionGenerating
                           ? "Generating…"
                           : businessDescriptionGenerated
-                            ? "Generated"
+                            ? "Regenerate"
                             : "Use Raymoch AI"}
-                        {businessDescriptionGenerated && <CheckCircle2 size={14} aria-hidden="true" />}
                       </button>
                     </div>
                   </Section>
@@ -3682,7 +3777,9 @@ ${description}`,
                           name="contact_name"
                           value={formData.contact_name}
                           required
-                          onChange={updateField}
+                          readOnly
+                          aria-busy={applicantInfoLoading}
+                          title="Loaded from the logged-in user profile"
                         />
 
                         <Field
@@ -3710,7 +3807,9 @@ ${description}`,
                           value={formData.contact_phone}
                           type="tel"
                           required
-                          onChange={updateField}
+                          readOnly
+                          aria-busy={applicantInfoLoading}
+                          title="Loaded from the logged-in user profile"
                         />
                       </div>
 
@@ -3731,6 +3830,12 @@ ${description}`,
                           onChange={updateField}
                         />
                       </div>
+
+                      {applicantInfoError && (
+                        <p className="vr-error" role="alert" style={{ marginTop: "12px" }}>
+                          {applicantInfoError}
+                        </p>
+                      )}
                     </Section>
 
                     <Section
