@@ -320,6 +320,20 @@ export default function CompanyDetailsModal({ onAddCompany }) {
         @keyframes companySpin{to{transform:rotate(360deg)}}
         .company-details-modal{padding:0}.company-details-modal .vr-hero{margin-bottom:16px}.company-companyCard{margin-bottom:16px}.company-companyHeader{display:flex;align-items:center;justify-content:space-between;gap:12px}.company-companyHeaderCopy{display:flex;align-items:center;gap:10px}.company-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.company-name-btn{display:inline-flex;align-items:center;gap:7px;padding:8px 11px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;color:#334155;font-size:12px;font-weight:800;cursor:pointer;transition:all .18s ease}.company-name-btn:hover{border-color:#93c5fd;background:#eff6ff;color:#1d4ed8}.company-name-btn.is-active{border-color:#2563eb;background:linear-gradient(135deg,#eff6ff,#eef2ff);color:#1d4ed8;box-shadow:0 0 0 3px rgba(37,99,235,.12)}.company-add-btn{white-space:nowrap}.company-loading{display:flex;align-items:center;justify-content:center;gap:9px;min-height:270px;color:#2563eb;font-weight:800}.company-loading svg,.company-inline-loading svg{animation:companySpin .9s linear infinite}.company-inline-loading{display:inline-flex;align-items:center;gap:7px;color:#64748b;font-size:12px}.company-emptyPrompt{display:grid;place-items:center;min-height:270px;padding:28px;text-align:center;color:#64748b}.company-emptyPrompt span{display:grid;place-items:center;width:54px;height:54px;margin-bottom:12px;border-radius:18px;background:#eff6ff;color:#2563eb}.company-step-section{animation:companyReveal .22s ease-out}@keyframes companyReveal{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}.company-section-copy{margin:3px 0 0;color:#64748b;font-size:12px;font-weight:500}.company-read-grid{align-items:stretch}.company-read-icon{display:inline-grid;place-items:center;margin-right:5px;color:#2563eb;vertical-align:-2px}.company-read-value{box-sizing:border-box;min-height:42px;padding:11px 12px;border:1px solid #dbe3ef;border-radius:8px;background:#f8fafc;color:#172033;font-size:13px;font-weight:650;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}.company-read-value.is-empty{color:#94a3b8;font-style:italic;font-weight:500}.company-signature-field{margin-top:15px}.company-signature-frame{display:grid;place-items:center;min-height:130px;padding:14px;border:1px dashed #93c5fd;border-radius:12px;background:#f8fafc}.company-signature-frame img{display:block;max-width:100%;max-height:150px}.company-step-dots{display:flex;align-items:center;justify-content:center;gap:6px;flex:1}.company-step-dot{width:8px;height:8px;border:0;border-radius:999px;background:#cbd5e1;cursor:pointer;transition:all .18s ease}.company-step-dot.is-active{width:24px;background:#2563eb}.company-details-modal .vr-stepNavigation{align-items:center}.company-error{margin:0 0 14px}@media(max-width:640px){.company-companyHeader{align-items:flex-start;flex-direction:column}.company-add-btn{width:100%;justify-content:center}.company-step-dots{order:-1;flex-basis:100%}.company-read-grid{grid-template-columns:1fr}}
       `}</style>
+      <style>{`
+        .company-verificationIntro{display:grid;gap:16px;padding:8px;text-align:left}
+        .company-introLead{display:flex;align-items:flex-start;gap:13px}
+        .company-introLead>span{display:grid;place-items:center;flex:0 0 52px;height:52px;border-radius:16px;background:linear-gradient(135deg,#dbeafe,#eef2ff);color:#2563eb}
+        .company-introLead h3{margin:0;color:#0f2747}
+        .company-introLead p{margin:5px 0 0;color:#64748b;font-size:13px;line-height:1.65}
+        .company-introGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+        .company-introItem{padding:14px;border:1px solid #dbe3ef;border-radius:12px;background:#f8fafc}
+        .company-introItem span{display:grid;place-items:center;width:34px;height:34px;margin-bottom:9px;border-radius:10px;background:#eff6ff;color:#2563eb}
+        .company-introItem strong{display:block;color:#0f2747;font-size:13px}
+        .company-introItem p{margin:5px 0 0;color:#64748b;font-size:11px;line-height:1.55}
+        .company-scoreNote{display:flex;align-items:flex-start;gap:9px;padding:12px 14px;border:1px solid #bbf7d0;border-radius:11px;background:#f0fdf4;color:#166534;font-size:12px;line-height:1.6}
+        @media(max-width:760px){.company-introGrid{grid-template-columns:1fr}}
+      `}</style>
 
       <header className="vr-hero vr-gradient">
         <div className="vr-heroContent">
@@ -378,6 +392,45 @@ export default function CompanyDetailsModal({ onAddCompany }) {
         <article className="vr-card">
           {detailsLoading ? (
             <div className="company-loading" role="status"><LoaderCircle size={34} /> Loading company information…</div>
+          ) : companies.length === 0 ? (
+            <div className="company-verificationIntro">
+              <div className="company-introLead">
+                <span><ShieldCheck size={27} /></span>
+                <div>
+                  <h3>Build a trusted company profile</h3>
+                  <p>Verification confirms that a company is genuine, identifies who owns and controls it, and connects its business claims to supporting evidence. Start a submission to establish a reliable profile that investors and partners can assess with confidence.</p>
+                </div>
+              </div>
+
+              <div className="company-introGrid">
+                <div className="company-introItem">
+                  <span><Building2 size={18} /></span>
+                  <strong>Confirm identity</strong>
+                  <p>Match the legal name, registration, address and responsible people to official records.</p>
+                </div>
+                <div className="company-introItem">
+                  <span><FileCheck2 size={18} /></span>
+                  <strong>Validate evidence</strong>
+                  <p>Use CTI formal documents or ATS operating evidence to support the company’s claims.</p>
+                </div>
+                <div className="company-introItem">
+                  <span><BadgeCheck size={18} /></span>
+                  <strong>Support a valid score</strong>
+                  <p>Complete, current and consistent information gives the review process stronger scoring signals.</p>
+                </div>
+              </div>
+
+              <div className="company-scoreNote">
+                <CheckCircle2 size={18} />
+                <span>The score is based on validated identity, ownership, operating information and supporting documents—not simply on completing the form.</span>
+              </div>
+
+              <div>
+                <button type="button" className="vr-btn" onClick={onAddCompany}>
+                  <Plus size={17} /> Start company verification
+                </button>
+              </div>
+            </div>
           ) : !selectedCompanyId ? (
             <div className="company-emptyPrompt">
               <span><Building2 size={27} /></span>
@@ -388,21 +441,23 @@ export default function CompanyDetailsModal({ onAddCompany }) {
             <DetailsSection definition={currentStep} company={company} />
           )}
 
-          <div className="vr-stepNavigation">
-            <button type="button" className="vr-btn vr-btnGhost" disabled={step === 1} onClick={() => changeStep(step - 1)}>
-              <ArrowLeft size={17} /> Back
-            </button>
+          {companies.length > 0 && (
+            <div className="vr-stepNavigation">
+              <button type="button" className="vr-btn vr-btnGhost" disabled={step === 1} onClick={() => changeStep(step - 1)}>
+                <ArrowLeft size={17} /> Back
+              </button>
 
-            <div className="company-step-dots" aria-label="Company detail steps">
-              {STEPS.map((item) => (
-                <button key={item.number} type="button" className={`company-step-dot${step === item.number ? " is-active" : ""}`} onClick={() => changeStep(item.number)} aria-label={`Open Step ${item.number}: ${item.title}`} aria-current={step === item.number ? "step" : undefined} />
-              ))}
+              <div className="company-step-dots" aria-label="Company detail steps">
+                {STEPS.map((item) => (
+                  <button key={item.number} type="button" className={`company-step-dot${step === item.number ? " is-active" : ""}`} onClick={() => changeStep(item.number)} aria-label={`Open Step ${item.number}: ${item.title}`} aria-current={step === item.number ? "step" : undefined} />
+                ))}
+              </div>
+
+              <button type="button" className="vr-btn" disabled={step === STEPS.length} onClick={() => changeStep(step + 1)}>
+                Next <ArrowRight size={17} />
+              </button>
             </div>
-
-            <button type="button" className="vr-btn" disabled={step === STEPS.length} onClick={() => changeStep(step + 1)}>
-              Next <ArrowRight size={17} />
-            </button>
-          </div>
+          )}
         </article>
       </section>
     </main>
