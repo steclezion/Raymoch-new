@@ -231,6 +231,69 @@ function RequiredFieldHelp({ name, label }) {
   );
 }
 
+function VerificationTypeInfo({ title, description }) {
+  const [open, setOpen] = useState(false);
+
+  const askClarityAssistant = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    window.dispatchEvent(
+      new CustomEvent(FIELD_HELP_EVENT, {
+        detail: {
+          label: title,
+          question: `Explain ${title}, including what it means, which documents are required, how the review works, and what result the applicant receives.`,
+        },
+      }),
+    );
+    setOpen(false);
+  };
+
+  return (
+    <span
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onFocusCapture={() => setOpen(true)}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+      }}
+      style={{ position: "absolute", top: "12px", right: "12px", zIndex: open ? 6 : 2 }}
+    >
+      <button
+        type="button"
+        aria-label={`Information about ${title}`}
+        aria-expanded={open}
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          setOpen((current) => !current);
+        }}
+        style={{ display: "grid", placeItems: "center", width: "25px", height: "25px", border: "1px solid #93c5fd", borderRadius: "50%", background: "#eff6ff", color: "#1d4ed8", fontSize: "13px", fontWeight: 900, cursor: "help" }}
+      >
+        i
+      </button>
+
+      {open && (
+        <span
+          role="tooltip"
+          style={{ position: "absolute", top: "31px", right: 0, display: "grid", width: "min(330px, 78vw)", gap: "9px", padding: "13px", border: "1px solid #bfdbfe", borderRadius: "11px", background: "#ffffff", boxShadow: "0 14px 35px rgba(15, 23, 42, .18)", color: "#334155", fontSize: "12px", lineHeight: 1.55 }}
+        >
+          <strong style={{ paddingRight: "28px", color: "#0f2747", fontSize: "13px" }}>{title}</strong>
+          <span>{description}</span>
+          <button
+            type="button"
+            aria-label={`Ask Clarity Assistant about ${title}`}
+            title={`Ask Clarity Assistant about ${title}`}
+            onClick={askClarityAssistant}
+            style={{ position: "absolute", top: "10px", right: "10px", display: "grid", placeItems: "center", width: "25px", height: "25px", border: 0, borderRadius: "50%", background: "#2563eb", color: "#fff", fontSize: "14px", fontWeight: 900, cursor: "pointer" }}
+          >
+            ?
+          </button>
+        </span>
+      )}
+    </span>
+  );
+}
+
 function FieldLabel({ label, name, required, help = false }) {
   return (
     <div className="vr-labelWithHelp">
@@ -1569,6 +1632,7 @@ export default function VerificationModal() {
   const [submissionLoading, setSubmissionLoading] = useState(false);
   const [submissionError, setSubmissionError] = useState("");
   const [submissionReference, setSubmissionReference] = useState("");
+  const [consentAttention, setConsentAttention] = useState("");
   const [applicantInfoLoading, setApplicantInfoLoading] = useState(false);
   const [applicantInfoError, setApplicantInfoError] = useState("");
   const [isOnline, setIsOnline] = useState(() =>
@@ -2916,6 +2980,46 @@ ${description}`,
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    const form = event.currentTarget;
+    const stepSixRequiredFields = [
+      "contact_name",
+      "contact_role",
+      "contact_email",
+      "contact_phone",
+      "preferred_contact",
+    ];
+    const firstInvalidStepSixField = stepSixRequiredFields
+      .map((fieldName) => form.elements.namedItem(fieldName))
+      .find((field) => field && !field.checkValidity());
+
+    if (firstInvalidStepSixField) {
+      setSubmissionError("Complete every required field in Step 6 before submitting.");
+      firstInvalidStepSixField.focus({ preventScroll: true });
+      firstInvalidStepSixField.scrollIntoView({ behavior: "smooth", block: "center" });
+      firstInvalidStepSixField.reportValidity();
+      return;
+    }
+
+    const missingConsentId = !formData.accuracy_consent
+      ? "accuracy_consent"
+      : !formData.privacy_consent
+        ? "privacy_consent"
+        : "";
+
+    if (missingConsentId) {
+      setConsentAttention(missingConsentId);
+      setSubmissionError("Select both required confirmation checkboxes before submitting.");
+      const missingConsent = document.getElementById(missingConsentId);
+      window.requestAnimationFrame(() => {
+        missingConsent?.focus({ preventScroll: true });
+        missingConsent?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+      window.setTimeout(() => {
+        setConsentAttention((current) => current === missingConsentId ? "" : current);
+      }, 3200);
+      return;
+    }
+
     if (!navigator.onLine) {
       setSubmissionError("No internet connection was detected. Your information remains in the form; reconnect before submitting.");
       return;
@@ -3691,18 +3795,21 @@ ${description}`,
                   >
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "12px" }}>
                       {[
-                        ["cti", "Standard Verification (CTI)", "Formal documents → Verified Tier and public badge after human review."],
-                        ["ats", "Auxiliary Verification (ATS)", "Alternative proofs → eligibility and private signals. Upgrade later."],
-                      ].map(([type, title, description]) => {
+                        ["cti", "Standard Verification (CTI)", "Formal documents → Verified Tier and public badge after human review.", "CTI is the standard verification path for applicants that have formal organization records. It requires registration, tax, bank and director identity documents. Human reviewers check legal existence, ownership, financial-account continuity and accountable leadership. A successful review can produce a verified tier and public verification badge."],
+                        ["ats", "Auxiliary Verification (ATS)", "Alternative proofs → eligibility and private signals. Upgrade later.", "ATS is the auxiliary verification path for applicants that cannot yet provide the complete CTI document set. It uses operational-presence evidence, customer or network proof, cash-flow traces and owner identity to establish genuine activity. Its verification signals remain private, and the applicant can upgrade to CTI when formal documents become available."],
+                      ].map(([type, title, description, fullDescription]) => {
                         const selected = verificationType === type;
                         return (
-                          <label key={type} htmlFor={`verification-type-${type}`} style={{ display: "flex", alignItems: "flex-start", gap: "11px", padding: "16px", border: `2px solid ${selected ? "#1d4ed8" : "#d5dce7"}`, borderRadius: "14px", background: selected ? "linear-gradient(135deg, #eff6ff, #eef2ff)" : "#fff", boxShadow: selected ? "0 8px 20px rgba(37, 99, 235, .12)" : "0 3px 10px rgba(15, 23, 42, .04)", cursor: "pointer", transition: "all 180ms ease" }}>
-                            <input id={`verification-type-${type}`} type="checkbox" checked={selected} onChange={() => selectVerificationType(type)} style={{ width: "19px", height: "19px", marginTop: "1px", accentColor: "#2563eb", cursor: "pointer" }} />
-                            <span>
-                              <strong style={{ display: "block", color: "#0f2747", fontSize: "15px" }}>{title}</strong>
-                              <span style={{ display: "block", marginTop: "6px", color: "#475569", fontSize: "12px", lineHeight: 1.5 }}>{description}</span>
-                            </span>
-                          </label>
+                          <div key={type} style={{ position: "relative", padding: "16px 50px 16px 16px", border: `2px solid ${selected ? "#1d4ed8" : "#d5dce7"}`, borderRadius: "14px", background: selected ? "linear-gradient(135deg, #eff6ff, #eef2ff)" : "#fff", boxShadow: selected ? "0 8px 20px rgba(37, 99, 235, .12)" : "0 3px 10px rgba(15, 23, 42, .04)", transition: "all 180ms ease" }}>
+                            <label htmlFor={`verification-type-${type}`} style={{ display: "flex", alignItems: "flex-start", gap: "11px", cursor: "pointer" }}>
+                              <input id={`verification-type-${type}`} type="checkbox" checked={selected} onChange={() => selectVerificationType(type)} style={{ width: "19px", height: "19px", marginTop: "1px", accentColor: "#2563eb", cursor: "pointer" }} />
+                              <span>
+                                <strong style={{ display: "block", color: "#0f2747", fontSize: "15px" }}>{title}</strong>
+                                <span style={{ display: "block", marginTop: "6px", color: "#475569", fontSize: "12px", lineHeight: 1.5 }}>{description}</span>
+                              </span>
+                            </label>
+                            <VerificationTypeInfo title={title} description={fullDescription} />
+                          </div>
                         );
                       })}
                     </div>
@@ -3766,7 +3873,7 @@ ${description}`,
 
                 {step === 6 && (
                   <>
-                    <style>{`@keyframes rrSpin{to{transform:rotate(360deg)}}@keyframes finalSubmitPulse{0%,100%{box-shadow:0 0 0 0 rgba(22,163,74,.38)}50%{box-shadow:0 0 0 11px rgba(22,163,74,0)}}`}</style>
+                    <style>{`@keyframes rrSpin{to{transform:rotate(360deg)}}@keyframes finalSubmitPulse{0%,100%{box-shadow:0 0 0 0 rgba(22,163,74,.38)}50%{box-shadow:0 0 0 11px rgba(22,163,74,0)}}@keyframes consentFocusPulse{0%,100%{background:#fff;border-color:#fecaca;box-shadow:0 0 0 0 rgba(239,68,68,0)}50%{background:#fff7ed;border-color:#f59e0b;box-shadow:0 0 0 8px rgba(245,158,11,.2)}}`}</style>
                     <Section
                       icon={<UserRound size={20} />}
                       title="Primary contact"
@@ -3777,7 +3884,6 @@ ${description}`,
                           name="contact_name"
                           value={formData.contact_name}
                           required
-                          readOnly
                           aria-busy={applicantInfoLoading}
                           title="Loaded from the logged-in user profile"
                         />
@@ -3807,7 +3913,6 @@ ${description}`,
                           value={formData.contact_phone}
                           type="tel"
                           required
-                          readOnly
                           aria-busy={applicantInfoLoading}
                           title="Loaded from the logged-in user profile"
                         />
@@ -3882,14 +3987,18 @@ ${description}`,
                       icon={<CheckCircle2 size={20} />}
                       title="Confirmation and acknowledgment"
                     >
-                      <div className="vr-consent">
+                      <div className="vr-consent" style={consentAttention === "accuracy_consent" ? { border: "1px solid #f59e0b", borderRadius: "10px", animation: "consentFocusPulse .85s ease-in-out 3" } : undefined}>
                         <input
                           id="accuracy_consent"
                           name="accuracy_consent"
                           type="checkbox"
                           required
                           checked={formData.accuracy_consent}
-                          onChange={updateField}
+                          onChange={(event) => {
+                            updateField(event);
+                            setConsentAttention("");
+                            setSubmissionError("");
+                          }}
                         />
 
                         <div className="vr-consentLabelWithHelp">
@@ -3906,14 +4015,18 @@ ${description}`,
                         </div>
                       </div>
 
-                      <div className="vr-consent">
+                      <div className="vr-consent" style={consentAttention === "privacy_consent" ? { border: "1px solid #f59e0b", borderRadius: "10px", animation: "consentFocusPulse .85s ease-in-out 3" } : undefined}>
                         <input
                           id="privacy_consent"
                           name="privacy_consent"
                           type="checkbox"
                           required
                           checked={formData.privacy_consent}
-                          onChange={updateField}
+                          onChange={(event) => {
+                            updateField(event);
+                            setConsentAttention("");
+                            setSubmissionError("");
+                          }}
                         />
 
                         <div className="vr-consentLabelWithHelp">
@@ -3981,7 +4094,7 @@ ${description}`,
                       <button
                         className="vr-btn"
                         type="submit"
-                        disabled={submissionLoading || !consentsComplete || !reviewReady || !isOnline}
+                        disabled={submissionLoading || !reviewReady || !isOnline}
                         title={!isOnline ? "Reconnect to the internet before submitting" : !consentsComplete ? "Complete both confirmations before submitting" : "Submit for Verification"}
                         style={consentsComplete && reviewReady && isOnline ? { background: "#16a34a", borderColor: "#16a34a", animation: "finalSubmitPulse 1.45s ease-in-out infinite" } : undefined}
                       >

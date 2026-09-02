@@ -185,7 +185,7 @@ class VerificationSubmissionFormController extends Controller
             }
 
             $companyId = DB::table('companies')->insertGetId([
-                'user_id' => $user->getAuthIdentifier(),
+                // 'user_id' => $user->getAuthIdentifier(),
                 'account_type_id' => $validated['account_type_id'],
                 'CompanyName' => $validated['legal_name'],
                 'trading_name' => $validated['trading_name'] ?? null,
