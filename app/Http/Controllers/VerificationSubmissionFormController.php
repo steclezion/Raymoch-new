@@ -225,6 +225,7 @@ class VerificationSubmissionFormController extends Controller
             }
 
             $companyId = DB::table('companies')->insertGetId([
+                // Step 2: account and legal identity
                 'who' => $user->getAuthIdentifier(),
                 'account_type_id' => $validated['account_type_id'],
                 'CompanyName' => $validated['legal_name'],
@@ -244,6 +245,8 @@ class VerificationSubmissionFormController extends Controller
                 'address' => $validated['registered_address'],
                 'postal_code' => $validated['postal_code'],
                 'website' => $validated['website'] ?? null,
+
+                // Step 3: business and operating profile
                 'business_model' => $validated['business_model'],
                 'products_or_services' => $validated['products_services'],
                 'countries_of_operation' => implode(
@@ -257,6 +260,8 @@ class VerificationSubmissionFormController extends Controller
                 'fiscal_year_end' => $validated['fiscal_year_end'],
                 'public_listing_ticker' => $validated['listing_ticker'] ?? null,
                 'business_description' => $validated['business_description'],
+
+                // Step 4: ownership, leadership and control
                 'ultimate_parent_company' => $validated['parent_company'] ?? null,
                 'is_ultimate_parent_company' => $request->boolean('has_parent_company'),
                 'ownership_type' => $validated['ownership_type'],
@@ -266,8 +271,12 @@ class VerificationSubmissionFormController extends Controller
                 'signatory_title' => $validated['signatory_title'],
                 'national_id_or_passport_number' => $validated['signatory_id_number'],
                 'id_expiry_date' => $validated['signatory_id_expiry'],
+
+                // Step 5: selected verification path and supporting evidence
                 'standard_verification_cit' => $verificationType === 'cti',
                 'auxiliary_verification_ats' => $verificationType === 'ats',
+
+                // Step 6: primary contact and confirmation
                 'Applicant_full_name' => $validated['contact_name'],
                 'job_title_relationship' => $validated['contact_role'],
                 'applicant_work_email' => $validated['contact_email'],
@@ -289,6 +298,15 @@ class VerificationSubmissionFormController extends Controller
                     STR_PAD_LEFT
                 ),
                 'company_id' => $companyId,
+                // These steps are confirmed only after the database transaction commits.
+                'saved_steps' => [2, 3, 4, 5, 6],
+                'step_results' => [
+                    ['step' => 2, 'status' => 'saved'],
+                    ['step' => 3, 'status' => 'saved'],
+                    ['step' => 4, 'status' => 'saved'],
+                    ['step' => 5, 'status' => 'saved'],
+                    ['step' => 6, 'status' => 'saved'],
+                ],
             ], 201);
         } catch (ValidationException $exception) {
             $cleanupFailedSubmission();

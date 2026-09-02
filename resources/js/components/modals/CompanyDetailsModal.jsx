@@ -248,7 +248,7 @@ function DetailsSection({ definition, company }) {
   );
 }
 
-export default function CompanyDetailsModal({ onAddCompany }) {
+export default function CompanyDetailsModal({ onAddCompany, initialCompanyId = null }) {
   const [companies, setCompanies] = useState([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState(null);
   const [company, setCompany] = useState(EMPTY_COMPANY);
@@ -306,6 +306,12 @@ export default function CompanyDetailsModal({ onAddCompany }) {
       setDetailsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (initialCompanyId) selectCompany(initialCompanyId);
+    // The newly saved company should open immediately when this modal is shown.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialCompanyId]);
 
   const changeStep = (nextStep) => {
     setStep(Math.min(STEPS.length, Math.max(1, nextStep)));

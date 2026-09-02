@@ -8,6 +8,7 @@ import {
   ChevronDown,
   FileCheck2,
   FileUp,
+  Eye,
   Landmark,
   Lightbulb,
   MessageCircle,
@@ -27,6 +28,7 @@ import "./verificationModal.chatbot.css";
 import "./verificationModal.fieldHelp.css";
 import "./verificationModal.signature.css";
 import ConfirmationDialog from "./ConfirmationDialog";
+import CompanyDetailsModal from "./CompanyDetailsModal";
 
 const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
 
@@ -46,6 +48,7 @@ const REVIEW_VERIFICATION_DOCUMENT_ENDPOINT =
 const GRAB_APPLICANTS_INFO_ENDPOINT =
   `${API_BASE_URL}/api/grab_applicants_info`;
 const VERIFICATION_ENDPOINT = `${API_BASE_URL}/verificationsubmissionform`;
+const COMPANY_INFORMATION_ENDPOINT = `${API_BASE_URL}/api/company-information`;
 
 const REVIEWABLE_DOCUMENT_FILES = ".pdf,.jpg,.jpeg,.png,.webp";
 
@@ -1600,6 +1603,68 @@ function ReviewChecklist({
   );
 }
 
+const SUBMISSION_STEPS = [
+  { step: 2, label: "Account and legal identity" },
+  { step: 3, label: "Business and operating profile" },
+  { step: 4, label: "Ownership and authorized signatory" },
+  { step: 5, label: "Verification documents" },
+  { step: 6, label: "Applicant contact and consent" },
+];
+
+const initialSubmissionStages = () =>
+  SUBMISSION_STEPS.map((item) => ({ ...item, status: "waiting" }));
+
+function SubmissionProgressModal({ open, stages, complete, error, onClose, onConfirm }) {
+  if (!open) return null;
+
+  return (
+    <div className="vr-saveOverlay" role="dialog" aria-modal="true" aria-labelledby="vr-save-title">
+      <style>{`
+        @keyframes vrSaveSpin { to { transform: rotate(360deg); } }
+        @keyframes vrSavePulse { 0%,100% { opacity:.52; transform:scale(.96) } 50% { opacity:1; transform:scale(1) } }
+        .vr-saveOverlay{position:fixed;inset:0;z-index:3000;display:grid;place-items:center;padding:18px;background:rgba(8,22,45,.58);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+        .vr-saveModal{width:min(620px,100%);max-height:calc(100vh - 36px);overflow:auto;border:1px solid rgba(255,255,255,.76);border-radius:24px;background:#fff;box-shadow:0 30px 90px rgba(8,22,45,.34)}
+        .vr-saveHead{padding:25px 27px 18px;background:linear-gradient(135deg,#eef6ff,#f8fafc);border-bottom:1px solid #dbe7f3}
+        .vr-saveHeadLine{display:flex;align-items:center;gap:12px}.vr-saveHead h2{margin:0;color:#102a4c;font-size:22px}.vr-saveHead p{margin:8px 0 0;color:#607087;line-height:1.55}
+        .vr-saveSpinner{width:28px;height:28px;flex:0 0 auto;border:3px solid #bfdbfe;border-top-color:#2563eb;border-radius:50%;animation:vrSaveSpin .8s linear infinite}
+        .vr-saveBody{padding:22px 27px 26px}.vr-saveSteps{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+        .vr-saveStep{width:88%;display:flex;align-items:center;gap:13px;padding:11px 14px;border:1px solid #e2e8f0;border-radius:15px;background:#f8fafc;transition:.25s ease}
+        .vr-saveStep:nth-child(even){margin-left:12%}.vr-saveStep.is-active{border-color:#93c5fd;background:#eff6ff}.vr-saveStep.is-saved{border-color:#86efac;background:#f0fdf4}.vr-saveStep.is-failed{border-color:#fca5a5;background:#fef2f2}
+        .vr-saveRing{position:relative;width:40px;height:40px;flex:0 0 auto}.vr-saveRing svg{width:40px;height:40px;transform:rotate(-90deg)}.vr-saveRing circle{fill:none;stroke-width:4}.vr-saveRing .track{stroke:#dbe5f0}.vr-saveRing .value{stroke:#2563eb;stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:28;animation:vrSaveSpin 1.15s linear infinite;transform-origin:center}.vr-saveStep.is-saved .value{stroke:#16a34a;stroke-dashoffset:0;animation:none}.vr-saveStep.is-failed .value{stroke:#dc2626;stroke-dashoffset:0;animation:none}
+        .vr-saveIcon{position:absolute;inset:0;display:grid;place-items:center;color:#64748b}.is-active .vr-saveIcon{color:#2563eb;animation:vrSavePulse 1.2s ease-in-out infinite}.is-saved .vr-saveIcon{color:#15803d}.is-failed .vr-saveIcon{color:#b91c1c}
+        .vr-saveCopy strong{display:block;color:#172b4d}.vr-saveCopy span{display:block;margin-top:2px;color:#64748b;font-size:12px}.vr-saveNotice{margin-top:18px;padding:14px 15px;border-radius:14px;line-height:1.5}.vr-saveNotice.success{background:#ecfdf5;color:#166534;border:1px solid #86efac}.vr-saveNotice.error{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}.vr-saveActions{display:flex;justify-content:flex-end;margin-top:17px}.vr-saveActions button{border:0;border-radius:11px;padding:11px 20px;background:#163d69;color:#fff;font-weight:700;cursor:pointer}
+      `}</style>
+      <section className="vr-saveModal">
+        <header className="vr-saveHead">
+          <div className="vr-saveHeadLine">
+            {!complete && !error && <span className="vr-saveSpinner" aria-hidden="true" />}
+            {complete && <CheckCircle2 size={30} color="#16a34a" aria-hidden="true" />}
+            {error && <XCircle size={30} color="#dc2626" aria-hidden="true" />}
+            <h2 id="vr-save-title">{complete ? "All information is saved" : error ? "Submission could not be confirmed" : "Securely saving verification"}</h2>
+          </div>
+          <p>{complete ? "Every verification section was committed and confirmed by the server." : error ? "No step is displayed as saved unless the server confirmed it." : "Please keep this window open while the server validates and stores your submission."}</p>
+        </header>
+        <div className="vr-saveBody">
+          <ol className="vr-saveSteps">
+            {stages.map((item) => (
+              <li key={item.step} className={`vr-saveStep is-${item.status}`}>
+                <span className="vr-saveRing" aria-hidden="true">
+                  <svg viewBox="0 0 40 40"><circle className="track" cx="20" cy="20" r="16" pathLength="100"/><circle className="value" cx="20" cy="20" r="16" pathLength="100"/></svg>
+                  <span className="vr-saveIcon">{item.status === "saved" ? <CheckCircle2 size={21}/> : item.status === "failed" ? <XCircle size={21}/> : item.step}</span>
+                </span>
+                <span className="vr-saveCopy"><strong>Step {item.step}</strong><span>{item.label} · {item.status === "saved" ? "Saved" : item.status === "failed" ? "Not confirmed" : item.status === "active" ? "Awaiting server confirmation" : "Queued"}</span></span>
+              </li>
+            ))}
+          </ol>
+          {complete && <div className="vr-saveNotice success"><strong>All information is saved.</strong> Your company verification record is ready to review.</div>}
+          {error && <div className="vr-saveNotice error" role="alert">{error}</div>}
+          {(complete || error) && <div className="vr-saveActions"><button type="button" onClick={complete ? onConfirm : onClose}>{complete ? "OK — view company details" : "Return to form"}</button></div>}
+        </div>
+      </section>
+    </div>
+  );
+}
+
 export default function VerificationModal() {
   const initialPageKeyRef = useRef(currentVerificationPageKey());
   const initialDraftRef = useRef(
@@ -1632,12 +1697,62 @@ export default function VerificationModal() {
   const [submissionLoading, setSubmissionLoading] = useState(false);
   const [submissionError, setSubmissionError] = useState("");
   const [submissionReference, setSubmissionReference] = useState("");
+  const [saveProgressOpen, setSaveProgressOpen] = useState(false);
+  const [saveProgressComplete, setSaveProgressComplete] = useState(false);
+  const [saveProgressError, setSaveProgressError] = useState("");
+  const [saveProgressStages, setSaveProgressStages] = useState(initialSubmissionStages);
+  const [savedCompanyId, setSavedCompanyId] = useState(null);
+  const [showCompanyDetails, setShowCompanyDetails] = useState(false);
+  const [existingCompanyId, setExistingCompanyId] = useState(null);
+  const [companyAvailabilityLoading, setCompanyAvailabilityLoading] = useState(true);
   const [consentAttention, setConsentAttention] = useState("");
   const [applicantInfoLoading, setApplicantInfoLoading] = useState(false);
   const [applicantInfoError, setApplicantInfoError] = useState("");
   const [isOnline, setIsOnline] = useState(() =>
     typeof navigator === "undefined" ? true : navigator.onLine,
   );
+
+  useEffect(() => {
+    if (!saveProgressOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [saveProgressOpen]);
+
+  const checkExistingCompanies = async (signal) => {
+    setCompanyAvailabilityLoading(true);
+
+    try {
+      const response = await fetch(COMPANY_INFORMATION_ENDPOINT, {
+        credentials: "include",
+        headers: { Accept: "application/json" },
+        signal,
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        setExistingCompanyId(null);
+        return;
+      }
+
+      const companies = Array.isArray(data.companies) ? data.companies : [];
+      setExistingCompanyId(companies.length > 0 ? companies[0].id : null);
+    } catch (error) {
+      if (error.name !== "AbortError") setExistingCompanyId(null);
+    } finally {
+      if (!signal.aborted) setCompanyAvailabilityLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    checkExistingCompanies(controller.signal);
+    return () => controller.abort();
+    // This availability check intentionally runs once when the modal opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [reviewPreparationRun, setReviewPreparationRun] = useState(0);
   const [reviewPreparation, setReviewPreparation] = useState({ 2: "pending", 3: "pending", 4: "pending", 5: "pending" });
   const [optionError, setOptionError] = useState("");
@@ -3070,8 +3185,26 @@ ${description}`,
 
     payload.append("singatory_image_holder", signatureDataUrl);
 
+    setSaveProgressStages(initialSubmissionStages());
+    setSaveProgressComplete(false);
+    setSaveProgressError("");
+    setSavedCompanyId(null);
+    setSaveProgressOpen(true);
     setSubmissionLoading(true);
     setSubmissionError("");
+
+    let activeStageIndex = 0;
+    setSaveProgressStages((current) => current.map((item, index) => ({
+      ...item,
+      status: index === activeStageIndex ? "active" : "waiting",
+    })));
+    const preparationTimer = window.setInterval(() => {
+      activeStageIndex = (activeStageIndex + 1) % SUBMISSION_STEPS.length;
+      setSaveProgressStages((current) => current.map((item, index) => ({
+        ...item,
+        status: index === activeStageIndex ? "active" : "waiting",
+      })));
+    }, 850);
 
     try {
       const response = await fetch(VERIFICATION_ENDPOINT, {
@@ -3091,16 +3224,55 @@ ${description}`,
         );
       }
 
-      setSubmissionReference(data.reference || "");
-      setSubmitted(true);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch (error) {
-      setSubmissionError(
-        !navigator.onLine || error instanceof TypeError
-          ? "The connection was interrupted before the server confirmed submission. Nothing is marked as submitted; reconnect and try again."
-          : error.message || "Submission failed. The server transaction was not confirmed; please try again.",
+      window.clearInterval(preparationTimer);
+      const confirmedSteps = new Set(
+        Array.isArray(data.saved_steps)
+          ? data.saved_steps.map((value) => Number(value))
+          : [],
       );
+      const confirmedResults = new Set(
+        Array.isArray(data.step_results)
+          ? data.step_results
+              .filter((result) => result?.status === "saved")
+              .map((result) => Number(result.step))
+          : [],
+      );
+      const allStepsConfirmed = SUBMISSION_STEPS.every(({ step: stepNumber }) =>
+        confirmedSteps.has(stepNumber) && confirmedResults.has(stepNumber),
+      );
+
+      if (!allStepsConfirmed) {
+        throw new Error(
+          "The server response did not confirm every saved section. Check your company list before attempting another submission.",
+        );
+      }
+
+      for (let index = 0; index < SUBMISSION_STEPS.length; index += 1) {
+        await new Promise((resolve) => window.setTimeout(resolve, 260));
+        setSaveProgressStages((current) => current.map((item, itemIndex) => ({
+          ...item,
+          status: itemIndex <= index ? "saved" : itemIndex === index + 1 ? "active" : "waiting",
+        })));
+      }
+
+      setSubmissionReference(data.reference || "");
+      setSavedCompanyId(data.company_id || null);
+      setExistingCompanyId(data.company_id || existingCompanyId);
+      setSaveProgressComplete(true);
+      setSubmitted(true);
+    } catch (error) {
+      window.clearInterval(preparationTimer);
+      const professionalMessage = !navigator.onLine || error instanceof TypeError
+          ? "The connection was interrupted before the server confirmed submission. Nothing is marked as submitted; reconnect and try again."
+          : error.message || "Submission failed. The server transaction was not confirmed; please try again.";
+      setSaveProgressStages((current) => current.map((item) => ({
+        ...item,
+        status: item.status === "active" ? "failed" : "waiting",
+      })));
+      setSaveProgressError(professionalMessage);
+      setSubmissionError(professionalMessage);
     } finally {
+      window.clearInterval(preparationTimer);
       setSubmissionLoading(false);
     }
   };
@@ -3175,6 +3347,19 @@ ${description}`,
   const preparedStepCount = Object.values(reviewPreparation).filter((status) => status === "success").length;
   const reviewReady = preparedStepCount === 4;
   const consentsComplete = formData.accuracy_consent && formData.privacy_consent;
+
+  if (showCompanyDetails) {
+    return (
+      <CompanyDetailsModal
+        initialCompanyId={savedCompanyId}
+        onAddCompany={() => {
+          setShowCompanyDetails(false);
+          setSubmitted(false);
+          setStep(1);
+        }}
+      />
+    );
+  }
 
   return (
     <main className="vr-container">
@@ -3267,6 +3452,25 @@ ${description}`,
               </div>
 
               <div className="vr-btnrow vr-requestButton vr-navigationRight">
+                {!companyAvailabilityLoading && existingCompanyId && (
+                  <button
+                    type="button"
+                    className="vr-btn"
+                    onClick={() => {
+                      setSavedCompanyId(existingCompanyId);
+                      setShowCompanyDetails(true);
+                    }}
+                    aria-label="View previously submitted company"
+                    style={{
+                      border: "1px solid #bfdbfe",
+                      background: "#eff6ff",
+                      color: "#1d4ed8",
+                    }}
+                  >
+                    <Eye size={17} aria-hidden="true" />
+                    View company
+                  </button>
+                )}
                 <button
                   className="vr-btn"
                   type="button"
@@ -4192,6 +4396,21 @@ ${description}`,
         tone={confirmation.tone}
         onConfirm={handleConfirmedAction}
         onCancel={closeConfirmation}
+      />
+
+      <SubmissionProgressModal
+        open={saveProgressOpen}
+        stages={saveProgressStages}
+        complete={saveProgressComplete}
+        error={saveProgressError}
+        onClose={() => {
+          if (submissionLoading) return;
+          setSaveProgressOpen(false);
+        }}
+        onConfirm={() => {
+          setSaveProgressOpen(false);
+          setShowCompanyDetails(true);
+        }}
       />
 
       <SignatureDialog
