@@ -54,6 +54,7 @@ import MatchingModal from "../components/modals/MatchingModal.jsx";
 import PartnerProgramsModal from "../components/modals/PartnerProgramsModal.jsx";
 import VerificationModal from "../components/modals/VerificationModal.jsx";
 import VisibilityListingModal from "../components/modals/VisibilityListingModal.jsx";
+import CompanyDetailsModal from "../components/modals/CompanyDetailsModal.jsx";
 
 /*
 |--------------------------------------------------------------------------
@@ -267,6 +268,7 @@ export default function Services() {
     activeServiceKey,
     setActiveServiceKey,
   ] = useState(null);
+  const [verificationView, setVerificationView] = useState("companies");
 
   /*
    * Store the element that opened the modal so focus can be restored.
@@ -280,6 +282,10 @@ export default function Services() {
     (serviceKey) => {
       lastFocusedElementRef.current =
         document.activeElement;
+
+      if (serviceKey === SERVICE_KEYS.VERIFICATION) {
+        setVerificationView("companies");
+      }
 
       setActiveServiceKey(serviceKey);
     },
@@ -347,7 +353,13 @@ export default function Services() {
         return <PartnerProgramsModal />;
 
       case SERVICE_KEYS.VERIFICATION:
-        return <VerificationModal />;
+        return verificationView === "add" ? (
+          <VerificationModal />
+        ) : (
+          <CompanyDetailsModal
+            onAddCompany={() => setVerificationView("add")}
+          />
+        );
 
       case SERVICE_KEYS.VISIBILITY_LISTING:
         return <VisibilityListingModal />;

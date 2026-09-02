@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\VerificationOptionsController;
 use App\Http\Controllers\Api\VerificationAssistantController;
 use App\Http\Controllers\Api\VerificationController;
 use App\Http\Controllers\Api\ApplicantInfoController;
+use App\Http\Controllers\Api\Readcompanyinformationcontroller;
 
 
 
@@ -163,3 +164,13 @@ Route::middleware(['web', 'auth'])
         [ApplicantInfoController::class, 'grabApplicantsInfo']
     )
     ->name('grab_applicants_info');
+
+
+Route::middleware(['web', 'auth'])->group(function (): void {
+    Route::get('/company-information', [Readcompanyinformationcontroller::class, 'index'])
+        ->name('company-information.index');
+
+    Route::get('/company-information/{id}', [Readcompanyinformationcontroller::class, 'show'])
+        ->whereNumber('id')
+        ->name('company-information.show');
+});
