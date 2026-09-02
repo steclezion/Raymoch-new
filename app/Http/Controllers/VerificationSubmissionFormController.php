@@ -208,7 +208,7 @@ class VerificationSubmissionFormController extends Controller
                     $validated['operating_countries'],
                     JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
                 ),
-                'number_of_employees' => $validated['employee_count'],
+                'number_of_employees' => $validated['employee_count'] ?? null,
                 'Stage' => $validated['company_stage'],
                 'AnnualRevenueUSD' => preg_replace('/[^0-9.]/', '', $validated['annual_revenue']),
                 'revenue_currency' => $validated['revenue_currency'],
