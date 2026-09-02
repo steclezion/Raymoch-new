@@ -192,21 +192,23 @@ class VerificationSubmissionFormController extends Controller
                 'legal_structure_id' => $validated['legal_structure_id'],
                 'Sector' => $validated['sector_id'],
                 'industry_id' => $validated['industry_id'],
+                'Region' => $validated['region_id'] ?? null,
                 'Country' => $validated['country_id'],
                 'state_id' => $validated['state_id'] ?? null,
                 'City' => $validated['city_id'] ?? null,
                 'licence_number' => $validated['registration_number'],
                 'tax_id' => $validated['tax_id'] ?? null,
                 'date_established' => $validated['established_date'],
+                'FoundedYear' => date('Y', strtotime($validated['established_date'])),
                 'lei_number' => $validated['external_identifier'] ?? null,
                 'address' => $validated['registered_address'],
                 'postal_code' => $validated['postal_code'],
                 'website' => $validated['website'] ?? null,
                 'business_model' => $validated['business_model'],
                 'products_or_services' => $validated['products_services'],
-                'countries_of_operation' => json_encode(
-                    $validated['operating_countries'],
-                    JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+                'countries_of_operation' => implode(
+                    ',',
+                    $validated['operating_countries']
                 ),
                 'number_of_employees' => $validated['employee_count'] ?? null,
                 'Stage' => $validated['company_stage'],
