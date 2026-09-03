@@ -4,6 +4,7 @@ import {
   ArrowRight,
   BadgeCheck,
   Building2,
+  CalendarDays,
   CheckCircle2,
   ChevronDown,
   FileCheck2,
@@ -64,7 +65,7 @@ const REQUIRED_FIELD_HELP = {
   trading_name: "The name the applicant uses publicly or commercially when it differs from its registered legal name. This may also be called a trade name, business name, assumed name, or DBA (doing business as).",
   registration_number: "The unique number assigned by the authority that registered or licensed the applicant.",
   tax_id: "The applicant’s official tax identifier issued by a government revenue or tax authority. Depending on the jurisdiction, this may be called a Tax ID, TIN, VAT number, EIN, GST number, or another equivalent registration number.",
-  established_date: "The organization’s official formation date, or the individual applicant’s date of birth, as shown on supporting records.",
+  established_date: "The organization’s official formation date, as shown on supporting records.",
   legal_structure_id: "The applicant’s legal form, such as corporation, partnership, nonprofit, trust, or sole proprietorship.",
   region_id: "The geographic region containing the applicant’s registered location.",
   country_id: "The country where the applicant is legally registered or ordinarily resident.",
@@ -309,6 +310,12 @@ function FieldLabel({ label, name, required, help = false }) {
   );
 }
 
+function latestEstablishmentDate(now = new Date()) {
+  const cutoff = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  cutoff.setDate(cutoff.getDate() - 10);
+  return [cutoff.getFullYear(), String(cutoff.getMonth() + 1).padStart(2, "0"), String(cutoff.getDate()).padStart(2, "0")].join("-");
+}
+
 const DATA_SCOPE_RULES = {
   legal_name: {
     valid: (value) => value.trim().length >= 2,
@@ -319,8 +326,8 @@ const DATA_SCOPE_RULES = {
     message: "Registration or license number is too short to be valid.",
   },
   established_date: {
-    valid: (value) => new Date(`${value}T00:00:00`) <= new Date(),
-    message: "Date established or date of birth cannot be in the future.",
+    valid: (value) => /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(new Date(`${value}T00:00:00`).getTime()) && value <= latestEstablishmentDate(),
+    message: "The company must have been established at least 10 days ago.",
   },
   postal_code: {
     valid: (value) => /^[A-Za-z0-9][A-Za-z0-9 -]{1,11}$/.test(value.trim()),
@@ -876,6 +883,58 @@ function Field({
         />
       )}
     </div>
+  );
+}
+
+function DateEstablishedField({ value, onChange }) {
+  const inputRef = useRef(null);
+  const maximumDate = latestEstablishmentDate();
+  const tooRecent = Boolean(value && value > maximumDate);
+  useEffect(() => {
+    inputRef.current?.setCustomValidity(tooRecent ? "The company must have been established at least 10 days ago." : "");
+  }, [tooRecent]);
+
+  const openPicker = () => {
+    const input = inputRef.current;
+    if (!input) return;
+    input.focus();
+    // Native pickers provide the device's accessible calendar UI.
+    // Browsers without showPicker still allow keyboard date entry.
+    try { input.showPicker?.(); } catch { /* Keep keyboard entry available. */ }
+  };
+
+  return (
+    <Field label="Date established" name="established_date" required>
+      <style>{`
+        .vr-established-date { display:flex; align-items:center; gap:8px; padding:5px 6px 5px 12px; border:1px solid #cbd5e1; border-radius:11px; background:#f8fafc; transition:border-color .15s,box-shadow .15s; }
+        .vr-established-date:focus-within { border-color:#3455a0; box-shadow:0 0 0 3px #3455a01a; }
+        .vr-established-date input[type="date"] { box-sizing:border-box; flex:1; min-width:0; width:100%; min-height:36px; margin:0; padding:5px 0; border:0; border-radius:0; background:transparent; color:#17233b; font:inherit; box-shadow:none; }
+        .vr-established-date button { display:inline-flex; flex-shrink:0; align-items:center; justify-content:center; width:42px; height:42px; border:1px solid #d8e3f6; border-radius:9px; background:#edf2fc; color:#3455a0; cursor:pointer; }
+        .vr-established-date button:hover { background:#dfe9fc; }
+        .vr-established-date button:focus-visible { outline:2px solid #3455a0; outline-offset:2px; }
+        .vr-established-date-help { display:block; margin-top:7px; color:#64748b; font-size:11px; line-height:1.5; }
+      `}</style>
+      <div className="vr-established-date">
+        <input
+          ref={inputRef}
+          id="established_date"
+          name="established_date"
+          type="date"
+          value={value ?? ""}
+          max={maximumDate}
+          required
+          onChange={onChange}
+          onClick={openPicker}
+          aria-describedby={tooRecent ? "established_date_hint established_date_error" : "established_date_hint"}
+          aria-invalid={tooRecent || undefined}
+        />
+        <button type="button" aria-label="Open date established calendar" title="Choose date established" onClick={openPicker}>
+          <CalendarDays size={20} strokeWidth={1.75} aria-hidden="true" />
+        </button>
+      </div>
+      <small id="established_date_hint" className="vr-established-date-help">The company must have been established at least 10 days ago.</small>
+      {tooRecent && <p id="established_date_error" className="vr-error" role="alert">Choose {maximumDate} or an earlier date.</p>}
+    </Field>
   );
 }
 
@@ -1665,7 +1724,15 @@ function SubmissionProgressModal({ open, stages, complete, error, onClose, onCon
   );
 }
 
-export default function VerificationModal() {
+export default function VerificationModal({ companyContext = null } = {}) {
+  const [confirmedCompanyContext, setConfirmedCompanyContext] = useState(undefined);
+  const activeCompanyContext = confirmedCompanyContext === undefined
+    ? companyContext
+    : confirmedCompanyContext;
+  const confirmedParentName = activeCompanyContext?.parentCompany
+    ? (activeCompanyContext.who_is_parent_company || activeCompanyContext.parentCompany.company_name || "")
+    : "";
+  const hasConfirmedParent = Boolean(confirmedParentName);
   const initialPageKeyRef = useRef(currentVerificationPageKey());
   const initialDraftRef = useRef(
     readVerificationDraft(initialPageKeyRef.current),
@@ -1674,8 +1741,16 @@ export default function VerificationModal() {
   // Begin at Step 1 and continue sequentially through Step 6.
   const [step, setStep] = useState(() => 1);
   const [formData, setFormData] = useState(
-    () => initialDraftRef.current.formData,
+    () => hasConfirmedParent
+      ? { ...initialDraftRef.current.formData, legal_name: confirmedParentName }
+      : initialDraftRef.current.formData,
   );
+
+  // Keep the confirmed name in form state for review/submission and form resets.
+  useEffect(() => {
+    if (!hasConfirmedParent || formData.legal_name === confirmedParentName) return;
+    setFormData((current) => ({ ...current, legal_name: confirmedParentName }));
+  }, [hasConfirmedParent, confirmedParentName, formData.legal_name]);
   const [files, setFiles] = useState(() => initialDraftRef.current.files);
   const [verificationType, setVerificationType] = useState("");
   const [verificationDocuments, setVerificationDocuments] = useState({});
@@ -3321,8 +3396,10 @@ ${description}`,
       stepNumber: 4,
       title: "Ownership, Leadership and Control",
       rows: [
-        ["Has ultimate parent company", formData.has_parent_company ? "Yes" : "No"],
-        ["Ultimate parent company", formData.parent_company],
+        ...(!hasConfirmedParent ? [
+          ["Has ultimate parent company", formData.has_parent_company ? "Yes" : "No"],
+          ["Ultimate parent company", formData.parent_company],
+        ] : []),
         ["Ownership type", formData.ownership_type],
         ["Beneficial owners", formData.beneficial_owners],
         ["Authorized signatory", formData.authorized_signatory],
@@ -3352,7 +3429,8 @@ ${description}`,
     return (
       <CompanyDetailsModal
         initialCompanyId={savedCompanyId}
-        onAddCompany={() => {
+        onAddCompany={(context = null) => {
+          setConfirmedCompanyContext(context);
           setShowCompanyDetails(false);
           setSubmitted(false);
           setStep(1);
@@ -3561,7 +3639,8 @@ ${description}`,
                       <Field
                         label="Legal or full name"
                         name="legal_name"
-                        value={formData.legal_name}
+                        value={hasConfirmedParent ? confirmedParentName : formData.legal_name}
+                        readOnly={hasConfirmedParent}
                         required
                         onChange={updateField}
                       />
@@ -3663,12 +3742,8 @@ ${description}`,
                     </div>
 
                     <div className="vr-row">
-                      <Field
-                        label="Date established or date of birth"
-                        name="established_date"
+                      <DateEstablishedField
                         value={formData.established_date}
-                        type="date"
-                        required
                         onChange={updateField}
                       />
 
@@ -3878,6 +3953,7 @@ ${description}`,
                   >
                     <div style={{ display: "grid", gap: "18px" }}>
                     <div className="vr-row" style={{ alignItems: "start" }}>
+                      {!hasConfirmedParent && (
                       <div className="vr-field">
                         <div className="vr-labelWithHelp">
                           <label
@@ -3917,6 +3993,7 @@ ${description}`,
                           />
                         )}
                       </div>
+                      )}
 
                       <DatalistField
                         label="Ownership type"

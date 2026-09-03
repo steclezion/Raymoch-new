@@ -33,12 +33,16 @@ class Readcompanyinformationcontroller extends Controller
                 ->get([
                     'companies.id',
                     'companies.CompanyName',
+                    'companies.trading_name',
+                    'companies.ultimate_parent_company',
                     'companies.is_parent_company',
                     'companies.created_at',
                 ])
                 ->map(static fn(object $company): array => [
                     'id' => $company->id,
                     'company_name' => $company->CompanyName,
+                    'trading_name' => $company->trading_name,
+                    'parent_company' => $company->ultimate_parent_company,
                     'is_parent_company' => (bool) $company->is_parent_company,
                     'created_at' => $company->created_at,
                 ])
