@@ -8,22 +8,11 @@ import React, {
   useState,
 } from "react";
 
-/*
-|--------------------------------------------------------------------------
-| Layout components
-|--------------------------------------------------------------------------
-|
-| Services.jsx is already inside:
-| resources/js/components/services
-|
-| Therefore, use ../layout_master rather than
-| ../components/layout_master.
-|
-*/
+import { ArrowUpRight, BadgeCheck, Handshake, Search, Sparkles, Telescope } from "lucide-react";
+
+// Layout imports follow the paths in your supplied application file.
 import Header from "../components/layout_master/Header.jsx";
 import Footer from "../components/layout_master/Footer.jsx";
-
-
 
 /*
 |--------------------------------------------------------------------------
@@ -31,6 +20,7 @@ import Footer from "../components/layout_master/Footer.jsx";
 |--------------------------------------------------------------------------
 */
 import "../components/services/services.css";
+import "../components/services/services-redesign.css";
 
 /*
 |--------------------------------------------------------------------------
@@ -198,7 +188,7 @@ function useExploreHeaderMenu() {
 /**
  * Main Raymoch Services page.
  */
-export default function Services() {
+export default function Services({ onSubmitCompany } = {}) {
   /*
   |--------------------------------------------------------------------------
   | Initialize header-menu behavior
@@ -219,24 +209,30 @@ export default function Services() {
       {
         key: SERVICE_KEYS.MATCHING,
         title: "Matching",
+        icon: Search,
         subtitle:
           "Investor inputs → ranked SME matches.",
       },
       {
         key: SERVICE_KEYS.PARTNER_PROGRAMS,
         title: "Partner Programs",
+        hidden: true,
+        icon: Handshake,
         subtitle:
           "Accelerators & syndicates, plugged in.",
       },
       {
         key: SERVICE_KEYS.VERIFICATION,
         title: "Verification",
+        icon: BadgeCheck,
         subtitle:
           "CTI checks: identity, ownership, basics.",
       },
       {
         key: SERVICE_KEYS.VISIBILITY_LISTING,
         title: "Visibility & Listing",
+        hidden: true,
+        icon: Telescope,
         subtitle:
           "Get listed. Get discovered.",
       },
@@ -269,6 +265,14 @@ export default function Services() {
     setActiveServiceKey,
   ] = useState(null);
   const [verificationView, setVerificationView] = useState("companies");
+  const [initialCompanyId, setInitialCompanyId] = useState(null);
+  const [hasRegisteredCompany, setHasRegisteredCompany] = useState(false);
+  const onCompaniesLoaded = useCallback((companies) => setHasRegisteredCompany(companies.length > 0), []);
+  const addCompany = useCallback(() => setVerificationView("add"), []);
+  const viewCompany = useCallback((companyId = null) => {
+    setInitialCompanyId(companyId);
+    setVerificationView("companies");
+  }, []);
 
   /*
    * Store the element that opened the modal so focus can be restored.
@@ -284,6 +288,7 @@ export default function Services() {
         document.activeElement;
 
       if (serviceKey === SERVICE_KEYS.VERIFICATION) {
+        setInitialCompanyId(null);
         setVerificationView("companies");
       }
 
@@ -354,10 +359,14 @@ export default function Services() {
 
       case SERVICE_KEYS.VERIFICATION:
         return verificationView === "add" ? (
-          <VerificationModal />
+
+          <VerificationModal onViewCompany={viewCompany} hasRegisteredCompany={hasRegisteredCompany} onSubmitCompany={onSubmitCompany} />
         ) : (
           <CompanyDetailsModal
-            onAddCompany={() => setVerificationView("add")}
+            onAddCompany={addCompany}
+            onCompaniesLoaded={onCompaniesLoaded}
+
+            initialCompanyId={initialCompanyId}
           />
         );
 
@@ -391,7 +400,8 @@ export default function Services() {
         aria-label="Raymoch Services"
       >
         <div className="services-wrap">
-          <h2>Services</h2>
+          <span className="services-eyebrow"><Sparkles size={16} aria-hidden="true" /> BUILT FOR YOUR NEXT CHAPTER</span>
+          <h2>Services that move you forward.</h2>
 
           <p>
             Build trust. Get seen. Partner smart.
@@ -403,9 +413,9 @@ export default function Services() {
           SERVICES LIST
       ====================================================== */}
       <main>
-        <div className="services-container">
+        <div className="services-container services-layout">
           <section
-            className="svc-menu"
+            className="svc-menu services-redesign"
             aria-labelledby="svcMenuTitle"
           >
             <h3
@@ -416,11 +426,13 @@ export default function Services() {
             </h3>
 
             <div className="svc-grid">
-              {services.map((service) => (
+              {services.filter((service) => !service.hidden).map((service) => {
+                const Icon = service.icon;
+                return (
                 <button
                   key={service.key}
                   type="button"
-                  className="svc-box svc-col-3"
+                  className="svc-box service-card"
                   onClick={() =>
                     openServiceModal(
                       service.key,
@@ -432,11 +444,16 @@ export default function Services() {
                     service.key
                   }
                 >
+                  <span className="service-card-top">
+                    <span className="service-icon"><Icon size={24} strokeWidth={1.75} aria-hidden="true" /></span>
+                    <ArrowUpRight className="service-arrow" size={20} aria-hidden="true" />
+                  </span>
                   <h3>{service.title}</h3>
-
                   <p>{service.subtitle}</p>
+                  <span className="service-card-action">Explore service <ArrowUpRight size={16} aria-hidden="true" /></span>
                 </button>
-              ))}
+                );
+              })}
             </div>
           </section>
         </div>
@@ -466,9 +483,12 @@ export default function Services() {
       <BaseModal
         open={standardModalOpen}
         onClose={closeServiceModal}
-        title={activeService?.title ?? "Service"}
+        title={activeServiceKey === SERVICE_KEYS.VERIFICATION && verificationView === "companies" ? "View Company" : activeService?.title ?? "Service"}
         subtitle={
-          activeService?.subtitle ?? ""
+          activeServiceKey === SERVICE_KEYS.VERIFICATION &&
+          verificationView === "companies"
+            ? "Company profiles and verification scores."
+            : (activeService?.subtitle ?? "")
         }
         hideFooter={
           hideStandardModalFooter
