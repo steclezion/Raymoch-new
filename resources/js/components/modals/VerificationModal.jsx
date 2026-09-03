@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
+  Plus,
   BadgeCheck,
   Building2,
   CalendarDays,
@@ -86,7 +87,7 @@ const REQUIRED_FIELD_HELP = {
   parent_company: "Select the checkbox only when another entity ultimately owns or controls the applicant. Then enter that parent entity’s complete legal name as it appears in official records.",
   has_parent_company: "Select the checkbox only when another entity ultimately owns or controls the applicant. Then enter that parent entity’s complete legal name as it appears in official records.",
   ownership_type: "The general ownership classification, such as privately held, publicly traded, state-owned, cooperative, or nonprofit.",
-  beneficial_owners: "The individuals who ultimately own or control the applicant. Include the identifying and ownership details requested by your jurisdiction.",
+  beneficial_owners: "Add the name and title of each member of the company’s leadership board.",
   authorized_signatory: "The person legally authorized to sign and submit this verification request for the applicant.",
   signatory_title: "The authorized signatory’s official role or position in relation to the applicant.",
   signatory_id_number: "The identifying number printed on the authorized signatory’s valid passport or national identity document.",
@@ -864,6 +865,7 @@ function Field({
   placeholder,
   onChange,
   children,
+  hint,
   ...props
 }) {
   return (
@@ -882,6 +884,7 @@ function Field({
           {...props}
         />
       )}
+      {hint}
     </div>
   );
 }
@@ -905,15 +908,7 @@ function DateEstablishedField({ value, onChange }) {
 
   return (
     <Field label="Date established" name="established_date" required>
-      <style>{`
-        .vr-established-date { display:flex; align-items:center; gap:8px; padding:5px 6px 5px 12px; border:1px solid #cbd5e1; border-radius:11px; background:#f8fafc; transition:border-color .15s,box-shadow .15s; }
-        .vr-established-date:focus-within { border-color:#3455a0; box-shadow:0 0 0 3px #3455a01a; }
-        .vr-established-date input[type="date"] { box-sizing:border-box; flex:1; min-width:0; width:100%; min-height:36px; margin:0; padding:5px 0; border:0; border-radius:0; background:transparent; color:#17233b; font:inherit; box-shadow:none; }
-        .vr-established-date button { display:inline-flex; flex-shrink:0; align-items:center; justify-content:center; width:42px; height:42px; border:1px solid #d8e3f6; border-radius:9px; background:#edf2fc; color:#3455a0; cursor:pointer; }
-        .vr-established-date button:hover { background:#dfe9fc; }
-        .vr-established-date button:focus-visible { outline:2px solid #3455a0; outline-offset:2px; }
-        .vr-established-date-help { display:block; margin-top:7px; color:#64748b; font-size:11px; line-height:1.5; }
-      `}</style>
+      <VerificationDateStyles />
       <div className="vr-established-date">
         <input
           ref={inputRef}
@@ -934,6 +929,53 @@ function DateEstablishedField({ value, onChange }) {
       </div>
       <small id="established_date_hint" className="vr-established-date-help">The company must have been established at least 10 days ago.</small>
       {tooRecent && <p id="established_date_error" className="vr-error" role="alert">Choose {maximumDate} or an earlier date.</p>}
+    </Field>
+  );
+}
+
+function VerificationDateStyles() {
+  return (
+      <style>{`
+        .vr-established-date { display:flex; align-items:center; gap:8px; padding:5px 6px 5px 12px; border:1px solid #cbd5e1; border-radius:11px; background:#f8fafc; transition:border-color .15s,box-shadow .15s; }
+        .vr-established-date:focus-within { border-color:#3455a0; box-shadow:0 0 0 3px #3455a01a; }
+        .vr-established-date input[type="date"] { box-sizing:border-box; flex:1; min-width:0; width:100%; min-height:36px; margin:0; padding:5px 0; border:0; border-radius:0; background:transparent; color:#17233b; font:inherit; box-shadow:none; }
+        .vr-established-date button { display:inline-flex; flex-shrink:0; align-items:center; justify-content:center; width:42px; height:42px; border:1px solid #d8e3f6; border-radius:9px; background:#edf2fc; color:#3455a0; cursor:pointer; }
+        .vr-established-date button:hover { background:#dfe9fc; }
+        .vr-established-date button:focus-visible { outline:2px solid #3455a0; outline-offset:2px; }
+        .vr-established-date-help { display:block; margin-top:7px; color:#64748b; font-size:11px; line-height:1.5; }
+      `}</style>
+  );
+}
+
+function FiscalYearEndField({ value, onChange }) {
+  const inputRef = useRef(null);
+  const openPicker = () => {
+    const input = inputRef.current;
+    if (!input) return;
+    input.focus();
+    try { input.showPicker?.(); } catch { /* Keyboard date entry remains available. */ }
+  };
+
+  return (
+    <Field label="Fiscal year end" name="fiscal_year_end" required>
+      <VerificationDateStyles />
+      <div className="vr-established-date">
+        <input
+          ref={inputRef}
+          id="fiscal_year_end"
+          name="fiscal_year_end"
+          type="date"
+          value={value ?? ""}
+          required
+          onChange={onChange}
+          onClick={openPicker}
+          aria-describedby="fiscal_year_end_hint"
+        />
+        <button type="button" aria-label="Open fiscal year end calendar" title="Choose fiscal year end" onClick={openPicker}>
+          <CalendarDays size={20} strokeWidth={1.75} aria-hidden="true" />
+        </button>
+      </div>
+      <small id="fiscal_year_end_hint" className="vr-established-date-help">Choose the closing date of the company’s fiscal year.</small>
     </Field>
   );
 }
@@ -1023,6 +1065,160 @@ function DatalistField({ label, name, value, options, required = false, help = f
         {options.map((option) => <option key={option} value={option} />)}
       </datalist>
     </Field>
+  );
+}
+
+function MultiProductsDatalist({
+  label,
+  name,
+  value = [],
+  options = [],
+  required = false,
+  onChange,
+  loading = false,
+  loadingText = "Loading suggestions…",
+  placeholder = "Select a product or service…",
+}) {
+  const [inputValue, setInputValue] = useState("");
+  const datalistId = `${name}-datalist`;
+  const safeValue = String(value ?? "").split("\n").map(item => item.trim()).filter(Boolean);
+  const inputRef = useRef(null);
+  useEffect(() => {
+    inputRef.current?.setCustomValidity(required && safeValue.length === 0 ? "Select at least one product or service from the suggestions." : "");
+  }, [required, safeValue.length]);
+  const safeOptions = asArray(options);
+
+  const countryNames = safeOptions
+    .map((option) => (typeof option === "object" ? option?.name : option))
+    .filter((countryName) => typeof countryName === "string" && countryName.trim())
+    .map((countryName) => countryName.trim());
+
+  const emitChange = (nextCountries) => {
+    onChange({
+      target: {
+        name,
+        value: nextCountries.join("\n"),
+        type: "text",
+      },
+    });
+  };
+
+  const addCountry = (rawValue) => {
+    const typedName = typeof rawValue === "string" ? rawValue.trim() : "";
+    if (!typedName) return;
+
+    const matchedName = countryNames.find(
+      (countryName) => countryName.toLowerCase() === typedName.toLowerCase(),
+    );
+
+    // Only accept entries from the current product suggestions.
+    if (!matchedName) return;
+
+    const alreadySelected = safeValue.some(
+      (countryName) => countryName.toLowerCase() === matchedName.toLowerCase(),
+    );
+
+    if (!alreadySelected) {
+      emitChange([...safeValue, matchedName]);
+    }
+
+    setInputValue("");
+  };
+
+  const removeCountry = (countryToRemove) => {
+    emitChange(
+      safeValue.filter((countryName) => countryName !== countryToRemove),
+    );
+  };
+
+  const handleInputChange = (event) => {
+    const nextValue = event.target.value;
+    setInputValue(nextValue);
+
+    const exactMatch = countryNames.find(
+      (countryName) => countryName.toLowerCase() === nextValue.trim().toLowerCase(),
+    );
+
+    if (exactMatch) {
+      addCountry(exactMatch);
+    }
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter" || event.key === ",") {
+      event.preventDefault();
+      addCountry(inputValue);
+    }
+  };
+
+  return (
+    <div className="vr-field">
+      <FieldLabel label={label} name={name} required={required} />
+
+      <input type="hidden" name={name} value={value ?? ""} />
+      <input
+        ref={inputRef}
+        id={name}
+        name={`${name}_search`}
+        type="text"
+        list={datalistId}
+        value={inputValue}
+        required={required && safeValue.length === 0}
+        placeholder={placeholder}
+        disabled={loading}
+        aria-busy={loading}
+        autoComplete="off"
+        onChange={handleInputChange}
+        onKeyDown={handleKeyDown}
+        onBlur={() => addCountry(inputValue)}
+      />
+
+      {loading && (
+        <>
+          <style>{`
+            .vr-product-thinking { display:flex; align-items:center; gap:9px; margin:9px 0 0; color:#15803d; font-size:12px; font-weight:650; line-height:1.6; }
+            .vr-product-thinking-dot { flex-shrink:0; width:8px; height:8px; border-radius:50%; background:#22c55e; animation:vrProductThinking 1.4s ease-in-out infinite; }
+            @keyframes vrProductThinking {
+              0%,100% { opacity:.6; transform:scale(.85); box-shadow:0 0 0 0 #22c55e33; }
+              50% { opacity:1; transform:scale(1.15); box-shadow:0 0 0 5px #22c55e00; }
+            }
+            @media(prefers-reduced-motion:reduce) { .vr-product-thinking-dot { animation:none; } }
+          `}</style>
+          <p className="vr-product-thinking" role="status" aria-live="polite">
+            <span className="vr-product-thinking-dot" aria-hidden="true" />
+            {loadingText}
+          </p>
+        </>
+      )}
+      <datalist id={datalistId}>
+        {countryNames.map((countryName) => (
+          <option key={countryName} value={countryName}>
+            {countryName}
+          </option>
+        ))}
+      </datalist>
+
+      {safeValue.length > 0 && (
+        <ul className="vr-fileList">
+          {safeValue.map((countryName) => (
+            <li key={countryName}>
+              <span className="vr-fileMeta">
+                <strong>{countryName}</strong>
+              </span>
+
+              <button
+                className="vr-fileRemove"
+                type="button"
+                aria-label={`Remove ${countryName}`}
+                onClick={() => removeCountry(countryName)}
+              >
+                <XCircle size={16} aria-hidden="true" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
@@ -2127,6 +2323,21 @@ export default function VerificationModal({ companyContext = null } = {}) {
     });
   }, [formData.legal_structure_id, lookupOptions.legalStructures]);
 
+  const productSelectionContext = JSON.stringify([
+    formData.account_type_id, formData.legal_name, formData.trading_name,
+    formData.legal_structure_id, formData.sector_id, formData.industry_id,
+    formData.region_id, formData.country_id, formData.state_id, formData.city_id,
+    formData.registration_number, formData.tax_id, formData.established_date,
+    formData.external_identifier, formData.registered_address, formData.postal_code,
+    formData.website, formData.business_model,
+  ]);
+  const previousProductContext = useRef(productSelectionContext);
+  useEffect(() => {
+    if (previousProductContext.current === productSelectionContext) return;
+    previousProductContext.current = productSelectionContext;
+    setFormData(current => current.products_services ? { ...current, products_services: "" } : current);
+  }, [productSelectionContext]);
+
   useEffect(() => {
     const sector = selectedOptionName(
       lookupOptions.sectors,
@@ -2139,6 +2350,7 @@ export default function VerificationModal({ companyContext = null } = {}) {
     const businessModel = formData.business_model.trim();
 
     productSuggestionsAbortRef.current?.abort();
+    setProductSuggestions([]);
 
     if (!sector || !industry || !businessModel) {
       setProductSuggestions([]);
@@ -2148,6 +2360,7 @@ export default function VerificationModal({ companyContext = null } = {}) {
 
     const controller = new AbortController();
     productSuggestionsAbortRef.current = controller;
+    setProductSuggestionsLoading(true);
 
     const timeoutId = window.setTimeout(async () => {
       setProductSuggestions([]);
@@ -2170,6 +2383,7 @@ export default function VerificationModal({ companyContext = null } = {}) {
           throw new Error(data?.message || "Unable to generate product suggestions.");
         }
 
+        if (controller.signal.aborted) return;
         setProductSuggestions(
           [...new Set(asArray(data?.products).map((item) => String(item).trim()))]
             .filter(Boolean),
@@ -2190,6 +2404,7 @@ export default function VerificationModal({ companyContext = null } = {}) {
       controller.abort();
     };
   }, [
+    productSelectionContext,
     formData.sector_id,
     formData.industry_id,
     formData.business_model,
@@ -3400,8 +3615,8 @@ ${description}`,
           ["Has ultimate parent company", formData.has_parent_company ? "Yes" : "No"],
           ["Ultimate parent company", formData.parent_company],
         ] : []),
-        ["Ownership type", formData.ownership_type],
-        ["Beneficial owners", formData.beneficial_owners],
+        ...((formData.has_parent_company || hasConfirmedParent) ? [["Ownership type", formData.ownership_type]] : []),
+        ["Leadership on board", leadershipRows(formData.beneficial_owners).map(person => `${person.name} — ${person.title}`).join("\n")],
         ["Authorized signatory", formData.authorized_signatory],
         ["Signatory title", formData.signatory_title],
         ["National ID or passport number", formData.signatory_id_number],
@@ -3808,7 +4023,8 @@ ${description}`,
                     </div>
 
                     <div className="vr-row">
-                      <DatalistField
+                      <MultiProductsDatalist
+                        key={productSelectionContext}
                         label="Products or services"
                         name="products_services"
                         value={formData.products_services}
@@ -3816,11 +4032,7 @@ ${description}`,
                         options={productSuggestions}
                         loading={productSuggestionsLoading}
                         loadingText="Raymoch Clarity Assistant is suggesting…"
-                        placeholder={
-                          productSuggestionsLoading
-                            ? "Clarity Assistant is generating suggestions…"
-                            : "Select a suggestion or enter your own"
-                        }
+                        placeholder="Select products or services…"
                         onChange={updateField}
                       />
 
@@ -3860,6 +4072,20 @@ ${description}`,
                         label="Annual revenue"
                         name="annual_revenue"
                         value={formData.annual_revenue}
+                        aria-describedby="annual_revenue_preview"
+                        hint={
+                          <small
+                            id="annual_revenue_preview"
+                            aria-live="polite"
+                            aria-atomic="true"
+                            style={{ display: "block", marginTop: "7px", color: "#3455a0", fontSize: "13px", fontWeight: 600, fontVariantNumeric: "tabular-nums", overflowWrap: "anywhere" }}
+                          >
+                            <span style={{ display: "block" }}>{formatRevenuePreview(formData.annual_revenue)}</span>
+                            <span style={{ display: "block", marginTop: "4px", color: "#64748b", fontSize: "12px", fontWeight: 500, lineHeight: 1.6 }}>
+                              {revenueInWords(formData.annual_revenue)}
+                            </span>
+                          </small>
+                        }
                         type="number"
                         min="0"
                         step="0.01"
@@ -3878,12 +4104,8 @@ ${description}`,
                     </div>
 
                     <div className="vr-row">
-                      <Field
-                        label="Fiscal year end"
-                        name="fiscal_year_end"
+                      <FiscalYearEndField
                         value={formData.fiscal_year_end}
-                        type="date"
-                        required
                         onChange={updateField}
                       />
 
@@ -3995,11 +4217,11 @@ ${description}`,
                       </div>
                       )}
 
+                      {(formData.has_parent_company || hasConfirmedParent) && (
                       <DatalistField
                         label="Ownership type"
                         name="ownership_type"
                         value={formData.ownership_type}
-                        required
                         options={[
                           ...new Set([
                             selectedOptionName(
@@ -4012,14 +4234,11 @@ ${description}`,
                         placeholder="Private, public, state-owned..."
                         onChange={updateField}
                       />
+                      )}
                     </div>
 
-                    <TextareaField
-                      label="Beneficial owners"
-                      name="beneficial_owners"
+                    <LeadershipBoardField
                       value={formData.beneficial_owners}
-                      required
-                      placeholder="Enter each owner's name, nationality and ownership percentage."
                       onChange={updateField}
                     />
 
@@ -4505,5 +4724,114 @@ ${description}`,
         }}
       />
     </main>
+  );
+}
+
+function formatRevenuePreview(value) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "";
+  // Group the typed digits without rounding the amount or removing decimals.
+  if (/^\d+(?:\.\d*)?$/.test(raw)) {
+    const [whole, fraction] = raw.split(".");
+    const grouped = whole.replace(/^0+(?=\d)/, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return `Amount entered: ${grouped}${fraction === undefined ? "" : `.${fraction}`}`;
+  }
+  const amount = Number(raw);
+  return Number.isFinite(amount) && amount >= 0
+    ? `Amount entered: ${amount.toLocaleString("en-US", { maximumFractionDigits: 20 })}`
+    : "";
+}
+
+function revenueInWords(value) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "";
+  const match = raw.match(/^(\d+)(?:\.(\d*))?(?:e\+?(\d+))?$/i);
+  if (!match) return "";
+  let whole = match[1];
+  let fraction = match[2] || "";
+  // Expand positive scientific notation without rounding monetary digits.
+  const exponent = Number(match[3] || 0);
+  if (exponent > 100) return "Amount is too large to display in words.";
+  if (exponent) {
+    const digits = whole + fraction;
+    const split = whole.length + exponent;
+    whole = digits.slice(0, split).padEnd(split, "0");
+    fraction = digits.slice(split);
+  }
+  whole = whole.replace(/^0+(?=\d)/, "");
+  const units = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"];
+  const tens = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
+  const scales = ["", "thousand", "million", "billion", "trillion", "quadrillion", "quintillion", "sextillion", "septillion", "octillion", "nonillion", "decillion"];
+  const chunkWords = (number) => {
+    const words = [];
+    if (number >= 100) {
+      words.push(`${units[Math.floor(number / 100)]} hundred`);
+      number %= 100;
+      if (number) words.push("and");
+    }
+    if (number >= 20) words.push(tens[Math.floor(number / 10)] + (number % 10 ? `-${units[number % 10]}` : ""));
+    else if (number) words.push(units[number]);
+    return words.join(" ");
+  };
+  if (whole.length > scales.length * 3) return "Amount is too large to display in words.";
+  const groups = [];
+  let scale = 0;
+  for (let end = whole.length; end > 0; end -= 3, scale += 1) {
+    const amount = Number(whole.slice(Math.max(0, end - 3), end));
+    if (amount) groups.unshift({ scale, words: `${chunkWords(amount)}${scales[scale] ? ` ${scales[scale]}` : ""}` });
+  }
+  let text = groups.length ? groups.map((group, index) => (
+    index > 0 && group.scale === 0 ? `and ${group.words}` : group.words
+  )).join(" ") : "zero";
+  if (fraction) text += ` point ${fraction.split("").map(digit => units[Number(digit)]).join(" ")}`;
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+function leadershipRows(value) {
+  if (!value) return [];
+  try {
+    const rows = JSON.parse(value);
+    if (Array.isArray(rows) && rows.every(row => row && typeof row.name === "string" && typeof row.title === "string")) return rows;
+  } catch { /* Keep existing text available for editing. */ }
+  return [{ name: String(value), title: "" }];
+}
+
+function LeadershipBoardField({ value, onChange }) {
+  const storedRows = leadershipRows(value);
+  const rows = storedRows.length ? storedRows : [{ name: "", title: "" }];
+  const emit = (next) => onChange({ target: {
+    name: "beneficial_owners", type: "text",
+    value: next.length ? JSON.stringify(next) : "",
+  } });
+  const update = (index, field, text) => emit(rows.map((row, position) => position === index ? { ...row, [field]: text } : row));
+
+  return (
+    <fieldset className="vr-leadership-board">
+      <style>{`
+        .vr-leadership-board { min-width:0; margin:0; padding:18px; border:1px solid #dbe3ef; border-radius:13px; background:#f8fafc; }
+        .vr-leadership-board legend { display:flex; align-items:center; gap:8px; padding:0 7px; color:#17233b; font-size:15px; font-weight:700; }
+        .vr-leadership-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto; align-items:end; gap:12px; margin-bottom:14px; }
+        .vr-leadership-row label { display:flex; flex-direction:column; gap:7px; color:#475569; font-size:12px; }
+        .vr-leadership-row input { box-sizing:border-box; min-width:0; width:100%; min-height:42px; padding:10px 12px; border:1px solid #cbd5e1; border-radius:9px; background:white; color:#17233b; font:inherit; }
+        .vr-leadership-row button { display:inline-flex; align-items:center; justify-content:center; min-height:42px; min-width:42px; border:1px solid #e2e8f0; border-radius:9px; background:#fff; color:#64748b; cursor:pointer; }
+        .vr-leadership-add { display:inline-flex; align-items:center; gap:7px; min-height:42px; padding:9px 14px; border:1px solid #bfd0ef; border-radius:9px; background:#eef4ff; color:#3455a0; font-weight:650; cursor:pointer; }
+        .vr-leadership-board :is(input,button):focus-visible { outline:2px solid #3455a0; outline-offset:2px; }
+        @media(max-width:560px) { .vr-leadership-row { grid-template-columns:minmax(0,1fr) auto; } .vr-leadership-row label { grid-column:1; } .vr-leadership-row button { grid-column:2; grid-row:1 / span 2; align-self:center; } }
+      `}</style>
+      <legend><UsersRound size={18} aria-hidden="true" /> Leadership on board</legend>
+      <input type="hidden" name="beneficial_owners" value={value ?? ""} />
+      {rows.map((person, index) => (
+        <div className="vr-leadership-row" key={index}>
+          <label htmlFor={`leadership-name-${index}`}>Name
+            <input id={`leadership-name-${index}`} value={person.name} required aria-label={`Board member ${index + 1} name`} placeholder="Full name" onChange={event => update(index, "name", event.target.value)} />
+          </label>
+          <label htmlFor={`leadership-title-${index}`}>Title
+            <input id={`leadership-title-${index}`} value={person.title} required aria-label={`Board member ${index + 1} title`} placeholder="e.g. Chairperson" onChange={event => update(index, "title", event.target.value)} />
+          </label>
+          <button type="button" aria-label={`Remove board member ${index + 1}`} onClick={() => emit(rows.filter((_, position) => position !== index))}><XCircle size={18} aria-hidden="true" /></button>
+        </div>
+      ))}
+      <button type="button" className="vr-leadership-add" onClick={() => emit([...rows, { name: "", title: "" }])}><Plus size={17} aria-hidden="true" /> Add person</button>
+    </fieldset>
   );
 }
