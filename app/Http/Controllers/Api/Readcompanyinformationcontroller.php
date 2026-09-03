@@ -29,24 +29,37 @@ class Readcompanyinformationcontroller extends Controller
                 ->join('users', 'companies.who', '=', 'users.id')
                 ->where('users.id', $user->getAuthIdentifier())
                 ->orderByDesc('companies.created_at')
+                ->orderByDesc('companies.id')
                 ->get([
                     'companies.id',
                     'companies.CompanyName',
+                    'companies.is_parent_company',
                     'companies.created_at',
                 ])
                 ->map(static fn(object $company): array => [
                     'id' => $company->id,
                     'company_name' => $company->CompanyName,
+                    'is_parent_company' => (bool) $company->is_parent_company,
                     'created_at' => $company->created_at,
                 ])
                 ->values();
+
+            $parents = $companies
+                ->filter(static fn(array $company): bool => $company['is_parent_company'])
+                ->values();
+
+            // Never choose an arbitrary parent when multiple records are marked.
+            $parent = $parents->count() === 1 ? $parents->first() : null;
 
             return response()->json([
                 'message' => $companies->isEmpty()
                     ? 'No submitted companies are available yet.'
                     : 'Submitted companies retrieved successfully.',
                 'companies' => $companies,
-            ]);
+                'who_is_parent_company' => $parent['company_name'] ?? null,
+                'parent_company_id' => $parent['id'] ?? null,
+                'parent_company_count' => $parents->count(),
+            ])->header('Cache-Control', 'private, no-store');
         } catch (QueryException $exception) {
             Log::error('Database error while reading the company list.', [
                 'user_id' => $request->user()?->getAuthIdentifier(),
@@ -59,6 +72,84 @@ class Readcompanyinformationcontroller extends Controller
             return $this->serviceUnavailableResponse();
         } catch (Throwable $exception) {
             Log::error('Unexpected error while reading the company list.', [
+                'user_id' => $request->user()?->getAuthIdentifier(),
+                'exception' => $exception::class,
+                'message' => $exception->getMessage(),
+            ]);
+
+            return $this->unexpectedErrorResponse();
+        }
+    }
+
+    /**
+     * Find the parent company among companies owned by the authenticated user.
+     */
+    public function is_parent_company(Request $request): JsonResponse
+    {
+        try {
+            $user = $request->user();
+
+            if (! $user) {
+                return $this->sessionRequiredResponse();
+            }
+
+            $companies = DB::table('companies')
+                ->where('who', $user->getAuthIdentifier())
+                ->orderByDesc('created_at')
+                ->orderByDesc('id')
+                ->get([
+                    'id',
+                    'CompanyName',
+                    'is_parent_company',
+                    'created_at',
+                ])
+                ->map(static fn(object $company): array => [
+                    'id' => $company->id,
+                    'company_name' => $company->CompanyName,
+                    'is_parent_company' => (bool) $company->is_parent_company,
+                    'created_at' => $company->created_at,
+                ])
+                ->values();
+
+            $parents = $companies
+                ->filter(static fn(array $company): bool => $company['is_parent_company'])
+                ->values();
+
+            if ($parents->count() > 1) {
+                return response()->json([
+                    'message' => 'Multiple parent companies are marked on this account. Contact support before adding another company.',
+                    'companies' => $companies,
+                    'who_is_parent_company' => null,
+                    'parent_company_id' => null,
+                    'parent_company_count' => $parents->count(),
+                ], 409)->header('Cache-Control', 'private, no-store');
+            }
+
+            $parent = $parents->first();
+
+            return response()->json([
+                'message' => $parent
+                    ? 'Parent company retrieved successfully.'
+                    : ($companies->isEmpty()
+                        ? 'No company is currently registered.'
+                        : 'No parent company is marked on this account.'),
+                'companies' => $companies,
+                'who_is_parent_company' => $parent['company_name'] ?? null,
+                'parent_company_id' => $parent['id'] ?? null,
+                'parent_company_count' => $parents->count(),
+            ])->header('Cache-Control', 'private, no-store');
+        } catch (QueryException $exception) {
+            Log::error('Database error while identifying the parent company.', [
+                'user_id' => $request->user()?->getAuthIdentifier(),
+                'sql_state' => $exception->errorInfo[0] ?? null,
+                'database_error_code' => $exception->errorInfo[1] ?? null,
+                'exception' => $exception::class,
+                'message' => $exception->getMessage(),
+            ]);
+
+            return $this->serviceUnavailableResponse();
+        } catch (Throwable $exception) {
+            Log::error('Unexpected error while identifying the parent company.', [
                 'user_id' => $request->user()?->getAuthIdentifier(),
                 'exception' => $exception::class,
                 'message' => $exception->getMessage(),
@@ -146,6 +237,7 @@ class Readcompanyinformationcontroller extends Controller
                     'business_description' => $company->business_description,
 
                     // Step 4: ownership, leadership and control
+                    'is_parent_company' => (bool) $company->is_parent_company,
                     'parent_company' => $company->ultimate_parent_company,
                     'has_parent_company' => (bool) $company->is_ultimate_parent_company,
                     'ownership_type' => $company->ownership_type,

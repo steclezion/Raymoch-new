@@ -174,3 +174,8 @@ Route::middleware(['web', 'auth'])->group(function (): void {
         ->whereNumber('id')
         ->name('company-information.show');
 });
+
+Route::middleware(['web', 'auth'])->group(function (): void {
+    Route::get('/company-information/parent-company', [Readcompanyinformationcontroller::class, 'is_parent_company'])
+        ->name('company-information.is_parent_company');
+});

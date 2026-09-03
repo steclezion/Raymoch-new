@@ -31,6 +31,7 @@ import {
   UsersRound,
 } from "lucide-react";
 
+import AddCompanyConfirmation from "./AddCompanyConfirmation.jsx";
 import "./verificationModal.css";
 import "../services/company-details.css";
 
@@ -257,6 +258,7 @@ function DetailsSection({ definition, company }) {
 
 export default function CompanyDetailsModal({ onAddCompany, onCompaniesLoaded, initialCompanyId = null }) {
   const [companies, setCompanies] = useState([]);
+  const [addCompanyPromptOpen, setAddCompanyPromptOpen] = useState(false);
   const [lookupAttempt, setLookupAttempt] = useState(0);
   const [selectedCompanyId, setSelectedCompanyId] = useState(null);
   const [company, setCompany] = useState(EMPTY_COMPANY);
@@ -346,6 +348,17 @@ export default function CompanyDetailsModal({ onAddCompany, onCompaniesLoaded, i
 
   return (
     <main className="vr-container company-details-modal">
+      {addCompanyPromptOpen && (
+        <AddCompanyConfirmation
+          open
+          endpoint={`${COMPANIES_ENDPOINT}/parent-company`}
+          onCancel={() => setAddCompanyPromptOpen(false)}
+          onConfirm={(context) => {
+            setAddCompanyPromptOpen(false);
+            onAddCompany?.(context);
+          }}
+        />
+      )}
 
       <header className="vr-hero vr-gradient">
         <div className="vr-heroContent">
@@ -363,7 +376,7 @@ export default function CompanyDetailsModal({ onAddCompany, onCompaniesLoaded, i
               <p className="company-section-copy">Select a company to review its profile.</p>
             </div>
           </div>
-          <button type="button" className="vr-btn company-add-btn" onClick={onAddCompany}>
+          <button type="button" className="vr-btn company-add-btn" onClick={() => setAddCompanyPromptOpen(true)}>
             <Plus size={17} /> Add new company
           </button>
         </div>
