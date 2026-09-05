@@ -13,7 +13,10 @@ import {
   Eye,
   Landmark,
   Lightbulb,
+  Maximize2,
   MessageCircle,
+  Minimize2,
+  Pencil,
   Send,
   SearchCheck,
   ShieldCheck,
@@ -85,7 +88,13 @@ const REQUIRED_FIELD_HELP = {
   fiscal_year_end: "The final date of the organization’s annual accounting period.",
   business_description: "A clear overview of the organization’s activities, customers, markets, delivery model, and sources of revenue.",
   parent_company: "Select the checkbox only when another entity ultimately owns or controls the applicant. Then enter that parent entity’s complete legal name as it appears in official records.",
-  has_parent_company: "Select the checkbox only when another entity ultimately owns or controls the applicant. Then enter that parent entity’s complete legal name as it appears in official records.",
+  has_parent_company: "Select this when the trade name represents a sister company under the parent company shown in Legal or full name. The parent name is read-only and the relationship is displayed below.",
+  is_parent_company: "Select this when the legal or full name belongs to the parent company itself. A company cannot be marked as both a parent company and a sister company.",
+  relationship_type: "Select the legal or ownership relationship between the current company and the related company.",
+  ownership_percentage: "Enter the percentage of ownership or control represented by this relationship, from 0 to 100.",
+  is_ultimate_parent: "Select this when the current company is the highest controlling entity in the ownership structure.",
+  is_holding_company: "Select this when the current company primarily holds ownership interests in other entities.",
+  ultimate_company_name: "Enter the complete legal name of the ultimate company associated with the selected relationship.",
   ownership_type: "The general ownership classification, such as privately held, publicly traded, state-owned, cooperative, or nonprofit.",
   beneficial_owners: "Add the name and title of each member of the company’s leadership board.",
   authorized_signatory: "The person legally authorized to sign and submit this verification request for the applicant.",
@@ -317,6 +326,12 @@ function latestEstablishmentDate(now = new Date()) {
   return [cutoff.getFullYear(), String(cutoff.getMonth() + 1).padStart(2, "0"), String(cutoff.getDate()).padStart(2, "0")].join("-");
 }
 
+function earliestIdExpiryDate(now = new Date()) {
+  const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return [tomorrow.getFullYear(), String(tomorrow.getMonth() + 1).padStart(2, "0"), String(tomorrow.getDate()).padStart(2, "0")].join("-");
+}
+
 const DATA_SCOPE_RULES = {
   legal_name: {
     valid: (value) => value.trim().length >= 2,
@@ -401,8 +416,11 @@ const initialFormData = {
   listing_ticker: "",
   business_description: "",
 
-  parent_company: "",
-  has_parent_company: false,
+  relationship_type: "",
+  ownership_percentage: "",
+  is_ultimate_parent: false,
+  is_holding_company: false,
+  ultimate_company_name: "",
   ownership_type: "",
   beneficial_owners: "",
   authorized_signatory: "",
@@ -933,6 +951,51 @@ function DateEstablishedField({ value, onChange }) {
   );
 }
 
+function IdExpiryDateField({ value, onChange }) {
+  const inputRef = useRef(null);
+  const minimumDate = earliestIdExpiryDate();
+  const expiredOrToday = Boolean(value && value < minimumDate);
+
+  useEffect(() => {
+    inputRef.current?.setCustomValidity(
+      expiredOrToday ? "The ID expiry date must be later than today." : "",
+    );
+  }, [expiredOrToday]);
+
+  const openPicker = () => {
+    const input = inputRef.current;
+    if (!input) return;
+    input.focus();
+    try { input.showPicker?.(); } catch { /* Keyboard date entry remains available. */ }
+  };
+
+  return (
+    <Field label="ID expiry date" name="signatory_id_expiry" required>
+      <VerificationDateStyles />
+      <div className="vr-established-date">
+        <input
+          ref={inputRef}
+          id="signatory_id_expiry"
+          name="signatory_id_expiry"
+          type="date"
+          value={value ?? ""}
+          min={minimumDate}
+          required
+          onChange={onChange}
+          onClick={openPicker}
+          aria-describedby={expiredOrToday ? "signatory_id_expiry_hint signatory_id_expiry_error" : "signatory_id_expiry_hint"}
+          aria-invalid={expiredOrToday || undefined}
+        />
+        <button type="button" aria-label="Open ID expiry date calendar" title="Choose ID expiry date" onClick={openPicker}>
+          <CalendarDays size={20} strokeWidth={1.75} aria-hidden="true" />
+        </button>
+      </div>
+      <small id="signatory_id_expiry_hint" className="vr-established-date-help">The identity document must remain valid beyond today.</small>
+      {expiredOrToday && <p id="signatory_id_expiry_error" className="vr-error" role="alert">Choose {minimumDate} or a later date.</p>}
+    </Field>
+  );
+}
+
 function VerificationDateStyles() {
   return (
       <style>{`
@@ -1078,10 +1141,13 @@ function MultiProductsDatalist({
   loading = false,
   loadingText = "Loading suggestions…",
   placeholder = "Select a product or service…",
+  allowCustom = false,
+  compact = false,
 }) {
   const [inputValue, setInputValue] = useState("");
   const datalistId = `${name}-datalist`;
   const safeValue = String(value ?? "").split("\n").map(item => item.trim()).filter(Boolean);
+  const useCompactSelectionButtons = true;
   const inputRef = useRef(null);
   useEffect(() => {
     inputRef.current?.setCustomValidity(required && safeValue.length === 0 ? "Select at least one product or service from the suggestions." : "");
@@ -1109,7 +1175,7 @@ function MultiProductsDatalist({
 
     const matchedName = countryNames.find(
       (countryName) => countryName.toLowerCase() === typedName.toLowerCase(),
-    );
+    ) || (allowCustom ? typedName : "");
 
     // Only accept entries from the current product suggestions.
     if (!matchedName) return;
@@ -1198,7 +1264,45 @@ function MultiProductsDatalist({
         ))}
       </datalist>
 
-      {safeValue.length > 0 && (
+      {safeValue.length > 0 && useCompactSelectionButtons && (
+        <>
+          <style>{`
+            .vr-selected-models { display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 150px), 1fr)); align-items:stretch; gap:7px; width:100%; margin:7px 0 0; padding:0; }
+            .vr-selected-model { position:relative; display:flex; align-items:center; width:100%; min-width:0; min-height:34px; margin:0; padding:7px 28px 7px 11px; border:1px solid #bbf7d0; border-radius:8px; background:#f0fdf4; color:#166534; font:inherit; font-size:12px; font-weight:700; line-height:1.25; text-align:left; cursor:pointer; box-shadow:0 1px 2px rgba(15,23,42,.05); }
+            .vr-selected-model span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+            .vr-selected-models.is-small { grid-template-columns:repeat(auto-fit, minmax(min(100%, 110px), 1fr)); gap:5px; }
+            .vr-selected-models.is-small .vr-selected-model { min-height:28px; padding:5px 24px 5px 9px; border-radius:7px; font-size:11px; }
+            .vr-selected-models.is-small .vr-selected-model svg { top:3px; right:3px; width:12px; height:12px; }
+            .vr-selected-model:hover { border-color:#86efac; background:#dcfce7; }
+            .vr-selected-model:focus-visible { outline:2px solid #22c55e; outline-offset:2px; }
+            .vr-selected-model svg { position:absolute; top:4px; right:4px; color:#15803d; }
+            .vr-business-profile > .vr-row { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); align-items:start; gap:16px; }
+            .vr-business-profile > .vr-row > .vr-field { box-sizing:border-box; width:100%; min-width:0; }
+            .vr-business-profile > .vr-row > .vr-field > input,
+            .vr-business-profile > .vr-row > .vr-field > select { box-sizing:border-box; width:100%; }
+            @media(max-width:760px) { .vr-business-profile > .vr-row { grid-template-columns:1fr; gap:12px; } }
+            @media(max-width:640px) { .vr-selected-models { grid-template-columns:repeat(2, minmax(0, 1fr)); gap:6px; } .vr-selected-model { font-size:11px; } }
+            @media(max-width:420px) { .vr-selected-models { grid-template-columns:1fr; } }
+          `}</style>
+          <div className={`vr-selected-models${compact ? " is-small" : ""}`} aria-label={`Selected ${label}`}>
+            {safeValue.map((selectedOption) => (
+              <button
+                key={selectedOption}
+                className="vr-selected-model"
+                type="button"
+                title={`Remove ${selectedOption}`}
+                aria-label={`Remove ${selectedOption}`}
+                onClick={() => removeCountry(selectedOption)}
+              >
+                <span>{selectedOption}</span>
+                <XCircle size={14} aria-hidden="true" />
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      {safeValue.length > 0 && !useCompactSelectionButtons && (
         <ul className="vr-fileList">
           {safeValue.map((countryName) => (
             <li key={countryName}>
@@ -1325,24 +1429,21 @@ function MultiCountryDatalist({
       </datalist>
 
       {safeValue.length > 0 && (
-        <ul className="vr-fileList">
+        <div className="vr-selected-models" aria-label="Selected countries of operation">
           {safeValue.map((countryName) => (
-            <li key={countryName}>
-              <span className="vr-fileMeta">
-                <strong>{countryName}</strong>
-              </span>
-
-              <button
-                className="vr-fileRemove"
-                type="button"
-                aria-label={`Remove ${countryName}`}
-                onClick={() => removeCountry(countryName)}
-              >
-                ×
-              </button>
-            </li>
+            <button
+              key={countryName}
+              className="vr-selected-model"
+              type="button"
+              title={`Remove ${countryName}`}
+              aria-label={`Remove ${countryName}`}
+              onClick={() => removeCountry(countryName)}
+            >
+              <span>{countryName}</span>
+              <XCircle size={14} aria-hidden="true" />
+            </button>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );
@@ -1392,18 +1493,18 @@ function VerificationDocumentSlot({ slotKey, label, example, documents = [], onS
                   aria-label={`${reviewPassed ? "Raymoch Clarity Review passed for" : "Raymoch Clarity Review"} ${document.file.name}`}
                   onClick={() => onReview(document)}
                   style={{
-                    display: "inline-grid",
-                    placeItems: "center",
-                    width: "28px",
-                    height: "25px",
-                    border: `1px solid ${reviewPassed ? "#22c55e" : needsReview ? "#fca5a5" : "#f87171"}`,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "5px",
+                    minWidth: "62px",
+                    minHeight: "30px",
+                    padding: "5px 9px",
+                    border: "1px solid #1d4ed8",
                     borderRadius: "7px",
-                    background: reviewPassed
-                      ? "#dcfce7"
-                      : needsReview
-                        ? "linear-gradient(135deg, #fee2e2, #fef9c3)"
-                        : "#fef2f2",
-                    color: reviewPassed ? "#15803d" : "#b91c1c",
+                    background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
+                    color: "#ffffff",
+                    boxShadow: "0 3px 9px rgba(37, 99, 235, .24)",
                     fontSize: "10px",
                     fontWeight: 900,
                     cursor: "pointer",
@@ -1411,7 +1512,11 @@ function VerificationDocumentSlot({ slotKey, label, example, documents = [], onS
                     transformOrigin: "center",
                   }}
                 >
-                  {reviewPassed ? <CheckCircle2 size={16} strokeWidth={3} aria-hidden="true" /> : "RR"}
+                  {reviewPassed ? (
+                    <><CheckCircle2 size={14} strokeWidth={3} aria-hidden="true" /> Verified</>
+                  ) : (
+                    <><SearchCheck size={14} strokeWidth={2.5} aria-hidden="true" /> Verify</>
+                  )}
                 </button>
                 <button type="button" onClick={() => onRemove(document.id)} aria-label={`Delete ${document.file.name}`} title="Delete and upload again" style={{ border: 0, background: "transparent", color: "#b91c1c", cursor: "pointer", fontSize: "16px", fontWeight: 800 }}>×</button>
               </li>
@@ -1694,9 +1799,9 @@ function selectedOptionName(options, selectedId) {
   );
 }
 
-function Section({ icon, title, children }) {
+function Section({ icon, title, children, className = "" }) {
   return (
-    <section className="vr-innerCard vr-stepSection">
+    <section className={`vr-innerCard vr-stepSection ${className}`.trim()}>
       <div className="vr-sectionHeading">
         <span className="vr-smallIcon">{icon}</span>
         <h3>{title}</h3>
@@ -1707,7 +1812,7 @@ function Section({ icon, title, children }) {
   );
 }
 
-function ReviewAccordion({ stepNumber, title, rows, defaultOpen = false }) {
+function ReviewAccordion({ stepNumber, title, rows, defaultOpen = false, onEdit }) {
   const [open, setOpen] = useState(defaultOpen);
 
   return (
@@ -1725,6 +1830,18 @@ function ReviewAccordion({ stepNumber, title, rows, defaultOpen = false }) {
           </div>
         ))}
       </div>
+      <div style={{ display: "flex", justifyContent: "flex-end", padding: "10px 12px", borderTop: "1px solid #e2e8f0", background: "#f8fafc" }}>
+        <button
+          type="button"
+          className="vr-btn"
+          onClick={onEdit}
+          aria-label={`Edit ${title}`}
+          style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px", minHeight: "32px", padding: "6px 11px", border: "1px solid #2563eb", borderRadius: "8px", background: "#2563eb", color: "#fff", fontSize: "12px", fontWeight: 750, cursor: "pointer" }}
+        >
+          <Pencil size={14} aria-hidden="true" />
+          Edit
+        </button>
+      </div>
     </details>
   );
 }
@@ -1741,13 +1858,78 @@ function ReviewChecklist({
   assistantMessagesRef,
   assistantPanelRef,
 }) {
-  const stepSpecificTips = {
-    2: "Make sure the legal name and registration number match official records.",
-    3: "Use the most recent operating and revenue information available.",
-    4: "List every beneficial owner and controller required by your jurisdiction.",
-    5: "Upload clear, readable and unexpired documents.",
-    6: "Confirm that the applicant has authorized the named representative.",
+  const [assistantExpanded, setAssistantExpanded] = useState(false);
+
+  useEffect(() => {
+    if (!assistantOpen) setAssistantExpanded(false);
+  }, [assistantOpen]);
+
+  useEffect(() => {
+    if (!assistantExpanded) return undefined;
+    const handleEscape = (event) => {
+      if (event.key === "Escape") setAssistantExpanded(false);
+    };
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [assistantExpanded]);
+
+  const stepGuidance = {
+    1: {
+      items: [
+        "Select the company profile you intend to verify.",
+        "Confirm that the displayed company belongs to the signed-in account.",
+        "Review the current verification status before continuing.",
+        "Use Add New Company only when the required company is not listed.",
+      ],
+      privacy: "Only open company records that you are authorized to view or manage.",
+    },
+    2: {
+      items: [
+        "Complete every required legal identity field.",
+        "Enter the legal name exactly as it appears on official registration records.",
+        "Confirm the registration, tax and external identification numbers.",
+        "Verify the registered address and date established before continuing.",
+      ],
+      privacy: "Legal identifiers and registered-address information must be protected with appropriate access controls.",
+    },
+    3: {
+      items: [
+        "Select all applicable business models, products and operating countries.",
+        "Use the most recent employee, revenue and fiscal-year information available.",
+        "Add every applicable public exchange or ticker symbol.",
+        "Ensure the business description accurately explains operations and revenue sources.",
+      ],
+      privacy: "Commercial and financial information should only be shared with authorized verification personnel.",
+    },
+    4: {
+      items: [
+        "Select the relationship type and enter the applicable ownership percentage.",
+        "Add each required leadership-board member with the correct title.",
+        "Verify the authorized signatory’s identity and authority.",
+        "Confirm whether the company is the ultimate parent or operates as a holding company.",
+      ],
+      privacy: "Ownership and identity information must be handled as confidential verification data.",
+    },
+    5: {
+      items: [
+        "Upload every document marked as required.",
+        "Use clear, complete and readable files.",
+        "Confirm that identity documents are current and unexpired.",
+        "Resolve any document-review questions before continuing.",
+      ],
+      privacy: "Uploaded documents must be encrypted during transmission and storage.",
+    },
+    6: {
+      items: [
+        "Confirm the primary contact’s name, email address and telephone number.",
+        "Review the information entered in every previous step.",
+        "Read and accept each required declaration.",
+        "Submit only after confirming that the information is complete and accurate.",
+      ],
+      privacy: "Submit the application only from a trusted device and secure connection.",
+    },
   };
+  const currentGuidance = stepGuidance[step] || stepGuidance[1];
 
   return (
     <aside className="vr-card vr-sticky vr-reviewChecklist">
@@ -1756,15 +1938,13 @@ function ReviewChecklist({
           <Lightbulb size={20} />
         </span>
 
-        <h3>Review checklist</h3>
+        <h3>Verification Guidance</h3>
       </div>
 
       <ul className="vr-infoList">
-        <li>Complete every field marked with an asterisk.</li>
-        <li>{stepSpecificTips[step]}</li>
-        <li>Names and identification numbers must match the documents.</li>
-        <li>Provide accurate and current information.</li>
-        <li>You can use Back without losing information already entered.</li>
+        {currentGuidance.items.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
       </ul>
 
       <hr className="vr-hr" />
@@ -1780,11 +1960,50 @@ function ReviewChecklist({
       <h3>Privacy reminder</h3>
 
       <p className="small">
-        Banking and identity information must be transmitted and stored using
-        appropriate encryption and access controls.
+        {currentGuidance.privacy}
       </p>
 
-      <div ref={assistantPanelRef} tabIndex="-1" className={`vr-assistant ${assistantOpen ? "is-open" : ""}`}>
+      <style>{`
+        .vr-reviewChecklist .vr-assistant { position:relative; box-sizing:border-box; width:100%; max-width:100%; }
+        .vr-reviewChecklist .vr-assistantHeader { box-sizing:border-box; width:100%; padding-right:48px; }
+        .vr-assistantResize { position:absolute; z-index:4; top:8px; right:8px; display:grid; place-items:center; width:30px; height:30px; padding:0; border:1px solid #cbd5e1; border-radius:8px; background:#fff; color:#3455a0; cursor:pointer; box-shadow:0 2px 7px rgba(15,23,42,.1); }
+        .vr-assistantResize:hover { background:#eff6ff; border-color:#93c5fd; }
+        .vr-assistantResize:focus-visible { outline:2px solid #2563eb; outline-offset:2px; }
+        .vr-assistantBackdrop { position:fixed; z-index:9998; inset:0; width:100%; height:100%; margin:0; padding:0; border:0; background:rgba(15,23,42,.48); backdrop-filter:blur(2px); cursor:default; }
+        .vr-reviewChecklist .vr-assistant.is-expanded { position:fixed; z-index:9999; top:50%; left:50%; display:flex; flex-direction:column; width:min(720px, calc(100vw - 32px)); max-width:calc(100vw - 32px); height:min(78dvh, 720px); max-height:calc(100dvh - 32px); transform:translate(-50%, -50%); overflow:hidden; border-radius:16px; background:#fff; box-shadow:0 28px 80px rgba(15,23,42,.35); }
+        .vr-reviewChecklist .vr-assistant.is-expanded .vr-assistantHeader { flex:0 0 auto; }
+        .vr-reviewChecklist .vr-assistant.is-expanded .vr-assistantBody { display:flex; flex:1 1 auto; min-height:0; flex-direction:column; }
+        .vr-reviewChecklist .vr-assistant.is-expanded .vr-assistantMessages { flex:1 1 auto; min-height:0; max-height:none; overflow-y:auto; }
+        .vr-reviewChecklist .vr-assistant.is-expanded .vr-assistantComposer { flex:0 0 auto; }
+        @media(max-width:640px) {
+          .vr-reviewChecklist .vr-assistant.is-expanded { width:calc(100vw - 16px); max-width:calc(100vw - 16px); height:calc(100dvh - 16px); max-height:calc(100dvh - 16px); border-radius:12px; }
+        }
+      `}</style>
+
+      {assistantExpanded && (
+        <button type="button" className="vr-assistantBackdrop" aria-label="Minimize Clarity Assistant" onClick={() => setAssistantExpanded(false)} />
+      )}
+
+      <div
+        ref={assistantPanelRef}
+        tabIndex="-1"
+        className={`vr-assistant ${assistantOpen ? "is-open" : ""} ${assistantExpanded ? "is-expanded" : ""}`}
+        role={assistantExpanded ? "dialog" : undefined}
+        aria-modal={assistantExpanded || undefined}
+        aria-label={assistantExpanded ? "Clarity Assistant" : undefined}
+      >
+        {assistantOpen && (
+          <button
+            type="button"
+            className="vr-assistantResize"
+            aria-label={assistantExpanded ? "Minimize Clarity Assistant" : "Expand Clarity Assistant"}
+            title={assistantExpanded ? "Return assistant to the guidance panel" : "Open assistant in the center of the screen"}
+            onClick={() => setAssistantExpanded((current) => !current)}
+          >
+            {assistantExpanded ? <Minimize2 size={15} aria-hidden="true" /> : <Maximize2 size={15} aria-hidden="true" />}
+          </button>
+        )}
+
         <button
           type="button"
           className="vr-assistantHeader"
@@ -1929,23 +2148,40 @@ export default function VerificationModal({ companyContext = null } = {}) {
     ? (activeCompanyContext.who_is_parent_company || activeCompanyContext.parentCompany.company_name || "")
     : "";
   const hasConfirmedParent = Boolean(confirmedParentName);
+  const modalTopRef = useRef(null);
+
+  useEffect(() => {
+    const dialog = modalTopRef.current?.closest("[role='dialog']");
+    if (!dialog) return undefined;
+
+    dialog.classList.add("vr-verification-dialog-wide");
+    return () => dialog.classList.remove("vr-verification-dialog-wide");
+  }, []);
   const initialPageKeyRef = useRef(currentVerificationPageKey());
   const initialDraftRef = useRef(
     readVerificationDraft(initialPageKeyRef.current),
   );
 
-  // Begin at Step 1 and continue sequentially through Step 6.
-  const [step, setStep] = useState(() => 1);
+  // Begin at Step 3 temporarily for testing, then continue through Step 6.
+  const [step, setStep] = useState(() => 6);
   const [formData, setFormData] = useState(
     () => hasConfirmedParent
-      ? { ...initialDraftRef.current.formData, legal_name: confirmedParentName }
+      ? {
+          ...initialDraftRef.current.formData,
+          legal_name: confirmedParentName,
+          relationship_type: "sister_company",
+          ultimate_company_name: confirmedParentName,
+        }
       : initialDraftRef.current.formData,
   );
 
   // Keep the confirmed name in form state for review/submission and form resets.
   useEffect(() => {
     if (!hasConfirmedParent || formData.legal_name === confirmedParentName) return;
-    setFormData((current) => ({ ...current, legal_name: confirmedParentName }));
+    setFormData((current) => ({
+      ...current,
+      legal_name: confirmedParentName,
+    }));
   }, [hasConfirmedParent, confirmedParentName, formData.legal_name]);
   const [files, setFiles] = useState(() => initialDraftRef.current.files);
   const [verificationType, setVerificationType] = useState("");
@@ -2347,12 +2583,12 @@ export default function VerificationModal({ companyContext = null } = {}) {
       lookupOptions.industries,
       formData.industry_id,
     ).trim();
-    const businessModel = formData.business_model.trim();
+    const businessModels = formData.business_model.split("\n").map(item => item.trim()).filter(Boolean);
 
     productSuggestionsAbortRef.current?.abort();
     setProductSuggestions([]);
 
-    if (!sector || !industry || !businessModel) {
+    if (!sector || !industry || businessModels.length === 0) {
       setProductSuggestions([]);
       setProductSuggestionsLoading(false);
       return undefined;
@@ -2374,7 +2610,7 @@ export default function VerificationModal({ companyContext = null } = {}) {
             "Content-Type": "application/json",
           },
           signal: controller.signal,
-          body: JSON.stringify({ sector, industry, business_model: businessModel }),
+          body: JSON.stringify({ sector, industry, business_models: businessModels, business_model: businessModels.join(", ") }),
         });
 
         const data = await response.json().catch(() => ({}));
@@ -2519,8 +2755,13 @@ export default function VerificationModal({ companyContext = null } = {}) {
         [name]: nextValue,
       };
 
-      if (name === "has_parent_company" && !nextValue) {
-        next.parent_company = "";
+      if (name === "is_ultimate_parent" && nextValue) {
+        next.relationship_type = "";
+        next.ultimate_company_name = "";
+      }
+
+      if (name === "relationship_type" && !nextValue) {
+        next.ultimate_company_name = "";
       }
 
       if (
@@ -2551,9 +2792,10 @@ export default function VerificationModal({ companyContext = null } = {}) {
   const goToStep = (stepNumber) => {
     setStep(sanitizeVerificationStep(stepNumber));
 
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
+    window.requestAnimationFrame(() => {
+      modalTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      const scrollContainer = modalTopRef.current?.closest("[role='dialog']");
+      if (scrollContainer) scrollContainer.scrollTo({ top: 0, behavior: "smooth" });
     });
   };
 
@@ -3595,7 +3837,7 @@ ${description}`,
       stepNumber: 3,
       title: "Business and Operating Profile",
       rows: [
-        ["Business model", formData.business_model],
+        ["Business models", formData.business_model.split("\n").filter(Boolean).join(", ")],
         ["Products or services", formData.products_services],
         ["Countries of operation", formData.operating_countries.join(", ")],
         ["Number of employees", formData.employee_count],
@@ -3611,11 +3853,11 @@ ${description}`,
       stepNumber: 4,
       title: "Ownership, Leadership and Control",
       rows: [
-        ...(!hasConfirmedParent ? [
-          ["Has ultimate parent company", formData.has_parent_company ? "Yes" : "No"],
-          ["Ultimate parent company", formData.parent_company],
-        ] : []),
-        ...((formData.has_parent_company || hasConfirmedParent) ? [["Ownership type", formData.ownership_type]] : []),
+        ["Relationship type", formData.is_ultimate_parent ? "Not applicable — ultimate parent" : (formData.relationship_type ? formData.relationship_type.replaceAll("_", " ") : "Not selected")],
+        ...(!formData.is_ultimate_parent && formData.relationship_type ? [["Ultimate company name", formData.ultimate_company_name]] : []),
+        ["Ownership percentage", formData.ownership_percentage === "" ? "Not provided" : `${formData.ownership_percentage}%`],
+        ["Is ultimate parent", formData.is_ultimate_parent ? "Yes" : "No"],
+        ["Is holding company", formData.is_holding_company ? "Yes" : "No"],
         ["Leadership on board", leadershipRows(formData.beneficial_owners).map(person => `${person.name} — ${person.title}`).join("\n")],
         ["Authorized signatory", formData.authorized_signatory],
         ["Signatory title", formData.signatory_title],
@@ -3655,7 +3897,14 @@ ${description}`,
   }
 
   return (
-    <main className="vr-container">
+    <main ref={modalTopRef} className="vr-container vr-verification-fullscreen">
+      <style>{`
+        .vr-verification-dialog-wide { box-sizing:border-box !important; width:min(96vw, 1480px) !important; max-width:min(96vw, 1480px) !important; height:min(92dvh, 960px); max-height:92dvh !important; border-radius:10px !important; }
+        .vr-verification-fullscreen { box-sizing:border-box; width:100%; max-width:none; min-height:100%; margin:0; padding-inline:clamp(14px, 2.5vw, 36px); overflow:auto; }
+        .vr-verification-fullscreen .vr-stepwrap { width:100%; max-width:none; }
+        @media(max-width:900px) { .vr-verification-dialog-wide { width:calc(100vw - 20px) !important; max-width:calc(100vw - 20px) !important; height:calc(100dvh - 20px); max-height:calc(100dvh - 20px) !important; border-radius:8px !important; } }
+        @media(max-width:640px) { .vr-verification-fullscreen { min-height:100%; padding-inline:12px; } }
+      `}</style>
       <header className="vr-hero vr-gradient">
         <div className="vr-heroContent">
           <span className="vr-heroIcon">
@@ -4008,21 +4257,18 @@ ${description}`,
                   <Section
                     icon={<Landmark size={20} />}
                     title="Business and operating profile"
+                    className="vr-business-profile"
                   >
                     <div className="vr-row">
-                      <DatalistField
-                        label="Business model"
+                      <MultiProductsDatalist
+                        label="Business models"
                         name="business_model"
                         value={formData.business_model}
                         required
-                        fullWidth
                         options={BUSINESS_MODELS}
-                        placeholder="B2B, B2C, marketplace..."
+                        placeholder="Select multiple business models…"
                         onChange={updateField}
                       />
-                    </div>
-
-                    <div className="vr-row">
                       <MultiProductsDatalist
                         key={productSelectionContext}
                         label="Products or services"
@@ -4035,7 +4281,9 @@ ${description}`,
                         placeholder="Select products or services…"
                         onChange={updateField}
                       />
+                    </div>
 
+                    <div className="vr-row">
                       <MultiCountryDatalist
                         label="Countries of operation"
                         name="operating_countries"
@@ -4044,9 +4292,6 @@ ${description}`,
                         required
                         onChange={updateField}
                       />
-                    </div>
-
-                    <div className="vr-row">
                       <SelectField
                         label="Number of employees"
                         name="employee_count"
@@ -4055,7 +4300,9 @@ ${description}`,
                         options={["1–9", "10–49", "50–99", "100–499", "500–999", "1,000+"]}
                         onChange={updateField}
                       />
+                    </div>
 
+                    <div className="vr-row">
                       <DatalistField
                         label="Company stage"
                         name="company_stage"
@@ -4065,9 +4312,6 @@ ${description}`,
                         placeholder="Pre-revenue, growth, mature..."
                         onChange={updateField}
                       />
-                    </div>
-
-                    <div className="vr-row">
                       <Field
                         label="Annual revenue"
                         name="annual_revenue"
@@ -4092,8 +4336,10 @@ ${description}`,
                         required
                         onChange={updateField}
                       />
+                    </div>
 
-                     <SelectField
+                    <div className="vr-row">
+                      <SelectField
                         label="Revenue currency"
                         name="revenue_currency"
                         value={formData.revenue_currency}
@@ -4101,21 +4347,21 @@ ${description}`,
                         required
                         onChange={updateField}
                       />
-                    </div>
-
-                    <div className="vr-row">
                       <FiscalYearEndField
                         value={formData.fiscal_year_end}
                         onChange={updateField}
                       />
+                    </div>
 
-                      <DatalistField
+                    <div className="vr-row vr-row-listing">
+                      <MultiProductsDatalist
                         label="Public listing or ticker"
                         name="listing_ticker"
                         value={formData.listing_ticker}
-                        help
                         options={STOCK_EXCHANGES}
-                        placeholder="Exchange and ticker, e.g. NASDAQ: MSFT"
+                        placeholder="Add an exchange or ticker…"
+                        allowCustom
+                        compact
                         onChange={updateField}
                       />
                     </div>
@@ -4175,67 +4421,74 @@ ${description}`,
                   >
                     <div style={{ display: "grid", gap: "18px" }}>
                     <div className="vr-row" style={{ alignItems: "start" }}>
-                      {!hasConfirmedParent && (
-                      <div className="vr-field">
-                        <div className="vr-labelWithHelp">
-                          <label
-                            htmlFor="has_parent_company"
-                            style={{ display: "inline-flex", alignItems: "center", gap: "10px", cursor: "pointer", minHeight: "38px" }}
-                          >
-                            <span style={{ position: "relative", display: "inline-grid", placeItems: "center", flex: "0 0 auto" }}>
+                      {[
+                        ["is_ultimate_parent", "Is ultimate parent", formData.is_ultimate_parent],
+                        ["is_holding_company", "Is holding company", formData.is_holding_company],
+                      ].map(([name, label, checked]) => (
+                        <div className="vr-field" key={name}>
+                          <div className="vr-labelWithHelp">
+                            <label htmlFor={name} style={{ display: "inline-flex", alignItems: "center", gap: "10px", minHeight: "38px", cursor: "pointer" }}>
                               <input
-                                id="has_parent_company"
-                                name="has_parent_company"
+                                id={name}
+                                name={name}
                                 type="checkbox"
-                                checked={formData.has_parent_company}
+                                checked={checked}
                                 onChange={updateField}
-                                style={{ position: "absolute", inset: 0, width: "22px", height: "22px", margin: 0, opacity: 0, cursor: "pointer" }}
+                                style={{ width: "20px", height: "20px", margin: 0, accentColor: "#2563eb" }}
                               />
-                              <span
-                                aria-hidden="true"
-                                style={{ display: "grid", placeItems: "center", width: "22px", height: "22px", border: `2px solid ${formData.has_parent_company ? "#2563eb" : "#94a3b8"}`, borderRadius: "7px", background: formData.has_parent_company ? "linear-gradient(135deg, #2563eb, #4f46e5)" : "#fff", color: "#fff", boxShadow: formData.has_parent_company ? "0 4px 12px rgba(37, 99, 235, .28)" : "inset 0 1px 2px rgba(15, 23, 42, .06)", transition: "all 180ms ease", fontSize: "14px", fontWeight: 900 }}
-                              >
-                                {formData.has_parent_company ? "✓" : ""}
-                              </span>
-                            </span>
-                            <span>Ultimate parent company</span>
-                          </label>
-                          <RequiredFieldHelp name="has_parent_company" label="Ultimate parent company" />
+                              <span>{label}</span>
+                            </label>
+                            <RequiredFieldHelp name={name} label={label} />
+                          </div>
                         </div>
+                      ))}
+                    </div>
 
-                        {formData.has_parent_company && (
-                          <input
-                            id="parent_company"
-                            name="parent_company"
-                            value={formData.parent_company}
-                            required
-                            placeholder="Enter the parent company’s full legal name"
-                            onChange={updateField}
-                            style={{ marginTop: "8px", width: "100%" }}
-                          />
-                        )}
-                      </div>
+                    <div className="vr-row" style={{ alignItems: "start" }}>
+                      {!formData.is_ultimate_parent && (
+                        <Field label="Relationship type" name="relationship_type" help>
+                          <select id="relationship_type" name="relationship_type" value={formData.relationship_type} onChange={updateField}>
+                            <option value="">Select relationship type (optional)</option>
+                            <option value="parent">Parent</option>
+                            <option value="subsidiary">Subsidiary</option>
+                            <option value="associate">Associate</option>
+                            <option value="affiliate">Affiliate</option>
+                            <option value="joint_venture">Joint venture</option>
+                            <option value="sister_company">Sister company</option>
+                            <option value="controlled_entity">Controlled entity</option>
+                          </select>
+                        </Field>
                       )}
 
-                      {(formData.has_parent_company || hasConfirmedParent) && (
-                      <DatalistField
-                        label="Ownership type"
-                        name="ownership_type"
-                        value={formData.ownership_type}
-                        options={[
-                          ...new Set([
-                            selectedOptionName(
-                              lookupOptions.legalStructures,
-                              formData.legal_structure_id,
-                            ),
-                            ...OWNERSHIP_TYPES,
-                          ].filter((option) => option && option !== "Not provided")),
-                        ]}
-                        placeholder="Private, public, state-owned..."
+                      <Field
+                        label="Ownership percentage"
+                        name="ownership_percentage"
+                        value={formData.ownership_percentage}
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        placeholder="e.g. 100, 75, or 30"
+                        required
+                        help
                         onChange={updateField}
                       />
-                      )}
                     </div>
+
+                    {!formData.is_ultimate_parent && formData.relationship_type && (
+                      <div className="vr-row">
+                        <Field
+                          label="Ultimate company name"
+                          name="ultimate_company_name"
+                          value={formData.ultimate_company_name}
+                          placeholder="Enter the ultimate company’s legal name"
+                          required
+                          help
+                          fullWidth
+                          onChange={updateField}
+                        />
+                      </div>
+                    )}
 
                     <LeadershipBoardField
                       value={formData.beneficial_owners}
@@ -4275,12 +4528,8 @@ ${description}`,
                         onChange={updateField}
                       />
 
-                      <Field
-                        label="ID expiry date"
-                        name="signatory_id_expiry"
+                      <IdExpiryDateField
                         value={formData.signatory_id_expiry}
-                        type="date"
-                        required
                         onChange={updateField}
                       />
                     </div>
@@ -4385,7 +4634,8 @@ ${description}`,
                           value={formData.contact_name}
                           required
                           aria-busy={applicantInfoLoading}
-                          title="Loaded from the logged-in user profile"
+                          title="Loaded from the logged-in user profile and available to edit"
+                          onChange={updateField}
                         />
 
                         <Field
@@ -4414,7 +4664,8 @@ ${description}`,
                           type="tel"
                           required
                           aria-busy={applicantInfoLoading}
-                          title="Loaded from the logged-in user profile"
+                          title="Loaded from the logged-in user profile and available to edit"
+                          onChange={updateField}
                         />
                       </div>
 
@@ -4478,7 +4729,12 @@ ${description}`,
 
                       <div style={{ display: "grid", gap: "10px", marginTop: "14px" }}>
                         {reviewSections.map((section, index) => (
-                          <ReviewAccordion key={section.stepNumber} {...section} defaultOpen={index === 0} />
+                          <ReviewAccordion
+                            key={section.stepNumber}
+                            {...section}
+                            defaultOpen={index === 0}
+                            onEdit={() => goToStep(section.stepNumber)}
+                          />
                         ))}
                       </div>
                     </Section>

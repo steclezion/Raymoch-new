@@ -209,6 +209,7 @@ export default function Services({ onSubmitCompany } = {}) {
       {
         key: SERVICE_KEYS.MATCHING,
         title: "Matching",
+        hidden: true,
         icon: Search,
         subtitle:
           "Investor inputs → ranked SME matches.",
@@ -216,7 +217,6 @@ export default function Services({ onSubmitCompany } = {}) {
       {
         key: SERVICE_KEYS.PARTNER_PROGRAMS,
         title: "Partner Programs",
-        hidden: true,
         icon: Handshake,
         subtitle:
           "Accelerators & syndicates, plugged in.",

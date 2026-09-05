@@ -257,6 +257,7 @@ function DetailsSection({ definition, company }) {
 }
 
 export default function CompanyDetailsModal({ onAddCompany, onCompaniesLoaded, initialCompanyId = null }) {
+  const modalTopRef = useRef(null);
   const [companies, setCompanies] = useState([]);
   const [addCompanyPromptOpen, setAddCompanyPromptOpen] = useState(false);
   const [lookupAttempt, setLookupAttempt] = useState(0);
@@ -274,6 +275,13 @@ export default function CompanyDetailsModal({ onAddCompany, onCompaniesLoaded, i
   useEffect(() => { companiesLoadedRef.current = onCompaniesLoaded; }, [onCompaniesLoaded]);
   useEffect(() => { addCompanyRef.current = onAddCompany; }, [onAddCompany]);
   useEffect(() => () => detailsRequest.current?.abort(), []);
+  useEffect(() => {
+    const dialog = modalTopRef.current?.closest("[role='dialog']");
+    if (!dialog) return undefined;
+
+    dialog.classList.add("company-details-dialog-wide");
+    return () => dialog.classList.remove("company-details-dialog-wide");
+  }, []);
 
   const loadCompanies = useCallback(async (signal) => {
     setListLoading(true);
@@ -347,7 +355,42 @@ export default function CompanyDetailsModal({ onAddCompany, onCompaniesLoaded, i
   };
 
   return (
-    <main className="vr-container company-details-modal">
+    <main ref={modalTopRef} className="vr-container company-details-modal">
+      <style>{`
+        .company-details-dialog-wide {
+          box-sizing: border-box !important;
+          width: min(96vw, 1480px) !important;
+          max-width: min(96vw, 1480px) !important;
+          height: min(92dvh, 960px);
+          max-height: 92dvh !important;
+          border-radius: 10px !important;
+          overflow: auto;
+        }
+        .company-details-modal {
+          box-sizing: border-box;
+          width: 100%;
+          max-width: none;
+          min-height: 100%;
+        }
+        @media (max-width: 900px) {
+          .company-details-dialog-wide {
+            width: calc(100vw - 20px) !important;
+            max-width: calc(100vw - 20px) !important;
+            height: calc(100dvh - 20px);
+            max-height: calc(100dvh - 20px) !important;
+            border-radius: 8px !important;
+          }
+        }
+        @media (max-width: 640px) {
+          .company-details-dialog-wide {
+            width: calc(100vw - 12px) !important;
+            max-width: calc(100vw - 12px) !important;
+            height: calc(100dvh - 12px);
+            max-height: calc(100dvh - 12px) !important;
+            border-radius: 6px !important;
+          }
+        }
+      `}</style>
       {addCompanyPromptOpen && (
         <AddCompanyConfirmation
           open
