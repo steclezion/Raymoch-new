@@ -2351,19 +2351,70 @@ export default function VerificationModal({ companyContext = null } = {}) {
   useEffect(() => {
     if (step !== 6) return undefined;
 
-    setReviewPreparation({ 2: "loading", 3: "pending", 4: "pending", 5: "pending" });
-    const timers = [];
-    [2, 3, 4, 5].forEach((stepNumber, index) => {
-      timers.push(window.setTimeout(() => {
-        setReviewPreparation((current) => ({
-          ...current,
-          [stepNumber]: "success",
-          ...(stepNumber < 5 ? { [stepNumber + 1]: "loading" } : {}),
-        }));
-      }, 600 * (index + 1)));
+    const filled = (value) => Array.isArray(value)
+      ? value.length > 0
+      : String(value ?? "").trim() !== "";
+    const validScopedValue = (name) => {
+      const value = formData[name];
+      if (!filled(value)) return true;
+      return DATA_SCOPE_RULES[name]?.valid
+        ? DATA_SCOPE_RULES[name].valid(String(value))
+        : true;
+    };
+    const allRequired = (names) => names.every((name) => filled(formData[name]));
+
+    const step2Required = [
+      "account_type_id", "legal_name", "legal_structure_id", "sector_id",
+      "industry_id", "region_id", "country_id", "registration_number",
+      "established_date", "registered_address", "postal_code",
+    ];
+    const step2Scoped = ["legal_name", "registration_number", "established_date", "postal_code"];
+    const websiteValid = !filled(formData.website) || /^https?:\/\/[^\s]+$/i.test(formData.website.trim());
+    const step2Valid = allRequired(step2Required) && step2Scoped.every(validScopedValue) && websiteValid;
+
+    const step3Required = [
+      "business_model", "products_services", "operating_countries", "employee_count",
+      "company_stage", "annual_revenue", "revenue_currency", "fiscal_year_end",
+      "business_description",
+    ];
+    const revenue = Number(formData.annual_revenue);
+    const step3Valid = allRequired(step3Required)
+      && Number.isFinite(revenue) && revenue >= 0
+      && validScopedValue("business_description")
+      && businessDescriptionReviewStatus === "passed";
+
+    const boardMembers = leadershipRows(formData.beneficial_owners);
+    const leadershipValid = boardMembers.length > 0
+      && boardMembers.every((member) => filled(member.name) && filled(member.title));
+    const ownership = Number(formData.ownership_percentage);
+    const relationshipValid = formData.is_ultimate_parent
+      ? true
+      : Number.isFinite(ownership) && ownership >= 0 && ownership <= 100
+        && (!formData.relationship_type || filled(formData.ultimate_company_name));
+    const step4Valid = allRequired([
+      "authorized_signatory", "signatory_title", "signatory_id_number", "signatory_id_expiry",
+    ])
+      && formData.signatory_id_expiry >= earliestIdExpiryDate()
+      && Boolean(signatureDataUrl)
+      && leadershipValid
+      && relationshipValid;
+
+    const requiredDocumentSlots = VERIFICATION_DOCUMENTS[verificationType] || [];
+    const step5Valid = Boolean(verificationType)
+      && requiredDocumentSlots.length > 0
+      && requiredDocumentSlots.every(([slotKey]) => {
+        const documents = verificationDocuments[slotKey] || [];
+        return documents.length > 0 && documents.every((document) => document.reviewStatus === "passed");
+      });
+
+    setReviewPreparation({
+      2: step2Valid ? "success" : "invalid",
+      3: step3Valid ? "success" : "invalid",
+      4: step4Valid ? "success" : "invalid",
+      5: step5Valid ? "success" : "invalid",
     });
 
-    return () => timers.forEach((timer) => window.clearTimeout(timer));
+    return undefined;
   }, [step, reviewPreparationRun]);
 
   useEffect(() => {
@@ -2757,6 +2808,7 @@ export default function VerificationModal({ companyContext = null } = {}) {
 
       if (name === "is_ultimate_parent" && nextValue) {
         next.relationship_type = "";
+        next.ownership_percentage = "";
         next.ultimate_company_name = "";
       }
 
@@ -3855,7 +3907,7 @@ ${description}`,
       rows: [
         ["Relationship type", formData.is_ultimate_parent ? "Not applicable — ultimate parent" : (formData.relationship_type ? formData.relationship_type.replaceAll("_", " ") : "Not selected")],
         ...(!formData.is_ultimate_parent && formData.relationship_type ? [["Ultimate company name", formData.ultimate_company_name]] : []),
-        ["Ownership percentage", formData.ownership_percentage === "" ? "Not provided" : `${formData.ownership_percentage}%`],
+        ...(!formData.is_ultimate_parent ? [["Ownership percentage", formData.ownership_percentage === "" ? "Not provided" : `${formData.ownership_percentage}%`]] : []),
         ["Is ultimate parent", formData.is_ultimate_parent ? "Yes" : "No"],
         ["Is holding company", formData.is_holding_company ? "Yes" : "No"],
         ["Leadership on board", leadershipRows(formData.beneficial_owners).map(person => `${person.name} — ${person.title}`).join("\n")],
@@ -3880,6 +3932,7 @@ ${description}`,
 
   const preparedStepCount = Object.values(reviewPreparation).filter((status) => status === "success").length;
   const reviewReady = preparedStepCount === 4;
+  const reviewChecking = Object.values(reviewPreparation).some((status) => status === "loading");
   const consentsComplete = formData.accuracy_consent && formData.privacy_consent;
 
   if (showCompanyDetails) {
@@ -4444,8 +4497,8 @@ ${description}`,
                       ))}
                     </div>
 
-                    <div className="vr-row" style={{ alignItems: "start" }}>
-                      {!formData.is_ultimate_parent && (
+                    {!formData.is_ultimate_parent && (
+                      <div className="vr-row" style={{ alignItems: "start" }}>
                         <Field label="Relationship type" name="relationship_type" help>
                           <select id="relationship_type" name="relationship_type" value={formData.relationship_type} onChange={updateField}>
                             <option value="">Select relationship type (optional)</option>
@@ -4458,22 +4511,22 @@ ${description}`,
                             <option value="controlled_entity">Controlled entity</option>
                           </select>
                         </Field>
-                      )}
 
-                      <Field
-                        label="Ownership percentage"
-                        name="ownership_percentage"
-                        value={formData.ownership_percentage}
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.01"
-                        placeholder="e.g. 100, 75, or 30"
-                        required
-                        help
-                        onChange={updateField}
-                      />
-                    </div>
+                        <Field
+                          label="Ownership percentage"
+                          name="ownership_percentage"
+                          value={formData.ownership_percentage}
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.01"
+                          placeholder="e.g. 100, 75, or 30"
+                          required
+                          help
+                          onChange={updateField}
+                        />
+                      </div>
+                    )}
 
                     {!formData.is_ultimate_parent && formData.relationship_type && (
                       <div className="vr-row">
@@ -4701,11 +4754,11 @@ ${description}`,
                       <div style={{ padding: "14px", border: "1px solid #dbe3ef", borderRadius: "14px", background: "#f8fafc" }}>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
                           <div>
-                            <strong style={{ color: "#0f2747" }}>Preparing Steps 2–5</strong>
-                            <span style={{ display: "block", marginTop: "3px", color: "#64748b", fontSize: "11px" }}>{preparedStepCount} of 4 sections prepared</span>
+                            <strong style={{ color: "#0f2747" }}>Validating Steps 2–5</strong>
+                            <span style={{ display: "block", marginTop: "3px", color: "#64748b", fontSize: "11px" }}>{preparedStepCount} of 4 sections passed validation</span>
                           </div>
                           <button type="button" title="Refresh the review summary" aria-label="Refresh review summary" onClick={() => setReviewPreparationRun((current) => current + 1)} style={{ display: "grid", placeItems: "center", width: "34px", height: "34px", border: "1px solid #bfdbfe", borderRadius: "10px", background: "#eff6ff", color: "#2563eb", cursor: "pointer" }}>
-                            <RefreshCw size={17} style={!reviewReady ? { animation: "rrSpin .9s linear infinite" } : undefined} />
+                            <RefreshCw size={17} style={reviewChecking ? { animation: "rrSpin .9s linear infinite" } : undefined} />
                           </button>
                         </div>
                         <div role="progressbar" aria-label="Review preparation progress" aria-valuemin="0" aria-valuemax="4" aria-valuenow={preparedStepCount} style={{ height: "8px", marginTop: "12px", overflow: "hidden", borderRadius: "999px", background: "#dbeafe" }}>
@@ -4713,9 +4766,9 @@ ${description}`,
                         </div>
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: "7px", marginTop: "12px" }}>
                           {[2, 3, 4, 5].map((stepNumber) => (
-                            <div key={stepNumber} style={{ display: "flex", alignItems: "center", gap: "7px", color: reviewPreparation[stepNumber] === "success" ? "#15803d" : "#64748b", fontSize: "11px", fontWeight: 700 }}>
-                              {reviewPreparation[stepNumber] === "success" ? <CheckCircle2 size={15} /> : <RefreshCw size={14} style={reviewPreparation[stepNumber] === "loading" ? { animation: "rrSpin .9s linear infinite" } : undefined} />}
-                              Step {stepNumber} {reviewPreparation[stepNumber] === "success" ? "submission successful" : reviewPreparation[stepNumber] === "loading" ? "is loading…" : "is waiting"}
+                            <div key={stepNumber} style={{ display: "flex", alignItems: "center", gap: "7px", color: reviewPreparation[stepNumber] === "success" ? "#15803d" : reviewPreparation[stepNumber] === "invalid" ? "#b91c1c" : "#64748b", fontSize: "11px", fontWeight: 700 }}>
+                              {reviewPreparation[stepNumber] === "success" ? <CheckCircle2 size={15} /> : reviewPreparation[stepNumber] === "invalid" ? <XCircle size={15} /> : <RefreshCw size={14} style={reviewPreparation[stepNumber] === "loading" ? { animation: "rrSpin .9s linear infinite" } : undefined} />}
+                              Step {stepNumber} {reviewPreparation[stepNumber] === "success" ? "validation successful" : reviewPreparation[stepNumber] === "invalid" ? "needs attention" : reviewPreparation[stepNumber] === "loading" ? "is checking…" : "is waiting"}
                             </div>
                           ))}
                         </div>
@@ -5076,13 +5129,27 @@ function LeadershipBoardField({ value, onChange }) {
       `}</style>
       <legend><UsersRound size={18} aria-hidden="true" /> Leadership on board</legend>
       <input type="hidden" name="beneficial_owners" value={value ?? ""} />
+      <datalist id="leadership-signatory-titles">
+        {SIGNATORY_TITLES.map((title) => (
+          <option key={title} value={title} />
+        ))}
+      </datalist>
       {rows.map((person, index) => (
         <div className="vr-leadership-row" key={index}>
           <label htmlFor={`leadership-name-${index}`}>Name
             <input id={`leadership-name-${index}`} value={person.name} required aria-label={`Board member ${index + 1} name`} placeholder="Full name" onChange={event => update(index, "name", event.target.value)} />
           </label>
           <label htmlFor={`leadership-title-${index}`}>Title
-            <input id={`leadership-title-${index}`} value={person.title} required aria-label={`Board member ${index + 1} title`} placeholder="e.g. Chairperson" onChange={event => update(index, "title", event.target.value)} />
+            <input
+              id={`leadership-title-${index}`}
+              list="leadership-signatory-titles"
+              value={person.title}
+              required
+              autoComplete="off"
+              aria-label={`Board member ${index + 1} title`}
+              placeholder="Select or type a title"
+              onChange={event => update(index, "title", event.target.value)}
+            />
           </label>
           <button type="button" aria-label={`Remove board member ${index + 1}`} onClick={() => emit(rows.filter((_, position) => position !== index))}><XCircle size={18} aria-hidden="true" /></button>
         </div>
