@@ -20,7 +20,7 @@ return new class extends Migration
             'company_reactions',
             'company_search_logs',
             'company_team_members',
-            // 'company_contacts',
+            'company_contacts',
         ];
 
         foreach ($tables as $tableName) {
