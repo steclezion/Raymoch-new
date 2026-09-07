@@ -19,7 +19,8 @@ return new class extends Migration
             'company_logs',
             'company_reactions',
             'company_search_logs',
-            'company_team_members'
+            'company_team_members',
+            // 'company_contacts',
         ];
 
         foreach ($tables as $tableName) {
@@ -46,7 +47,8 @@ return new class extends Migration
             'company_logs',
             'company_reactions',
             'company_search_logs',
-            'company_team_members'
+            'company_team_members',
+            'company_contacts',
         ];
 
         foreach ($tables as $tableName) {

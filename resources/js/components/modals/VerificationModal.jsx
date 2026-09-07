@@ -55,10 +55,24 @@ const REVIEW_VERIFICATION_DOCUMENT_ENDPOINT =
 const GRAB_APPLICANTS_INFO_ENDPOINT =
   `${API_BASE_URL}/api/grab_applicants_info`;
 const VERIFICATION_ENDPOINT = `${API_BASE_URL}/verificationsubmissionform`;
-const SUBMISSION_PREVIEW_MODE = true;
+const SUBMISSION_PREVIEW_MODE = false;
 const COMPANY_INFORMATION_ENDPOINT = `${API_BASE_URL}/api/company-information`;
 
 const REVIEWABLE_DOCUMENT_FILES = ".pdf,.jpg,.jpeg,.png,.webp";
+const COMPANY_PROFILE_FILES = ".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp";
+const COMPANY_PROFILE_TYPES = [
+  "Magazine",
+  "Company profile",
+  "Article",
+  "Company image",
+  "Press release",
+  "Brochure",
+  "Annual report",
+  "Case study",
+  "Media coverage",
+  "Award or recognition",
+  "Other",
+];
 
 const FIELD_HELP_EVENT = "verification:ask-field-help";
 
@@ -100,7 +114,7 @@ const REQUIRED_FIELD_HELP = {
   is_holding_company: "Select this when the current company primarily holds ownership interests in other entities.",
   ultimate_company_name: "Enter the complete legal name of the ultimate company associated with the selected relationship.",
   ownership_type: "The general ownership classification, such as privately held, publicly traded, state-owned, cooperative, or nonprofit.",
-  beneficial_owners: "Add the name and title of each member of the company’s leadership board.",
+  beneficial_owners: "Add the name, title, biography, email address, LinkedIn URL, and ownership percentage of each member of the company’s leadership board.",
   authorized_signatory: "The person legally authorized to sign and submit this verification request for the applicant.",
   signatory_title: "The authorized signatory’s official role or position in relation to the applicant.",
   signatory_id_number: "The identifying number printed on the authorized signatory’s valid passport or national identity document.",
@@ -2177,11 +2191,11 @@ function ReviewChecklist({
 }
 
 const SUBMISSION_STEPS = [
-  { step: 2, label: "Account and legal identity" },
-  { step: 3, label: "Business and operating profile" },
-  { step: 4, label: "Ownership and authorized signatory" },
-  { step: 5, label: "Verification documents" },
-  { step: 6, label: "Applicant contact and consent" },
+  { step: 2, label: "Create company identity and location" },
+  { step: 3, label: "Save company financials" },
+  { step: 4, label: "Save leadership board" },
+  { step: 5, label: "Store verification documents" },
+  { step: 6, label: "Save contact and company profile; commit transaction" },
 ];
 
 const initialSubmissionStages = () =>
@@ -2236,13 +2250,13 @@ function SubmissionProgressModal({ open, stages, complete, error, onClose, onCon
                   <svg viewBox="0 0 40 40"><circle className="track" cx="20" cy="20" r="16" pathLength="100"/><circle className="value" cx="20" cy="20" r="16" pathLength="100"/></svg>
                   <span className="vr-saveIcon">{item.status === "saved" ? <CheckCircle2 size={21}/> : item.status === "failed" ? <XCircle size={21}/> : item.step}</span>
                 </span>
-                <span className="vr-saveCopy"><strong>Step {item.step}</strong><span>{item.label} · {previewMode && item.phase ? item.phase : previewMode && item.status === "saved" ? "Saved successfully" : item.status === "saved" ? "Saved" : item.status === "failed" ? "Not confirmed" : item.status === "active" ? "Awaiting server confirmation" : "Queued"}</span></span>
+                <span className="vr-saveCopy"><strong>Step {item.step}</strong><span>{item.label} · {item.phase || (item.status === "saved" ? "Saved" : item.status === "failed" ? "Not confirmed" : item.status === "active" || item.status === "reading" ? "Awaiting server confirmation" : "Queued")}</span></span>
               </li>
             ))}
           </ol>
           {complete && <div className="vr-saveNotice success"><strong>{previewMode ? "Preview completed." : "All information is saved."}</strong> {previewMode ? "Close this window to continue testing the form." : "Your company verification record is ready to review."}</div>}
           {error && <div className="vr-saveNotice error" role="alert">{error}</div>}
-          {(complete || error) && <div className="vr-saveActions"><button type="button" onClick={complete ? onConfirm : onClose}>{previewMode ? "OK" : complete ? "OK — view company details" : "Return to form"}</button></div>}
+          {(complete || error) && <div className="vr-saveActions"><button type="button" onClick={complete ? onConfirm : onClose}>{complete ? "OK — return to form" : "Return to form"}</button></div>}
         </div>
       </section>
     </div>
@@ -2273,7 +2287,7 @@ export default function VerificationModal({ companyContext = null } = {}) {
   );
 
   // Begin at Step 3 temporarily for testing, then continue through Step 6.
-  const [step, setStep] = useState(() => 6);
+  const [step, setStep] = useState(() => 1);
   const [formData, setFormData] = useState(
     () => hasConfirmedParent
       ? {
@@ -2296,6 +2310,7 @@ export default function VerificationModal({ companyContext = null } = {}) {
   const [files, setFiles] = useState(() => initialDraftRef.current.files);
   const [verificationType, setVerificationType] = useState("");
   const [verificationDocuments, setVerificationDocuments] = useState({});
+  const [companyProfiles, setCompanyProfiles] = useState([]);
   const [documentReview, setDocumentReview] = useState({
     open: false,
     loading: false,
@@ -2494,8 +2509,33 @@ export default function VerificationModal({ companyContext = null } = {}) {
       && businessDescriptionReviewStatus === "passed";
 
     const boardMembers = leadershipRows(formData.beneficial_owners);
+    const boardOwnershipTotal = boardMembers.reduce(
+      (total, member) => total + Number(member.ownership_percentage || 0),
+      0,
+    );
     const leadershipValid = boardMembers.length > 0
-      && boardMembers.every((member) => filled(member.name) && filled(member.title));
+      && boardMembers.every((member) => {
+        const hasBio = filled(member.bio);
+        const hasLinkedIn = filled(member.linkedin_url);
+        const hasOwnership = filled(member.ownership_percentage);
+        const memberOwnership = Number(member.ownership_percentage);
+        const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(member.email);
+        const linkedInValid = /^https?:\/\/(?:[a-z]{2,3}\.)?(?:www\.)?linkedin\.com\/.+/i.test(member.linkedin_url);
+
+        return filled(member.name)
+          && member.name.trim().length >= 2
+          && filled(member.title)
+          && member.title.trim().length >= 2
+          && emailValid
+          && (!hasBio || member.bio.trim().length >= 20)
+          && (!hasLinkedIn || linkedInValid)
+          && (!hasOwnership || (
+            Number.isFinite(memberOwnership)
+            && memberOwnership >= 0
+            && memberOwnership <= 100
+          ));
+      })
+      && boardOwnershipTotal <= 100;
     const ownership = Number(formData.ownership_percentage);
     const relationshipValid = formData.is_ultimate_parent
       ? true
@@ -3545,6 +3585,25 @@ ${description}`,
       return false;
     }
 
+    if (step === 4) {
+      const boardMembers = leadershipRows(formData.beneficial_owners);
+      const boardOwnershipTotal = boardMembers.reduce(
+        (total, member) => total + Number(member.ownership_percentage || 0),
+        0,
+      );
+
+      if (boardOwnershipTotal > 100) {
+        const firstOwnershipField = form.querySelector('[id^="leadership-ownership-"]');
+        pushAssistantMessage(
+          `Leadership-board ownership totals ${boardOwnershipTotal}%. The combined percentage cannot exceed 100%.`,
+          "assistant",
+          "error",
+        );
+        focusInvalidFieldThenAssistant(firstOwnershipField);
+        return false;
+      }
+    }
+
     if (step === 4 && !signatureDataUrl) {
       setSignatureOpen(true);
       pushAssistantMessage(
@@ -3598,15 +3657,30 @@ ${description}`,
   };
 
   const handleNext = async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    event.nativeEvent?.stopImmediatePropagation?.();
+
+    const stepBeingValidated = step;
+
     if (!validateCurrentStep(event)) {
       return;
     }
 
-    if (step === 3 && !(await reviewBusinessDescription())) {
+    if (stepBeingValidated === 3 && !(await reviewBusinessDescription())) {
       return;
     }
 
-    goToStep(step + 1);
+    if (stepBeingValidated === 5) {
+      // Step 5 Next is validation/navigation only. Never let it enter the
+      // Step 6 form-submission operation during the same event.
+      goToStep(6);
+      return;
+    }
+
+    if (stepBeingValidated < 6) {
+      goToStep(stepBeingValidated + 1);
+    }
   };
 
   const handleBack = () => {
@@ -3653,6 +3727,7 @@ ${description}`,
     setFiles([]);
     setVerificationType("");
     setVerificationDocuments({});
+    setCompanyProfiles([]);
     setDocumentReview((current) => ({ ...current, open: false, loading: false, result: null, error: "", closing: false }));
     setDraftRecoveryWarning(false);
     setFileError("");
@@ -3736,6 +3811,40 @@ ${description}`,
     setFileError("");
   };
 
+  const addCompanyProfile = () => {
+    setCompanyProfiles((current) => [
+      ...current,
+      {
+        id: globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`,
+        type: "",
+        file: null,
+      },
+    ]);
+  };
+
+  const updateCompanyProfileType = (profileId, type) => {
+    setCompanyProfiles((current) =>
+      current.map((profile) =>
+        profile.id === profileId ? { ...profile, type } : profile,
+      ),
+    );
+  };
+
+  const updateCompanyProfileFile = (profileId, event) => {
+    const file = event.target.files?.[0] || null;
+    setCompanyProfiles((current) =>
+      current.map((profile) =>
+        profile.id === profileId ? { ...profile, file } : profile,
+      ),
+    );
+  };
+
+  const removeCompanyProfile = (profileId) => {
+    setCompanyProfiles((current) =>
+      current.filter((profile) => profile.id !== profileId),
+    );
+  };
+
   const removeVerificationDocument = (slotKey, documentId) => {
     setVerificationDocuments((current) => {
       const remaining = (current[slotKey] || []).filter((document) => document.id !== documentId);
@@ -3788,6 +3897,12 @@ ${description}`,
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    // Submission is a Step 6-only operation. Pressing Enter or clicking Next
+    // anywhere in Steps 2–5 must never start the transaction.
+    if (step !== 6) {
+      return;
+    }
 
     if (SUBMISSION_PREVIEW_MODE) {
       setSaveProgressStages(initialSubmissionStages());
@@ -3845,28 +3960,39 @@ ${description}`,
       return;
     }
 
-    const missingConsentId = !formData.accuracy_consent
-      ? "accuracy_consent"
-      : !formData.privacy_consent
-        ? "privacy_consent"
-        : "";
+    const missingConsentIds = [
+      !formData.accuracy_consent ? "accuracy_consent" : null,
+      !formData.privacy_consent ? "privacy_consent" : null,
+    ].filter(Boolean);
 
-    if (missingConsentId) {
-      setConsentAttention(missingConsentId);
-      setSubmissionError("Select both required confirmation checkboxes before submitting.");
-      const missingConsent = document.getElementById(missingConsentId);
-      window.requestAnimationFrame(() => {
-        missingConsent?.focus({ preventScroll: true });
-        missingConsent?.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (missingConsentIds.length > 0) {
+      const firstMissingConsentId = missingConsentIds[0];
+      const missingLabel = missingConsentIds.length === 2
+        ? "the Accuracy and Authorization checkbox and the Privacy Consent checkbox"
+        : firstMissingConsentId === "accuracy_consent"
+          ? "the Accuracy and Authorization checkbox"
+          : "the Privacy Consent checkbox";
+      const consentMessage = `Please select ${missingLabel} before submitting for verification.`;
+
+      setConsentAttention(firstMissingConsentId);
+      setSubmissionError(consentMessage);
+      requestConfirmation({
+        title: "Confirmation required",
+        message: consentMessage,
+        confirmLabel: "Select checkbox",
+        cancelLabel: "Close",
+        tone: "danger",
+        onConfirm: () => {
+          const missingConsent = document.getElementById(firstMissingConsentId);
+          window.requestAnimationFrame(() => {
+            missingConsent?.focus({ preventScroll: true });
+            missingConsent?.scrollIntoView({ behavior: "smooth", block: "center" });
+          });
+        },
       });
       window.setTimeout(() => {
-        setConsentAttention((current) => current === missingConsentId ? "" : current);
+        setConsentAttention((current) => current === firstMissingConsentId ? "" : current);
       }, 3200);
-      return;
-    }
-
-    if (!navigator.onLine) {
-      setSubmissionError("No internet connection was detected. Your information remains in the form; reconnect before submitting.");
       return;
     }
 
@@ -3879,6 +4005,53 @@ ${description}`,
       setFileError("Upload at least one supporting document.");
       goToStep(5);
       return;
+    }
+
+    if (!navigator.onLine) {
+      setSubmissionError("You are not connected to the internet. Your information remains in the form; reconnect before submitting.");
+      return;
+    }
+
+    setSaveProgressStages((current) => current.map((item, index) => ({
+      ...item,
+      status: index === 0 ? "reading" : "waiting",
+      phase: index === 0 ? "Checking server connection…" : "Queued",
+    })));
+    setSaveProgressComplete(false);
+    setSaveProgressError("");
+    setSaveProgressOpen(true);
+    setSubmissionLoading(true);
+    setSubmissionError("");
+
+    const connectionCheckController = new AbortController();
+    const connectionCheckTimeout = window.setTimeout(
+      () => connectionCheckController.abort(),
+      10000,
+    );
+    try {
+      // This authenticated endpoint is already used by the form, making it a
+      // reliable reachability check without requiring a separate health route.
+      await fetch(COMPANY_INFORMATION_ENDPOINT, {
+        method: "GET",
+        credentials: "include",
+        headers: { Accept: "application/json" },
+        cache: "no-store",
+        signal: connectionCheckController.signal,
+      });
+    } catch {
+      setIsOnline(false);
+      const connectionMessage = "You are not connected to the internet or the verification server cannot be reached. Your information remains in the form.";
+      setSaveProgressStages((current) => current.map((item) => ({
+        ...item,
+        status: "failed",
+        phase: "Server connection not confirmed",
+      })));
+      setSaveProgressError(connectionMessage);
+      setSubmissionError(connectionMessage);
+      setSubmissionLoading(false);
+      return;
+    } finally {
+      window.clearTimeout(connectionCheckTimeout);
     }
 
     const payload = new FormData();
@@ -3900,11 +4073,26 @@ ${description}`,
       payload.append(key, value);
     });
 
+    payload.append("country_name", selectedOptionName(lookupOptions.countries, formData.country_id));
+    if (formData.state_id) {
+      payload.append("state_name", selectedOptionName(lookupOptions.states, formData.state_id));
+    }
+    if (formData.city_id) {
+      payload.append("city_name", selectedOptionName(lookupOptions.cities, formData.city_id));
+    }
+
     Object.entries(verificationDocuments).forEach(([slotKey, documents]) => {
       documents.forEach((document) => {
         payload.append(`documents[${slotKey}][]`, document.file);
       });
     });
+
+    companyProfiles
+      .filter((profile) => profile.type && profile.file)
+      .forEach((profile, index) => {
+        payload.append(`company_profiles[${index}][type]`, profile.type);
+        payload.append(`company_profiles[${index}][file]`, profile.file);
+      });
 
     if (!signatureDataUrl) {
       setSubmissionError("The authorized signatory’s handwritten signature is required.");
@@ -3923,38 +4111,57 @@ ${description}`,
     setSubmissionLoading(true);
     setSubmissionError("");
 
-    let activeStageIndex = 0;
     setSaveProgressStages((current) => current.map((item, index) => ({
       ...item,
-      status: index === activeStageIndex ? "active" : "waiting",
+      status: index === 0 ? "reading" : "waiting",
+      phase: index === 0 ? "Server transaction in progress…" : "Queued",
     })));
-    const preparationTimer = window.setInterval(() => {
-      activeStageIndex = (activeStageIndex + 1) % SUBMISSION_STEPS.length;
-      setSaveProgressStages((current) => current.map((item, index) => ({
-        ...item,
-        status: index === activeStageIndex ? "active" : "waiting",
-      })));
-    }, 850);
+
+    const submissionController = new AbortController();
+    const abortSubmissionWhenOffline = () => {
+      setIsOnline(false);
+      submissionController.abort();
+    };
+    window.addEventListener("offline", abortSubmissionWhenOffline);
 
     try {
       const response = await fetch(VERIFICATION_ENDPOINT, {
         method: "POST",
+        credentials: "include",
         headers: {
           Accept: "application/json",
           "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.content || "",
         },
         body: payload,
+        signal: submissionController.signal,
       });
 
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
         const firstValidationError = Object.values(data.errors || {})[0]?.[0];
-        throw new Error(
+        const technicalError = data.debug?.database_error || data.debug?.error;
+        const technicalContext = data.debug
+          ? [
+              data.debug.exception,
+              data.debug.sql_state ? `SQLSTATE ${data.debug.sql_state}` : "",
+              data.debug.database_error_code
+                ? `DB code ${data.debug.database_error_code}`
+                : "",
+              data.debug.file && data.debug.line
+                ? `${data.debug.file}:${data.debug.line}`
+                : "",
+            ].filter(Boolean).join(" · ")
+          : "";
+        const visibleError = [
           firstValidationError || data.message || "Submission failed.",
+          technicalError,
+          technicalContext,
+        ].filter(Boolean).join("\n\n");
+        throw new Error(
+          visibleError,
         );
       }
 
-      window.clearInterval(preparationTimer);
       const confirmedSteps = new Set(
         Array.isArray(data.saved_steps)
           ? data.saved_steps.map((value) => Number(value))
@@ -3970,18 +4177,39 @@ ${description}`,
       const allStepsConfirmed = SUBMISSION_STEPS.every(({ step: stepNumber }) =>
         confirmedSteps.has(stepNumber) && confirmedResults.has(stepNumber),
       );
+      const transactionConfirmed = data.transaction_committed === true;
 
-      if (!allStepsConfirmed) {
+      if (!transactionConfirmed || !allStepsConfirmed) {
         throw new Error(
-          "The server response did not confirm every saved section. Check your company list before attempting another submission.",
+          "The server did not confirm that every section was committed. No success state will be shown; check the company list before attempting another submission.",
         );
       }
 
+      const confirmedOperations = new Map(
+        (data.step_results || []).map((result) => [
+          Number(result.step),
+          result.operation || "Saved and confirmed",
+        ]),
+      );
+
       for (let index = 0; index < SUBMISSION_STEPS.length; index += 1) {
-        await new Promise((resolve) => window.setTimeout(resolve, 260));
+        const stepNumber = SUBMISSION_STEPS[index].step;
         setSaveProgressStages((current) => current.map((item, itemIndex) => ({
           ...item,
-          status: itemIndex <= index ? "saved" : itemIndex === index + 1 ? "active" : "waiting",
+          status: itemIndex < index ? "saved" : itemIndex === index ? "validated" : "waiting",
+          phase: itemIndex < index
+            ? current[itemIndex].phase
+            : itemIndex === index
+              ? confirmedOperations.get(stepNumber)
+              : "Queued",
+        })));
+        await new Promise((resolve) => window.setTimeout(resolve, 520));
+        setSaveProgressStages((current) => current.map((item, itemIndex) => ({
+          ...item,
+          status: itemIndex <= index ? "saved" : "waiting",
+          phase: itemIndex <= index
+            ? confirmedOperations.get(item.step)
+            : "Queued",
         })));
       }
 
@@ -3989,20 +4217,21 @@ ${description}`,
       setSavedCompanyId(data.company_id || null);
       setExistingCompanyId(data.company_id || existingCompanyId);
       setSaveProgressComplete(true);
-      setSubmitted(true);
+      // Testing mode: keep the verification form mounted after success.
+      setSubmitted(false);
     } catch (error) {
-      window.clearInterval(preparationTimer);
-      const professionalMessage = !navigator.onLine || error instanceof TypeError
-          ? "The connection was interrupted before the server confirmed submission. Nothing is marked as submitted; reconnect and try again."
+      const professionalMessage = !navigator.onLine || error?.name === "AbortError" || error instanceof TypeError
+          ? "You are not connected to the internet. The server did not confirm the transaction; reconnect and try again."
           : error.message || "Submission failed. The server transaction was not confirmed; please try again.";
       setSaveProgressStages((current) => current.map((item) => ({
         ...item,
-        status: item.status === "active" ? "failed" : "waiting",
+        status: "failed",
+        phase: "Transaction rolled back or not confirmed",
       })));
       setSaveProgressError(professionalMessage);
       setSubmissionError(professionalMessage);
     } finally {
-      window.clearInterval(preparationTimer);
+      window.removeEventListener("offline", abortSubmissionWhenOffline);
       setSubmissionLoading(false);
     }
   };
@@ -4057,7 +4286,7 @@ ${description}`,
         ...(!formData.is_ultimate_parent ? [["Ownership percentage", formData.ownership_percentage === "" ? "Not provided" : `${formData.ownership_percentage}%`]] : []),
         ["Is ultimate parent", formData.is_ultimate_parent ? "Yes" : "No"],
         ["Is holding company", formData.is_holding_company ? "Yes" : "No"],
-        ["Leadership on board", leadershipRows(formData.beneficial_owners).map(person => `${person.name} — ${person.title}`).join("\n")],
+        ["Leadership on board", leadershipRows(formData.beneficial_owners).map(person => `${person.name} — ${person.title} — ${person.email} — ${person.linkedin_url} — ${person.ownership_percentage}%\n${person.bio}`).join("\n\n")],
         ["Authorized signatory", formData.authorized_signatory],
         ["Signatory title", formData.signatory_title],
         ["National ID or passport number", formData.signatory_id_number],
@@ -4895,6 +5124,79 @@ ${description}`,
                         />
                       </div>
 
+                      <div style={{ marginTop: "18px", padding: "16px", border: "1px solid #dbe3ef", borderRadius: "14px", background: "#f8fafc" }}>
+                        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+                          <div>
+                            <h3 style={{ margin: 0, color: "#0f2747", fontSize: "15px" }}>Company Profile</h3>
+                            <p style={{ margin: "5px 0 0", color: "#64748b", fontSize: "12px", lineHeight: 1.5 }}>
+                              Add magazines, profiles, articles, company images, and other public company materials.
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={addCompanyProfile}
+                            style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "8px 12px", border: 0, borderRadius: "9px", background: "#2563eb", color: "#fff", fontSize: "12px", fontWeight: 800, cursor: "pointer" }}
+                          >
+                            <Plus size={15} /> Add
+                          </button>
+                        </div>
+
+                        {companyProfiles.length === 0 ? (
+                          <p style={{ margin: "13px 0 0", padding: "12px", border: "1px dashed #cbd5e1", borderRadius: "10px", color: "#64748b", fontSize: "12px", textAlign: "center" }}>
+                            No company profile files added yet.
+                          </p>
+                        ) : (
+                          <div style={{ display: "grid", gap: "10px", marginTop: "13px" }}>
+                            {companyProfiles.map((profile, index) => {
+                              const fileInputId = `company-profile-file-${profile.id}`;
+                              return (
+                                <div key={profile.id} style={{ display: "grid", gridTemplateColumns: "minmax(190px, 1.2fr) minmax(170px, 1fr) auto", alignItems: "end", gap: "10px", padding: "12px", border: "1px solid #dbe3ef", borderRadius: "11px", background: "#fff" }}>
+                                  <div className="vr-field">
+                                    <label htmlFor={fileInputId} style={{ display: "block", marginBottom: "6px", color: "#334155", fontSize: "12px", fontWeight: 700 }}>
+                                      File {index + 1}
+                                    </label>
+                                    <input
+                                      id={fileInputId}
+                                      type="file"
+                                      accept={COMPANY_PROFILE_FILES}
+                                      onChange={(event) => updateCompanyProfileFile(profile.id, event)}
+                                      required
+                                    />
+                                  </div>
+
+                                  <div className="vr-field">
+                                    <label htmlFor={`company-profile-type-${profile.id}`} style={{ display: "block", marginBottom: "6px", color: "#334155", fontSize: "12px", fontWeight: 700 }}>
+                                      Material type
+                                    </label>
+                                    <select
+                                      id={`company-profile-type-${profile.id}`}
+                                      value={profile.type}
+                                      required
+                                      onChange={(event) => updateCompanyProfileType(profile.id, event.target.value)}
+                                    >
+                                      <option value="">Select type</option>
+                                      {COMPANY_PROFILE_TYPES.map((type) => (
+                                        <option key={type} value={type}>{type}</option>
+                                      ))}
+                                    </select>
+                                  </div>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => removeCompanyProfile(profile.id)}
+                                    aria-label={`Remove company profile item ${index + 1}`}
+                                    title="Remove"
+                                    style={{ width: "38px", height: "38px", border: "1px solid #fecaca", borderRadius: "9px", background: "#fff1f2", color: "#b91c1c", fontSize: "20px", fontWeight: 800, cursor: "pointer" }}
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+
                       {applicantInfoError && (
                         <p className="vr-error" role="alert" style={{ marginTop: "12px" }}>
                           {applicantInfoError}
@@ -5010,7 +5312,7 @@ ${description}`,
                 )}
 
                 <div className="vr-stepNavigation">
-                  {step > 2 && (
+                  {step > 1 && (
                     <button
                       className="vr-btn vr-btnGhost"
                       type="button"
@@ -5020,8 +5322,6 @@ ${description}`,
                       Back
                     </button>
                   )}
-
-                  {step === 2 && <span />}
 
                   <div
                     style={{
@@ -5058,8 +5358,8 @@ ${description}`,
                       <button
                         className="vr-btn"
                         type="submit"
-                        formNoValidate={SUBMISSION_PREVIEW_MODE}
-                        disabled={!SUBMISSION_PREVIEW_MODE && (submissionLoading || !reviewReady || !isOnline)}
+                        formNoValidate
+                        disabled={submissionLoading}
                         title={SUBMISSION_PREVIEW_MODE ? "Open the submission design preview; no data will be sent" : !isOnline ? "Reconnect to the internet before submitting" : !consentsComplete ? "Complete both confirmations before submitting" : "Submit for Verification"}
                         style={SUBMISSION_PREVIEW_MODE ? { background: "#2563eb", borderColor: "#2563eb" } : consentsComplete && reviewReady && isOnline ? { background: "#16a34a", borderColor: "#16a34a", animation: "finalSubmitPulse 1.45s ease-in-out infinite" } : undefined}
                       >
@@ -5185,7 +5485,8 @@ ${description}`,
         }}
         onConfirm={() => {
           setSaveProgressOpen(false);
-          if (!SUBMISSION_PREVIEW_MODE) setShowCompanyDetails(true);
+          // Keep this verification modal open for repeated UI testing.
+          setShowCompanyDetails(false);
         }}
       />
 
@@ -5271,14 +5572,40 @@ function leadershipRows(value) {
   if (!value) return [];
   try {
     const rows = JSON.parse(value);
-    if (Array.isArray(rows) && rows.every(row => row && typeof row.name === "string" && typeof row.title === "string")) return rows;
+    if (Array.isArray(rows)) {
+      return rows
+        .filter((row) => row && typeof row === "object")
+        .map((row) => ({
+          name: String(row.name ?? ""),
+          title: String(row.title ?? ""),
+          bio: String(row.bio ?? ""),
+          email: String(row.email ?? ""),
+          linkedin_url: String(row.linkedin_url ?? ""),
+          ownership_percentage: String(row.ownership_percentage ?? ""),
+        }));
+    }
   } catch { /* Keep existing text available for editing. */ }
-  return [{ name: String(value), title: "" }];
+  return [{
+    name: String(value),
+    title: "",
+    bio: "",
+    email: "",
+    linkedin_url: "",
+    ownership_percentage: "",
+  }];
 }
 
 function LeadershipBoardField({ value, onChange }) {
   const storedRows = leadershipRows(value);
-  const rows = storedRows.length ? storedRows : [{ name: "", title: "" }];
+  const emptyMember = () => ({
+    name: "",
+    title: "",
+    bio: "",
+    email: "",
+    linkedin_url: "",
+    ownership_percentage: "",
+  });
+  const rows = storedRows.length ? storedRows : [emptyMember()];
   const emit = (next) => onChange({ target: {
     name: "beneficial_owners", type: "text",
     value: next.length ? JSON.stringify(next) : "",
@@ -5290,13 +5617,15 @@ function LeadershipBoardField({ value, onChange }) {
       <style>{`
         .vr-leadership-board { min-width:0; margin:0; padding:18px; border:1px solid #dbe3ef; border-radius:13px; background:#f8fafc; }
         .vr-leadership-board legend { display:flex; align-items:center; gap:8px; padding:0 7px; color:#17233b; font-size:15px; font-weight:700; }
-        .vr-leadership-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto; align-items:end; gap:12px; margin-bottom:14px; }
+        .vr-leadership-row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)) auto; align-items:end; gap:12px; margin-bottom:14px; padding:14px; border:1px solid #dbe3ef; border-radius:11px; background:#fff; }
         .vr-leadership-row label { display:flex; flex-direction:column; gap:7px; color:#475569; font-size:12px; }
-        .vr-leadership-row input { box-sizing:border-box; min-width:0; width:100%; min-height:42px; padding:10px 12px; border:1px solid #cbd5e1; border-radius:9px; background:white; color:#17233b; font:inherit; }
-        .vr-leadership-row button { display:inline-flex; align-items:center; justify-content:center; min-height:42px; min-width:42px; border:1px solid #e2e8f0; border-radius:9px; background:#fff; color:#64748b; cursor:pointer; }
+        .vr-leadership-row :is(input,textarea) { box-sizing:border-box; min-width:0; width:100%; min-height:42px; padding:10px 12px; border:1px solid #cbd5e1; border-radius:9px; background:white; color:#17233b; font:inherit; }
+        .vr-leadership-row textarea { min-height:88px; resize:vertical; }
+        .vr-leadership-row .vr-leadership-bio { grid-column:1 / -2; }
+        .vr-leadership-row button { grid-column:3; grid-row:1 / span 3; align-self:center; display:inline-flex; align-items:center; justify-content:center; min-height:42px; min-width:42px; border:1px solid #e2e8f0; border-radius:9px; background:#fff; color:#64748b; cursor:pointer; }
         .vr-leadership-add { display:inline-flex; align-items:center; gap:7px; min-height:42px; padding:9px 14px; border:1px solid #bfd0ef; border-radius:9px; background:#eef4ff; color:#3455a0; font-weight:650; cursor:pointer; }
-        .vr-leadership-board :is(input,button):focus-visible { outline:2px solid #3455a0; outline-offset:2px; }
-        @media(max-width:560px) { .vr-leadership-row { grid-template-columns:minmax(0,1fr) auto; } .vr-leadership-row label { grid-column:1; } .vr-leadership-row button { grid-column:2; grid-row:1 / span 2; align-self:center; } }
+        .vr-leadership-board :is(input,textarea,button):focus-visible { outline:2px solid #3455a0; outline-offset:2px; }
+        @media(max-width:650px) { .vr-leadership-row { grid-template-columns:minmax(0,1fr) auto; } .vr-leadership-row label,.vr-leadership-row .vr-leadership-bio { grid-column:1; } .vr-leadership-row button { grid-column:2; grid-row:1 / span 6; } }
       `}</style>
       <legend><UsersRound size={18} aria-hidden="true" /> Leadership on board</legend>
       <input type="hidden" name="beneficial_owners" value={value ?? ""} />
@@ -5308,7 +5637,7 @@ function LeadershipBoardField({ value, onChange }) {
       {rows.map((person, index) => (
         <div className="vr-leadership-row" key={index}>
           <label htmlFor={`leadership-name-${index}`}>Name
-            <input id={`leadership-name-${index}`} value={person.name} required aria-label={`Board member ${index + 1} name`} placeholder="Full name" onChange={event => update(index, "name", event.target.value)} />
+            <input id={`leadership-name-${index}`} value={person.name} required minLength={2} aria-label={`Board member ${index + 1} name`} placeholder="Full name" onChange={event => update(index, "name", event.target.value)} />
           </label>
           <label htmlFor={`leadership-title-${index}`}>Title
             <input
@@ -5316,16 +5645,29 @@ function LeadershipBoardField({ value, onChange }) {
               list="leadership-signatory-titles"
               value={person.title}
               required
+              minLength={2}
               autoComplete="off"
               aria-label={`Board member ${index + 1} title`}
               placeholder="Select or type a title"
               onChange={event => update(index, "title", event.target.value)}
             />
           </label>
+          <label htmlFor={`leadership-email-${index}`}>Email
+            <input id={`leadership-email-${index}`} type="email" value={person.email} required aria-label={`Board member ${index + 1} email`} placeholder="name@company.com" onChange={event => update(index, "email", event.target.value)} />
+          </label>
+          <label htmlFor={`leadership-linkedin-${index}`}>LinkedIn URL
+            <input id={`leadership-linkedin-${index}`} type="url" pattern="https?://([a-z]{2,3}\.)?(www\.)?linkedin\.com/.+" value={person.linkedin_url} aria-label={`Board member ${index + 1} LinkedIn URL`} placeholder="https://www.linkedin.com/in/name" title="Enter a complete LinkedIn URL" onChange={event => update(index, "linkedin_url", event.target.value)} />
+          </label>
+          <label htmlFor={`leadership-ownership-${index}`}>Ownership percentage
+            <input id={`leadership-ownership-${index}`} type="number" min="0" max="100" step="0.01" value={person.ownership_percentage} aria-label={`Board member ${index + 1} ownership percentage`} placeholder="0–100" onChange={event => update(index, "ownership_percentage", event.target.value)} />
+          </label>
+          <label className="vr-leadership-bio" htmlFor={`leadership-bio-${index}`}>Bio
+            <textarea id={`leadership-bio-${index}`} value={person.bio} minLength={20} aria-label={`Board member ${index + 1} bio`} placeholder="Optional biography (at least 20 characters if provided)" onChange={event => update(index, "bio", event.target.value)} />
+          </label>
           <button type="button" aria-label={`Remove board member ${index + 1}`} onClick={() => emit(rows.filter((_, position) => position !== index))}><XCircle size={18} aria-hidden="true" /></button>
         </div>
       ))}
-      <button type="button" className="vr-leadership-add" onClick={() => emit([...rows, { name: "", title: "" }])}><Plus size={17} aria-hidden="true" /> Add person</button>
+      <button type="button" className="vr-leadership-add" onClick={() => emit([...rows, emptyMember()])}><Plus size={17} aria-hidden="true" /> Add person</button>
     </fieldset>
   );
 }

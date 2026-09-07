@@ -78,6 +78,10 @@ class VerificationSubmissionFormController extends Controller
                 'registered_address' => ['required', 'string', 'max:1000'],
                 'postal_code' => ['required', 'string', 'max:30'],
                 'website' => ['nullable', 'url:http,https', 'max:2048'],
+                'gps_location' => ['required', 'string', 'max:100'],
+                'country_name' => ['required', 'string', 'max:255'],
+                'state_name' => ['nullable', 'string', 'max:255'],
+                'city_name' => ['nullable', 'string', 'max:255'],
 
                 'business_model' => ['required', 'string', 'max:255'],
                 'products_services' => ['required', 'string', 'max:2000'],
@@ -123,6 +127,9 @@ class VerificationSubmissionFormController extends Controller
                 'documents' => ['required', 'array'],
                 'documents.*' => ['required', 'array', 'min:1'],
                 'documents.*.*' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:102400'],
+                'company_profiles' => ['nullable', 'array'],
+                'company_profiles.*.type' => ['required_with:company_profiles.*.file', 'string', 'max:100'],
+                'company_profiles.*.file' => ['required_with:company_profiles.*.type', 'file', 'mimes:pdf,doc,docx,jpg,jpeg,png,webp', 'max:102400'],
                 'singatory_image_holder' => ['required', 'string', 'max:7000000'],
 
                 'contact_name' => ['required', 'string', 'max:255'],
@@ -200,6 +207,57 @@ class VerificationSubmissionFormController extends Controller
                     'documents' => [
                         'The uploaded document categories do not match the selected verification type.',
                     ],
+                ]);
+            }
+
+            $coordinatePattern = '/^\s*(-?\d+(?:\.\d+)?)\s*(?:,|\s+-\s+)\s*(-?\d+(?:\.\d+)?)\s*$/';
+            if (! preg_match($coordinatePattern, $validated['gps_location'], $coordinateMatches)) {
+                throw ValidationException::withMessages([
+                    'gps_location' => ['Enter GPS coordinates as "latitude, longitude" or "latitude - longitude".'],
+                ]);
+            }
+
+            $latitude = (float) $coordinateMatches[1];
+            $longitude = (float) $coordinateMatches[2];
+            if ($latitude < -90 || $latitude > 90 || $longitude < -180 || $longitude > 180) {
+                throw ValidationException::withMessages([
+                    'gps_location' => ['Latitude must be between -90 and 90 and longitude between -180 and 180.'],
+                ]);
+            }
+
+            $leadershipBoard = json_decode($validated['beneficial_owners'], true);
+            if (! is_array($leadershipBoard) || $leadershipBoard === []) {
+                throw ValidationException::withMessages([
+                    'beneficial_owners' => ['Add at least one leadership board member.'],
+                ]);
+            }
+
+            $leadershipOwnershipTotal = 0.0;
+            foreach ($leadershipBoard as $index => $member) {
+                $validator = validator($member, [
+                    'name' => ['required', 'string', 'min:2', 'max:255'],
+                    'title' => ['required', 'string', 'min:2', 'max:255'],
+                    'email' => ['required', 'email:rfc', 'max:255'],
+                    'bio' => ['nullable', 'string', 'min:20', 'max:5000'],
+                    'linkedin_url' => ['nullable', 'url:http,https', 'regex:/^https?:\\/\\/(?:[a-z]{2,3}\\.)?(?:www\\.)?linkedin\\.com\\/.+/i', 'max:2048'],
+                    'ownership_percentage' => ['nullable', 'numeric', 'between:0,100'],
+                ]);
+
+                if ($validator->fails()) {
+                    throw ValidationException::withMessages([
+                        'beneficial_owners' => [
+                            'Leadership board member ' . ($index + 1) . ': '
+                                . $validator->errors()->first(),
+                        ],
+                    ]);
+                }
+
+                $leadershipOwnershipTotal += (float) ($member['ownership_percentage'] ?? 0);
+            }
+
+            if ($leadershipOwnershipTotal > 100) {
+                throw ValidationException::withMessages([
+                    'beneficial_owners' => ['Combined leadership ownership cannot exceed 100%.'],
                 ]);
             }
 
@@ -292,6 +350,49 @@ class VerificationSubmissionFormController extends Controller
                     'updated_at' => now(),
                 ]);
 
+            // Step 2: physical company location.
+            DB::table('company_locations')->insert([
+                'company_id' => $companyId,
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'who' => $user->getAuthIdentifier(),
+            ]);
+
+            // Step 3: current financial profile.
+            DB::table('company_financials')->insert([
+                'company_id' => $companyId,
+                'fiscal_year' => date('Y', strtotime($validated['fiscal_year_end'])),
+                'currency' => $validated['revenue_currency'],
+                'revenue' => preg_replace('/[^0-9.]/', '', $validated['annual_revenue']),
+                'ebitda' => null,
+                'net_income' => null,
+                'total_assets' => null,
+                'total_liabilities' => null,
+                'valuation' => null,
+                'source' => null,
+                'who' => $user->getAuthIdentifier(),
+            ]);
+
+            // Step 4: one row per leadership board member.
+            foreach ($leadershipBoard as $member) {
+                DB::table('company_team_members')->insert([
+                    'company_id' => $companyId,
+                    'full_name' => trim($member['name']),
+                    'title' => trim($member['title']),
+                    'role_type' => null,
+                    'bio' => filled($member['bio'] ?? null) ? trim($member['bio']) : null,
+                    'email' => trim($member['email']),
+                    'linkedin_url' => filled($member['linkedin_url'] ?? null)
+                        ? trim($member['linkedin_url'])
+                        : null,
+                    'ownership_percent' => filled($member['ownership_percentage'] ?? null)
+                        ? (float) $member['ownership_percentage']
+                        : null,
+                    'who' => $user->getAuthIdentifier(),
+                ]);
+            }
+
+            $documentCount = 0;
             foreach ($requiredFolders as $categoryKey => $folderLabel) {
                 $relativeFolder = $baseRelativePath . '/' . $folderLabel;
                 $absoluteFolder = Storage::disk('public')->path(
@@ -322,13 +423,96 @@ class VerificationSubmissionFormController extends Controller
                     );
                     $storedPaths[] = $storedPath;
                     @chmod(Storage::disk('public')->path($storedPath), 0660);
+
+                    DB::table('company_documents')->insert([
+                        'company_id' => $companyId,
+                        'title' => $uploadedFile->getClientOriginalName(),
+                        'document_type' => $folderLabel,
+                        'file_path' => $storedPath,
+                        'mime_type' => $uploadedFile->getMimeType(),
+                        'is_public' => 1,
+                        'source' => null,
+                        'as_of_date' => now(),
+                        'who' => $user->getAuthIdentifier(),
+                    ]);
+                    $documentCount++;
                 }
+            }
+
+            // Step 6: primary contact plus Step 2 address details.
+            DB::table('company_contacts')->insert([
+                'company_id' => $companyId,
+                'contact_name' => $validated['contact_name'],
+                'role' => $validated['contact_role'],
+                'email' => $validated['contact_email'],
+                'phone' => $validated['contact_phone'],
+                'website' => $validated['website'] ?? null,
+                'linkedin_url' => $validated['referral_source'] ?? null,
+                'address_line1' => $validated['registered_address'],
+                'city' => $validated['city_name'] ?? null,
+                'state' => $validated['state_name'] ?? null,
+                'postal_code' => $validated['postal_code'],
+                'country' => $validated['country_name'],
+                'who' => $user->getAuthIdentifier(),
+            ]);
+
+            $galleryRelativeFolder = $baseRelativePath . '/gallery';
+            $galleryAbsoluteFolder = Storage::disk('public')->path($galleryRelativeFolder);
+            File::ensureDirectoryExists($galleryAbsoluteFolder, 0770, true);
+            @chmod($galleryAbsoluteFolder, 0770);
+
+            $galleryCount = 0;
+            foreach ($request->file('company_profiles', []) as $index => $profileUpload) {
+                $uploadedFile = $profileUpload['file'] ?? null;
+                $materialType = trim((string) ($validated['company_profiles'][$index]['type'] ?? 'Other'));
+                if (! $uploadedFile) {
+                    continue;
+                }
+
+                $safeCompanyName = Str::slug($validated['legal_name'], '_') ?: 'company';
+                $safeMaterialType = Str::slug($materialType, '_') ?: 'material';
+                $safeOriginalName = Str::slug(
+                    pathinfo($uploadedFile->getClientOriginalName(), PATHINFO_FILENAME),
+                    '_'
+                ) ?: 'file';
+                $galleryFileName = sprintf(
+                    '%s_%s_%s_%d.%s',
+                    $safeCompanyName,
+                    $safeMaterialType,
+                    $safeOriginalName,
+                    $index + 1,
+                    strtolower($uploadedFile->extension())
+                );
+                $storedPath = $uploadedFile->storeAs(
+                    $galleryRelativeFolder,
+                    $galleryFileName,
+                    'public'
+                );
+                $storedPaths[] = $storedPath;
+                @chmod(Storage::disk('public')->path($storedPath), 0660);
+
+                DB::table('company_galleries')->insert([
+                    'company_id' => $companyId,
+                    'image_url' => $storedPath,
+                    'caption' => $materialType,
+                    'sort_order' => null,
+                    'is_primary' => null,
+                    'alt_text' => null,
+                    'image_base64' => null,
+                    'who' => $user->getAuthIdentifier(),
+                ]);
+                $galleryCount++;
+            }
+
+            if (connection_aborted()) {
+                throw new \RuntimeException('The client connection ended before the transaction could be committed.');
             }
 
             DB::commit();
 
             return response()->json([
                 'message' => 'Verification submitted successfully.',
+                'transaction_committed' => true,
                 'reference' => 'VSF-' . str_pad(
                     (string) $companyId,
                     8,
@@ -339,11 +523,11 @@ class VerificationSubmissionFormController extends Controller
                 // These steps are confirmed only after the database transaction commits.
                 'saved_steps' => [2, 3, 4, 5, 6],
                 'step_results' => [
-                    ['step' => 2, 'status' => 'saved'],
-                    ['step' => 3, 'status' => 'saved'],
-                    ['step' => 4, 'status' => 'saved'],
-                    ['step' => 5, 'status' => 'saved'],
-                    ['step' => 6, 'status' => 'saved'],
+                    ['step' => 2, 'status' => 'saved', 'operation' => 'Company identity and location saved'],
+                    ['step' => 3, 'status' => 'saved', 'operation' => 'Financial profile saved'],
+                    ['step' => 4, 'status' => 'saved', 'operation' => count($leadershipBoard) . ' leadership member(s) saved'],
+                    ['step' => 5, 'status' => 'saved', 'operation' => $documentCount . ' verification document(s) stored'],
+                    ['step' => 6, 'status' => 'saved', 'operation' => 'Primary contact and ' . $galleryCount . ' company profile file(s) saved; transaction committed'],
                 ],
             ], 201);
         } catch (ValidationException $exception) {
@@ -369,8 +553,23 @@ class VerificationSubmissionFormController extends Controller
                 'message' => $exception->getMessage(),
             ]);
 
+            $databaseReason = $exception->errorInfo[2] ?? $exception->getMessage();
+            $sqlState = $exception->errorInfo[0] ?? 'unknown';
+            $databaseErrorCode = $exception->errorInfo[1] ?? 'unknown';
+
             return response()->json([
-                'message' => 'We could not save the verification information at this time. Your submission was not completed; please try again shortly.',
+                'message' => sprintf(
+                    'Database operation failed and the transaction was rolled back. Reason: %s',
+                    $databaseReason
+                ),
+                'error_type' => 'database',
+                'transaction_rolled_back' => true,
+                'details' => [
+                    'exception' => $exception::class,
+                    'sql_state' => $sqlState,
+                    'database_error_code' => $databaseErrorCode,
+                    'database_error' => $databaseReason,
+                ],
             ], 503);
         } catch (Throwable $exception) {
             $cleanupFailedSubmission();
@@ -382,7 +581,18 @@ class VerificationSubmissionFormController extends Controller
             ]);
 
             return response()->json([
-                'message' => 'We could not complete your verification request. No information was committed. Please try again, and contact support if the issue continues.',
+                'message' => sprintf(
+                    'Submission execution failed and the transaction was rolled back. Reason: %s',
+                    $exception->getMessage()
+                ),
+                'error_type' => 'unexpected',
+                'transaction_rolled_back' => true,
+                'details' => [
+                    'exception' => $exception::class,
+                    'error' => $exception->getMessage(),
+                    'file' => $exception->getFile(),
+                    'line' => $exception->getLine(),
+                ],
             ], 500);
         }
     }
