@@ -16,7 +16,12 @@ return new class extends Migration
 
             $tables = [
 
-                'company_contacts'
+                'company_contacts',
+                'company_locations',
+                'company_logs',
+                'company_reactions',
+                'company_search_logs',
+
             ];
 
             foreach ($tables as $tableName) {
@@ -39,6 +44,10 @@ return new class extends Migration
         $tables = [
 
             'company_contacts',
+            'company_locations',
+            'company_logs',
+            'company_reactions',
+            'company_search_logs',
         ];
 
         foreach ($tables as $tableName) {
