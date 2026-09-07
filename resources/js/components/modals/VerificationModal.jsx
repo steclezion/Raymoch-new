@@ -13,6 +13,8 @@ import {
   Eye,
   Landmark,
   Lightbulb,
+  LocateFixed,
+  MapPin,
   Maximize2,
   MessageCircle,
   Minimize2,
@@ -53,6 +55,7 @@ const REVIEW_VERIFICATION_DOCUMENT_ENDPOINT =
 const GRAB_APPLICANTS_INFO_ENDPOINT =
   `${API_BASE_URL}/api/grab_applicants_info`;
 const VERIFICATION_ENDPOINT = `${API_BASE_URL}/verificationsubmissionform`;
+const SUBMISSION_PREVIEW_MODE = true;
 const COMPANY_INFORMATION_ENDPOINT = `${API_BASE_URL}/api/company-information`;
 
 const REVIEWABLE_DOCUMENT_FILES = ".pdf,.jpg,.jpeg,.png,.webp";
@@ -65,6 +68,7 @@ const REQUIRED_FIELD_HELP = {
   sector_id: "The broad area of the economy in which the organization operates.",
   industry_id: "The more specific line of business within the selected sector.",
   website: "The applicant’s official public website. Enter the complete address, including https://, so it can be used to verify the organization’s identity and activities.",
+  gps_location: "Select the applicant’s physical live location using the device GPS. Location access must be allowed in the browser.",
   external_identifier: "D-U-N-S is a unique 9-digit Dun & Bradstreet business identifier used across company, credit, supplier, procurement, and global transaction records. An LEI is a globally unique 20-character alphanumeric identifier issued under GLEIF for legal entities in financial transactions, regulatory reporting, and counterparty identification.",
   trading_name: "The name the applicant uses publicly or commercially when it differs from its registered legal name. This may also be called a trade name, business name, assumed name, or DBA (doing business as).",
   registration_number: "The unique number assigned by the authority that registered or licensed the applicant.",
@@ -332,6 +336,14 @@ function earliestIdExpiryDate(now = new Date()) {
   return [tomorrow.getFullYear(), String(tomorrow.getMonth() + 1).padStart(2, "0"), String(tomorrow.getDate()).padStart(2, "0")].join("-");
 }
 
+function isValidGpsLocation(value) {
+  const coordinates = String(value ?? "").split(",").map((coordinate) => Number(coordinate.trim()));
+  return coordinates.length === 2
+    && coordinates.every(Number.isFinite)
+    && coordinates[0] >= -90 && coordinates[0] <= 90
+    && coordinates[1] >= -180 && coordinates[1] <= 180;
+}
+
 const DATA_SCOPE_RULES = {
   legal_name: {
     valid: (value) => value.trim().length >= 2,
@@ -348,6 +360,16 @@ const DATA_SCOPE_RULES = {
   postal_code: {
     valid: (value) => /^[A-Za-z0-9][A-Za-z0-9 -]{1,11}$/.test(value.trim()),
     message: "Postal code must be 2–12 letters, numbers, spaces, or hyphens.",
+  },
+  gps_location: {
+    valid: (value) => {
+      const coordinates = value.split(",").map((coordinate) => Number(coordinate.trim()));
+      return coordinates.length === 2
+        && coordinates.every(Number.isFinite)
+        && coordinates[0] >= -90 && coordinates[0] <= 90
+        && coordinates[1] >= -180 && coordinates[1] <= 180;
+    },
+    message: "Select a valid physical live GPS location.",
   },
   business_description: {
     valid: (value) => value.trim().length >= 500,
@@ -401,6 +423,7 @@ const initialFormData = {
   registered_address: "",
   postal_code: "",
   website: "",
+  gps_location: "",
   external_identifier: "",
 
   sector_id: "",
@@ -1043,6 +1066,89 @@ function FiscalYearEndField({ value, onChange }) {
   );
 }
 
+function GpsLocationField({ value, onChange }) {
+  const inputRef = useRef(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const coordinateInvalid = Boolean(value && !isValidGpsLocation(value));
+
+  useEffect(() => {
+    inputRef.current?.setCustomValidity(
+      coordinateInvalid
+        ? "Enter valid GPS coordinates as latitude, longitude. Latitude must be between -90 and 90; longitude must be between -180 and 180."
+        : "",
+    );
+  }, [coordinateInvalid]);
+
+  const handleManualChange = (event) => {
+    setError("");
+    onChange(event);
+  };
+
+  const selectLiveLocation = () => {
+    if (loading) return;
+    if (!navigator.geolocation) {
+      setError("Live location is not supported by this browser.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        onChange({
+          target: {
+            name: "gps_location",
+            value: `${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)}`,
+            type: "location",
+          },
+        });
+        setLoading(false);
+      },
+      (locationError) => {
+        setError(
+          locationError.code === 1
+            ? "Allow location access to select the physical live location."
+            : "The live location could not be determined. Move to an open area and try again.",
+        );
+        setLoading(false);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+    );
+  };
+
+  return (
+    <Field label="GPS location" name="gps_location" required help>
+      <div className="vr-established-date">
+        <MapPin size={18} color="#3455a0" aria-hidden="true" />
+        <input
+          ref={inputRef}
+          id="gps_location"
+          name="gps_location"
+          type="text"
+          data-input-type="location"
+          value={value ?? ""}
+          required
+          aria-busy={loading}
+          aria-describedby={error || coordinateInvalid ? "gps_location_hint gps_location_error" : "gps_location_hint"}
+          aria-invalid={coordinateInvalid || undefined}
+          placeholder={loading ? "Selecting physical live location…" : "Latitude, longitude"}
+          onChange={handleManualChange}
+        />
+        <button type="button" onClick={selectLiveLocation} disabled={loading} aria-label="Select physical live GPS location" title="Use current physical location">
+          <LocateFixed size={20} strokeWidth={1.8} aria-hidden="true" />
+        </button>
+      </div>
+      <small id="gps_location_hint" className="vr-established-date-help">Enter latitude and longitude manually or use the location button to select the device’s current position.</small>
+      {(error || coordinateInvalid) && (
+        <p id="gps_location_error" className="vr-error" role="alert">
+          {error || "Enter valid coordinates, for example: 37.774900, -122.419400."}
+        </p>
+      )}
+    </Field>
+  );
+}
+
 function SelectField({
   label,
   name,
@@ -1064,18 +1170,11 @@ function SelectField({
         onChange={onChange}
       >
         <option value="">Select…</option>
-
         {safeOptions.map((option) => {
           const optionValue = typeof option === "object" ? option?.id : option;
           const optionLabel = typeof option === "object" ? option?.name : option;
-
           if (optionValue == null || !optionLabel) return null;
-
-          return (
-            <option key={optionValue} value={optionValue}>
-              {optionLabel}
-            </option>
-          );
+          return <option key={optionValue} value={optionValue}>{optionLabel}</option>;
         })}
       </select>
     </Field>
@@ -2088,7 +2187,7 @@ const SUBMISSION_STEPS = [
 const initialSubmissionStages = () =>
   SUBMISSION_STEPS.map((item) => ({ ...item, status: "waiting" }));
 
-function SubmissionProgressModal({ open, stages, complete, error, onClose, onConfirm }) {
+function SubmissionProgressModal({ open, stages, complete, error, onClose, onConfirm, previewMode = false }) {
   if (!open) return null;
 
   return (
@@ -2096,16 +2195,27 @@ function SubmissionProgressModal({ open, stages, complete, error, onClose, onCon
       <style>{`
         @keyframes vrSaveSpin { to { transform: rotate(360deg); } }
         @keyframes vrSavePulse { 0%,100% { opacity:.52; transform:scale(.96) } 50% { opacity:1; transform:scale(1) } }
+        @keyframes vrSnakeFillForward { from { background-size:0% 100% } to { background-size:100% 100% } }
+        @keyframes vrSnakeFillBackward { from { background-size:0% 100% } to { background-size:100% 100% } }
+        @keyframes vrSnakeForward { from { left:10px; opacity:.45 } to { left:calc(100% - 18px); opacity:1 } }
+        @keyframes vrSnakeBackward { from { right:10px; opacity:.45 } to { right:calc(100% - 18px); opacity:1 } }
         .vr-saveOverlay{position:fixed;inset:0;z-index:3000;display:grid;place-items:center;padding:18px;background:rgba(8,22,45,.58);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
         .vr-saveModal{width:min(620px,100%);max-height:calc(100vh - 36px);overflow:auto;border:1px solid rgba(255,255,255,.76);border-radius:24px;background:#fff;box-shadow:0 30px 90px rgba(8,22,45,.34)}
         .vr-saveHead{padding:25px 27px 18px;background:linear-gradient(135deg,#eef6ff,#f8fafc);border-bottom:1px solid #dbe7f3}
         .vr-saveHeadLine{display:flex;align-items:center;gap:12px}.vr-saveHead h2{margin:0;color:#102a4c;font-size:22px}.vr-saveHead p{margin:8px 0 0;color:#607087;line-height:1.55}
         .vr-saveSpinner{width:28px;height:28px;flex:0 0 auto;border:3px solid #bfdbfe;border-top-color:#2563eb;border-radius:50%;animation:vrSaveSpin .8s linear infinite}
         .vr-saveBody{padding:22px 27px 26px}.vr-saveSteps{display:grid;gap:10px;margin:0;padding:0;list-style:none}
-        .vr-saveStep{width:88%;display:flex;align-items:center;gap:13px;padding:11px 14px;border:1px solid #e2e8f0;border-radius:15px;background:#f8fafc;transition:.25s ease}
+        .vr-saveStep{position:relative;width:88%;display:flex;align-items:center;gap:13px;padding:11px 14px;border:1px solid #e2e8f0;border-radius:15px;background:#f8fafc;transition:.25s ease}
         .vr-saveStep:nth-child(even){margin-left:12%}.vr-saveStep.is-active{border-color:#93c5fd;background:#eff6ff}.vr-saveStep.is-saved{border-color:#86efac;background:#f0fdf4}.vr-saveStep.is-failed{border-color:#fca5a5;background:#fef2f2}
+        .vr-saveStep:not(:last-child)::after{content:"";position:absolute;top:100%;width:12%;height:11px;border-bottom:3px solid #cbd5e1;opacity:.9}.vr-saveStep:nth-child(odd):not(:last-child)::after{left:100%;border-right:3px solid #cbd5e1;border-radius:0 0 10px 0}.vr-saveStep:nth-child(even):not(:last-child)::after{right:100%;border-left:3px solid #cbd5e1;border-radius:0 0 0 10px}.vr-saveStep.is-saved:not(:last-child)::after{border-color:#22c55e}
+        .vr-saveStep.is-reading,.vr-saveStep.is-validated{border-color:#60a5fa;background-color:#f8fafc;background-repeat:no-repeat;box-shadow:0 7px 20px rgba(37,99,235,.13)}
+        .vr-saveStep:nth-child(odd).is-reading,.vr-saveStep:nth-child(odd).is-validated{background-image:linear-gradient(90deg,#dbeafe 0%,#eff6ff 72%,#bfdbfe 100%);background-position:left center;animation:vrSnakeFillForward 1.8s ease-out both}
+        .vr-saveStep:nth-child(even).is-reading,.vr-saveStep:nth-child(even).is-validated{background-image:linear-gradient(270deg,#dbeafe 0%,#eff6ff 72%,#bfdbfe 100%);background-position:right center;animation:vrSnakeFillBackward 1.8s ease-out both}
+        .vr-saveStep.is-validated{border-color:#818cf8}
+        .vr-saveStep.is-reading::before,.vr-saveStep.is-validated::before{content:"";position:absolute;z-index:2;top:-5px;width:10px;height:10px;border:3px solid #fff;border-radius:50%;background:#2563eb;box-shadow:0 0 0 4px rgba(37,99,235,.18)}
+        .vr-saveStep:nth-child(odd).is-reading::before,.vr-saveStep:nth-child(odd).is-validated::before{animation:vrSnakeForward 1.8s ease-out both}.vr-saveStep:nth-child(even).is-reading::before,.vr-saveStep:nth-child(even).is-validated::before{animation:vrSnakeBackward 1.8s ease-out both}
         .vr-saveRing{position:relative;width:40px;height:40px;flex:0 0 auto}.vr-saveRing svg{width:40px;height:40px;transform:rotate(-90deg)}.vr-saveRing circle{fill:none;stroke-width:4}.vr-saveRing .track{stroke:#dbe5f0}.vr-saveRing .value{stroke:#2563eb;stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:28;animation:vrSaveSpin 1.15s linear infinite;transform-origin:center}.vr-saveStep.is-saved .value{stroke:#16a34a;stroke-dashoffset:0;animation:none}.vr-saveStep.is-failed .value{stroke:#dc2626;stroke-dashoffset:0;animation:none}
-        .vr-saveIcon{position:absolute;inset:0;display:grid;place-items:center;color:#64748b}.is-active .vr-saveIcon{color:#2563eb;animation:vrSavePulse 1.2s ease-in-out infinite}.is-saved .vr-saveIcon{color:#15803d}.is-failed .vr-saveIcon{color:#b91c1c}
+        .vr-saveIcon{position:absolute;inset:0;display:grid;place-items:center;color:#64748b}.is-active .vr-saveIcon,.is-reading .vr-saveIcon,.is-validated .vr-saveIcon{color:#2563eb;animation:vrSavePulse 1.2s ease-in-out infinite}.is-saved .vr-saveIcon{color:#15803d}.is-failed .vr-saveIcon{color:#b91c1c}
         .vr-saveCopy strong{display:block;color:#172b4d}.vr-saveCopy span{display:block;margin-top:2px;color:#64748b;font-size:12px}.vr-saveNotice{margin-top:18px;padding:14px 15px;border-radius:14px;line-height:1.5}.vr-saveNotice.success{background:#ecfdf5;color:#166534;border:1px solid #86efac}.vr-saveNotice.error{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}.vr-saveActions{display:flex;justify-content:flex-end;margin-top:17px}.vr-saveActions button{border:0;border-radius:11px;padding:11px 20px;background:#163d69;color:#fff;font-weight:700;cursor:pointer}
       `}</style>
       <section className="vr-saveModal">
@@ -2114,9 +2224,9 @@ function SubmissionProgressModal({ open, stages, complete, error, onClose, onCon
             {!complete && !error && <span className="vr-saveSpinner" aria-hidden="true" />}
             {complete && <CheckCircle2 size={30} color="#16a34a" aria-hidden="true" />}
             {error && <XCircle size={30} color="#dc2626" aria-hidden="true" />}
-            <h2 id="vr-save-title">{complete ? "All information is saved" : error ? "Submission could not be confirmed" : "Securely saving verification"}</h2>
+            <h2 id="vr-save-title">{previewMode ? "Submission design preview" : complete ? "All information is saved" : error ? "Submission could not be confirmed" : "Securely saving verification"}</h2>
           </div>
-          <p>{complete ? "Every verification section was committed and confirmed by the server." : error ? "No step is displayed as saved unless the server confirmed it." : "Please keep this window open while the server validates and stores your submission."}</p>
+          <p>{previewMode ? "Preview mode is active. No information was posted, saved, or sent to another page." : complete ? "Every verification section was committed and confirmed by the server." : error ? "No step is displayed as saved unless the server confirmed it." : "Please keep this window open while the server validates and stores your submission."}</p>
         </header>
         <div className="vr-saveBody">
           <ol className="vr-saveSteps">
@@ -2126,13 +2236,13 @@ function SubmissionProgressModal({ open, stages, complete, error, onClose, onCon
                   <svg viewBox="0 0 40 40"><circle className="track" cx="20" cy="20" r="16" pathLength="100"/><circle className="value" cx="20" cy="20" r="16" pathLength="100"/></svg>
                   <span className="vr-saveIcon">{item.status === "saved" ? <CheckCircle2 size={21}/> : item.status === "failed" ? <XCircle size={21}/> : item.step}</span>
                 </span>
-                <span className="vr-saveCopy"><strong>Step {item.step}</strong><span>{item.label} · {item.status === "saved" ? "Saved" : item.status === "failed" ? "Not confirmed" : item.status === "active" ? "Awaiting server confirmation" : "Queued"}</span></span>
+                <span className="vr-saveCopy"><strong>Step {item.step}</strong><span>{item.label} · {previewMode && item.phase ? item.phase : previewMode && item.status === "saved" ? "Saved successfully" : item.status === "saved" ? "Saved" : item.status === "failed" ? "Not confirmed" : item.status === "active" ? "Awaiting server confirmation" : "Queued"}</span></span>
               </li>
             ))}
           </ol>
-          {complete && <div className="vr-saveNotice success"><strong>All information is saved.</strong> Your company verification record is ready to review.</div>}
+          {complete && <div className="vr-saveNotice success"><strong>{previewMode ? "Preview completed." : "All information is saved."}</strong> {previewMode ? "Close this window to continue testing the form." : "Your company verification record is ready to review."}</div>}
           {error && <div className="vr-saveNotice error" role="alert">{error}</div>}
-          {(complete || error) && <div className="vr-saveActions"><button type="button" onClick={complete ? onConfirm : onClose}>{complete ? "OK — view company details" : "Return to form"}</button></div>}
+          {(complete || error) && <div className="vr-saveActions"><button type="button" onClick={complete ? onConfirm : onClose}>{previewMode ? "OK" : complete ? "OK — view company details" : "Return to form"}</button></div>}
         </div>
       </section>
     </div>
@@ -2366,9 +2476,9 @@ export default function VerificationModal({ companyContext = null } = {}) {
     const step2Required = [
       "account_type_id", "legal_name", "legal_structure_id", "sector_id",
       "industry_id", "region_id", "country_id", "registration_number",
-      "established_date", "registered_address", "postal_code",
+      "established_date", "registered_address", "postal_code", "gps_location",
     ];
-    const step2Scoped = ["legal_name", "registration_number", "established_date", "postal_code"];
+    const step2Scoped = ["legal_name", "registration_number", "established_date", "postal_code", "gps_location"];
     const websiteValid = !filled(formData.website) || /^https?:\/\/[^\s]+$/i.test(formData.website.trim());
     const step2Valid = allRequired(step2Required) && step2Scoped.every(validScopedValue) && websiteValid;
 
@@ -3476,7 +3586,7 @@ ${description}`,
       if (pendingReviews.length > 0) {
         setFileError(`Every uploaded file must pass Raymoch Clarity Review. ${pendingReviews.length} file${pendingReviews.length === 1 ? " remains" : "s remain"} unapproved.`);
         pushAssistantMessage(
-          "Click the RR button beside every file and resolve any failed or blurry-document review before continuing.",
+          "Click the Verify button beside every file and resolve any failed or blurry-document review before continuing.",
           "assistant",
           "error",
         );
@@ -3678,6 +3788,42 @@ ${description}`,
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (SUBMISSION_PREVIEW_MODE) {
+      setSaveProgressStages(initialSubmissionStages());
+      setSaveProgressComplete(false);
+      setSaveProgressError("");
+      setSubmissionError("");
+      setSubmissionLoading(true);
+      setSaveProgressOpen(true);
+
+      const waitForPreviewMotion = (milliseconds) => new Promise(
+        (resolve) => window.setTimeout(resolve, milliseconds),
+      );
+
+      for (let index = 0; index < SUBMISSION_STEPS.length; index += 1) {
+        setSaveProgressStages((current) => current.map((item, itemIndex) => ({
+          ...item,
+          status: itemIndex < index ? "saved" : itemIndex === index ? "reading" : "waiting",
+          phase: itemIndex < index ? "Saved successfully" : itemIndex === index ? "Reading…" : "Queued",
+        })));
+        await waitForPreviewMotion(1800);
+
+        setSaveProgressStages((current) => current.map((item, itemIndex) => itemIndex === index
+          ? { ...item, status: "validated", phase: "Validated…" }
+          : item));
+        await waitForPreviewMotion(1200);
+
+        setSaveProgressStages((current) => current.map((item, itemIndex) => itemIndex === index
+          ? { ...item, status: "saved", phase: "Saved successfully" }
+          : item));
+        await waitForPreviewMotion(700);
+      }
+
+      setSubmissionLoading(false);
+      setSaveProgressComplete(true);
+      return;
+    }
 
     const form = event.currentTarget;
     const stepSixRequiredFields = [
@@ -3883,6 +4029,7 @@ ${description}`,
         ["Registered address", formData.registered_address],
         ["Postal code", formData.postal_code],
         ["Website", formData.website],
+        ["GPS location", formData.gps_location],
       ],
     },
     {
@@ -4154,7 +4301,7 @@ ${description}`,
                       />
 
                       <Field
-                        label="Legal or full name"
+                        label="Legal Name:"
                         name="legal_name"
                         value={hasConfirmedParent ? confirmedParentName : formData.legal_name}
                         readOnly={hasConfirmedParent}
@@ -4298,8 +4445,12 @@ ${description}`,
                         value={formData.website}
                         type="url"
                         help
-                        fullWidth
                         placeholder="https://example.com"
+                        onChange={updateField}
+                      />
+
+                      <GpsLocationField
+                        value={formData.gps_location}
                         onChange={updateField}
                       />
                     </div>
@@ -4499,18 +4650,22 @@ ${description}`,
 
                     {!formData.is_ultimate_parent && (
                       <div className="vr-row" style={{ alignItems: "start" }}>
-                        <Field label="Relationship type" name="relationship_type" help>
-                          <select id="relationship_type" name="relationship_type" value={formData.relationship_type} onChange={updateField}>
-                            <option value="">Select relationship type (optional)</option>
-                            <option value="parent">Parent</option>
-                            <option value="subsidiary">Subsidiary</option>
-                            <option value="associate">Associate</option>
-                            <option value="affiliate">Affiliate</option>
-                            <option value="joint_venture">Joint venture</option>
-                            <option value="sister_company">Sister company</option>
-                            <option value="controlled_entity">Controlled entity</option>
-                          </select>
-                        </Field>
+                        <SelectField
+                          label="Relationship type"
+                          name="relationship_type"
+                          value={formData.relationship_type}
+                          help
+                          options={[
+                            { id: "parent", name: "Parent" },
+                            { id: "subsidiary", name: "Subsidiary" },
+                            { id: "associate", name: "Associate" },
+                            { id: "affiliate", name: "Affiliate" },
+                            { id: "joint_venture", name: "Joint venture" },
+                            { id: "sister_company", name: "Sister company" },
+                            { id: "controlled_entity", name: "Controlled entity" },
+                          ]}
+                          onChange={updateField}
+                        />
 
                         <Field
                           label="Ownership percentage"
@@ -4733,7 +4888,7 @@ ${description}`,
                         />
 
                         <Field
-                          label="Referral or source"
+                          label="LinkedIn URL"
                           name="referral_source"
                           value={formData.referral_source}
                           onChange={updateField}
@@ -4903,9 +5058,10 @@ ${description}`,
                       <button
                         className="vr-btn"
                         type="submit"
-                        disabled={submissionLoading || !reviewReady || !isOnline}
-                        title={!isOnline ? "Reconnect to the internet before submitting" : !consentsComplete ? "Complete both confirmations before submitting" : "Submit for Verification"}
-                        style={consentsComplete && reviewReady && isOnline ? { background: "#16a34a", borderColor: "#16a34a", animation: "finalSubmitPulse 1.45s ease-in-out infinite" } : undefined}
+                        formNoValidate={SUBMISSION_PREVIEW_MODE}
+                        disabled={!SUBMISSION_PREVIEW_MODE && (submissionLoading || !reviewReady || !isOnline)}
+                        title={SUBMISSION_PREVIEW_MODE ? "Open the submission design preview; no data will be sent" : !isOnline ? "Reconnect to the internet before submitting" : !consentsComplete ? "Complete both confirmations before submitting" : "Submit for Verification"}
+                        style={SUBMISSION_PREVIEW_MODE ? { background: "#2563eb", borderColor: "#2563eb" } : consentsComplete && reviewReady && isOnline ? { background: "#16a34a", borderColor: "#16a34a", animation: "finalSubmitPulse 1.45s ease-in-out infinite" } : undefined}
                       >
                         {submissionLoading
                           ? "Submitting…"
@@ -4988,6 +5144,20 @@ ${description}`,
                 </div>
               )}
             </div>
+
+            {!documentReview.loading && (documentReview.result || documentReview.error) && (
+              <div style={{ display: "flex", justifyContent: "flex-end", padding: "12px 17px 15px", borderTop: "1px solid #e2e8f0", background: "#f8fafc" }}>
+                <button
+                  type="button"
+                  onClick={closeDocumentReview}
+                  autoFocus
+                  style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "7px", minWidth: "92px", minHeight: "38px", padding: "8px 16px", border: "1px solid #1d4ed8", borderRadius: "9px", background: "linear-gradient(135deg, #2563eb, #1d4ed8)", color: "#fff", fontSize: "13px", fontWeight: 800, cursor: "pointer", boxShadow: "0 5px 14px rgba(37, 99, 235, .22)" }}
+                >
+                  <CheckCircle2 size={16} aria-hidden="true" />
+                  OK
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -5008,13 +5178,14 @@ ${description}`,
         stages={saveProgressStages}
         complete={saveProgressComplete}
         error={saveProgressError}
+        previewMode={SUBMISSION_PREVIEW_MODE}
         onClose={() => {
           if (submissionLoading) return;
           setSaveProgressOpen(false);
         }}
         onConfirm={() => {
           setSaveProgressOpen(false);
-          setShowCompanyDetails(true);
+          if (!SUBMISSION_PREVIEW_MODE) setShowCompanyDetails(true);
         }}
       />
 

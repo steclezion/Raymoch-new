@@ -91,9 +91,27 @@ class VerificationSubmissionFormController extends Controller
                 'listing_ticker' => ['nullable', 'string', 'max:255'],
                 'business_description' => ['required', 'string', 'min:500'],
 
-                'parent_company' => ['nullable', 'required_if:has_parent_company,1,true', 'string', 'max:255'],
-                'has_parent_company' => ['required', 'boolean'],
-                'ownership_type' => ['required', 'string', 'max:255'],
+                'is_ultimate_parent' => ['required', 'boolean'],
+                'relationship_type' => [
+                    'required_if:is_ultimate_parent,0',
+                    'nullable',
+                    'string',
+                    'max:256',
+                    'in:parent,subsidiary,associate,affiliate,joint_venture,sister_company,controlled_entity',
+                ],
+                'ownership_percentage' => [
+                    'required_if:is_ultimate_parent,0',
+                    'nullable',
+                    'numeric',
+                    'between:0,100',
+                ],
+                'ultimate_company_name' => [
+                    'required_if:is_ultimate_parent,0',
+                    'nullable',
+                    'string',
+                    'max:255',
+                ],
+                'is_holding_company' => ['required', 'boolean'],
                 'beneficial_owners' => ['required', 'string', 'max:5000'],
                 'authorized_signatory' => ['required', 'string', 'max:255'],
                 'signatory_title' => ['required', 'string', 'max:255'],
@@ -143,6 +161,11 @@ class VerificationSubmissionFormController extends Controller
                 ? 'cti'
                 : $validated['verification_type'];
 
+            $isUltimateParent = $request->boolean('is_ultimate_parent');
+            $parentCompanyName = $isUltimateParent
+                ? $validated['legal_name']
+                : $validated['ultimate_company_name'];
+
             if ($verificationType === 'cti') {
                 $requiredFolders = [
                     'registration' => 'Registration',
@@ -180,49 +203,7 @@ class VerificationSubmissionFormController extends Controller
                 ]);
             }
 
-            $folderName = implode('_', array_filter([
-                (string) $user->getAuthIdentifier(),
-                Str::slug((string) ($user->name ?? 'user'), '_'),
-                Str::slug($validated['legal_name'], '_'),
-            ]));
-            $baseRelativePath = 'verification-submissions/' . $folderName;
-            $baseAbsolutePath = Storage::disk('public')->path($baseRelativePath);
-            $baseExistedBefore = File::isDirectory($baseAbsolutePath);
             DB::beginTransaction();
-            File::ensureDirectoryExists($baseAbsolutePath, 0770, true);
-
-            foreach ($requiredFolders as $categoryKey => $folderLabel) {
-                $relativeFolder = $baseRelativePath . '/' . $folderLabel;
-                $absoluteFolder = Storage::disk('public')->path(
-                    $relativeFolder
-                );
-                File::ensureDirectoryExists($absoluteFolder, 0770, true);
-                @chmod($absoluteFolder, 0770);
-
-                foreach ($request->file("documents.{$categoryKey}", []) as $index => $uploadedFile) {
-                    $safeBaseName = Str::slug(
-                        pathinfo(
-                            $uploadedFile->getClientOriginalName(),
-                            PATHINFO_FILENAME
-                        ),
-                        '_'
-                    ) ?: 'document';
-                    $fileName = sprintf(
-                        '%s_%s_%d.%s',
-                        now()->format('Ymd_His_u'),
-                        $safeBaseName,
-                        $index + 1,
-                        strtolower($uploadedFile->extension())
-                    );
-                    $storedPath = $uploadedFile->storeAs(
-                        $relativeFolder,
-                        $fileName,
-                        'public'
-                    );
-                    $storedPaths[] = $storedPath;
-                    @chmod(Storage::disk('public')->path($storedPath), 0660);
-                }
-            }
 
             $companyId = DB::table('companies')->insertGetId([
                 // Step 2: account and legal identity
@@ -262,9 +243,14 @@ class VerificationSubmissionFormController extends Controller
                 'business_description' => $validated['business_description'],
 
                 // Step 4: ownership, leadership and control
-                'ultimate_parent_company' => $validated['parent_company'] ?? null,
-                'is_ultimate_parent_company' => $request->boolean('has_parent_company'),
-                'ownership_type' => $validated['ownership_type'],
+                'is_parent_company' => $isUltimateParent ? 1 : 0,
+                'who_is_parent_company' => $parentCompanyName,
+                'relationship_type' => $isUltimateParent
+                    ? null
+                    : $validated['relationship_type'],
+                'ownership_percentage' => $isUltimateParent
+                    ? null
+                    : (string) $validated['ownership_percentage'],
                 'beneficial_owners' => $validated['beneficial_owners'],
                 'authorized_signatory' => $validated['authorized_signatory'],
                 'singatory_image_holder' => $signatureDataUrl,
@@ -286,6 +272,58 @@ class VerificationSubmissionFormController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+
+            $folderName = sprintf(
+                '%s_%s',
+                $user->getAuthIdentifier(),
+                $companyId
+            );
+            $baseRelativePath = 'verification-submissions/' . $folderName;
+            $baseAbsolutePath = Storage::disk('public')->path($baseRelativePath);
+            $baseExistedBefore = File::isDirectory($baseAbsolutePath);
+
+            File::ensureDirectoryExists($baseAbsolutePath, 0770, true);
+            @chmod($baseAbsolutePath, 0770);
+
+            DB::table('companies')
+                ->where('id', $companyId)
+                ->update([
+                    'company_full_directory_path' => $baseAbsolutePath,
+                    'updated_at' => now(),
+                ]);
+
+            foreach ($requiredFolders as $categoryKey => $folderLabel) {
+                $relativeFolder = $baseRelativePath . '/' . $folderLabel;
+                $absoluteFolder = Storage::disk('public')->path(
+                    $relativeFolder
+                );
+                File::ensureDirectoryExists($absoluteFolder, 0770, true);
+                @chmod($absoluteFolder, 0770);
+
+                foreach ($request->file("documents.{$categoryKey}", []) as $index => $uploadedFile) {
+                    $safeBaseName = Str::slug(
+                        pathinfo(
+                            $uploadedFile->getClientOriginalName(),
+                            PATHINFO_FILENAME
+                        ),
+                        '_'
+                    ) ?: 'document';
+                    $fileName = sprintf(
+                        '%s_%s_%d.%s',
+                        now()->format('Ymd_His_u'),
+                        $safeBaseName,
+                        $index + 1,
+                        strtolower($uploadedFile->extension())
+                    );
+                    $storedPath = $uploadedFile->storeAs(
+                        $relativeFolder,
+                        $fileName,
+                        'public'
+                    );
+                    $storedPaths[] = $storedPath;
+                    @chmod(Storage::disk('public')->path($storedPath), 0660);
+                }
+            }
 
             DB::commit();
 
