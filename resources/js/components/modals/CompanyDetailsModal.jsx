@@ -46,13 +46,20 @@ const FIELD_ICONS = {
   created_at: CalendarDays,
   updated_at: RefreshCw,
   account_type_id: BadgeCheck,
+  account_type_name: BadgeCheck,
   trading_name: Building2,
   legal_structure_id: Landmark,
+  legal_structure_name: Landmark,
   sector_id: BriefcaseBusiness,
+  sector_title: BriefcaseBusiness,
   industry_id: BriefcaseBusiness,
+  industry_name: BriefcaseBusiness,
   country_id: Globe2,
+  country_name: Globe2,
   state_id: MapPin,
+  state_name: MapPin,
   city_id: MapPin,
+  city_name: MapPin,
   registration_number: FileText,
   tax_id: Hash,
   established_date: CalendarDays,
@@ -67,6 +74,7 @@ const FIELD_ICONS = {
   company_stage: BadgeCheck,
   annual_revenue: CircleDollarSign,
   revenue_currency: CircleDollarSign,
+  currency_display: CircleDollarSign,
   fiscal_year_end: CalendarDays,
   listing_ticker: Landmark,
   business_description: FileText,
@@ -116,15 +124,15 @@ const STEPS = [
     description: "Read the company’s legal, registration and location details.",
     icon: Building2,
     fields: [
-      ["Account type", "account_type_id"],
+      ["Account type", "account_type_name"],
       ["Legal name", "company_name"],
       ["Trading name", "trading_name"],
-      ["Legal structure", "legal_structure_id"],
-      ["Sector", "sector_id"],
-      ["Industry", "industry_id"],
-      ["Country", "country_id"],
-      ["State or province", "state_id"],
-      ["City", "city_id"],
+      ["Legal structure", "legal_structure_name"],
+      ["Sector", "sector_title"],
+      ["Industry", "industry_name"],
+      ["Country", "country_name"],
+      ["State or province", "state_name"],
+      ["City", "city_name"],
       ["Registration or licence number", "registration_number"],
       ["Tax ID", "tax_id"],
       ["Date established", "established_date"],
@@ -147,7 +155,7 @@ const STEPS = [
       ["Number of employees", "employee_count"],
       ["Company stage", "company_stage"],
       ["Annual revenue", "annual_revenue"],
-      ["Revenue currency", "revenue_currency"],
+      ["Revenue currency", "currency_display"],
       ["Fiscal year end", "fiscal_year_end"],
       ["Public listing or ticker", "listing_ticker"],
       ["Business description", "business_description", true],
@@ -186,8 +194,8 @@ const STEPS = [
   },
   {
     number: 6,
-    title: "Primary Contact and Confirmation",
-    description: "Review the applicant contact information saved with this submission.",
+    title: "Company Contact and Confirmation",
+    description: "Review the company contact information saved with this submission.",
     icon: UserRound,
     fields: [
       ["Full name", "contact_name"],
@@ -202,7 +210,52 @@ const STEPS = [
   },
 ];
 
-function displayValue(value) {
+function formatLeadershipMembers(value) {
+  let members = value;
+
+  if (typeof members === "string") {
+    try {
+      members = JSON.parse(members);
+    } catch {
+      return members;
+    }
+  }
+
+  if (!Array.isArray(members) || members.length === 0) {
+    return "Not provided";
+  }
+
+  const memberFields = [
+    ["Name", ["name", "full_name"]],
+    ["Title", ["title"]],
+    ["Bio", ["bio"]],
+    ["Email", ["email"]],
+    ["Ownership percentage", ["ownership_percentage", "ownership_percent"]],
+    ["LinkedIn URL", ["linkedin_url"]],
+  ];
+
+  return members.map((member, index) => {
+    const heading = members.length > 1 ? `Leader ${index + 1}\n` : "";
+    const details = memberFields
+      .map(([label, keys]) => {
+        const fieldValue = keys
+          .map((key) => member?.[key])
+          .find((candidate) => candidate != null && String(candidate).trim() !== "");
+        const displayedValue = fieldValue == null || String(fieldValue).trim() === ""
+          ? "Not provided"
+          : String(fieldValue);
+        return `${label}: ${displayedValue}`;
+      })
+      .join("\n");
+
+    return `${heading}${details}`;
+  }).join("\n\n");
+}
+
+function displayValue(value, fieldKey = "") {
+  if (fieldKey === "beneficial_owners" || fieldKey === "leadership_board") {
+    return formatLeadershipMembers(value);
+  }
   if (value === true) return "Yes";
   if (value === false) return "No";
   if (Array.isArray(value)) {
@@ -231,11 +284,12 @@ function ReadOnlyField({ label, fieldKey, value, fullWidth = false }) {
       </label>
       <div
         className={`company-read-value${empty ? " is-empty" : ""}`}
+        style={{ whiteSpace: "pre-wrap" }}
         role="textbox"
         aria-readonly="true"
         aria-label={label}
       >
-        {displayValue(value)}
+        {displayValue(value, fieldKey)}
       </div>
     </div>
   );

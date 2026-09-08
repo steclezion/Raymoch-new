@@ -33,13 +33,30 @@ class Readcompanyinformationcontroller extends Controller
                 'companies.ultimate_parent_company',
                 'companies.is_parent_company',
                 'companies.created_at',
+                'account_type.name as account_type_name',
+                'sectors.title as sector_title',
+                'legal_structure.name as legal_structure_name',
+                'industries.name as industry_name',
+                'countries_africans.country_name as country_name',
+                'states_all.name as state_name',
+                'cities_all.name as city_name',
+                'ticket_currency.code as currency_code',
+                'ticket_currency.country_name as currency_country_name',
             ];
             if (Schema::hasColumn('companies', 'verification_score')) {
                 $companyColumns[] = 'companies.verification_score';
             }
 
             $companies = DB::table('companies')
-                ->join('users', 'companies.who', '=', 'users.id')
+                ->leftjoin('users', 'companies.who', '=', 'users.id')
+                ->leftjoin('account_type', 'companies.account_type_id', '=', 'account_type.id')
+                ->leftjoin('sectors', 'companies.Sector', '=', 'sectors.id')
+                ->leftjoin('legal_structure', 'companies.legal_structure_id', '=', 'legal_structure.id')
+                ->leftjoin('industries', 'companies.industry_id', '=', 'industries.id')
+                ->leftjoin('countries_africans', 'companies.Country', '=', 'countries_africans.countries_all_id')
+                ->leftjoin('states_all', 'companies.state_id', '=', 'states_all.id')
+                ->leftjoin('cities_all', 'companies.City', '=', 'cities_all.id')
+                ->leftjoin('ticket_currency', 'companies.revenue_currency', '=', 'ticket_currency.id')
                 ->where('users.id', $user->getAuthIdentifier())
                 ->orderByDesc('companies.created_at')
                 ->orderByDesc('companies.id')
@@ -52,9 +69,23 @@ class Readcompanyinformationcontroller extends Controller
                     'is_parent_company' => (bool) $company->is_parent_company,
                     'verification_score' => $company->verification_score ?? null,
                     'created_at' => $company->created_at,
+                    'account_type_name' => $company->account_type_name,
+                    'sector_title' => $company->sector_title,
+                    'legal_structure_name' => $company->legal_structure_name,
+                    'industry_name' => $company->industry_name,
+                    'country_name' => $company->country_name,
+                    'state_name' => $company->state_name,
+                    'city_name' => $company->city_name,
+                    'currency_code' => $company->currency_code,
+                    'currency_country_name' => $company->currency_country_name,
+                    'currency_display' => trim(
+                        $company->currency_code . ' — ' . $company->currency_country_name,
+                        ' —'
+                    ),
                 ])
                 ->values();
 
+            // dd($companies->toArray());
             $parents = $companies
                 ->filter(static fn(array $company): bool => $company['is_parent_company'])
                 ->values();
@@ -80,7 +111,7 @@ class Readcompanyinformationcontroller extends Controller
                 'message' => $exception->getMessage(),
             ]);
 
-            return $this->serviceUnavailableResponse();
+            return $this->serviceUnavailableResponse($exception);
         } catch (Throwable $exception) {
             Log::error('Unexpected error while reading the company list.', [
                 'user_id' => $request->user()?->getAuthIdentifier(),
@@ -88,7 +119,7 @@ class Readcompanyinformationcontroller extends Controller
                 'message' => $exception->getMessage(),
             ]);
 
-            return $this->unexpectedErrorResponse();
+            return $this->unexpectedErrorResponse($exception);
         }
     }
 
@@ -158,7 +189,7 @@ class Readcompanyinformationcontroller extends Controller
                 'message' => $exception->getMessage(),
             ]);
 
-            return $this->serviceUnavailableResponse();
+            return $this->serviceUnavailableResponse($exception);
         } catch (Throwable $exception) {
             Log::error('Unexpected error while identifying the parent company.', [
                 'user_id' => $request->user()?->getAuthIdentifier(),
@@ -166,7 +197,7 @@ class Readcompanyinformationcontroller extends Controller
                 'message' => $exception->getMessage(),
             ]);
 
-            return $this->unexpectedErrorResponse();
+            return $this->unexpectedErrorResponse($exception);
         }
     }
 
@@ -189,13 +220,30 @@ class Readcompanyinformationcontroller extends Controller
             }
 
             $company = DB::table('companies')
-                ->join('users', 'companies.who', '=', 'users.id')
+                ->leftjoin('users', 'companies.who', '=', 'users.id')
+                ->leftjoin('account_type', 'companies.account_type_id', '=', 'account_type.id')
+                ->leftjoin('sectors', 'companies.Sector', '=', 'sectors.id')
+                ->leftjoin('legal_structure', 'companies.legal_structure_id', '=', 'legal_structure.id')
+                ->leftjoin('industries', 'companies.industry_id', '=', 'industries.id')
+                ->leftjoin('countries_africans', 'companies.Country', '=', 'countries_africans.countries_all_id')
+                ->leftjoin('states_all', 'companies.state_id', '=', 'states_all.id')
+                ->leftjoin('cities_all', 'companies.City', '=', 'cities_all.id')
+                ->leftjoin('ticket_currency', 'companies.revenue_currency', '=', 'ticket_currency.id')
                 ->where('companies.id', $id)
                 ->where('users.id', $user->getAuthIdentifier())
                 ->select([
                     'companies.*',
                     'users.name as user_name',
                     'users.display_name as user_display_name',
+                    'account_type.name as account_type_name',
+                    'sectors.title as sector_title',
+                    'legal_structure.name as legal_structure_name',
+                    'industries.name as industry_name',
+                    'countries_africans.country_name as country_name',
+                    'states_all.name as state_name',
+                    'cities_all.name as city_name',
+                    'ticket_currency.code as currency_code',
+                    'ticket_currency.country_name as currency_country_name',
                 ])
                 ->first();
 
@@ -246,9 +294,9 @@ class Readcompanyinformationcontroller extends Controller
                 ],
                 [
                     'step' => 6,
-                    'title' => 'Primary Contact and Confirmation',
+                    'title' => 'Company Contact and Confirmation',
                     'status' => $contacts->isNotEmpty() ? 'completed' : 'attention',
-                    'tasks' => ['Primary contact linked', count($galleries) . ' profile material(s) available'],
+                    'tasks' => ['Company contact linked', count($galleries) . ' profile material(s) available'],
                 ],
             ])->values();
 
@@ -265,13 +313,20 @@ class Readcompanyinformationcontroller extends Controller
 
                     // Step 2: account and legal identity
                     'account_type_id' => $company->account_type_id,
+                    'account_type_name' => $company->account_type_name,
                     'trading_name' => $company->trading_name,
                     'legal_structure_id' => $company->legal_structure_id,
+                    'legal_structure_name' => $company->legal_structure_name,
                     'sector_id' => $company->Sector,
+                    'sector_title' => $company->sector_title,
                     'industry_id' => $company->industry_id,
+                    'industry_name' => $company->industry_name,
                     'country_id' => $company->Country,
+                    'country_name' => $company->country_name,
                     'state_id' => $company->state_id,
+                    'state_name' => $company->state_name,
                     'city_id' => $company->City,
+                    'city_name' => $company->city_name,
                     'registration_number' => $company->licence_number,
                     'tax_id' => $company->tax_id,
                     'established_date' => $company->date_established,
@@ -289,6 +344,12 @@ class Readcompanyinformationcontroller extends Controller
                     'company_stage' => $company->Stage,
                     'annual_revenue' => $company->AnnualRevenueUSD,
                     'revenue_currency' => $company->revenue_currency,
+                    'currency_code' => $company->currency_code,
+                    'currency_country_name' => $company->currency_country_name,
+                    'currency_display' => trim(
+                        $company->currency_code . ' — ' . $company->currency_country_name,
+                        ' —'
+                    ),
                     'fiscal_year_end' => $company->fiscal_year_end,
                     'listing_ticker' => $company->public_listing_ticker,
                     'business_description' => $company->business_description,
@@ -340,7 +401,7 @@ class Readcompanyinformationcontroller extends Controller
                 'message' => $exception->getMessage(),
             ]);
 
-            return $this->serviceUnavailableResponse();
+            return $this->serviceUnavailableResponse($exception);
         } catch (Throwable $exception) {
             Log::error('Unexpected error while reading company information.', [
                 'user_id' => $request->user()?->getAuthIdentifier(),
@@ -349,7 +410,7 @@ class Readcompanyinformationcontroller extends Controller
                 'message' => $exception->getMessage(),
             ]);
 
-            return $this->unexpectedErrorResponse();
+            return $this->unexpectedErrorResponse($exception);
         }
     }
 
@@ -383,17 +444,37 @@ class Readcompanyinformationcontroller extends Controller
         return $query->get();
     }
 
-    private function serviceUnavailableResponse(): JsonResponse
+    private function serviceUnavailableResponse(QueryException $exception): JsonResponse
     {
+        $databaseReason = $exception->errorInfo[2] ?? $exception->getMessage();
+
         return response()->json([
-            'message' => 'Company information is temporarily unavailable. Please try again shortly.',
+            'message' => sprintf(
+                'Company information query failed. Reason: %s',
+                $databaseReason
+            ),
+            'error_type' => 'database',
+            'details' => [
+                'sql_state' => $exception->errorInfo[0] ?? null,
+                'database_error_code' => $exception->errorInfo[1] ?? null,
+                'database_error' => $databaseReason,
+            ],
         ], 503);
     }
 
-    private function unexpectedErrorResponse(): JsonResponse
+    private function unexpectedErrorResponse(Throwable $exception): JsonResponse
     {
         return response()->json([
-            'message' => 'We could not complete your request at this time. Please try again. If the issue continues, contact support.',
+            'message' => sprintf(
+                'Company information execution failed. Reason: %s',
+                $exception->getMessage()
+            ),
+            'error_type' => 'unexpected',
+            'details' => [
+                'exception' => $exception::class,
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+            ],
         ], 500);
     }
 }
