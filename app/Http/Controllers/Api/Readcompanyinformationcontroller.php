@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Throwable;
 
 class Readcompanyinformationcontroller extends Controller
@@ -25,25 +26,31 @@ class Readcompanyinformationcontroller extends Controller
                 return $this->sessionRequiredResponse();
             }
 
+            $companyColumns = [
+                'companies.id',
+                'companies.CompanyName',
+                'companies.trading_name',
+                'companies.ultimate_parent_company',
+                'companies.is_parent_company',
+                'companies.created_at',
+            ];
+            if (Schema::hasColumn('companies', 'verification_score')) {
+                $companyColumns[] = 'companies.verification_score';
+            }
+
             $companies = DB::table('companies')
                 ->join('users', 'companies.who', '=', 'users.id')
                 ->where('users.id', $user->getAuthIdentifier())
                 ->orderByDesc('companies.created_at')
                 ->orderByDesc('companies.id')
-                ->get([
-                    'companies.id',
-                    'companies.CompanyName',
-                    'companies.trading_name',
-                    'companies.ultimate_parent_company',
-                    'companies.is_parent_company',
-                    'companies.created_at',
-                ])
+                ->get($companyColumns)
                 ->map(static fn(object $company): array => [
                     'id' => $company->id,
                     'company_name' => $company->CompanyName,
                     'trading_name' => $company->trading_name,
                     'parent_company' => $company->ultimate_parent_company,
                     'is_parent_company' => (bool) $company->is_parent_company,
+                    'verification_score' => $company->verification_score ?? null,
                     'created_at' => $company->created_at,
                 ])
                 ->values();
@@ -200,6 +207,50 @@ class Readcompanyinformationcontroller extends Controller
 
             $isCti = (bool) ($company->standard_verification_cit ?? false);
             $isAts = (bool) ($company->auxiliary_verification_ats ?? false);
+            $userId = $user->getAuthIdentifier();
+            $contacts = $this->relatedRows('company_contacts', $company->id, $userId);
+            $financials = $this->relatedRows('company_financials', $company->id, $userId);
+            $locations = $this->relatedRows('company_locations', $company->id, $userId);
+            $teamMembers = $this->relatedRows('company_team_members', $company->id, $userId);
+            $documents = $this->relatedRows('company_documents', $company->id, $userId);
+            $galleries = $this->relatedRows('company_galleries', $company->id, $userId);
+            $companyLogs = $this->relatedRows('company_logs', $company->id, $userId);
+            $companyReactions = $this->relatedRows('company_reactions', $company->id, $userId);
+            $companySearchLogs = $this->relatedRows('company_search_logs', $company->id, $userId);
+            $primaryContact = $contacts->first();
+
+            $verificationProcess = collect([
+                [
+                    'step' => 2,
+                    'title' => 'Account and Legal Identity',
+                    'status' => $locations->isNotEmpty() ? 'completed' : 'attention',
+                    'tasks' => ['Company identity saved', 'Registered location recorded'],
+                ],
+                [
+                    'step' => 3,
+                    'title' => 'Business and Operating Profile',
+                    'status' => $financials->isNotEmpty() ? 'completed' : 'attention',
+                    'tasks' => ['Operating profile saved', 'Financial record linked'],
+                ],
+                [
+                    'step' => 4,
+                    'title' => 'Ownership, Leadership and Control',
+                    'status' => $teamMembers->isNotEmpty() ? 'completed' : 'attention',
+                    'tasks' => ['Ownership recorded', 'Leadership board linked'],
+                ],
+                [
+                    'step' => 5,
+                    'title' => 'Supporting Documents',
+                    'status' => $documents->isNotEmpty() ? 'completed' : 'attention',
+                    'tasks' => ['Verification path recorded', count($documents) . ' document(s) available'],
+                ],
+                [
+                    'step' => 6,
+                    'title' => 'Primary Contact and Confirmation',
+                    'status' => $contacts->isNotEmpty() ? 'completed' : 'attention',
+                    'tasks' => ['Primary contact linked', count($galleries) . ' profile material(s) available'],
+                ],
+            ])->values();
 
             return response()->json([
                 'message' => 'Company information retrieved successfully.',
@@ -210,6 +261,7 @@ class Readcompanyinformationcontroller extends Controller
                     'verification_type' => $isCti ? 'CTI' : ($isAts ? 'ATS' : 'Not selected'),
                     'created_at' => $company->created_at,
                     'updated_at' => $company->updated_at,
+                    'verification_score' => $company->verification_score ?? null,
 
                     // Step 2: account and legal identity
                     'account_type_id' => $company->account_type_id,
@@ -227,6 +279,7 @@ class Readcompanyinformationcontroller extends Controller
                     'registered_address' => $company->address,
                     'postal_code' => $company->postal_code,
                     'website' => $company->website,
+                    'locations' => $locations,
 
                     // Step 3: business and operating profile
                     'business_model' => $company->business_model,
@@ -239,6 +292,7 @@ class Readcompanyinformationcontroller extends Controller
                     'fiscal_year_end' => $company->fiscal_year_end,
                     'listing_ticker' => $company->public_listing_ticker,
                     'business_description' => $company->business_description,
+                    'financial_records' => $financials,
 
                     // Step 4: ownership, leadership and control
                     'is_parent_company' => (bool) $company->is_parent_company,
@@ -251,19 +305,29 @@ class Readcompanyinformationcontroller extends Controller
                     'signatory_title' => $company->signatory_title,
                     'signatory_id_number' => $company->national_id_or_passport_number,
                     'signatory_id_expiry' => $company->id_expiry_date,
+                    'leadership_board' => $teamMembers,
 
                     // Step 5: selected verification path
                     'standard_verification_cti' => $isCti,
                     'auxiliary_verification_ats' => $isAts,
                     'document_status' => 'Submission recorded; supporting files are stored separately.',
+                    'documents' => $documents,
 
                     // Step 6: applicant contact
-                    'contact_name' => $company->user_name,
-                    'contact_role' => $company->job_title_relationship,
-                    'contact_email' => $company->applicant_work_email,
-                    'contact_phone' => $company->applicant_phone_number,
-                    'preferred_contact' => $company->user_display_name,
-                    'referral_source' => $company->referral_source,
+                    'contact_name' => $primaryContact->contact_name ?? $company->user_name,
+                    'contact_role' => $primaryContact->role ?? $company->job_title_relationship,
+                    'contact_email' => $primaryContact->email ?? $company->applicant_work_email,
+                    'contact_phone' => $primaryContact->phone ?? $company->applicant_phone_number,
+                    'preferred_contact' => $company->Preferred_contact_method ?? $company->user_display_name,
+                    'referral_source' => $primaryContact->linkedin_url ?? $company->referral_source,
+                    'contacts' => $contacts,
+                    'company_profiles' => $galleries,
+
+                    // Verification score workspace
+                    'verification_process' => $verificationProcess,
+                    'communication_timeline' => $companyLogs,
+                    'reactions' => $companyReactions,
+                    'search_activity' => $companySearchLogs,
                 ],
             ]);
         } catch (QueryException $exception) {
@@ -294,6 +358,29 @@ class Readcompanyinformationcontroller extends Controller
         return response()->json([
             'message' => 'Your secure session could not be confirmed. Please sign in again to continue.',
         ], 401);
+    }
+
+    /**
+     * Read related company records defensively. The authenticated company
+     * ownership check occurs before this method is called.
+     */
+    private function relatedRows(string $table, int $companyId, int|string $userId)
+    {
+        if (! Schema::hasTable($table) || ! Schema::hasColumn($table, 'company_id')) {
+            return collect();
+        }
+
+        $query = DB::table($table)->where('company_id', $companyId);
+        if (Schema::hasColumn($table, 'who')) {
+            $query->where('who', $userId);
+        }
+        if (Schema::hasColumn($table, 'created_at')) {
+            $query->orderBy('created_at');
+        } elseif (Schema::hasColumn($table, 'id')) {
+            $query->orderBy('id');
+        }
+
+        return $query->get();
     }
 
     private function serviceUnavailableResponse(): JsonResponse

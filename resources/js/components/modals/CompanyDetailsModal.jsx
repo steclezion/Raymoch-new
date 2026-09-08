@@ -88,6 +88,12 @@ const FIELD_ICONS = {
   contact_phone: Phone,
   preferred_contact: Mail,
   referral_source: Globe2,
+  locations: MapPin,
+  financial_records: CircleDollarSign,
+  leadership_board: UsersRound,
+  documents: FileCheck2,
+  contacts: Mail,
+  company_profiles: Eye,
 };
 
 const STEPS = [
@@ -126,6 +132,7 @@ const STEPS = [
       ["Registered address", "registered_address", true],
       ["Postal code", "postal_code"],
       ["Website", "website"],
+      ["Saved locations", "locations", true],
     ],
   },
   {
@@ -144,6 +151,7 @@ const STEPS = [
       ["Fiscal year end", "fiscal_year_end"],
       ["Public listing or ticker", "listing_ticker"],
       ["Business description", "business_description", true],
+      ["Financial records", "financial_records", true],
     ],
   },
   {
@@ -160,6 +168,7 @@ const STEPS = [
       ["Signatory title", "signatory_title"],
       ["Signatory ID number", "signatory_id_number"],
       ["Signatory ID expiry", "signatory_id_expiry"],
+      ["Leadership board", "leadership_board", true],
     ],
   },
   {
@@ -172,6 +181,7 @@ const STEPS = [
       ["Standard CTI verification", "standard_verification_cti"],
       ["Auxiliary ATS verification", "auxiliary_verification_ats"],
       ["Document status", "document_status", true],
+      ["Uploaded documents", "documents", true],
     ],
   },
   {
@@ -186,6 +196,8 @@ const STEPS = [
       ["Phone number", "contact_phone"],
       ["Preferred contact method", "preferred_contact"],
       ["Referral source", "referral_source"],
+      ["Saved contacts", "contacts", true],
+      ["Company profile materials", "company_profiles", true],
     ],
   },
 ];
@@ -193,7 +205,17 @@ const STEPS = [
 function displayValue(value) {
   if (value === true) return "Yes";
   if (value === false) return "No";
-  if (Array.isArray(value)) return value.join(", ") || "Not provided";
+  if (Array.isArray(value)) {
+    if (value.length === 0) return "Not provided";
+    return value.map((item, index) => {
+      if (!item || typeof item !== "object") return String(item);
+      const details = Object.entries(item)
+        .filter(([, entryValue]) => entryValue != null && String(entryValue).trim() !== "")
+        .map(([key, entryValue]) => `${key.replaceAll("_", " ")}: ${entryValue}`)
+        .join(" · ");
+      return `${index + 1}. ${details}`;
+    }).join("\n");
+  }
   return value == null || String(value).trim() === "" ? "Not provided" : String(value);
 }
 
@@ -262,6 +284,8 @@ export default function CompanyDetailsModal({ onAddCompany, onCompaniesLoaded, i
   const [addCompanyPromptOpen, setAddCompanyPromptOpen] = useState(false);
   const [lookupAttempt, setLookupAttempt] = useState(0);
   const [selectedCompanyId, setSelectedCompanyId] = useState(null);
+  const [companyActionTarget, setCompanyActionTarget] = useState(null);
+  const [companyView, setCompanyView] = useState(null);
   const [company, setCompany] = useState(EMPTY_COMPANY);
   const [step, setStep] = useState(1);
   const [listLoading, setListLoading] = useState(true);
@@ -316,11 +340,12 @@ export default function CompanyDetailsModal({ onAddCompany, onCompaniesLoaded, i
     return () => controller.abort();
   }, [loadCompanies, lookupAttempt]);
 
-  const selectCompany = useCallback(async (companyId) => {
+  const selectCompany = useCallback(async (companyId, requestedView = "information") => {
     detailsRequest.current?.abort();
     const controller = new AbortController();
     detailsRequest.current = controller;
     setSelectedCompanyId(companyId);
+    setCompanyView(requestedView);
     setCompany(EMPTY_COMPANY);
     setStep(1);
     setDetailsLoading(true);
@@ -345,9 +370,18 @@ export default function CompanyDetailsModal({ onAddCompany, onCompaniesLoaded, i
     }
   }, []);
 
+  const openCompanyActions = (selectedCompany) => {
+    detailsRequest.current?.abort();
+    setSelectedCompanyId(null);
+    setCompany(EMPTY_COMPANY);
+    setCompanyView(null);
+    setError("");
+    setCompanyActionTarget(selectedCompany);
+  };
+
   useEffect(() => {
     if (initialCompanyId != null) {
-      selectCompany(initialCompanyId);
+      selectCompany(initialCompanyId, "information");
     }
   }, [initialCompanyId, selectCompany]);
 
@@ -437,7 +471,7 @@ export default function CompanyDetailsModal({ onAddCompany, onCompaniesLoaded, i
                 key={item.id}
                 type="button"
                 className={`company-name-btn${String(selectedCompanyId) === String(item.id) ? " is-active" : ""}`}
-                onClick={() => selectCompany(item.id)}
+                onClick={() => openCompanyActions(item)}
                 aria-pressed={String(selectedCompanyId) === String(item.id)}
               >
                 <Building2 size={15} /> {item.company_name}
@@ -449,6 +483,34 @@ export default function CompanyDetailsModal({ onAddCompany, onCompaniesLoaded, i
         </div>
       </section>
 
+      {companyActionTarget && (
+        <section className="vr-card" aria-labelledby="company-action-title" style={{ marginTop: "14px", border: "1px solid #bfdbfe", background: "linear-gradient(135deg,#eff6ff,#f8fafc)" }}>
+          <div className="vr-sectionHeading">
+            <span className="vr-smallIcon"><Building2 size={20} /></span>
+            <div>
+              <h3 id="company-action-title" style={{ margin: 0 }}>{companyActionTarget.company_name}</h3>
+              <p className="company-section-copy">Choose what you want to view.</p>
+            </div>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "14px" }}>
+            <button type="button" className="vr-btn" onClick={() => {
+              const companyId = companyActionTarget.id;
+              setCompanyActionTarget(null);
+              selectCompany(companyId, "score");
+            }}>
+              <Gauge size={17} /> View Score
+            </button>
+            <button type="button" className="vr-btn vr-btnGhost" onClick={() => {
+              const companyId = companyActionTarget.id;
+              setCompanyActionTarget(null);
+              selectCompany(companyId, "information");
+            }}>
+              <Eye size={17} /> View Company Information
+            </button>
+          </div>
+        </section>
+      )}
+
       {error && <div className="company-error" role="alert"><p>{error}</p><button type="button" className="vr-btn vr-btnGhost" onClick={() => setLookupAttempt(attempt => attempt + 1)}><RefreshCw size={16} aria-hidden="true" /> Retry company lookup</button></div>}
 
       <section className="vr-stepwrap">
@@ -459,13 +521,17 @@ export default function CompanyDetailsModal({ onAddCompany, onCompaniesLoaded, i
             <div className="company-loading" role="status"><LoaderCircle size={28} aria-hidden="true" /> Loading verification report…</div>
           ) : error && companies.length === 0 ? (
             <p className="company-lane-empty">Retry the lookup to load your companies and verification report.</p>
+          ) : companyActionTarget ? (
+            <p className="company-lane-empty">Choose View Score or View Company Information above.</p>
           ) : selectedCompanyId == null ? (
             <VerificationBoard companies={companies} />
+          ) : companyView === "score" ? (
+            <VerificationProcessWorkspace company={company} />
           ) : (
             <DetailsSection definition={currentStep} company={company} />
           )}
 
-          {selectedCompanyId != null && !detailsLoading && company.id != null && (
+          {companyView === "information" && selectedCompanyId != null && !detailsLoading && company.id != null && (
             <div className="vr-stepNavigation">
               <button type="button" className="vr-btn vr-btnGhost" disabled={step === 1} onClick={() => changeStep(step - 1)}>
                 <ArrowLeft size={17} /> Back
@@ -485,6 +551,110 @@ export default function CompanyDetailsModal({ onAddCompany, onCompaniesLoaded, i
         </article>
       </section>
     </main>
+  );
+}
+
+function VerificationProcessWorkspace({ company }) {
+  const processSteps = Array.isArray(company.verification_process)
+    ? company.verification_process
+    : [];
+  const timeline = [
+    ...(Array.isArray(company.communication_timeline)
+      ? company.communication_timeline.map((item) => ({ ...item, activity_source: "Company log" }))
+      : []),
+    ...(Array.isArray(company.reactions)
+      ? company.reactions.map((item) => ({ ...item, activity_source: "Reaction" }))
+      : []),
+    ...(Array.isArray(company.search_activity)
+      ? company.search_activity.map((item) => ({ ...item, activity_source: "Search activity" }))
+      : []),
+  ].sort((left, right) => String(
+    left.created_at || left.updated_at || left.as_of_date || "",
+  ).localeCompare(String(
+    right.created_at || right.updated_at || right.as_of_date || "",
+  )));
+  const lanes = [
+    { key: "completed", title: "Completed", icon: CheckCircle2 },
+    { key: "attention", title: "Needs attention", icon: FileText },
+    { key: "pending", title: "Pending", icon: LoaderCircle },
+  ];
+
+  const activityLabel = (activity) =>
+    activity.message
+    || activity.description
+    || activity.action
+    || activity.event
+    || activity.status
+    || "Verification activity recorded";
+  const activityDate = (activity) =>
+    activity.created_at || activity.updated_at || activity.as_of_date || "";
+
+  return (
+    <section aria-label="Raymoch verification process">
+      <style>{`
+        .company-process-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+        .company-process-lane{min-width:0;padding:14px;border:1px solid #dbe3ef;border-radius:14px;background:#f8fafc}
+        .company-process-lane h3{display:flex;align-items:center;gap:7px;margin:0 0 11px;color:#0f2747;font-size:14px}
+        .company-process-card{padding:12px;margin-top:9px;border:1px solid #dbe3ef;border-radius:11px;background:#fff}
+        .company-process-card strong{display:block;color:#17233b;font-size:13px}
+        .company-process-card span{display:block;margin-top:3px;color:#64748b;font-size:11px}
+        .company-process-card ul{margin:9px 0 0;padding-left:18px;color:#475569;font-size:12px;line-height:1.55}
+        .company-timeline{margin-top:18px;padding:16px;border:1px solid #dbe3ef;border-radius:14px;background:#fff}
+        .company-timeline h3{margin:0 0 13px;color:#0f2747}
+        .company-timeline-list{position:relative;display:grid;gap:0;margin:0;padding:0;list-style:none}
+        .company-timeline-item{position:relative;margin-left:8px;padding:0 0 18px 24px;border-left:2px solid #bfdbfe}
+        .company-timeline-item:last-child{padding-bottom:0}
+        .company-timeline-item::before{content:"";position:absolute;top:2px;left:-7px;width:12px;height:12px;border:2px solid #fff;border-radius:50%;background:#2563eb;box-shadow:0 0 0 2px #bfdbfe}
+        .company-timeline-item strong{display:block;color:#17233b;font-size:13px}
+        .company-timeline-item time{display:block;margin-top:3px;color:#64748b;font-size:11px}
+        @media(max-width:760px){.company-process-grid{grid-template-columns:1fr}}
+      `}</style>
+
+      <div className="vr-sectionHeading">
+        <span className="vr-smallIcon"><Workflow size={20} /></span>
+        <div>
+          <h2 style={{ margin: 0, color: "#0f2747" }}>{company.company_name} verification workflow</h2>
+          <p className="company-section-copy">Kanban status and communication history for the Raymoch verification process.</p>
+        </div>
+      </div>
+
+      <div className="company-process-grid">
+        {lanes.map(({ key, title, icon: Icon }) => {
+          const tasks = processSteps.filter((item) => (item.status || "pending") === key);
+          return (
+            <section className="company-process-lane" key={key}>
+              <h3><Icon size={17} /> {title} <span>{tasks.length}</span></h3>
+              {tasks.length === 0 && <p className="company-lane-empty">No tasks in this stage.</p>}
+              {tasks.map((item) => (
+                <article className="company-process-card" key={item.step}>
+                  <strong>Step {item.step}: {item.title}</strong>
+                  <span>{key === "completed" ? "Database information retrieved" : "Review required"}</span>
+                  {Array.isArray(item.tasks) && (
+                    <ul>{item.tasks.map((task) => <li key={task}>{task}</li>)}</ul>
+                  )}
+                </article>
+              ))}
+            </section>
+          );
+        })}
+      </div>
+
+      <section className="company-timeline">
+        <h3>Communication time series</h3>
+        {timeline.length === 0 ? (
+          <p className="company-lane-empty">No company communication has been recorded yet.</p>
+        ) : (
+          <ol className="company-timeline-list">
+            {timeline.map((activity, index) => (
+              <li className="company-timeline-item" key={activity.id ?? index}>
+                <strong>{activity.activity_source}: {activityLabel(activity)}</strong>
+                {activityDate(activity) && <time>{String(activityDate(activity))}</time>}
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
+    </section>
   );
 }
 
