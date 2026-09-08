@@ -2256,7 +2256,7 @@ function SubmissionProgressModal({ open, stages, complete, error, onClose, onCon
           </ol>
           {complete && <div className="vr-saveNotice success"><strong>{previewMode ? "Preview completed." : "All information is saved."}</strong> {previewMode ? "Close this window to continue testing the form." : "Your company verification record is ready to review."}</div>}
           {error && <div className="vr-saveNotice error" role="alert">{error}</div>}
-          {(complete || error) && <div className="vr-saveActions"><button type="button" onClick={complete ? onConfirm : onClose}>{complete ? "OK — return to form" : "Return to form"}</button></div>}
+          {(complete || error) && <div className="vr-saveActions"><button type="button" onClick={complete ? onConfirm : onClose}>{complete ? "OK" : "Return to form"}</button></div>}
         </div>
       </section>
     </div>
@@ -2287,7 +2287,7 @@ export default function VerificationModal({ companyContext = null } = {}) {
   );
 
   // Begin at Step 3 temporarily for testing, then continue through Step 6.
-  const [step, setStep] = useState(() => 1);
+  const [step, setStep] = useState(() => 6);
   const [formData, setFormData] = useState(
     () => hasConfirmedParent
       ? {
@@ -2334,6 +2334,7 @@ export default function VerificationModal({ companyContext = null } = {}) {
   const [saveProgressError, setSaveProgressError] = useState("");
   const [saveProgressStages, setSaveProgressStages] = useState(initialSubmissionStages);
   const [savedCompanyId, setSavedCompanyId] = useState(null);
+  const savedCompanyIdRef = useRef(null);
   const [showCompanyDetails, setShowCompanyDetails] = useState(false);
   const [existingCompanyId, setExistingCompanyId] = useState(null);
   const [companyAvailabilityLoading, setCompanyAvailabilityLoading] = useState(true);
@@ -4106,6 +4107,7 @@ ${description}`,
     setSaveProgressStages(initialSubmissionStages());
     setSaveProgressComplete(false);
     setSaveProgressError("");
+    savedCompanyIdRef.current = null;
     setSavedCompanyId(null);
     setSaveProgressOpen(true);
     setSubmissionLoading(true);
@@ -4178,10 +4180,13 @@ ${description}`,
         confirmedSteps.has(stepNumber) && confirmedResults.has(stepNumber),
       );
       const transactionConfirmed = data.transaction_committed === true;
+      const committedCompanyId = Number(data.company_id);
+      const companyIdConfirmed = Number.isInteger(committedCompanyId)
+        && committedCompanyId > 0;
 
-      if (!transactionConfirmed || !allStepsConfirmed) {
+      if (!transactionConfirmed || !allStepsConfirmed || !companyIdConfirmed) {
         throw new Error(
-          "The server did not confirm that every section was committed. No success state will be shown; check the company list before attempting another submission.",
+          "The server did not confirm the committed company record and every saved section. Company Details cannot be opened safely.",
         );
       }
 
@@ -4214,11 +4219,13 @@ ${description}`,
       }
 
       setSubmissionReference(data.reference || "");
-      setSavedCompanyId(data.company_id || null);
-      setExistingCompanyId(data.company_id || existingCompanyId);
+      // Keep an immediate reference for the progress modal callback. Unlike
+      // React state, this value is available synchronously to the OK handler.
+      savedCompanyIdRef.current = committedCompanyId;
+      setSavedCompanyId(committedCompanyId);
+      setExistingCompanyId(committedCompanyId);
       setSaveProgressComplete(true);
-      // Testing mode: keep the verification form mounted after success.
-      setSubmitted(false);
+      setSubmitted(true);
     } catch (error) {
       const professionalMessage = !navigator.onLine || error?.name === "AbortError" || error instanceof TypeError
           ? "You are not connected to the internet. The server did not confirm the transaction; reconnect and try again."
@@ -5485,8 +5492,11 @@ ${description}`,
         }}
         onConfirm={() => {
           setSaveProgressOpen(false);
-          // Keep this verification modal open for repeated UI testing.
-          setShowCompanyDetails(false);
+          const companyIdToOpen = savedCompanyIdRef.current || savedCompanyId;
+          if (companyIdToOpen) {
+            setSavedCompanyId(companyIdToOpen);
+            setShowCompanyDetails(true);
+          }
         }}
       />
 
