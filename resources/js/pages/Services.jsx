@@ -61,7 +61,7 @@ const SERVICE_KEYS = Object.freeze({
   VISIBILITY_LISTING: "visibility-listing",
 });
 
-const COMPANY_INFORMATION_ENDPOINT = "/company-information";
+const COMPANY_INFORMATION_ENDPOINT = "/api/company-information";
 
 /**
  * Configure the existing Explore header menu.

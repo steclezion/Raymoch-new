@@ -423,9 +423,9 @@ export default function CompanyDetailsModal({ onAddCompany, onCompaniesLoaded, i
               <p className="company-section-copy">Select a company to review its profile.</p>
             </div>
           </div>
-          <button type="button" className="vr-btn company-add-btn" onClick={() => setAddCompanyPromptOpen(true)}>
+          {/* <button type="button" className="vr-btn company-add-btn" onClick={() => setAddCompanyPromptOpen(true)}>
             <Plus size={17} /> Add new company
-          </button>
+          </button> */}
         </div>
 
         <div className="company-list" aria-label="Select a submitted company">
