@@ -272,8 +272,10 @@ export default function CompanyDetailsModal({ onAddCompany, onCompaniesLoaded, i
   const detailsRequest = useRef(null);
   const addCompanyRef = useRef(onAddCompany);
   const companiesLoadedRef = useRef(onCompaniesLoaded);
+  const initialCompanyIdRef = useRef(initialCompanyId);
   useEffect(() => { companiesLoadedRef.current = onCompaniesLoaded; }, [onCompaniesLoaded]);
   useEffect(() => { addCompanyRef.current = onAddCompany; }, [onAddCompany]);
+  useEffect(() => { initialCompanyIdRef.current = initialCompanyId; }, [initialCompanyId]);
   useEffect(() => () => detailsRequest.current?.abort(), []);
   useEffect(() => {
     const dialog = modalTopRef.current?.closest("[role='dialog']");
@@ -298,7 +300,9 @@ export default function CompanyDetailsModal({ onAddCompany, onCompaniesLoaded, i
       if (signal.aborted) return;
       setCompanies(data.companies);
       companiesLoadedRef.current?.(data.companies);
-      if (data.companies.length === 0) addCompanyRef.current?.();
+      if (data.companies.length === 0 && initialCompanyIdRef.current == null) {
+        addCompanyRef.current?.();
+      }
     } catch (requestError) {
       if (requestError.name !== "AbortError") setError(requestError.message);
     } finally {
@@ -342,10 +346,10 @@ export default function CompanyDetailsModal({ onAddCompany, onCompaniesLoaded, i
   }, []);
 
   useEffect(() => {
-    if (!listLoading && initialCompanyId != null && companies.some(item => String(item.id) === String(initialCompanyId))) {
+    if (initialCompanyId != null) {
       selectCompany(initialCompanyId);
     }
-  }, [initialCompanyId, listLoading, companies, selectCompany]);
+  }, [initialCompanyId, selectCompany]);
 
   const changeStep = (nextStep) => {
     setStep(Math.min(STEPS.length, Math.max(1, nextStep)));
