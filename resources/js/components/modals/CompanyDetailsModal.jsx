@@ -424,15 +424,6 @@ export default function CompanyDetailsModal({ onAddCompany, onCompaniesLoaded, i
     }
   }, []);
 
-  const openCompanyActions = (selectedCompany) => {
-    detailsRequest.current?.abort();
-    setSelectedCompanyId(null);
-    setCompany(EMPTY_COMPANY);
-    setCompanyView(null);
-    setError("");
-    setCompanyActionTarget(selectedCompany);
-  };
-
   useEffect(() => {
     if (initialCompanyId != null) {
       selectCompany(initialCompanyId, "information");
@@ -463,6 +454,187 @@ export default function CompanyDetailsModal({ onAddCompany, onCompaniesLoaded, i
           width: 100%;
           max-width: none;
           min-height: 100%;
+          padding: clamp(10px, 1.5vw, 20px);
+          overflow-x: hidden;
+        }
+        .company-details-modal *,
+        .company-details-modal *::before,
+        .company-details-modal *::after {
+          box-sizing: border-box;
+        }
+        .company-details-modal .vr-hero,
+        .company-details-modal .vr-card,
+        .company-details-modal .vr-innerCard,
+        .company-details-modal .vr-stepwrap {
+          width: 100%;
+          max-width: 100%;
+          min-width: 0;
+        }
+        .company-details-modal .vr-hero,
+        .company-details-modal .vr-card {
+          padding: clamp(12px, 1.4vw, 20px);
+        }
+        .company-details-modal .vr-hero h2,
+        .company-details-modal .vr-sectionHeading h3,
+        .company-details-modal .company-board-heading h3 {
+          margin-block: 0;
+          font-size: clamp(16px, 1.5vw, 21px);
+          line-height: 1.25;
+        }
+        .company-details-modal .vr-hero p,
+        .company-details-modal .company-section-copy,
+        .company-details-modal .company-board-heading p {
+          margin: 4px 0 0;
+          font-size: clamp(12px, 1vw, 14px);
+          line-height: 1.45;
+        }
+        .company-details-modal .company-read-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+          gap: 12px;
+          width: 100%;
+          min-width: 0;
+        }
+        .company-details-modal .company-read-grid .vr-field {
+          min-width: 0;
+          margin: 0;
+        }
+        .company-details-modal .company-read-grid label,
+        .company-details-modal .company-signature-field label {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-bottom: 5px;
+          font-size: 12px;
+          line-height: 1.3;
+        }
+        .company-details-modal .company-read-value {
+          width: 100%;
+          min-width: 0;
+          min-height: 38px;
+          padding: 9px 10px;
+          overflow-wrap: anywhere;
+          word-break: break-word;
+          font-size: 13px;
+          line-height: 1.45;
+        }
+        .company-details-modal .company-step-section {
+          padding: clamp(12px, 1.5vw, 20px);
+          overflow: hidden;
+        }
+        .company-details-modal .vr-sectionHeading,
+        .company-details-modal .company-companyHeader,
+        .company-details-modal .vr-stepNavigation {
+          gap: 10px;
+          min-width: 0;
+          flex-wrap: wrap;
+        }
+        .company-details-modal .vr-sectionHeading > div,
+        .company-details-modal .company-companyHeaderCopy,
+        .company-details-modal .company-companyHeaderCopy > div {
+          min-width: 0;
+        }
+        .company-details-modal .company-list {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          width: 100%;
+          min-width: 0;
+        }
+        .company-details-modal .company-name-btn {
+          max-width: min(100%, 300px);
+          white-space: normal;
+          overflow-wrap: anywhere;
+          text-align: left;
+        }
+        .company-details-modal .company-signature-frame,
+        .company-details-modal .company-signature-frame img {
+          max-width: 100%;
+        }
+        .company-details-modal .company-signature-frame img {
+          height: auto;
+          max-height: 160px;
+          object-fit: contain;
+        }
+        .company-details-modal .company-list { overflow: visible; }
+        .company-details-modal .company-tree-node {
+          position: relative;
+          display: inline-flex;
+          padding-bottom: 20px;
+        }
+        .company-details-modal .company-tree-actions {
+          position: absolute;
+          z-index: 20;
+          top: calc(100% - 7px);
+          left: 50%;
+          display: flex;
+          gap: 12px;
+          padding-top: 14px;
+          opacity: 0;
+          visibility: hidden;
+          pointer-events: none;
+          transform: translateX(-50%) translateY(-5px);
+          transition: opacity 160ms ease, transform 160ms ease, visibility 160ms ease;
+        }
+        .company-details-modal .company-tree-actions::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 50%;
+          width: 2px;
+          height: 14px;
+          background: #93c5fd;
+          transform: translateX(-50%);
+        }
+        .company-details-modal .company-tree-actions::after {
+          content: "";
+          position: absolute;
+          top: 13px;
+          left: 25%;
+          right: 25%;
+          height: 2px;
+          background: #93c5fd;
+        }
+        .company-details-modal .company-tree-node:hover .company-tree-actions,
+        .company-details-modal .company-tree-node:focus-within .company-tree-actions,
+        .company-details-modal .company-tree-node.is-open .company-tree-actions {
+          opacity: 1;
+          visibility: visible;
+          pointer-events: auto;
+          transform: translateX(-50%) translateY(0);
+        }
+        .company-details-modal .company-tree-action {
+          position: relative;
+          z-index: 1;
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          min-height: 38px;
+          padding: 8px 12px;
+          border: 1px solid #bfdbfe;
+          border-radius: 10px;
+          background: #fff;
+          color: #1e3a8a;
+          font-weight: 700;
+          white-space: nowrap;
+          box-shadow: 0 8px 20px rgba(30, 64, 175, 0.14);
+          cursor: pointer;
+        }
+        .company-details-modal .company-tree-action::before {
+          content: "";
+          position: absolute;
+          bottom: 100%;
+          left: 50%;
+          width: 2px;
+          height: 9px;
+          background: #93c5fd;
+          transform: translateX(-50%);
+        }
+        .company-details-modal .company-tree-action:hover,
+        .company-details-modal .company-tree-action:focus-visible {
+          border-color: #2563eb;
+          background: #eff6ff;
+          outline: none;
         }
         @media (max-width: 900px) {
           .company-details-dialog-wide {
@@ -480,6 +652,43 @@ export default function CompanyDetailsModal({ onAddCompany, onCompaniesLoaded, i
             height: calc(100dvh - 12px);
             max-height: calc(100dvh - 12px) !important;
             border-radius: 6px !important;
+          }
+          .company-details-modal {
+            padding: 8px;
+          }
+          .company-details-modal .company-read-grid {
+            grid-template-columns: minmax(0, 1fr);
+          }
+          .company-details-modal .company-tree-node {
+            width: 100%;
+          }
+          .company-details-modal .company-name-btn {
+            width: 100%;
+            max-width: 100%;
+          }
+          .company-details-modal .company-tree-actions {
+            left: 0;
+            right: 0;
+            flex-direction: column;
+            transform: translateY(-5px);
+          }
+          .company-details-modal .company-tree-node:hover .company-tree-actions,
+          .company-details-modal .company-tree-node:focus-within .company-tree-actions,
+          .company-details-modal .company-tree-node.is-open .company-tree-actions {
+            transform: translateY(0);
+          }
+          .company-details-modal .company-tree-action {
+            width: 100%;
+            justify-content: center;
+            white-space: normal;
+            text-align: center;
+          }
+          .company-details-modal .company-tree-actions::after,
+          .company-details-modal .company-tree-action::before {
+            display: none;
+          }
+          .company-details-modal .vr-stepNavigation {
+            justify-content: center;
           }
         }
       `}</style>
@@ -520,50 +729,53 @@ export default function CompanyDetailsModal({ onAddCompany, onCompaniesLoaded, i
           {listLoading ? (
             <span className="company-inline-loading"><LoaderCircle size={17} /> Loading companies…</span>
           ) : companies.length > 0 ? (
-            companies.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                className={`company-name-btn${String(selectedCompanyId) === String(item.id) ? " is-active" : ""}`}
-                onClick={() => openCompanyActions(item)}
-                aria-pressed={String(selectedCompanyId) === String(item.id)}
-              >
-                <Building2 size={15} /> {item.company_name}
-              </button>
-            ))
+            companies.map((item) => {
+              const actionsOpen = String(companyActionTarget?.id) === String(item.id);
+
+              return (
+                <div
+                  key={item.id}
+                  className={`company-tree-node${actionsOpen ? " is-open" : ""}`}
+                  onMouseEnter={() => setCompanyActionTarget(item)}
+                  onMouseLeave={() => setCompanyActionTarget((current) =>
+                    String(current?.id) === String(item.id) ? null : current
+                  )}
+                >
+                  <button
+                    type="button"
+                    className={`company-name-btn${String(selectedCompanyId) === String(item.id) ? " is-active" : ""}`}
+                    onFocus={() => setCompanyActionTarget(item)}
+                    onClick={() => setCompanyActionTarget((current) =>
+                      String(current?.id) === String(item.id) ? null : item
+                    )}
+                    aria-expanded={actionsOpen}
+                    aria-haspopup="true"
+                  >
+                    <Building2 size={15} /> {item.company_name}
+                  </button>
+
+                  <div className="company-tree-actions" aria-label={`${item.company_name} actions`}>
+                    <button type="button" className="company-tree-action" onClick={() => {
+                      setCompanyActionTarget(null);
+                      selectCompany(item.id, "score");
+                    }}>
+                      <Gauge size={16} /> View Score
+                    </button>
+                    <button type="button" className="company-tree-action" onClick={() => {
+                      setCompanyActionTarget(null);
+                      selectCompany(item.id, "information");
+                    }}>
+                      <Eye size={16} /> View Company Information
+                    </button>
+                  </div>
+                </div>
+              );
+            })
           ) : (
             <span style={{ color: "#64748b", fontSize: "12px" }}>{error ? "Company lookup unavailable." : "No submitted companies were found."}</span>
           )}
         </div>
       </section>
-
-      {companyActionTarget && (
-        <section className="vr-card" aria-labelledby="company-action-title" style={{ marginTop: "14px", border: "1px solid #bfdbfe", background: "linear-gradient(135deg,#eff6ff,#f8fafc)" }}>
-          <div className="vr-sectionHeading">
-            <span className="vr-smallIcon"><Building2 size={20} /></span>
-            <div>
-              <h3 id="company-action-title" style={{ margin: 0 }}>{companyActionTarget.company_name}</h3>
-              <p className="company-section-copy">Choose what you want to view.</p>
-            </div>
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "14px" }}>
-            <button type="button" className="vr-btn" onClick={() => {
-              const companyId = companyActionTarget.id;
-              setCompanyActionTarget(null);
-              selectCompany(companyId, "score");
-            }}>
-              <Gauge size={17} /> View Score
-            </button>
-            <button type="button" className="vr-btn vr-btnGhost" onClick={() => {
-              const companyId = companyActionTarget.id;
-              setCompanyActionTarget(null);
-              selectCompany(companyId, "information");
-            }}>
-              <Eye size={17} /> View Company Information
-            </button>
-          </div>
-        </section>
-      )}
 
       {error && <div className="company-error" role="alert"><p>{error}</p><button type="button" className="vr-btn vr-btnGhost" onClick={() => setLookupAttempt(attempt => attempt + 1)}><RefreshCw size={16} aria-hidden="true" /> Retry company lookup</button></div>}
 
@@ -575,8 +787,6 @@ export default function CompanyDetailsModal({ onAddCompany, onCompaniesLoaded, i
             <div className="company-loading" role="status"><LoaderCircle size={28} aria-hidden="true" /> Loading verification report…</div>
           ) : error && companies.length === 0 ? (
             <p className="company-lane-empty">Retry the lookup to load your companies and verification report.</p>
-          ) : companyActionTarget ? (
-            <p className="company-lane-empty">Choose View Score or View Company Information above.</p>
           ) : selectedCompanyId == null ? (
             <VerificationBoard companies={companies} />
           ) : companyView === "score" ? (
