@@ -2287,7 +2287,7 @@ export default function VerificationModal({ companyContext = null } = {}) {
   );
 
   // Begin at Step 3 temporarily for testing, then continue through Step 6.
-  const [step, setStep] = useState(() => 6);
+  const [step, setStep] = useState(() => 1);
   const [formData, setFormData] = useState(
     () => hasConfirmedParent
       ? {
