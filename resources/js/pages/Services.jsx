@@ -61,6 +61,8 @@ const SERVICE_KEYS = Object.freeze({
   VISIBILITY_LISTING: "visibility-listing",
 });
 
+const COMPANY_INFORMATION_ENDPOINT = "/company-information";
+
 /**
  * Configure the existing Explore header menu.
  *
@@ -267,12 +269,68 @@ export default function Services({ onSubmitCompany } = {}) {
   const [verificationView, setVerificationView] = useState("companies");
   const [initialCompanyId, setInitialCompanyId] = useState(null);
   const [hasRegisteredCompany, setHasRegisteredCompany] = useState(false);
+  const [verificationLookupError, setVerificationLookupError] = useState("");
+  const verificationLookupAbortRef = useRef(null);
   const onCompaniesLoaded = useCallback((companies) => setHasRegisteredCompany(companies.length > 0), []);
   const addCompany = useCallback(() => setVerificationView("add"), []);
   const viewCompany = useCallback((companyId = null) => {
     setInitialCompanyId(companyId);
     setVerificationView("companies");
   }, []);
+
+  const checkAuthenticatedUserCompany = useCallback(async () => {
+    verificationLookupAbortRef.current?.abort();
+    const controller = new AbortController();
+    verificationLookupAbortRef.current = controller;
+
+    setVerificationLookupError("");
+    setVerificationView("loading");
+
+    try {
+      const response = await fetch(COMPANY_INFORMATION_ENDPOINT, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          Accept: "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        cache: "no-store",
+        signal: controller.signal,
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(
+          response.status === 401
+            ? "Please sign in before opening company verification."
+            : data.message || "Unable to check your submitted companies.",
+        );
+      }
+
+      const companies = Array.isArray(data.companies) ? data.companies : [];
+      if (controller.signal.aborted) return;
+
+      const submittedCompany = companies.find(
+        (company) => company && company.id != null,
+      );
+      const companyExists = Boolean(submittedCompany);
+
+      setHasRegisteredCompany(companyExists);
+      setInitialCompanyId(companyExists ? submittedCompany.id : null);
+      setVerificationView(companyExists ? "companies" : "add");
+    } catch (error) {
+      if (error.name === "AbortError") return;
+      setVerificationLookupError(
+        error.message || "Unable to check your submitted companies.",
+      );
+      setVerificationView("error");
+    }
+  }, []);
+
+  useEffect(
+    () => () => verificationLookupAbortRef.current?.abort(),
+    [],
+  );
 
   /*
    * Store the element that opened the modal so focus can be restored.
@@ -289,18 +347,21 @@ export default function Services({ onSubmitCompany } = {}) {
 
       if (serviceKey === SERVICE_KEYS.VERIFICATION) {
         setInitialCompanyId(null);
-        setVerificationView("companies");
+        setActiveServiceKey(serviceKey);
+        void checkAuthenticatedUserCompany();
+        return;
       }
 
       setActiveServiceKey(serviceKey);
     },
-    [],
+    [checkAuthenticatedUserCompany],
   );
 
   /**
    * Close the current service modal.
    */
   const closeServiceModal = useCallback(() => {
+    verificationLookupAbortRef.current?.abort();
     setActiveServiceKey(null);
 
     /*
@@ -358,6 +419,27 @@ export default function Services({ onSubmitCompany } = {}) {
         return <PartnerProgramsModal />;
 
       case SERVICE_KEYS.VERIFICATION:
+        if (verificationView === "loading") {
+          return (
+            <div role="status" aria-live="polite" style={{ padding: "32px", textAlign: "center" }}>
+              Checking your submitted companies…
+            </div>
+          );
+        }
+
+        if (verificationView === "error") {
+          return (
+            <div role="alert" style={{ padding: "28px", textAlign: "center" }}>
+              <p style={{ margin: "0 0 16px", color: "#b91c1c" }}>
+                {verificationLookupError}
+              </p>
+              <button type="button" className="vr-btn" onClick={() => void checkAuthenticatedUserCompany()}>
+                Try again
+              </button>
+            </div>
+          );
+        }
+
         return verificationView === "add" ? (
 
           <VerificationModal onViewCompany={viewCompany} hasRegisteredCompany={hasRegisteredCompany} onSubmitCompany={onSubmitCompany} />
