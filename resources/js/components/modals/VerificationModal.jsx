@@ -2287,7 +2287,7 @@ export default function VerificationModal({ companyContext = null } = {}) {
   );
 
   // Begin at Step 3 temporarily for testing, then continue through Step 6.
-  const [step, setStep] = useState(() => 1);
+  const [step, setStep] = useState(() => 6);
   const [formData, setFormData] = useState(
     () => hasConfirmedParent
       ? {
@@ -4341,6 +4341,152 @@ ${description}`,
         @media(max-width:900px) { .vr-verification-dialog-wide { width:calc(100vw - 20px) !important; max-width:calc(100vw - 20px) !important; height:calc(100dvh - 20px); max-height:calc(100dvh - 20px) !important; border-radius:8px !important; } }
         @media(max-width:640px) { .vr-verification-fullscreen { min-height:100%; padding-inline:12px; } }
       `}</style>
+      <style>{`
+        /* Home-aligned Raymoch coffee theme. Presentation only: verification logic is unchanged. */
+        .vr-verification-fullscreen {
+          --vr-espresso: #5b3825;
+          --vr-espresso-dark: #382116;
+          --vr-coffee: #8b6248;
+          --vr-taupe: #7a746d;
+          --vr-oat: #ded2c3;
+          --vr-ivory: #f7f2ea;
+          --vr-card: #fbf8f3;
+          --vr-gold: #b57b3f;
+          --vr-green: #2f6f4f;
+          --vr-danger: #a85846;
+          color: var(--vr-espresso-dark) !important;
+          background:
+            radial-gradient(circle at 92% 2%, rgba(181,123,63,.10), transparent 28rem),
+            linear-gradient(180deg, #fffdf9 0, var(--vr-ivory) 22rem) !important;
+          scrollbar-color: #a98b76 #eee5da;
+        }
+        .vr-verification-fullscreen .vr-hero {
+          margin-top: clamp(14px, 2vw, 24px);
+          border: 1px solid #d2c0ae !important;
+          border-radius: 18px !important;
+          background: linear-gradient(135deg, #5b3825 0%, #76513a 56%, #9a7052 100%) !important;
+          color: #fffaf3 !important;
+          box-shadow: 0 16px 38px rgba(73,45,29,.18) !important;
+        }
+        .vr-verification-fullscreen .vr-hero :is(h1,h2,h3,p,.vr-step) { color: inherit !important; }
+        .vr-verification-fullscreen .vr-heroIcon,
+        .vr-verification-fullscreen .vr-smallIcon,
+        .vr-verification-fullscreen .vr-icon {
+          border-color: rgba(91,56,37,.18) !important;
+          background: #f2e8dc !important;
+          color: var(--vr-espresso) !important;
+          box-shadow: 0 5px 14px rgba(73,45,29,.10) !important;
+        }
+        .vr-verification-fullscreen .vr-heroIcon {
+          border-color: rgba(255,255,255,.30) !important;
+          background: rgba(255,250,243,.14) !important;
+          color: #fffaf3 !important;
+        }
+        .vr-verification-fullscreen .vr-progress { background: rgba(255,255,255,.22) !important; }
+        .vr-verification-fullscreen .vr-progress > span { background: linear-gradient(90deg,#ead4a6,#c89a58) !important; }
+        .vr-verification-fullscreen .vr-card,
+        .vr-verification-fullscreen .vr-business-profile,
+        .vr-verification-fullscreen .vr-consent,
+        .vr-verification-fullscreen .vr-fileList,
+        .vr-verification-fullscreen .vr-requiredHelpPopover {
+          border-color: var(--vr-oat) !important;
+          background: rgba(251,248,243,.96) !important;
+          color: var(--vr-espresso-dark) !important;
+          box-shadow: 0 10px 26px rgba(73,45,29,.08) !important;
+        }
+        .vr-verification-fullscreen :is(h1,h2,h3,h4,strong,label,legend) { color: var(--vr-espresso-dark); }
+        .vr-verification-fullscreen :is(.muted,.small,.vr-fileMeta,.vr-successText) { color: var(--vr-taupe) !important; }
+        .vr-verification-fullscreen .vr-hr { border-color: var(--vr-oat) !important; }
+        .vr-verification-fullscreen :is(input:not([type=checkbox]):not([type=radio]),select,textarea) {
+          min-height: 43px;
+          border-color: #d5c6b7 !important;
+          border-radius: 10px !important;
+          background: #fffdf9 !important;
+          color: var(--vr-espresso-dark) !important;
+          box-shadow: inset 0 1px 2px rgba(73,45,29,.035) !important;
+        }
+        .vr-verification-fullscreen :is(input,select,textarea):focus {
+          border-color: var(--vr-coffee) !important;
+          outline: 3px solid rgba(139,98,72,.16) !important;
+          box-shadow: none !important;
+        }
+        .vr-verification-fullscreen :is(input,textarea)::placeholder { color: #9c9187 !important; }
+        .vr-verification-fullscreen .vr-btn,
+        .vr-verification-fullscreen .vr-saveActions button,
+        .vr-verification-fullscreen .vr-leadership-add {
+          min-height: 43px !important;
+          padding: 0 17px !important;
+          border: 1px solid var(--vr-espresso) !important;
+          border-radius: 10px !important;
+          background: linear-gradient(135deg,var(--vr-espresso),var(--vr-espresso-dark)) !important;
+          color: #fffaf3 !important;
+          font-weight: 750 !important;
+          box-shadow: 0 7px 16px rgba(73,45,29,.17) !important;
+          transition: transform .18s ease, box-shadow .18s ease, background .18s ease !important;
+        }
+        .vr-verification-fullscreen .vr-btn:hover:not(:disabled),
+        .vr-verification-fullscreen .vr-saveActions button:hover:not(:disabled),
+        .vr-verification-fullscreen .vr-leadership-add:hover:not(:disabled) {
+          transform: translateY(-1px);
+          box-shadow: 0 10px 22px rgba(73,45,29,.22) !important;
+        }
+        .vr-verification-fullscreen .vr-btnGhost {
+          border-color: #cbb9a7 !important;
+          background: #fffdf9 !important;
+          color: var(--vr-espresso) !important;
+          box-shadow: 0 4px 12px rgba(73,45,29,.07) !important;
+        }
+        .vr-verification-fullscreen button:focus-visible,
+        .vr-verification-fullscreen a:focus-visible {
+          outline: 3px solid rgba(181,123,63,.30) !important;
+          outline-offset: 3px !important;
+        }
+        .vr-verification-fullscreen button:disabled { opacity: .58; box-shadow: none !important; }
+        .vr-verification-fullscreen .vr-checkwrap,
+        .vr-verification-fullscreen .vr-successTitle { color: var(--vr-green) !important; }
+        .vr-verification-fullscreen .vr-error { color: var(--vr-danger) !important; }
+        .vr-verification-fullscreen .vr-reference,
+        .vr-verification-fullscreen .vr-uploadRule {
+          border-color: #d8c5ab !important;
+          background: #f4eadb !important;
+          color: #684b35 !important;
+        }
+        .vr-verification-fullscreen .vr-assistantBackdrop,
+        .vr-verification-fullscreen .vr-signatureBackdrop,
+        .vr-verification-fullscreen .vr-saveOverlay,
+        .vr-verification-fullscreen .vr-documentReviewBackdrop {
+          background: rgba(56,33,22,.56) !important;
+          backdrop-filter: blur(8px) saturate(.9) !important;
+        }
+        .vr-verification-fullscreen :is(.vr-assistantBody,.vr-signatureDialog,.vr-saveModal,.vr-documentReviewModal) {
+          border-color: #d4c4b5 !important;
+          background: #fffdf9 !important;
+          color: var(--vr-espresso-dark) !important;
+          box-shadow: 0 26px 74px rgba(56,33,22,.30) !important;
+        }
+        .vr-verification-fullscreen :is(.vr-assistantHeader,.vr-signatureHeader,.vr-saveHead,.vr-documentReviewHeader) {
+          border-color: var(--vr-oat) !important;
+          background: linear-gradient(135deg,#f3e9dd,#fbf7f1) !important;
+          color: var(--vr-espresso-dark) !important;
+        }
+        .vr-verification-fullscreen .vr-saveRing,
+        .vr-verification-fullscreen .vr-saveSpinner { border-color: #dbc8b6 !important; border-top-color: var(--vr-espresso) !important; }
+        .vr-verification-fullscreen .vr-assistantAvatar,
+        .vr-verification-fullscreen .vr-product-thinking-dot { background: var(--vr-gold) !important; color:#fff !important; }
+        .vr-verification-fullscreen .vr-leadership-board {
+          border-color: var(--vr-oat) !important;
+          background: #f4ede4 !important;
+        }
+        .vr-verification-fullscreen .vr-leadership-row {
+          border-color: var(--vr-oat) !important;
+          background: #fffdf9 !important;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .vr-verification-fullscreen *, .vr-verification-fullscreen *::before, .vr-verification-fullscreen *::after {
+            scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important;
+          }
+        }
+      `}</style>
       <header className="vr-hero vr-gradient">
         <div className="vr-heroContent">
           <span className="vr-heroIcon">
@@ -5410,10 +5556,10 @@ ${description}`,
       )}
 
       {documentReview.open && (
-        <div role="dialog" aria-modal="true" aria-labelledby="rr-review-title" style={{ position: "fixed", inset: 0, zIndex: 1200, display: "grid", placeItems: "center", padding: "18px", background: "rgba(15, 23, 42, .56)", backdropFilter: "blur(4px)", animation: `${documentReview.closing ? "rrFadeOut" : "rrFadeIn"} 180ms ease-out forwards` }}>
+        <div className="vr-documentReviewBackdrop" role="dialog" aria-modal="true" aria-labelledby="rr-review-title" style={{ position: "fixed", inset: 0, zIndex: 1200, display: "grid", placeItems: "center", padding: "18px", background: "rgba(15, 23, 42, .56)", backdropFilter: "blur(4px)", animation: `${documentReview.closing ? "rrFadeOut" : "rrFadeIn"} 180ms ease-out forwards` }}>
           <style>{`@keyframes rrFadeIn{from{opacity:0}to{opacity:1}}@keyframes rrFadeOut{from{opacity:1}to{opacity:0}}@keyframes rrSpin{to{transform:rotate(360deg)}}@keyframes rrBreathe{0%,100%{opacity:.45}50%{opacity:1}}`}</style>
-          <div style={{ width: "min(520px, 100%)", border: "1px solid #dbe3ef", borderRadius: "18px", background: "#fff", boxShadow: "0 24px 70px rgba(15, 23, 42, .28)", overflow: "hidden", animation: "rrFadeIn 240ms ease-out" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", padding: "15px 17px", borderBottom: "1px solid #e2e8f0", background: "linear-gradient(135deg, #eff6ff, #f5f3ff)" }}>
+          <div className="vr-documentReviewModal" style={{ width: "min(520px, 100%)", border: "1px solid #dbe3ef", borderRadius: "18px", background: "#fff", boxShadow: "0 24px 70px rgba(15, 23, 42, .28)", overflow: "hidden", animation: "rrFadeIn 240ms ease-out" }}>
+            <div className="vr-documentReviewHeader" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", padding: "15px 17px", borderBottom: "1px solid #e2e8f0", background: "linear-gradient(135deg, #eff6ff, #f5f3ff)" }}>
               <div>
                 <strong id="rr-review-title" style={{ display: "block", color: "#0f2747" }}>Raymoch Clarity Review</strong>
                 <span style={{ display: "block", maxWidth: "390px", marginTop: "3px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#64748b", fontSize: "11px" }}>{documentReview.fileName}</span>

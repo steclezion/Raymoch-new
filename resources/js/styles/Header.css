@@ -1,0 +1,68 @@
+:root {
+  --ray-brown: #5b3825;
+  --ray-dark: #382116;
+  --ray-border: #ded2c3;
+  --ray-hover: #f7f2ea;
+  --ray-muted: #7a746d;
+  --ray-paper: #fff;
+}
+
+* { box-sizing: border-box; }
+.ray-header { position: sticky; top: 0; z-index: 1000; color: var(--ray-dark); background: #fff; border-bottom: 1px solid var(--ray-border); box-shadow: 0 7px 22px rgba(73,45,29,.08); font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+.ray-container { width: min(1536px, 100%); margin: 0 auto; padding-inline: 16px; }
+.ray-toolbar { min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.ray-brand-group, .ray-actions, .ray-brand, .ray-button { display: flex; align-items: center; }
+.ray-brand-group { gap: 16px; }
+.ray-brand { gap: 8px; color: var(--ray-brown); font-size: 1.25rem; font-weight: 900; text-decoration: none; }
+.ray-logo { width: 28px; height: 28px; object-fit: contain; }
+.ray-actions { gap: 10px; }
+.ray-button { min-height: 40px; justify-content: center; gap: 7px; padding: 9px 16px; border: 1px solid transparent; border-radius: 10px; font: inherit; font-weight: 800; line-height: 1; text-decoration: none; cursor: pointer; transition: transform .18s ease, box-shadow .18s ease, background .18s ease; }
+.ray-button:hover { transform: translateY(-1px); }
+.ray-button:focus-visible, .ray-icon-button:focus-visible, .ray-nav-link:focus-visible, .ray-search:focus-within { outline: 3px solid rgba(181,123,63,.28); outline-offset: 3px; }
+.ray-button:disabled { cursor: not-allowed; opacity: .65; transform: none; }
+.ray-button--ghost { color: var(--ray-dark); background: transparent; }
+.ray-button--ghost:hover { background: var(--ray-hover); }
+.ray-button--trial { color: #fffdf8; background: linear-gradient(135deg,#d6a75c,#b57b3f 55%,#8c572b); box-shadow: 0 7px 17px rgba(140,87,43,.22); }
+.ray-button--login { color: #fffaf3; background: linear-gradient(135deg,#68442f,#4c2e1f 54%,#2f1b12); box-shadow: 0 7px 17px rgba(56,33,22,.24); }
+.ray-button--signup { color: #f8fff9; background: linear-gradient(135deg,#477d62,#2f6f4f 55%,#214c38); box-shadow: 0 7px 17px rgba(47,111,79,.22); }
+.ray-button--outline { color: var(--ray-brown); background: #fff; border-color: var(--ray-border); }
+.ray-button--pill { border-radius: 999px; }
+.ray-icon-button { width: 42px; height: 42px; display: inline-grid; place-items: center; flex: 0 0 auto; padding: 0; color: var(--ray-brown); background: #fff; border: 1px solid var(--ray-border); border-radius: 10px; cursor: pointer; }
+.ray-icon-button:hover { background: var(--ray-hover); }
+.ray-search { width: clamp(260px, 24vw, 320px); height: 42px; display: flex; align-items: center; gap: 8px; padding: 0 14px; color: var(--ray-muted); background: #fff; border: 1px solid var(--ray-border); border-radius: 999px; }
+.ray-search input { min-width: 0; width: 100%; border: 0; outline: 0; font: inherit; color: var(--ray-dark); background: transparent; }
+.ray-secondary-nav { background: #f1f1ef; border-top: 1px solid var(--ray-border); }
+.ray-secondary-links { min-height: 48px; display: flex; align-items: center; gap: 8px 16px; flex-wrap: wrap; }
+.ray-nav-link { padding: 9px 10px; color: var(--ray-dark); border-radius: 8px; font-weight: 800; text-decoration: none; }
+.ray-nav-link:hover { background: var(--ray-hover); }
+.ray-explore-panel { position: fixed; z-index: 3000; overflow: hidden; color: var(--ray-dark); background: #fff; border: 1px solid var(--ray-border); border-radius: 16px; box-shadow: 0 18px 45px rgba(73,45,29,.16); animation: ray-drop .18s ease; }
+.ray-explore-heading { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; color: var(--ray-dark); background: #fff; border: 0; font: inherit; font-weight: 900; cursor: pointer; }
+.ray-explore-heading:hover { background: var(--ray-hover); }
+.ray-explore-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 0 16px 16px; }
+.ray-explore-card { display: grid; gap: 6px; padding: 15px; color: var(--ray-dark); border: 1px solid var(--ray-border); border-radius: 14px; text-decoration: none; transition: transform .12s ease, box-shadow .12s ease; }
+.ray-explore-card span { color: var(--ray-muted); font-size: .875rem; line-height: 1.45; }
+.ray-explore-card:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(73,45,29,.08); }
+.ray-overlay { position: fixed; inset: 0; z-index: 4000; background: rgba(56,33,22,.38); backdrop-filter: blur(2px); }
+.ray-overlay--center { display: grid; place-items: center; padding: 20px; }
+.ray-drawer { width: min(360px, 92vw); height: 100%; overflow-y: auto; color: var(--ray-dark); background: #fff; border-radius: 0 16px 16px 0; box-shadow: 18px 0 45px rgba(56,33,22,.2); animation: ray-drawer .2s ease; }
+.ray-drawer-head { min-height: 62px; display: flex; align-items: center; justify-content: space-between; padding: 10px 18px; border-bottom: 1px solid var(--ray-border); }
+.ray-mobile-links, .ray-mobile-actions { display: grid; gap: 10px; padding: 18px; }
+.ray-mobile-links { border-bottom: 1px solid var(--ray-border); }
+.ray-mobile-links .ray-nav-link { padding: 10px 0; }
+.ray-avatar { display: inline-grid; place-items: center; flex: 0 0 auto; object-fit: cover; color: #fff; background: var(--ray-brown); border-radius: 50%; font-weight: 900; }
+.ray-avatar--sm { width: 34px; height: 34px; }.ray-avatar--md { width: 42px; height: 42px; }.ray-avatar--lg { width: 56px; height: 56px; }.ray-avatar--xl { width: 76px; height: 76px; font-size: 1.4rem; }
+.ray-dialog { width: min(600px, 100%); max-height: calc(100vh - 40px); overflow-y: auto; color: var(--ray-dark); background: #fff; border: 1px solid var(--ray-border); border-radius: 16px; box-shadow: 0 24px 70px rgba(56,33,22,.25); font-family: Inter, ui-sans-serif, system-ui, sans-serif; animation: ray-dialog .18s ease; }
+.ray-dialog-head { position: relative; display: flex; align-items: center; gap: 16px; padding: 20px 24px 14px; }
+.ray-dialog-head h2, .ray-dialog-head p, .ray-picture-card p { margin: 0; }.ray-dialog-head h2 { font-size: 1.25rem; }.ray-dialog-head p, .ray-picture-card p { margin-top: 4px; color: var(--ray-muted); font-size: .875rem; }
+.ray-dialog-close { position: absolute; top: 16px; right: 16px; }
+.ray-dialog-body { padding: 20px 24px; border-block: 1px solid var(--ray-border); }
+.ray-chip { display: inline-block; padding: 5px 10px; color: #555; background: #ecebea; border-radius: 999px; font-size: .75rem; font-weight: 800; }.ray-chip--success { color: #24583e; background: #dff1e7; }
+.ray-profile-stack { display: grid; gap: 16px; margin-top: 18px; }
+.ray-info-card { display: grid; gap: 5px; padding: 16px; border: 1px solid var(--ray-border); border-radius: 14px; }.ray-info-card small { color: var(--ray-muted); }.ray-picture-card { display: flex; align-items: center; gap: 16px; }.ray-picture-card > div { display: grid; gap: 7px; }
+.ray-field { display: grid; gap: 7px; color: var(--ray-muted); font-size: .78rem; font-weight: 700; }.ray-field input { height: 44px; padding: 0 12px; color: var(--ray-muted); background: #f3f1ee; border: 1px solid var(--ray-border); border-radius: 10px; font: inherit; }
+.ray-error { margin: 0; color: #a85846; font-size: .875rem; }.ray-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 24px; }
+.ray-spin { animation: ray-spin .8s linear infinite; }
+@keyframes ray-spin { to { transform: rotate(360deg); } } @keyframes ray-drop { from { opacity: 0; transform: translateY(-8px); } } @keyframes ray-drawer { from { transform: translateX(-100%); } } @keyframes ray-dialog { from { opacity: 0; transform: translateY(8px) scale(.985); } }
+@media (max-width: 899px) { .ray-container { padding-inline: 12px; }.ray-toolbar { min-height: 68px; }.ray-picture-card { align-items: flex-start; } }
+@media (max-width: 560px) { .ray-explore-grid { grid-template-columns: 1fr; }.ray-dialog-head, .ray-dialog-body, .ray-dialog-actions { padding-inline: 16px; }.ray-picture-card { flex-direction: column; }.ray-dialog-actions { flex-wrap: wrap; }.ray-dialog-actions .ray-button { flex: 1; } }
+@media (prefers-reduced-motion: reduce) { .ray-button, .ray-explore-card, .ray-explore-panel, .ray-drawer, .ray-dialog, .ray-spin { animation: none; transition: none; } }

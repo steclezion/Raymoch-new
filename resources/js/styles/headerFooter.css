@@ -1,0 +1,305 @@
+/* src/styles/headerFooter.css */
+
+/* Tokens (safe to keep here for compatibility) */
+:root{
+  --brand-blue: rgb(38, 24, 18);        /* Raymoch wordmark + icon: espresso */
+  --brand-blue-700: rgb(64, 40, 28);    /* deep roast */
+  --brand-blue-500: rgb(140, 92, 52);   /* copper accent */
+  --accent-gold: rgb(215, 180, 106);    /* soft honey */
+
+  --ink: rgb(16, 17, 20);
+  --muted: rgb(95, 84, 72);
+  --bg: rgb(250, 250, 250);
+  --border: rgb(230, 221, 210);
+  --card: rgb(255, 255, 255);
+
+  --radius: 14px;
+  --pill: 999px;
+  --shadow: 0 6px 22px rgba(61, 38, 25, 0.08);
+  --maxw: 1328px;
+  --gutter: 18px;
+
+  --footer-bg: rgb(11, 16, 32);
+}
+
+/* Keep this modest. No global * reset. */
+a{ color: inherit; text-decoration: none; }
+.wrap{ max-width: var(--maxw); margin: 0 auto; padding: 0 var(--gutter); }
+
+/* ===================== HEADER ===================== */
+.header{
+  --nav-brand: rgb(38, 24, 18);
+  --nav-link: rgb(50, 31, 22);
+  --nav-hover: rgb(140, 92, 52);
+  --nav-bg: rgb(255, 255, 255);
+  --nav-fg: var(--ink);
+
+  background: var(--nav-bg);
+  color: var(--nav-fg);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  border-bottom: 1px solid var(--border);
+  font-family: "Inter", "Segoe UI", sans-serif;
+}
+
+.row1{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+
+  padding: 12px 8px;
+  margin: 15px;
+  box-shadow: 0 1px 0 rgba(61, 38, 25, 0.05);
+  position: relative;
+  background: rgb(255, 255, 255);
+  border-radius: 12px;
+}
+
+.brandrow{
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.brand{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--nav-brand);
+}
+
+.brand svg{
+  color: var(--nav-brand);
+  opacity: 0.96;
+}
+
+.brand-word{
+  font-family: "Inter", "Segoe UI", sans-serif;
+  font-weight: 900;
+  font-size: 1.35rem;
+  color: var(--nav-brand);
+  letter-spacing: -0.02em;
+}
+
+.dotgrid{
+  width: 18px;
+  height: 18px;
+  display: inline-grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2px;
+}
+
+.dotgrid i{
+  width: 5px;
+  height: 5px;
+  border-radius: 2px;
+  background: rgb(50, 31, 22);
+  display: block;
+}
+
+.rightside{
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-right: 0;
+}
+
+.search-box{
+  min-width: 140px;
+  width: 18vw;
+  max-width: 260px;
+}
+
+.search-box input{
+  width: 100%;
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--pill);
+  background: rgb(255, 255, 255);
+  color: var(--ink);
+  font-family: "Inter", "Segoe UI", sans-serif;
+}
+
+.search-box input:focus{
+  border-color: var(--nav-brand);
+  outline: 2px solid rgba(215, 180, 106, 0.28);
+}
+
+.auth{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn{
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  border-radius: var(--pill);
+  font-family: "Inter", "Segoe UI", sans-serif;
+  font-weight: 700;
+  background: rgb(255, 255, 255);
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.btn.primary{
+  background: var(--nav-brand);
+  color: rgb(255, 255, 255);
+  border-color: var(--nav-brand);
+}
+
+.explore-toggle{
+  appearance: none;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "Inter", "Segoe UI", sans-serif;
+  font-weight: 800;
+  color: var(--nav-link);
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.explore-toggle:hover,
+.explore-toggle[aria-expanded="true"]{
+  background: rgba(215, 180, 106, 0.14);
+  color: var(--nav-hover);
+}
+
+.menu-panel{
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 15px;
+  z-index: 1100;
+  width: min(760px, calc(100vw - 40px));
+  background: rgb(255, 255, 255);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 14px;
+  font-family: "Inter", "Segoe UI", sans-serif;
+}
+
+.menu-panel[hidden]{ display: none; }
+
+.menu-head{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.menu-head h4{
+  margin: 0;
+  font-size: 1rem;
+  color: rgb(50, 31, 22);
+  font-family: "Inter", "Segoe UI", sans-serif;
+  font-weight: 800;
+}
+
+.menu-grid{
+  display: grid;
+  grid-template-columns: repeat(2, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.menu-item{
+  display: block;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgb(255, 255, 255);
+}
+
+.menu-item:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(61, 38, 25, 0.06);
+}
+
+.menu-item h5{
+  margin: 0 0 6px;
+  font-size: 0.98rem;
+  color: var(--ink);
+  font-family: "Inter", "Segoe UI", sans-serif;
+  font-weight: 800;
+}
+
+.menu-item p{
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-family: "Inter", "Segoe UI", sans-serif;
+}
+
+.row2{
+  background: rgb(243, 237, 228);
+  border-top: 1px solid rgb(234, 223, 206);
+  border-bottom: 1px solid rgb(227, 214, 195);
+  padding-left: 15px;
+}
+
+.row2 .wrap{
+  max-width: none;
+  padding: 0;
+}
+
+.row2 .links{
+  display: flex;
+  gap: 18px;
+  padding: 8px 8px;
+  margin: 0;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.row2 a{
+  font-family: "Inter", "Segoe UI", sans-serif;
+  font-weight: 600;
+  font-size: 0.92rem;
+  padding: 4px 6px;
+  border-radius: 4px;
+  color: var(--nav-link);
+}
+
+.row2 a:hover{
+  background: rgba(215, 180, 106, 0.14);
+  color: var(--nav-hover);
+}
+
+@media (max-width: 800px){
+  .search-box{
+    width: 34vw;
+    max-width: 300px;
+  }
+}
+
+@media (max-width: 720px){
+  .row2{ display: none; }
+  .search-box{
+    min-width: 0;
+    width: 46vw;
+  }
+}
+
+.header a:focus-visible,
+.header button:focus-visible,
+.btn:focus-visible{
+  outline: 2px solid rgba(215, 180, 106, 0.34);
+  outline-offset: 2px;
+}
+
+/* ===================== FOOTER ===================== */
+footer{
+  background: var(--footer-bg);
+  color: rgb(203, 213, 225);
+}

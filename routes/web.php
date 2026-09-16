@@ -48,10 +48,15 @@ use App\Http\Controllers\VerificationSubmissionFormController;
 */
 
 Route::view('/', 'pages.entire')->name('home');
-Route::view('/about', 'pages.about')->name('about');
+Route::view('/about', 'pages.about')->name('about'); //
+Route::view('/overview', 'pages.overview')->name('overview');
+Route::view('/fulloverview', 'pages.fulloverview')->name('fulloverview');
 
 Route::view('/services', 'pages.services')->name('services');
 Route::view('/insights', 'pages.market-insight')->name('insights');
+Route::view('/security_raymoch', 'pages.security')->name('security_raymoch');
+Route::view('/business_landing', 'pages.Business_landing')->name('business_landing');
+
 // Trial request pages
 Route::get('/request-trial', fn() => view('pages.auth.trial'))->name('trial.page');
 Route::view('/trial/verify', 'pages.auth.trial-verify')->name('trial.verify.page');
@@ -169,6 +174,7 @@ Route::get('/auth/user', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard
     Route::get('/dashboard', fn() => view('pages.dashboard.dashboard'))->name('dashboard');
+    Route::get('/home', fn() => view('pages.dashboard.home'))->name('home');
 
     Route::post('/profile/update', [ProfileController::class, 'updateProfilePicture'])
         ->name('profile.update');
@@ -221,6 +227,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/company_classifications/import', [CompanyClassificationController::class, 'import'])->name('company_classifications.import');
     Route::resource('company_classifications', CompanyClassificationController::class);
     Route::view('/companies', 'pages.companies')->name('companies'); // main companies listing page // Static placeholders used in header/footer links (wire up later as you build them)
+    Route::view('/matching', 'pages.matching')->name('matching'); // main companies listing page // Static placeholders used in header/footer links (wire up later as you build them)
     Route::view('/services', 'pages.services')->name('services'); // temp → point to real page later
     Route::view('/insights', 'pages.market-insight')->name('insights'); // temp // services sub-pages
     Route::view('/partner-programs', 'pages.services.partner-programs')->name('partner-programs'); // partner programs page

@@ -19,12 +19,19 @@ import SignupInvestorAccount from "./components/signup/SignupInvestorAccount.jsx
 import ExploreBusinesses from "./pages/ExploreBusinesses.jsx";
 import Companies from "./pages/Companies.jsx";
 import Entire from "./pages/Entire.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
+import Home from "./pages/Home.jsx";
 import Services from "./pages/Services.jsx";
+import Matching from "./pages/Matching.jsx";
 import Market_Insight from "./pages/Market_Insight.jsx";
 import About from "./pages/About.jsx";
 import Pricing from "./pages/Pricing.jsx";
 import PriceHowToPay  from "./pages/Pricehowtopay.jsx";
 import MembershipSuccess from "./pages/membership_success.jsx";
+import Overview from "./pages/Overview.jsx";
+import Fulloverview from "./pages/Fulloverview.jsx";
+import Security from "./pages/Security.jsx";
+import BusinessLanding from "./pages/Business_landing.jsx";
 /* =========================================================
    Auth Context
 ========================================================= */
@@ -344,16 +351,23 @@ mount(
   <SignupInvestorAccount routes={window.ROUTES || window.APP?.routes || {}} />
 );
 mount("entire-root", <Entire />);
+mount("home-root", <Home />);
+mount("dashboard-root", <Dashboard />);
 mount("ServicesRoot", <Services />);
 mount("MarketInsightRoot", <Market_Insight />);
+mount("OverviewRoot", <Overview />);
+mount("FulloverviewRoot", <Fulloverview />);
+mount("SecurityRoot", <Security/>);
+mount("business-landing-root", <BusinessLanding />);
 
 mount("explore-root",
-<BrowserRouter>   <ExploreBusinesses /></BrowserRouter>
-
-   
+<BrowserRouter>   <ExploreBusinesses /></BrowserRouter>   
   );
 
 mount("explore-companies", <Companies />);
+
+mount("matching-root", <Matching />);
+
 mount(
   "signupBasicRoot",
   <SignupBasic routes={window.ROUTES || window.APP?.routes || {}} />

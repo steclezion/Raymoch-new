@@ -1,0 +1,80 @@
+.ray-ai-search__company-step {
+  display: grid;
+  gap: 18px;
+}
+
+.ray-ai-search__company-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ray-ai-search__company-options > label {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 15px;
+  cursor: pointer;
+  background: #fff;
+  border: 1px solid #ded2c3;
+  border-radius: 12px;
+  transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+
+.ray-ai-search__company-options > label.is-selected {
+  background: #fffaf3;
+  border-color: #8b6248;
+  box-shadow: 0 0 0 3px rgba(91, 56, 37, .1);
+}
+
+.ray-ai-search__company-options input[type="radio"] {
+  width: 17px;
+  height: 17px;
+  margin-top: 2px;
+  accent-color: #5b3825;
+}
+
+.ray-ai-search__company-options span,
+.ray-ai-search__company-fields label {
+  display: grid;
+  gap: 5px;
+}
+
+.ray-ai-search__company-options small,
+.ray-ai-search__company-fields small {
+  color: #7a746d;
+  font-weight: 500;
+}
+
+.ray-ai-search__company-fields {
+  display: grid;
+  gap: 14px;
+}
+
+.ray-ai-search__company-fields label > span {
+  color: #382116;
+  font-size: .82rem;
+  font-weight: 800;
+}
+
+.ray-ai-search__company-fields input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  color: #382116;
+  background: #fff;
+  border: 1px solid #ded2c3;
+  border-radius: 10px;
+  font: inherit;
+}
+
+.ray-ai-search__company-fields input:focus {
+  border-color: #8b6248;
+  outline: 3px solid rgba(91, 56, 37, .12);
+}
+
+@media (max-width: 640px) {
+  .ray-ai-search__company-options {
+    grid-template-columns: 1fr;
+  }
+}

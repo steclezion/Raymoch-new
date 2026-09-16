@@ -18,7 +18,7 @@ import Paper from "@mui/material/Paper";
 import ClickAwayListener from "@mui/material/ClickAwayListener";
 import Portal from "@mui/material/Portal";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import { useTheme } from "@mui/material/styles";
+import { createTheme, ThemeProvider, useTheme } from "@mui/material/styles";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -38,6 +38,75 @@ import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
 import PhotoCameraRoundedIcon from "@mui/icons-material/PhotoCameraRounded";
 
 import { getAuthUser, logoutRequest } from "../../lib/auth";
+import "../../styles/headerFooter.css";
+
+const HORIZONTAL_NAV_THEME = createTheme({
+  palette: {
+    mode: "light",
+    primary: { main: "#5b3825", dark: "#382116", light: "#8b6248", contrastText: "#fffaf3" },
+    secondary: { main: "#8b6248", dark: "#5b3825", contrastText: "#fffaf3" },
+    success: { main: "#2f6f4f" },
+    warning: { main: "#b57b3f" },
+    error: { main: "#a85846" },
+    background: { default: "#f7f2ea", paper: "#ffffff" },
+    text: { primary: "#382116", secondary: "#7a746d" },
+    divider: "#ded2c3",
+    action: { hover: "#f7f2ea", selected: "#eee3d6", focus: "rgba(91,56,37,.14)" },
+    grey: { 100: "#f1f1ef", 200: "#e5e3df", 300: "#d7d3cd" },
+  },
+  shape: { borderRadius: 10 },
+  typography: {
+    fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    button: { fontWeight: 750, textTransform: "none" },
+  },
+  shadows: [
+    "none",
+    "0 2px 8px rgba(73,45,29,.06)",
+    "0 5px 14px rgba(73,45,29,.08)",
+    "0 8px 20px rgba(73,45,29,.10)",
+    "0 12px 28px rgba(73,45,29,.12)",
+    "0 16px 36px rgba(73,45,29,.14)",
+    ...Array(19).fill("0 18px 45px rgba(73,45,29,.16)"),
+  ],
+  components: {
+    MuiAppBar: {
+      styleOverrides: {
+        root: { backgroundImage: "none", boxShadow: "0 7px 22px rgba(73,45,29,.08)" },
+      },
+    },
+    MuiButton: {
+      defaultProps: { disableElevation: true },
+      styleOverrides: {
+        root: { minHeight: 40, paddingInline: 16, borderRadius: 10, fontWeight: 750 },
+        containedPrimary: {
+          background: "linear-gradient(135deg,#5b3825,#382116)",
+          boxShadow: "0 6px 15px rgba(73,45,29,.16)",
+          "&:hover": { background: "linear-gradient(135deg,#68442f,#44291b)", boxShadow: "0 9px 20px rgba(73,45,29,.20)" },
+        },
+      },
+    },
+    MuiIconButton: {
+      styleOverrides: { root: { color: "#5b3825", borderRadius: 10 } },
+    },
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: {
+          minHeight: 42,
+          backgroundColor: "#fff",
+          "& fieldset": { borderColor: "#ded2c3" },
+          "&:hover fieldset": { borderColor: "#a98b76" },
+          "&.Mui-focused fieldset": { borderColor: "#5b3825", boxShadow: "0 0 0 3px rgba(91,56,37,.12)" },
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: { root: { backgroundImage: "none", borderColor: "#ded2c3" } },
+    },
+    MuiDialog: {
+      styleOverrides: { paper: { border: "1px solid #ded2c3", boxShadow: "0 24px 70px rgba(56,33,22,.25)" } },
+    },
+  },
+});
 
 /* =========================================================
    Helpers
@@ -84,8 +153,14 @@ function absoluteImageUrl(path) {
 // }
 
 function SafeLink({ to, children, ...rest }) {
+  const hasRouter = useInRouterContext?.() ?? false;
+
+  if (hasRouter) {
+    return <Link to={to} {...rest}>{children}</Link>;
+  }
+
   return (
-    <a href={to} {...rest}>
+    <a href={typeof to === "string" ? to : "/"} {...rest}>
       {children}
     </a>
   );
@@ -110,10 +185,16 @@ function SafeLink({ to, children, ...rest }) {
 // }
 
 function RouterSafeButton({ to, children, sx, ...rest }) {
+  const hasRouter = useInRouterContext?.() ?? false;
+
+  if (hasRouter) {
+    return <Button component={Link} to={to} sx={sx} {...rest}>{children}</Button>;
+  }
+
   return (
     <Button
       component="a"
-      href={to}
+      href={typeof to === "string" ? to : "/"}
       sx={sx}
       {...rest}
     >
@@ -143,7 +224,7 @@ const mobileMenuStyles = {
   link: {
     fontWeight: 800,
     textDecoration: "none",
-    color: "#000",
+    color: "#382116",
     "&:hover": { textDecoration: "underline" },
   },
   actionStack: {
@@ -170,7 +251,7 @@ const desktopDropdownStyles = {
     maxWidth: "92vw",
     borderRadius: 2,
     overflow: "hidden",
-    boxShadow: "0 18px 45px rgba(0,0,0,.18)",
+    boxShadow: "0 18px 45px rgba(73,45,29,.16)",
     border: "1px solid",
     borderColor: "divider",
     backgroundColor: "background.paper",
@@ -207,7 +288,7 @@ const desktopDropdownStyles = {
     borderColor: "divider",
     "&:hover": {
       transform: "translateY(-1px)",
-      boxShadow: "0 8px 20px rgba(0,0,0,.06)",
+      boxShadow: "0 8px 20px rgba(73,45,29,.08)",
     },
     transition: "transform .12s ease, box-shadow .12s ease",
   },
@@ -216,8 +297,68 @@ const desktopDropdownStyles = {
 const secondaryNavBtnSx = {
   fontWeight: 800,
   textTransform: "none",
-  color: "#000",
-  "&:hover": { color: "#000", bgcolor: "action.hover" },
+  color: "#382116",
+  "&:hover": { color: "#382116", bgcolor: "action.hover" },
+};
+
+const authActionBaseSx = {
+  minHeight: 42,
+  px: 2.1,
+  border: "1px solid transparent",
+  borderRadius: "10px",
+  fontWeight: 850,
+  letterSpacing: "0.01em",
+  lineHeight: 1,
+  textTransform: "none",
+  whiteSpace: "nowrap",
+  transition: "transform .18s ease, box-shadow .18s ease, filter .18s ease",
+  "&:hover": {
+    transform: "translateY(-1px)",
+    filter: "saturate(1.04)",
+  },
+  "&:focus-visible": {
+    outline: "3px solid rgba(181,123,63,.28)",
+    outlineOffset: "3px",
+  },
+};
+
+const authActionStyles = {
+  trial: {
+    ...authActionBaseSx,
+    borderColor: "#b8833f",
+    background: "linear-gradient(135deg,#d6a75c 0%,#b57b3f 55%,#8c572b 100%)",
+    color: "#fffdf8",
+    boxShadow: "0 7px 17px rgba(140,87,43,.22)",
+    "&:hover": {
+      ...authActionBaseSx["&:hover"],
+      background: "linear-gradient(135deg,#dfb469 0%,#bf8646 55%,#945d2f 100%)",
+      boxShadow: "0 10px 22px rgba(140,87,43,.28)",
+    },
+  },
+  login: {
+    ...authActionBaseSx,
+    borderColor: "#382116",
+    background: "linear-gradient(135deg,#68442f 0%,#4c2e1f 54%,#2f1b12 100%)",
+    color: "#fffaf3",
+    boxShadow: "0 7px 17px rgba(56,33,22,.24)",
+    "&:hover": {
+      ...authActionBaseSx["&:hover"],
+      background: "linear-gradient(135deg,#765039 0%,#573524 54%,#382116 100%)",
+      boxShadow: "0 10px 22px rgba(56,33,22,.30)",
+    },
+  },
+  signup: {
+    ...authActionBaseSx,
+    borderColor: "#315d48",
+    background: "linear-gradient(135deg,#477d62 0%,#2f6f4f 55%,#214c38 100%)",
+    color: "#f8fff9",
+    boxShadow: "0 7px 17px rgba(47,111,79,.22)",
+    "&:hover": {
+      ...authActionBaseSx["&:hover"],
+      background: "linear-gradient(135deg,#528a6d 0%,#38795a 55%,#285743 100%)",
+      boxShadow: "0 10px 22px rgba(47,111,79,.28)",
+    },
+  },
 };
 
 function HamburgerIcon({ open }) {
@@ -228,7 +369,7 @@ function HamburgerIcon({ open }) {
         width: 24,
         height: 24,
         position: "relative",
-        color: "#0a2a6b",
+        color: "#5b3825",
         "& span": {
           position: "absolute",
           display: "block",
@@ -301,6 +442,8 @@ export default function Header({ routes = {} }) {
       services: routes.services ?? "/services",
       insights: routes.insights ?? "/insights",
       about: routes.about ?? "/about",
+      security: routes.security_raymoch ?? "/security_raymoch",
+      businessLanding: routes.business_landing ?? "/business_landing",
       matching: routes.matching ?? "/matching",
       verification: routes.verification ?? "/verification",
       incentives: routes.incentives ?? "/incentives",
@@ -545,7 +688,7 @@ setTimeout(() => {
   };
 
   return (
-    <>
+    <ThemeProvider theme={HORIZONTAL_NAV_THEME}>
 
       <AppBar
         position="sticky"
@@ -557,7 +700,7 @@ setTimeout(() => {
           borderColor: "divider",
         }}
       >
-        <Toolbar sx={{ minHeight: 64 }}>
+        <Toolbar sx={{ minHeight: 76, bgcolor: "#fff" }}>
           <Container maxWidth="xl" sx={{ px: { xs: 1, sm: 2 } }}>
             <Box
               sx={{
@@ -599,7 +742,7 @@ setTimeout(() => {
       sx={{
         fontWeight: 900,
         fontSize: "1.25rem",
-        color: "#0a2a6b",
+        color: "#5b3825",
       }}
     >
       Raymoch
@@ -767,14 +910,9 @@ setTimeout(() => {
                         <Button
                           component="a"
                           href={safeRoutes.trial}
-                          target="_blank"
+                      //    target="_blank"
                           variant="contained"
-                          sx={{
-                            borderRadius: 999,
-                            fontWeight: 900,
-                            textTransform: "none",
-                            bgcolor: "#f59e0b",
-                          }}
+                          sx={authActionStyles.trial}
                         >
                           Request a free trial
                         </Button>
@@ -782,14 +920,10 @@ setTimeout(() => {
                         <Button
                           component="a"
                           href={safeRoutes.login}
-                          target="_blank"
+                      //    target="_blank"
                           variant="contained"
                           color="primary"
-                          sx={{
-                            borderRadius: 999,
-                            fontWeight: 900,
-                            textTransform: "none",
-                          }}
+                          sx={authActionStyles.login}
                         >
                           Login
                         </Button>
@@ -797,14 +931,9 @@ setTimeout(() => {
                         <Button
                           component="a"
                           href={safeRoutes.signup}
-                          target="_blank"
+                      //    target="_blank"
                           variant="contained"
-                          sx={{
-                            borderRadius: 999,
-                            fontWeight: 900,
-                            textTransform: "none",
-                            bgcolor: "#16a34a",
-                          }}
+                          sx={authActionStyles.signup}
                         >
                           Sign up
                         </Button>
@@ -860,9 +989,9 @@ setTimeout(() => {
                     onClick={() => setMobileOpen(true)}
                     sx={{
                       borderRadius: 2,
-                      color: "#0a2a6b",
+                      color: "#5b3825",
                       "&:hover": {
-                        color: "#0a2a6b",
+                        color: "#5b3825",
                         bgcolor: "action.hover",
                       },
                     }}
@@ -878,7 +1007,7 @@ setTimeout(() => {
         {!isMobile && (
           <Box
             sx={{
-              bgcolor: "grey.100",
+              bgcolor: "#f1f1ef",
               borderTop: "1px solid",
               borderColor: "divider",
             }}
@@ -895,6 +1024,9 @@ setTimeout(() => {
               >
                 {isAuthed && !authLoading && (
                   <>
+                    <RouterSafeButton to={safeRoutes.home} sx={secondaryNavBtnSx}>
+                      Home
+                    </RouterSafeButton>
                     <RouterSafeButton to={safeRoutes.explore} sx={secondaryNavBtnSx}>
                       Businesses
                     </RouterSafeButton>
@@ -906,9 +1038,21 @@ setTimeout(() => {
                     </RouterSafeButton>
                   </>
                 )}
-
-                <RouterSafeButton to={safeRoutes.about} sx={secondaryNavBtnSx}>
-                  Who We Are
+         <RouterSafeButton to={safeRoutes.businessLanding} sx={secondaryNavBtnSx}>
+                  Business
+                </RouterSafeButton>
+                <RouterSafeButton to={safeRoutes.security} sx={secondaryNavBtnSx}>
+                  Security
+                </RouterSafeButton>
+                
+                      <RouterSafeButton to={safeRoutes.about} sx={secondaryNavBtnSx}>
+                  Customers
+                </RouterSafeButton>
+                      <RouterSafeButton to={safeRoutes.about} sx={secondaryNavBtnSx}>
+                  Pricing
+                </RouterSafeButton>
+                      <RouterSafeButton to={safeRoutes.about} sx={secondaryNavBtnSx}>
+                  Blog
                 </RouterSafeButton>
               </Box>
             </Container>
@@ -943,6 +1087,14 @@ setTimeout(() => {
             {isAuthed && !authLoading && (
               <>
                 <SafeLink
+                  to={safeRoutes.home}
+                  style={mobileMenuStyles.link}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Home
+                </SafeLink>
+
+                <SafeLink
                   to={safeRoutes.explore}
                   style={mobileMenuStyles.link}
                   onClick={() => setMobileOpen(false)}
@@ -968,14 +1120,45 @@ setTimeout(() => {
               </>
             )}
 
-            <SafeLink
+                        <SafeLink
+              to={safeRoutes.businessLanding}
+              style={mobileMenuStyles.link}
+              onClick={() => setMobileOpen(false)}
+            >
+              Business
+            </SafeLink>
+              <SafeLink
+              to={safeRoutes.security}
+              style={mobileMenuStyles.link}
+              onClick={() => setMobileOpen(false)}
+            >
+              Security
+            </SafeLink>
+ 
+              <SafeLink
               to={safeRoutes.about}
               style={mobileMenuStyles.link}
               onClick={() => setMobileOpen(false)}
             >
-              Who We Are
+              Customers
             </SafeLink>
-
+     
+                <SafeLink
+              to={safeRoutes.about}
+              style={mobileMenuStyles.link}
+              onClick={() => setMobileOpen(false)}
+            >
+              Pricing
+            </SafeLink>
+            
+             <SafeLink
+              to={safeRoutes.about}
+              style={mobileMenuStyles.link}
+              onClick={() => setMobileOpen(false)}
+            >
+             Blog
+            </SafeLink>
+            
             <Divider flexItem sx={{ width: "100%" }} />
 
             <Box sx={mobileMenuStyles.actionStack}>
@@ -986,7 +1169,7 @@ setTimeout(() => {
                     href={safeRoutes.login}
                     variant="contained"
                     color="primary"
-                    sx={mobileMenuStyles.actionBtn}
+                    sx={{ ...mobileMenuStyles.actionBtn, ...authActionStyles.login, width: "100%" }}
                     onClick={() => setMobileOpen(false)}
                   >
                     Login
@@ -996,7 +1179,7 @@ setTimeout(() => {
                     component="a"
                     href={safeRoutes.signup}
                     variant="contained"
-                    sx={{ ...mobileMenuStyles.actionBtn, bgcolor: "#16a34a" }}
+                    sx={{ ...mobileMenuStyles.actionBtn, ...authActionStyles.signup, width: "100%" }}
                     onClick={() => setMobileOpen(false)}
                   >
                     Sign up
@@ -1006,7 +1189,7 @@ setTimeout(() => {
                     component="a"
                     href={safeRoutes.trial}
                     variant="contained"
-                    sx={{ ...mobileMenuStyles.actionBtn, bgcolor: "#f59e0b" }}
+                    sx={{ ...mobileMenuStyles.actionBtn, ...authActionStyles.trial, width: "100%" }}
                     onClick={() => setMobileOpen(false)}
                   >
                     Request a free trial
@@ -1286,6 +1469,6 @@ setTimeout(() => {
           )}
         </DialogActions>
       </Dialog>
-    </>
+    </ThemeProvider>
   );
 }

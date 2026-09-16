@@ -212,6 +212,24 @@ const css = `
   font-weight:800;
 }
 
+/* Home.jsx visual system */
+.h3sub{color:#382116}.subcopy,.page-info,.empty-state{color:#7a746d}
+.grid-loading .MuiCircularProgress-root,.tooltip-loading-wrap .MuiCircularProgress-root{color:#5b3825}
+.card{border-color:#ded2c3;background:#fbf8f3;box-shadow:0 8px 24px rgba(72,47,30,.07)}
+.card h3{color:#5b3825}.card p{color:#7a746d}
+.grid .card:hover,.grid .card:focus,.grid .card:active,.grid .card:focus-within{border-color:#cdb79f!important;background:#f8efe5!important;box-shadow:0 12px 28px rgba(72,47,30,.11)!important}
+.data-search-row .MuiOutlinedInput-root{min-height:43px;border-radius:10px;background:#fbf8f3;color:#1c1d1f}
+.data-search-row .MuiOutlinedInput-notchedOutline{border-color:#ded2c3}
+.data-search-row .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline{border-color:#bfa286}
+.data-search-row .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline{border-color:#8f6847;box-shadow:0 0 0 3px rgba(143,104,71,.14)}
+.pagination .MuiButton-root{min-width:43px;height:43px;border-radius:10px;border-color:#d5c2ad;color:#5b3825;font-weight:800}
+.pagination .MuiButton-outlined:hover,.pagination .MuiButton-text:hover{border-color:#bfa286;background:#f8efe5}
+.pagination .MuiButton-contained{color:#fbf8f3;background:linear-gradient(135deg,#6f452e,#5b3825);box-shadow:0 6px 15px rgba(91,56,37,.18)}
+.pagination .MuiButton-contained:hover{background:linear-gradient(135deg,#5b3825,#382116)}
+.tooltip-card,.tooltip-loading-wrap,.tooltip-empty{border-color:#d8c3ad;color:#382116;background:linear-gradient(180deg,#f3e8dc,#f8efe5 55%,#fbf8f3);box-shadow:0 18px 38px rgba(72,47,30,.16),inset 0 1px 0 rgba(255,255,255,.85)}
+.tooltip-title,.tooltip-loading-text,.tooltip-empty{color:#5b3825}.tooltip-label{color:#6d5d52}.tooltip-value{color:#382116}
+.tooltip-divider{background:linear-gradient(90deg,rgba(181,123,63,.1),rgba(181,123,63,.7),rgba(181,123,63,.1))}
+
 @media (prefers-reduced-motion: reduce){
   .grid .card .icon{
     animation:none !important;
@@ -434,7 +452,7 @@ export default function MainPanel({
                     },
                     arrow: {
                       sx: {
-                        color: "#e0f2fe",
+                        color: "#f3e8dc",
                       },
                     },
                   }}

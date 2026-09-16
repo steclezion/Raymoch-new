@@ -28,7 +28,7 @@ class VerificationAssistantController extends Controller
     ];
 
     /**
-     * Handle a question submitted to Clarity Assistant.
+     * Handle a question submitted to Raymoch support.
      */
     public function __invoke(
         AskVerificationAssistantRequest $request
@@ -41,7 +41,7 @@ class VerificationAssistantController extends Controller
         $model = config('openai.model');
 
         if (! is_string($apiKey) || trim($apiKey) === '') {
-            Log::error('Clarity Assistant OpenAI key is not configured', [
+            Log::error('Raymoch support OpenAI key is not configured', [
                 'trace_id' => $traceId,
             ]);
 
@@ -52,7 +52,7 @@ class VerificationAssistantController extends Controller
         }
 
         if (! is_string($model) || trim($model) === '') {
-            Log::error('Clarity Assistant OpenAI model is not configured', [
+            Log::error('Raymoch support OpenAI model is not configured', [
                 'trace_id' => $traceId,
             ]);
 
@@ -66,7 +66,7 @@ class VerificationAssistantController extends Controller
             $instructions = $this->loadInstructions();
             $input = $this->buildInput($validated);
         } catch (Throwable $exception) {
-            Log::error('Unable to prepare Clarity Assistant request', [
+            Log::error('Unable to prepare Raymoch support request', [
                 'trace_id' => $traceId,
                 'exception' => $exception::class,
                 'message' => $exception->getMessage(),
@@ -80,7 +80,7 @@ class VerificationAssistantController extends Controller
             ], 503);
         }
 
-        Log::info('Clarity Assistant request received', [
+        Log::info('Raymoch support request received', [
             'trace_id' => $traceId,
             'user_id' => $request->user()?->getAuthIdentifier(),
             'current_step' => $validated['current_step'],
@@ -157,7 +157,7 @@ class VerificationAssistantController extends Controller
             ], 502);
         }
 
-        Log::info('Clarity Assistant response completed', [
+        Log::info('Raymoch support response completed', [
             'trace_id' => $traceId,
             'openai_request_id' => $response->header('x-request-id'),
             'response_id' => $response->json('id'),
@@ -635,13 +635,13 @@ PROMPT,
             || ! is_string($model) || trim($model) === ''
         ) {
             return response()->json([
-                'message' => 'Raymoch Clarity Review is not configured.',
+                'message' => 'Raymoch support Desk is not configured.',
                 'trace_id' => $traceId,
             ], 503);
         }
 
         $instructionPath = storage_path(
-            'app/public/prompts/clarity_image_pdf.txt'
+            'app/public/prompts/clarity_image_pdf'
         );
 
         if (! File::isFile($instructionPath)) {
@@ -916,13 +916,13 @@ PROMPT;
 
         if (! File::exists($promptPath)) {
             throw new RuntimeException(
-                "Clarity Assistant prompt file was not found: {$promptPath}"
+                "Raymoch support prompt file was not found: {$promptPath}"
             );
         }
 
         if (! File::isReadable($promptPath)) {
             throw new RuntimeException(
-                "Clarity Assistant prompt file is not readable: {$promptPath}"
+                "Raymoch support prompt file is not readable: {$promptPath}"
             );
         }
 
@@ -930,7 +930,7 @@ PROMPT;
 
         if ($template === '') {
             throw new RuntimeException(
-                'Clarity Assistant prompt file is empty.'
+                'Raymoch support prompt file is empty.'
             );
         }
 

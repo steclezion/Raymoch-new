@@ -108,16 +108,16 @@ const formatPct = (n) => {
 };
 
 const PIE_COLORS = [
-  "#2563eb",
-  "#16a34a",
-  "#dc2626",
-  "#7c3aed",
-  "#ea580c",
-  "#0891b2",
-  "#ca8a04",
-  "#0f766e",
-  "#be185d",
-  "#4b5563",
+  "#5b3825",
+  "#b57b3f",
+  "#2f6f4f",
+  "#8f6847",
+  "#d2ad78",
+  "#6f766f",
+  "#9a6542",
+  "#557a63",
+  "#c49a67",
+  "#77665a",
 ];
 
 export default function AfricaInvestmentPanel({
@@ -770,5 +770,110 @@ const panelCss = `
 @media (max-width: 420px){
   .rm-stats{ grid-template-columns: 1fr; }
   .rm-input{ width: 100%; }
+}
+
+/* Home.jsx visual system */
+.rm-panel{
+  --rm-ink: var(--dash-text, #1c1d1f);
+  --rm-muted: var(--dash-muted, #7a746d);
+  --rm-border: var(--dash-line, #ded2c3);
+  --rm-card: var(--dash-card, #fbf8f3);
+  --rm-shadow: 0 14px 34px rgba(72, 47, 30, .09);
+  --rm-radius: 16px;
+  --rm-blue: #5b3825;
+  --rm-blue-700: #5b3825;
+  --rm-blue-500: #382116;
+  background: var(--dash-bg, #f7f2ea);
+}
+
+.rm-shell{ max-width: 1328px; padding: 22px 18px; }
+
+.rm-surface{
+  padding: clamp(18px, 2.4vw, 28px);
+  border-color: var(--rm-border);
+  border-radius: 18px;
+  background: linear-gradient(180deg, #fbf8f3, #f8f2ea);
+  box-shadow: var(--rm-shadow);
+}
+
+.rm-title{ color: #382116; letter-spacing: -.025em; }
+.rm-sub, .rm-updated, .rm-selected, .rm-cardSub, .rm-chartSub,
+.rm-hint, .rm-muted, .rm-foot{ color: var(--rm-muted); }
+
+.rm-live{
+  color: #fdfaf6;
+  background: linear-gradient(135deg, #3f7659, #2f6f4f);
+  box-shadow: 0 6px 16px rgba(47, 111, 79, .18);
+}
+
+.rm-btn{
+  min-width: 92px;
+  min-height: 43px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 17px;
+  border-color: #5b3825;
+  border-radius: 10px;
+  color: #fbf8f3;
+  background: linear-gradient(135deg, #6f452e, #5b3825);
+  font-size: .84rem;
+  box-shadow: 0 6px 15px rgba(91, 56, 37, .18);
+  transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+.rm-btn:hover{
+  border-color: #382116;
+  background: linear-gradient(135deg, #5b3825, #382116);
+  box-shadow: 0 9px 20px rgba(91, 56, 37, .24);
+  transform: translateY(-1px);
+}
+
+.rm-btn:focus-visible, .rm-chip:focus-visible,
+.rm-input:focus, .rm-select:focus{
+  outline: 0;
+  border-color: #8f6847;
+  box-shadow: 0 0 0 3px rgba(143, 104, 71, .16);
+}
+
+.rm-speed, .rm-card, .rm-chartBox, .rm-tableWrap,
+.rm-select, .rm-input{
+  border-color: var(--rm-border);
+  background: #fbf8f3;
+}
+
+.rm-card{ border-radius: 16px; box-shadow: 0 9px 24px rgba(72, 47, 30, .07); }
+.rm-stat{ border-color: var(--rm-border); background: linear-gradient(180deg, #fffdfa, #f5ece2); }
+
+.rm-chip{
+  min-height: 36px;
+  padding: 0 13px;
+  border-color: #ded2c3;
+  color: #5d5149;
+  background: #f4ece2;
+}
+
+.rm-chip:hover{ color: #382116; border-color: #cdb79f; background: #eee1d3; }
+.rm-chip.active{ color: #fbf8f3; border-color: #5b3825; background: #5b3825; }
+.rm-speed input{ accent-color: #5b3825; }
+.rm-badge{ color: #f8efe5; border-color: #5b3825; background: #382116; }
+
+.rm-table th{ color: #382116; background: #efe4d7; }
+.rm-table th, .rm-table td{ border-bottom-color: #e5d9cc; }
+.rm-row:hover td{ background: #f5ece2; }
+.rm-row.active td{
+  background: #eee1d3 !important;
+  border-top-color: #d4b99d;
+  border-bottom-color: #d4b99d;
+}
+
+.pos{ color: var(--dash-green, #2f6f4f); }
+.neg{ color: #a85846; }
+
+@media (max-width: 640px){
+  .rm-shell{ padding: 14px 12px; }
+  .rm-surface{ padding: 16px 12px; }
+  .rm-actions{ width: 100%; }
+  .rm-btn{ min-width: 88px; }
 }
 `;

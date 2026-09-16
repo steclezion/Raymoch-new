@@ -128,20 +128,20 @@ function buildSelectStyles(hasError = false) {
       borderColor: hasError
         ? "#ef4444"
         : state.isFocused
-          ? "#9db7ff"
-          : "#e5e7eb",
+          ? "#8f6847"
+          : "#ded2c3",
       boxShadow: hasError
         ? "0 0 0 4px rgba(239,68,68,.12)"
         : state.isFocused
-          ? "0 0 0 4px rgba(59,130,246,.14)"
-          : "0 2px 10px rgba(15,23,42,.04)",
-      backgroundColor: state.isDisabled ? "#f8fafc" : "#fff",
+          ? "0 0 0 4px rgba(143,104,71,.14)"
+          : "0 2px 10px rgba(72,47,30,.05)",
+      backgroundColor: state.isDisabled ? "#f4ece2" : "#fbf8f3",
       paddingLeft: 40,
       paddingRight: 8,
       cursor: state.isDisabled ? "not-allowed" : "pointer",
       transition: "all .18s ease",
       "&:hover": {
-        borderColor: hasError ? "#ef4444" : "#d7dbe5",
+        borderColor: hasError ? "#ef4444" : "#cdb79f",
       },
     }),
     valueContainer: (base) => ({
@@ -153,7 +153,7 @@ function buildSelectStyles(hasError = false) {
       ...base,
       margin: 0,
       padding: 0,
-      color: "#111827",
+      color: "#1c1d1f",
     }),
     indicatorSeparator: () => ({
       display: "none",
@@ -187,8 +187,9 @@ function buildSelectStyles(hasError = false) {
       zIndex:1000,
       borderRadius: 18,
       overflow: "hidden",
-      border: "1px solid #e5e7eb",
-      boxShadow: "0 18px 40px rgba(15,23,42,.14)",
+      border: "1px solid #ded2c3",
+      backgroundColor: "#fbf8f3",
+      boxShadow: "0 18px 40px rgba(72,47,30,.14)",
     }),
     menuList: (base) => ({
       ...base,
@@ -203,14 +204,14 @@ function buildSelectStyles(hasError = false) {
       fontSize: 14,
       cursor: "pointer",
       backgroundColor: state.isSelected
-        ? "#dbeafe"
+        ? "#eee1d3"
         : state.isFocused
-          ? "#eff6ff"
-          : "#fff",
-      color: "#0f172a",
+          ? "#f4ece2"
+          : "#fbf8f3",
+      color: "#382116",
       fontWeight: state.isSelected ? 800 : 600,
       ":active": {
-        backgroundColor: "#dbeafe",
+        backgroundColor: "#e5d4c2",
       },
     }),
     noOptionsMessage: (base) => ({
@@ -1089,6 +1090,22 @@ const css = `
   }
 }
 
+/* Home.jsx visual system */
+.sf-card{background:#fbf8f3;border-color:#ded2c3;box-shadow:0 10px 28px rgba(72,47,30,.09)}
+.sf-topbar{color:#fbf8f3;background:linear-gradient(135deg,#382116,#5b3825 58%,#8f6847)}
+.sf-sub{color:#eee2d4}.sf-badge.on{background:rgba(47,111,79,.32);border-color:rgba(231,244,236,.34)}
+.sf-label{color:#7a746d}.sf-icon{color:#5b3825!important}
+.sf-input{border-color:#ded2c3;color:#1c1d1f;background:#fbf8f3;box-shadow:0 2px 10px rgba(72,47,30,.05)}
+.sf-input::placeholder{color:#9a8d82}.sf-input:focus{border-color:#8f6847;box-shadow:0 0 0 4px rgba(143,104,71,.14)}
+.sf-input:disabled{background:#f4ece2}.sf-verify .txt{color:#382116}
+.sf-slider{border-color:#ded2c3;background:#ded2c3}.sf-switch input:checked + .sf-slider{border-color:#2f6f4f;background:#2f6f4f}
+.sf-divider{background:#e5d9cc}.sf-btn{height:43px;border-radius:10px;padding:0 17px;font-size:.84rem}
+.sf-btn.ghost,.sf-btn.outline{border-color:#d5c2ad;color:#5b3825;background:#fbf8f3}
+.sf-btn.ghost:hover,.sf-btn.outline:hover{background:#f4ece2;border-color:#bfa286}
+.sf-btn.primary{min-width:170px;border-color:#5b3825;color:#fbf8f3;background:linear-gradient(135deg,#6f452e,#5b3825);box-shadow:0 7px 18px rgba(91,56,37,.22)}
+.sf-btn:focus-visible{outline:0;box-shadow:0 0 0 4px rgba(143,104,71,.16)}
+.sf-error-text{color:#a85846}.sf-tooltip{color:#8b8178}
+
 @media (max-width:1200px){
   .sf-grid{
     grid-template-columns:repeat(3,minmax(0,1fr));
@@ -1121,3 +1138,4 @@ const css = `
   }
 }
 `;
+

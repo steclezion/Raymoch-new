@@ -515,6 +515,126 @@ export default function MatchingModal({
 
   return (
     <>
+      <style>{`
+        /* Home-aligned Raymoch coffee theme. Matching behavior is unchanged. */
+        .match-wrap {
+          --match-espresso: #5b3825;
+          --match-espresso-dark: #382116;
+          --match-coffee: #8b6248;
+          --match-taupe: #7a746d;
+          --match-oat: #ded2c3;
+          --match-ivory: #f7f2ea;
+          --match-card: #fbf8f3;
+          --match-gold: #b57b3f;
+          --match-green: #2f6f4f;
+          --match-danger: #a85846;
+          color: var(--match-espresso-dark) !important;
+          background:
+            radial-gradient(circle at 94% 0, rgba(181,123,63,.10), transparent 25rem),
+            linear-gradient(180deg,#fffdf9 0,var(--match-ivory) 22rem) !important;
+          scrollbar-color: #a98b76 #eee5da;
+        }
+        .match-wrap :is(.match-card,.payload-details) {
+          border-color: var(--match-oat) !important;
+          background: rgba(251,248,243,.97) !important;
+          color: var(--match-espresso-dark) !important;
+          box-shadow: 0 10px 26px rgba(73,45,29,.08) !important;
+        }
+        .match-wrap :is(.label,.label.big,summary,strong) { color: var(--match-espresso-dark) !important; }
+        .match-wrap :is(.help,.multi-select-help,.range-separator) { color: var(--match-taupe) !important; }
+        .match-wrap :is(.input,.multi-select) {
+          min-height: 43px !important;
+          border: 1px solid #d5c6b7 !important;
+          border-radius: 10px !important;
+          background: #fffdf9 !important;
+          color: var(--match-espresso-dark) !important;
+          box-shadow: inset 0 1px 2px rgba(73,45,29,.035) !important;
+        }
+        .match-wrap .multi-select { min-height: 152px !important; }
+        .match-wrap :is(.input,.multi-select):focus {
+          border-color: var(--match-coffee) !important;
+          outline: 3px solid rgba(139,98,72,.16) !important;
+          box-shadow: none !important;
+        }
+        .match-wrap :is(.input,.multi-select)::placeholder { color: #9c9187 !important; }
+        .match-wrap .pill {
+          min-height: 40px !important;
+          border-color: #d5c6b7 !important;
+          border-radius: 999px !important;
+          background: #fffdf9 !important;
+          color: #684b35 !important;
+          box-shadow: 0 3px 10px rgba(73,45,29,.05) !important;
+        }
+        .match-wrap .pill:hover { border-color: #a98265 !important; background: #f6eee5 !important; }
+        .match-wrap .pill--selected {
+          border-color: var(--match-espresso) !important;
+          background: #eadbca !important;
+          color: var(--match-espresso-dark) !important;
+          box-shadow: 0 0 0 3px rgba(139,98,72,.11) !important;
+        }
+        .match-wrap :is(input[type=checkbox],input[type=radio]) { accent-color: var(--match-espresso) !important; }
+        .match-wrap .verification-check {
+          border-color: var(--match-oat) !important;
+          border-radius: 11px !important;
+          background: #f3eadf !important;
+          color: var(--match-espresso-dark) !important;
+        }
+        .match-wrap .ms-clear {
+          min-width: 38px !important;
+          min-height: 38px !important;
+          border-color: #cbb9a7 !important;
+          border-radius: 9px !important;
+          background: #f4ebe1 !important;
+          color: var(--match-espresso) !important;
+        }
+        .match-wrap .ms-clear:hover:not(:disabled) { background: #eadbca !important; }
+        .match-wrap .payload {
+          border-color: var(--match-oat) !important;
+          background: #eee5da !important;
+          color: #513321 !important;
+          scrollbar-color: #a98b76 #e3d6c8;
+        }
+        .match-wrap .match-alert--error,
+        .match-wrap :is(.field-error,.help.error) {
+          border-color: #dfb9ad !important;
+          background: #f8ebe6 !important;
+          color: var(--match-danger) !important;
+        }
+        .match-button {
+          min-height: 43px !important;
+          padding: 0 17px !important;
+          border-radius: 10px !important;
+          font-weight: 750 !important;
+          transition: transform .18s ease,box-shadow .18s ease,background .18s ease !important;
+        }
+        .match-button--primary {
+          border: 1px solid var(--match-espresso, #5b3825) !important;
+          background: linear-gradient(135deg,var(--match-espresso, #5b3825),var(--match-espresso-dark, #382116)) !important;
+          color: #fffaf3 !important;
+          box-shadow: 0 7px 16px rgba(73,45,29,.17) !important;
+        }
+        .match-button--secondary,
+        .match-button--history {
+          border: 1px solid #cbb9a7 !important;
+          background: #fffdf9 !important;
+          color: #5b3825 !important;
+          box-shadow: 0 4px 12px rgba(73,45,29,.07) !important;
+        }
+        .match-button:hover:not(:disabled) {
+          transform: translateY(-1px);
+          box-shadow: 0 10px 22px rgba(73,45,29,.20) !important;
+        }
+        :is(.match-button,.match-wrap button,.match-wrap input,.match-wrap select):focus-visible {
+          outline: 3px solid rgba(181,123,63,.30) !important;
+          outline-offset: 3px !important;
+        }
+        :is(.match-button,.match-wrap button):disabled { opacity: .56; box-shadow: none !important; }
+        @media (prefers-reduced-motion: reduce) {
+          .match-wrap *, .match-wrap *::before, .match-wrap *::after, .match-button {
+            scroll-behavior:auto !important; animation-duration:.01ms !important; animation-iteration-count:1 !important;
+          }
+        }
+      `}</style>
       <ModalShell
         open={open}
         title="Preferences & Matches"

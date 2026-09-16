@@ -1,0 +1,109 @@
+.ray-ai-supported-search {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: 24px;
+  overflow: auto;
+  pointer-events: auto;
+  color: #fff6e8;
+  background: #0d0806;
+  isolation: isolate;
+  animation: ray-ai-space-enter 3s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.ray-ai-supported-search__wash {
+  position: fixed;
+  inset: -30px;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(139, 98, 72, .28), transparent 28%),
+    radial-gradient(circle at 18% 18%, rgba(181, 123, 63, .12), transparent 34%),
+    radial-gradient(circle at 82% 82%, rgba(91, 56, 37, .20), transparent 38%),
+    linear-gradient(145deg, #080504 0%, #160d09 48%, #050303 100%);
+  backdrop-filter: blur(28px) saturate(.70);
+  -webkit-backdrop-filter: blur(28px) saturate(.70);
+}
+
+.ray-ai-supported-search__content {
+  width: min(680px, 100%);
+  display: grid;
+  justify-items: center;
+  gap: 13px;
+  padding: clamp(28px, 5vw, 54px);
+  text-align: center;
+  background: linear-gradient(145deg, rgba(47, 28, 19, .82), rgba(13, 8, 6, .90));
+  border: 1px solid rgba(181, 123, 63, .26);
+  border-radius: 24px;
+  box-shadow: 0 35px 120px rgba(0, 0, 0, .64), inset 0 1px rgba(255, 250, 243, .06);
+  animation: ray-ai-content-arrive 3s cubic-bezier(.16, 1, .3, 1) both;
+}
+
+.ray-ai-supported-search__mark {
+  position: relative;
+  width: 104px;
+  height: 104px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 4px;
+  animation: ray-ai-mark-arrive 2.4s .25s cubic-bezier(.16, 1, .3, 1) both;
+}
+
+.ray-ai-supported-search__mark::before { content: ""; position: absolute; inset: -36px; z-index: -1; background: radial-gradient(circle, rgba(181,123,63,.22), transparent 68%); filter: blur(8px); }
+.ray-ai-supported-search__mark img { width: 72px; height: 72px; object-fit: contain; filter: drop-shadow(0 12px 28px rgba(181,123,63,.28)); }
+.ray-ai-supported-search__mark svg { position: absolute; color: #d8a45e; filter: drop-shadow(0 0 10px rgba(216,164,94,.38)); }
+.ray-ai-supported-search__mark.is-spinning img { animation: ray-ai-logo-spin 2.6s 2.7s ease-in-out infinite; }
+.ray-ai-supported-search__mark.is-spinning svg { animation: ray-ai-refresh-spin 1.25s 2.7s linear infinite; }
+.ray-ai-supported-search__eyebrow { margin: 0; color: #d8a45e; font-size: .76rem; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+.ray-ai-supported-search h1 { margin: 0; font-size: clamp(1.8rem, 5vw, 3rem); letter-spacing: -.045em; }
+.ray-ai-supported-search__status { margin: 0 0 8px; color: #cdbbae; line-height: 1.55; }
+
+.ray-ai-supported-search__selection {
+  width: 100%;
+  display: grid;
+  gap: 1px;
+  overflow: hidden;
+  text-align: left;
+  background: rgba(181, 123, 63, .18);
+  border: 1px solid rgba(181, 123, 63, .26);
+  border-radius: 14px;
+  animation: ray-ai-table-arrive .8s 2.2s cubic-bezier(.16, 1, .3, 1) both;
+}
+
+.ray-ai-supported-search__selection div { display: grid; grid-template-columns: minmax(130px, .65fr) 1.35fr; gap: 14px; padding: 12px 15px; background: rgba(20, 12, 8, .82); }
+.ray-ai-supported-search__selection dt { color: #bda99b; font-size: .78rem; font-weight: 750; }
+.ray-ai-supported-search__selection dd { margin: 0; font-size: .86rem; font-weight: 850; overflow-wrap: anywhere; }
+.ray-ai-supported-search__selection-value { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ray-ai-supported-search__badges { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 6px; }
+.ray-ai-supported-search__count-badge { display: inline-flex; align-items: center; gap: 6px; min-height: 25px; padding: 4px 8px; color: #f8e8d0; background: rgba(181,123,63,.18); border: 1px solid rgba(216,164,94,.34); border-radius: 999px; font-size: .7rem; font-weight: 750; white-space: nowrap; }
+.ray-ai-supported-search__count-badge strong { min-width: 16px; color: #ffd89a; font-size: .76rem; text-align: center; }
+.ray-ai-supported-search__action { min-height: 46px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; padding: 11px 18px; color: #fffaf3; background: linear-gradient(135deg, #68442f, #382116); border: 0; border-radius: 12px; box-shadow: 0 10px 24px rgba(56, 33, 22, .22); font: inherit; font-weight: 850; cursor: pointer; }
+.ray-ai-supported-search__action:focus-visible { outline: 3px solid rgba(181, 123, 63, .42); outline-offset: 3px; }
+
+@keyframes ray-ai-logo-spin { 0%, 100% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(.92); } }
+@keyframes ray-ai-refresh-spin { to { transform: rotate(360deg); } }
+@keyframes ray-ai-space-enter { from { opacity: 0; background: rgba(56,33,22,0); } to { opacity: 1; background: #0d0806; } }
+@keyframes ray-ai-content-arrive { from { opacity: 0; transform: scale(.965); } to { opacity: 1; transform: scale(1); } }
+@keyframes ray-ai-mark-arrive { from { opacity: 0; transform: scale(.15) translateY(24px); filter: blur(14px); } 62% { opacity: 1; transform: scale(1.07) translateY(0); filter: blur(0); } to { opacity: 1; transform: scale(1); filter: blur(0); } }
+@keyframes ray-ai-table-arrive { from { opacity: 0; transform: translateY(18px) scale(.985); filter: blur(7px); } to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); } }
+@keyframes ray-ai-modal-fade-away { to { opacity: 0; transform: scale(.94); filter: blur(14px); } }
+
+.ray-ai-search__backdrop.is-launching-supported-search .ray-ai-search {
+  pointer-events: none;
+  animation: ray-ai-modal-fade-away .58s cubic-bezier(.4, 0, 1, 1) both;
+}
+
+@media (max-width: 560px) {
+  .ray-ai-supported-search { padding: 12px; }
+  .ray-ai-supported-search__content { padding: 26px 18px; border-radius: 18px; }
+  .ray-ai-supported-search__selection div { grid-template-columns: 1fr; gap: 4px; }
+  .ray-ai-supported-search__selection-value { align-items: flex-start; flex-direction: column; }
+  .ray-ai-supported-search__badges { justify-content: flex-start; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ray-ai-supported-search__mark.is-spinning img,
+  .ray-ai-supported-search__mark.is-spinning svg { animation-duration: 5s; }
+}

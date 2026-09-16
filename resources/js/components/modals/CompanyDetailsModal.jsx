@@ -692,6 +692,145 @@ export default function CompanyDetailsModal({ onAddCompany, onCompaniesLoaded, i
           }
         }
       `}</style>
+      <style>{`
+        /* Home-aligned Raymoch theme. This layer changes presentation only. */
+        .company-details-modal {
+          --company-espresso: #5b3825;
+          --company-espresso-dark: #382116;
+          --company-coffee: #8b6248;
+          --company-taupe: #7a746d;
+          --company-oat: #ded2c3;
+          --company-ivory: #f7f2ea;
+          --company-card: #fbf8f3;
+          --company-gold: #b57b3f;
+          --company-green: #2f6f4f;
+          --company-danger: #a85846;
+          color: var(--company-espresso-dark) !important;
+          background:
+            radial-gradient(circle at 94% 0, rgba(181,123,63,.11), transparent 27rem),
+            linear-gradient(180deg,#fffdf9 0,var(--company-ivory) 24rem) !important;
+          scrollbar-color: #a98b76 #eee5da;
+        }
+        .company-details-modal .vr-hero {
+          border: 1px solid #d2c0ae !important;
+          border-radius: 18px !important;
+          background: linear-gradient(135deg,#5b3825 0%,#76513a 57%,#9a7052 100%) !important;
+          color: #fffaf3 !important;
+          box-shadow: 0 16px 38px rgba(73,45,29,.18) !important;
+        }
+        .company-details-modal .vr-hero :is(h1,h2,h3,p) { color: inherit !important; }
+        .company-details-modal .vr-heroIcon {
+          border-color: rgba(255,255,255,.30) !important;
+          background: rgba(255,250,243,.14) !important;
+          color: #fffaf3 !important;
+        }
+        .company-details-modal :is(.vr-card,.vr-innerCard,.company-board,.company-score-details) {
+          border-color: var(--company-oat) !important;
+          background: rgba(251,248,243,.96) !important;
+          color: var(--company-espresso-dark) !important;
+          box-shadow: 0 10px 26px rgba(73,45,29,.08) !important;
+        }
+        .company-details-modal :is(.company-process-lane,.company-process-card,.company-timeline,.company-board-lane,.company-score-card,.company-score-panel,.company-signature-frame) {
+          border-color: var(--company-oat) !important;
+          background: #fffdf9 !important;
+          color: var(--company-espresso-dark) !important;
+          box-shadow: 0 6px 18px rgba(73,45,29,.06) !important;
+        }
+        .company-details-modal :is(h1,h2,h3,h4,strong,label,legend),
+        .company-details-modal .company-companyHeader h3,
+        .company-details-modal .vr-sectionHeading h2 {
+          color: var(--company-espresso-dark) !important;
+        }
+        .company-details-modal :is(.company-section-copy,.company-lane-empty,.company-process-card span,.company-timeline-item time,.company-board-heading p,.company-score-panel p) {
+          color: var(--company-taupe) !important;
+        }
+        .company-details-modal :is(.vr-smallIcon,.company-read-icon,.company-score-panel-icon) {
+          border-color: rgba(91,56,37,.16) !important;
+          background: #f2e8dc !important;
+          color: var(--company-espresso) !important;
+          box-shadow: 0 4px 12px rgba(73,45,29,.08) !important;
+        }
+        .company-details-modal .company-read-value {
+          min-height: 43px !important;
+          border: 1px solid #d5c6b7 !important;
+          border-radius: 10px !important;
+          background: #fffdf9 !important;
+          color: var(--company-espresso-dark) !important;
+        }
+        .company-details-modal :is(input:not([type=checkbox]):not([type=radio]),select,textarea) {
+          min-height: 43px;
+          border-color: #d5c6b7 !important;
+          border-radius: 10px !important;
+          background: #fffdf9 !important;
+          color: var(--company-espresso-dark) !important;
+        }
+        .company-details-modal :is(input,select,textarea):focus {
+          border-color: var(--company-coffee) !important;
+          outline: 3px solid rgba(139,98,72,.16) !important;
+          box-shadow: none !important;
+        }
+        .company-details-modal :is(.vr-btn,.company-view-score,.company-tree-action,.company-name-btn) {
+          min-height: 43px !important;
+          padding: 0 17px !important;
+          border: 1px solid var(--company-espresso) !important;
+          border-radius: 10px !important;
+          background: linear-gradient(135deg,var(--company-espresso),var(--company-espresso-dark)) !important;
+          color: #fffaf3 !important;
+          font-weight: 750 !important;
+          box-shadow: 0 7px 16px rgba(73,45,29,.17) !important;
+          transition: transform .18s ease,box-shadow .18s ease,background .18s ease !important;
+        }
+        .company-details-modal :is(.vr-btn,.company-view-score,.company-tree-action,.company-name-btn):hover:not(:disabled) {
+          transform: translateY(-1px);
+          box-shadow: 0 10px 22px rgba(73,45,29,.22) !important;
+        }
+        .company-details-modal :is(.vr-btnGhost,.company-name-btn:not(.active):not(.is-active)) {
+          border-color: #cbb9a7 !important;
+          background: #fffdf9 !important;
+          color: var(--company-espresso) !important;
+          box-shadow: 0 4px 12px rgba(73,45,29,.07) !important;
+        }
+        .company-details-modal :is(.company-name-btn.active,.company-name-btn.is-active,.company-score-card.is-active) {
+          border-color: var(--company-gold) !important;
+          background: #f5ead8 !important;
+          color: var(--company-espresso-dark) !important;
+          box-shadow: 0 0 0 3px rgba(181,123,63,.13) !important;
+        }
+        .company-details-modal button:focus-visible {
+          outline: 3px solid rgba(181,123,63,.30) !important;
+          outline-offset: 3px !important;
+        }
+        .company-details-modal button:disabled { opacity: .56; box-shadow: none !important; }
+        .company-details-modal .company-tree-actions::before,
+        .company-details-modal .company-tree-actions::after,
+        .company-details-modal .company-tree-action::before { background: #c9ab8f !important; }
+        .company-details-modal .company-step-dot { border-color: #cbb9a7 !important; background: #fffdf9 !important; color: var(--company-taupe) !important; }
+        .company-details-modal .company-step-dot:is(.active,.is-active),
+        .company-details-modal .company-score-meter > span { background: linear-gradient(90deg,var(--company-coffee),var(--company-gold)) !important; color:#fff !important; }
+        .company-details-modal .company-score-meter { background: #eadfd3 !important; }
+        .company-details-modal .company-timeline-item { border-color: #ccb39b !important; }
+        .company-details-modal .company-timeline-item::before {
+          border-color: #fffdf9 !important;
+          background: var(--company-gold) !important;
+          box-shadow: 0 0 0 2px #d9c0a6 !important;
+        }
+        .company-details-modal .company-error {
+          border-color: #dfb9ad !important;
+          background: #f8ebe6 !important;
+          color: var(--company-danger) !important;
+        }
+        .company-details-modal :is(.company-loading,.company-inline-loading,.company-score-refresh) { color: var(--company-coffee) !important; }
+        .company-details-modal .company-score-placeholder {
+          border-color: #d8c5ab !important;
+          background: #f4eadb !important;
+          color: #684b35 !important;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .company-details-modal *, .company-details-modal *::before, .company-details-modal *::after {
+            scroll-behavior:auto !important; animation-duration:.01ms !important; animation-iteration-count:1 !important;
+          }
+        }
+      `}</style>
       {addCompanyPromptOpen && (
         <AddCompanyConfirmation
           open

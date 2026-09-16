@@ -23,6 +23,9 @@ use App\Http\Controllers\Api\VerificationAssistantController;
 use App\Http\Controllers\Api\VerificationController;
 use App\Http\Controllers\Api\ApplicantInfoController;
 use App\Http\Controllers\Api\Readcompanyinformationcontroller;
+use App\Http\Controllers\Api\RaymochHelpAssistantController;
+use App\Http\Controllers\Api\RaymochInformationProviderController;
+use App\Http\Controllers\Api\AIBusinessSearchController;
 
 
 
@@ -80,6 +83,7 @@ Route::get('/api/companies/{id}', [AllCompaniesController::class, 'show'])
     ->name('api.companies.show');
 
 Route::get('/services/options', [ServiceController::class, 'options']);
+Route::post('/help/information', RaymochInformationProviderController::class);
 
 
 Route::get('/regions', [SearchFilterController::class, 'regions']);
@@ -90,7 +94,24 @@ Route::get('/cities-all', [SearchFilterController::class, 'cities']);
 Route::get('/sectors', [SearchFilterController::class, 'sectors']);
 Route::get('/industries', [SearchFilterController::class, 'industries']);
 
+Route::prefix('business-search')->controller(AIBusinessSearchController::class)->group(function () {
+    Route::get('/get-regions', 'getRegions');
+    Route::post('/get-countries', 'getCountries')->middleware('throttle:20,1');
+    Route::post('/get-states', 'getStates')->middleware('throttle:20,1');
+    Route::post('/get-cities', 'getCities')->middleware('throttle:20,1');
+    // Sectors support multiple selections in the React modal.
+    Route::get('/get-sectors', 'getSectors');
+    Route::post('/get-industries', 'getIndustries');
+    // The prefix already supplies /business-search.
+    Route::post('/companies', '__invoke')->middleware('throttle:20,1');
+    Route::get('/companies/{searchId}', 'searchStatus')
+        ->middleware(['throttle:120,1'])
+        ->name('business-search.companies.status');
+})->middleware('auth');
 
+
+
+Route::post('/business-search/validate', [AIBusinessSearchController::class, 'validateSearch'])->middleware('throttle:20,1');
 
 
 Route::get('/companies/resolve-search-filters', [CompanySearchFilterResolveController::class, 'resolve']);
@@ -129,6 +150,11 @@ Route::prefix('verification/options')->group(function () {
 
 Route::post('/verification/assistant', VerificationAssistantController::class)
     ->middleware('throttle:20,1');
+
+Route::post('/help/assistant', RaymochHelpAssistantController::class)
+    ->middleware('throttle:20,1');
+
+
 
 Route::post('verification/assistant_business_description', [VerificationAssistantController::class, 'businessDescription'])
     ->middleware('throttle:20,1');

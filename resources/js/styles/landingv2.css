@@ -1,0 +1,188 @@
+/* LandingV2 content styles
+   Imported by EntireContent.jsx with: import "./landingv2.css"; */
+
+.landing-v2-content {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  color: #181d22;
+  background: #f6f1e8;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.landing-v2-content *,
+.landing-v2-content *::before,
+.landing-v2-content *::after {
+  box-sizing: border-box;
+}
+
+.landing-v2-content img,
+.landing-v2-content svg {
+  display: block;
+  max-width: 100%;
+}
+
+.landing-v2-content a,
+.landing-v2-content button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.landing-v2-content a {
+  transition: transform 180ms ease, box-shadow 180ms ease,
+    border-color 180ms ease, filter 180ms ease;
+}
+
+.landing-v2-content a:hover {
+  filter: brightness(0.985);
+}
+
+.landing-v2-content a:focus-visible,
+.landing-v2-content button:focus-visible {
+  outline: 3px solid rgba(181, 123, 63, 0.42);
+  outline-offset: 3px;
+}
+
+.landing-v2-content button:not(:disabled) {
+  cursor: pointer;
+}
+
+.landing-v2-content button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* Continuously moving policy and market signals. */
+.l2-marquee {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 5%,
+    #000 95%,
+    transparent
+  );
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 5%,
+    #000 95%,
+    transparent
+  );
+}
+
+.l2-marqueeTrack {
+  width: max-content;
+  min-width: 100%;
+  will-change: transform;
+  animation: l2-marquee-scroll 42s linear infinite;
+}
+
+.l2-marquee:hover .l2-marqueeTrack,
+.l2-marquee:focus-within .l2-marqueeTrack {
+  animation-play-state: paused;
+}
+
+@keyframes l2-marquee-scroll {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+/* Inline style controllers define desktop presentation. These rules supply
+   safe resizing when the component is embedded inside Home.jsx. */
+@media (max-width: 1100px) {
+  .landing-v2-content [style*="grid-template-columns: repeat(4"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .landing-v2-content [style*="grid-template-columns: repeat(3"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .landing-v2-content [style*="grid-template-columns: 1.1fr"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .landing-v2-content [style*="display: grid"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .landing-v2-content [style*="display: flex"] {
+    max-width: 100%;
+  }
+
+  .landing-v2-content [style*="width: 360px"],
+  .landing-v2-content [style*="width: 380px"],
+  .landing-v2-content [style*="width: 400px"] {
+    width: min(100%, 360px) !important;
+  }
+
+  .landing-v2-content h2 {
+    overflow-wrap: anywhere;
+  }
+
+  .l2-marquee {
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .landing-v2-content section {
+    scroll-margin-top: 76px;
+  }
+
+  .landing-v2-content a,
+  .landing-v2-content button {
+    touch-action: manipulation;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-v2-content *,
+  .landing-v2-content *::before,
+  .landing-v2-content *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  .l2-marquee {
+    overflow-x: auto;
+  }
+
+  .l2-marqueeTrack {
+    transform: none !important;
+  }
+}
+
+@media print {
+  .landing-v2-content {
+    overflow: visible;
+    background: #fff;
+  }
+
+  .l2-marquee {
+    overflow: visible;
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+
+  .l2-marqueeTrack {
+    width: auto;
+    transform: none !important;
+    animation: none !important;
+  }
+}
