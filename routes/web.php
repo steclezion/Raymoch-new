@@ -125,30 +125,30 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
     Route::post('reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
 
     // Signup entry
-    Route::get('/signup', [SignupController::class, 'index'])->name('signup.index');
-    Route::get('/signup/investor/create', [SignupController::class, 'createInvestor'])->name('signup.investor.create');
-    Route::get('/signup/basic/create/individual', [SignupController::class, 'showPaymentPlansCreate'])->name('signup.basic.create.individual'); // Store the Basic account (JSON) Route::get('/signup/premium/create/individual/', [SignupController::class, 'showPaymentPlansCreate'])->name('signup.premium.create.individual');
+    // Route::get('/signup', [SignupController::class, 'index'])->name('signup.index');
+    // Route::get('/signup/investor/create', [SignupController::class, 'createInvestor'])->name('signup.investor.create');
+    // Route::get('/signup/basic/create/individual', [SignupController::class, 'showPaymentPlansCreate'])->name('signup.basic.create.individual'); // Store the Basic account (JSON) Route::get('/signup/premium/create/individual/', [SignupController::class, 'showPaymentPlansCreate'])->name('signup.premium.create.individual');
 
     // Basic signup
-    Route::get('/signup/basic/pricing', fn() => view('pages.auth.signup.basic.pricing'))->name('signup.basic.pricing');
-    Route::get('/signup/basic/create/individual', [SignupController::class, 'showPaymentPlansCreate'])->name('signup.basic.create.individual');
-    Route::post('/signup/basic/store', [SignupController::class, 'individualAccountStore'])->name('signup.basic.store');
-    Route::post('/signup/basic/send-otp', [SignupController::class, 'sendOtp'])->name('signup.basic.send_otp');
-    Route::post('/signup/basic/verify-otp', [SignupController::class, 'verifyOtp'])->name('signup.basic.verify_otp');
-    Route::get('/signup/basic/create', [SignupController::class, 'createBasic'])->name('signup.basic.create');
+    // Route::get('/signup/basic/pricing', fn() => view('pages.auth.signup.basic.pricing'))->name('signup.basic.pricing');
+    // Route::get('/signup/basic/create/individual', [SignupController::class, 'showPaymentPlansCreate'])->name('signup.basic.create.individual');
+    // Route::post('/signup/basic/store', [SignupController::class, 'individualAccountStore'])->name('signup.basic.store');
+    // Route::post('/signup/basic/send-otp', [SignupController::class, 'sendOtp'])->name('signup.basic.send_otp');
+    // Route::post('/signup/basic/verify-otp', [SignupController::class, 'verifyOtp'])->name('signup.basic.verify_otp');
+    // Route::get('/signup/basic/create', [SignupController::class, 'createBasic'])->name('signup.basic.create');
 
     // Premium signup
-    Route::get('/signup/premium/create/individual', [SignupController::class, 'showPaymentPlansCreate'])->name('signup.premium.create.individual');
-    Route::post('/signup/premium/send-otp', [PremiumSignupController::class, 'sendOtp'])->name('signup.premium.send_otp');
-    Route::post('/signup/premium/verify-otp', [PremiumSignupController::class, 'verifyOtp'])->name('signup.premium.verify_otp');
+    // Route::get('/signup/premium/create/individual', [SignupController::class, 'showPaymentPlansCreate'])->name('signup.premium.create.individual');
+    // Route::post('/signup/premium/send-otp', [PremiumSignupController::class, 'sendOtp'])->name('signup.premium.send_otp');
+    // Route::post('/signup/premium/verify-otp', [PremiumSignupController::class, 'verifyOtp'])->name('signup.premium.verify_otp');
     // Premium finalize after payment success
-    Route::post('/signup/premium/complete', [PaymentController::class, 'finalizePremiumSignup'])->name('signup.premium.complete');
+    // Route::post('/signup/premium/complete', [PaymentController::class, 'finalizePremiumSignup'])->name('signup.premium.complete');
 
     // Business signup
     Route::post('/auth/check-email', BusinessAccountController::class)->name('auth.check-email');
-    Route::get('/signup/business/create', [BusinessAccountController::class, 'createBusiness'])->name('signup.business.create');
-    Route::post('/signup/business/send-otp', [BusinessOtpController::class, 'sendOtp'])->name('signup.business.send_otp');
-    Route::post('/signup/business/verify-otp', [BusinessOtpController::class, 'verifyOtp'])->name('signup.business.verify_otp');
+    // Route::get('/signup/business/create', [BusinessAccountController::class, 'createBusiness'])->name('signup.business.create');
+    // Route::post('/signup/business/send-otp', [BusinessOtpController::class, 'sendOtp'])->name('signup.business.send_otp');
+    // Route::post('/signup/business/verify-otp', [BusinessOtpController::class, 'verifyOtp'])->name('signup.business.verify_otp');
 });
 
 /*
