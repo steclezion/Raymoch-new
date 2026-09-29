@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Select, { components } from "react-select";
-import useQueuedCompanySearch from "../../hooks/useQueuedCompanySearch.jsx";
+import useQueuedCompanySearch from "../../hooks/useQueuedCompanySearch";
 import SearchSplashModal from "../../components/behaviours/SearchSplashModal";
 
 function IconSearch(props) {
