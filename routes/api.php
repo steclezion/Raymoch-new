@@ -1,38 +1,35 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\CompanyApiController;
-use App\Http\Controllers\Api\UpdateRequestController;
-use App\Http\Controllers\TrialRequestController;
 use App\Http\Controllers\AllCompaniesController;
-use App\Http\Controllers\Api\DirectoryController;
+use App\Http\Controllers\Api\AIBusinessSearchController;
+use App\Http\Controllers\Api\ApplicantInfoController;
+use App\Http\Controllers\Api\CompanySearchFilterResolveController;
 use App\Http\Controllers\Api\CompanySearchLogController;
-use App\Http\Controllers\CompanyDetailController;
-use App\Http\Controllers\CompanyReactionController;
-use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\Api\CountryCodeController;
-use App\Http\Controllers\Api\SearchFilterController;
+use App\Http\Controllers\Api\DirectoryController;
 use App\Http\Controllers\Api\ExploreTooltipController;
 use App\Http\Controllers\Api\MainSearchEngineController;
-use App\Http\Controllers\Api\SubscriptionController;
-use App\Http\Controllers\Api\CompanySearchFilterResolveController;
-use App\Http\Controllers\Api\VerificationOptionsController;
-use App\Http\Controllers\Api\VerificationAssistantController;
-use App\Http\Controllers\Api\VerificationController;
-use App\Http\Controllers\Api\ApplicantInfoController;
-use App\Http\Controllers\Api\Readcompanyinformationcontroller;
 use App\Http\Controllers\Api\RaymochHelpAssistantController;
 use App\Http\Controllers\Api\RaymochInformationProviderController;
-use App\Http\Controllers\Api\AIBusinessSearchController;
+use App\Http\Controllers\Api\Readcompanyinformationcontroller;
+use App\Http\Controllers\Api\SearchChartController;
+use App\Http\Controllers\Api\SearchFilterController;
+use App\Http\Controllers\Api\SubscriptionController;
+use App\Http\Controllers\Api\UpdateRequestController;
+use App\Http\Controllers\Api\VerificationAssistantController;
+use App\Http\Controllers\Api\VerificationController;
+use App\Http\Controllers\Api\VerificationOptionsController;
+use App\Http\Controllers\CompanyDetailController;
+use App\Http\Controllers\CompanyReactionController;
+use App\Http\Controllers\SearchVisualController;
+use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\TrialRequestController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
-
-
-
-
-Route::middleware('auth::sanctum')->get('/me', function (\Illuminate\Http\Request $request) {
+Route::middleware('auth::sanctum')->get('/me', function (Request $request) {
     $u = $request->user();
+
     return response()->json([
         'ok' => true,
         'user' => [
@@ -46,34 +43,24 @@ Route::middleware('auth::sanctum')->get('/me', function (\Illuminate\Http\Reques
     ]);
 });
 
-
-
-
-
-
 Route::post('/company-search-logs', [CompanySearchLogController::class, 'store']);
 
 $base = rtrim(config('services.express.url'), '/'); // set in config/services.php
 Route::get('/ping', fn() => response()->json(['ok' => true]));
 Route::get('/companies', [AllCompaniesController::class, 'index']);
 
-
 // Receive “Request Update / Claim” form posts
 Route::post('/company-update-request', [UpdateRequestController::class, 'store'])->name('api.company.update-request');
 
-
 Route::post('/trial-requests', [TrialRequestController::class, 'store'])->name('api.trial-requests.store');
-
 
 Route::post('trial-requests', [TrialRequestController::class, 'store'])->name('api.trial-requests.store');
 
 Route::post('trial-requests/verify-code', [TrialRequestController::class, 'verifyCode'])->name('api.trial-requests.verify');
 
-
 Route::get('/business-sectors', [DirectoryController::class, 'sectors']);
-Route::get('/countries',        [DirectoryController::class, 'countries']);
+Route::get('/countries', [DirectoryController::class, 'countries']);
 Route::get('/country-codes', [CountryCodeController::class, 'index']);
-
 
 // JSON API routes
 Route::get('/api/companies', [AllCompaniesController::class, 'index'])
@@ -84,7 +71,6 @@ Route::get('/api/companies/{id}', [AllCompaniesController::class, 'show'])
 
 Route::get('/services/options', [ServiceController::class, 'options']);
 Route::post('/help/information', RaymochInformationProviderController::class);
-
 
 Route::get('/regions', [SearchFilterController::class, 'regions']);
 Route::get('/countries-africans', [SearchFilterController::class, 'countries']);
@@ -109,34 +95,40 @@ Route::prefix('business-search')->controller(AIBusinessSearchController::class)-
         ->name('business-search.companies.status');
 })->middleware('auth');
 
-
-
 Route::post('/business-search/validate', [AIBusinessSearchController::class, 'validateSearch'])->middleware('throttle:20,1');
-
 
 Route::get('/companies/resolve-search-filters', [CompanySearchFilterResolveController::class, 'resolve']);
 
 Route::get('/explore-card-stats', [ExploreTooltipController::class, 'show']);
 
 Route::prefix('companies/{company}')->group(function () {
-    Route::get('/overview',   [CompanyDetailController::class, 'overview']);
+    Route::get('/overview', [CompanyDetailController::class, 'overview']);
     Route::get('/financials', [CompanyDetailController::class, 'financials']);
-    Route::get('/team',       [CompanyDetailController::class, 'team']);
-    Route::get('/gallery',    [CompanyDetailController::class, 'gallery']);
-    Route::get('/documents',  [CompanyDetailController::class, 'documents']);
-    Route::get('/contact',    [CompanyDetailController::class, 'contact']);
-    Route::get('/location',   [CompanyDetailController::class, 'location']); // 👈 NEW
+    Route::get('/team', [CompanyDetailController::class, 'team']);
+    Route::get('/gallery', [CompanyDetailController::class, 'gallery']);
+    Route::get('/documents', [CompanyDetailController::class, 'documents']);
+    Route::get('/contact', [CompanyDetailController::class, 'contact']);
+    Route::get('/location', [CompanyDetailController::class, 'location']); // 👈 NEW
     Route::post('/reactions', [CompanyReactionController::class, 'storeReaction']);
 });
 
 Route::middleware('auth')->get('/subscription/access', [SubscriptionController::class, 'access']);
 
-Route::prefix('main-search-engine')->group(function () {
+Route::prefix('main-search-engine')->group(function (): void {
     Route::post('/start', [MainSearchEngineController::class, 'start']);
     Route::post('/run/{token}', [MainSearchEngineController::class, 'run']);
+    Route::post('/stop/{token}', [MainSearchEngineController::class, 'stop']);
     Route::get('/status/{token}', [MainSearchEngineController::class, 'status']);
+    Route::get('/results/{token}', [MainSearchEngineController::class, 'results']);
+    Route::post(
+        '/main-search/{token}/stop',
+        [MainSearchEngineController::class, 'stop']
+    );
 });
-
+Route::get(
+    '/main-search/{token}/chart',
+    [SearchChartController::class, 'show']
+)->middleware(['throttle:30,1']);
 
 Route::prefix('verification/options')->group(function () {
     Route::get('/', [VerificationOptionsController::class, 'index']);
@@ -154,35 +146,31 @@ Route::post('/verification/assistant', VerificationAssistantController::class)
 Route::post('/help/assistant', RaymochHelpAssistantController::class)
     ->middleware('throttle:20,1');
 
-
-
 Route::post('verification/assistant_business_description', [VerificationAssistantController::class, 'businessDescription'])
     ->middleware('throttle:20,1');
 
 Route::post('/verification', [VerificationController::class, 'store'])
     ->middleware('throttle:5,1');
 
+Route::post('/search-visuals', [SearchVisualController::class, 'generate'])
+    ->middleware('throttle:20,1');
 
 Route::post(
     '/verification/generate_business_description',
     [VerificationAssistantController::class, 'generate_business_description']
 )->middleware('throttle:20,1');
 
-
 Route::post(
     '/verification/generate_product_suggestions',
     [VerificationAssistantController::class, 'generate_product_suggestions']
 )->middleware('throttle:20,1');
-
 
 Route::post(
     '/verification/review_document',
     [VerificationAssistantController::class, 'review_document']
 )->middleware('throttle:20,1');
 
-
-//Route::middleware('auth')->get('/grab_applicants_info', [ApplicantInfoController::class, 'grabApplicantsInfo'])->name('grab_applicants_info');
-
+// Route::middleware('auth')->get('/grab_applicants_info', [ApplicantInfoController::class, 'grabApplicantsInfo'])->name('grab_applicants_info');
 
 Route::middleware(['web', 'auth'])
     ->get(
@@ -190,7 +178,6 @@ Route::middleware(['web', 'auth'])
         [ApplicantInfoController::class, 'grabApplicantsInfo']
     )
     ->name('grab_applicants_info');
-
 
 Route::middleware(['web', 'auth'])->group(function (): void {
     Route::get('/company-information', [Readcompanyinformationcontroller::class, 'index'])

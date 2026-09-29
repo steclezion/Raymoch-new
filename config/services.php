@@ -69,5 +69,11 @@ return [
         'token' => env('POSTMARK_TOKEN'),
     ],
 
-
+    // 'open_ai' => [
+    //     'key' => env('OPENAI_API_KEY'),
+    //     'key-image' => env('OPEN_API_KEY_IMAGE'),
+    //     'model' => env('OPENAI_MODEL', 'gpt-5-mini'),
+    //     'model_image' => env('OPENAI_MODEL_IMAGE', 'gpt-image-2'),
+    //     'chart_model' => env('OPENAI_CHART_MODEL', 'gpt-4o-mini'),
+    // ]
 ];

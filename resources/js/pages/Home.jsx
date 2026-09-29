@@ -90,7 +90,7 @@ export default function Home() {
             </div>
 
             <div className="topbar-actions">
-              <form className="dashboard-search" action="/explore" role="search">
+              {/* <form className="dashboard-search" action="/explore" role="search">
                 <Search size={17} aria-hidden="true" />
                 <label className="sr-only" htmlFor="dashboard-search-input">
                   Search companies, sectors, or regions
@@ -99,9 +99,9 @@ export default function Home() {
                   id="dashboard-search-input"
                   name="q"
                   type="search"
-                  placeholder="Search companies, sectors, regions…"
+                  placeholder="Search companies, sectorsss, regions…"
                 />
-              </form>
+              </form> */}
 
               <button className="notification-button" type="button" aria-label="Notifications" data-tooltip="Notifications">
                 <Bell size={18} />

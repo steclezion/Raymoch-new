@@ -1,5 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Select, { components } from "react-select";
+import useQueuedCompanySearch from "../../hooks/useQueuedCompanySearch";
+import SearchSplashModal from "../../components/behaviours/SearchSplashModal";
 
 function IconSearch(props) {
   return (
@@ -199,6 +201,9 @@ export default function TopSearchForm({
 
   SelectedFiltersComponent,
 }) {
+  const queuedSearch = useQueuedCompanySearch();
+  const liveResolveIdRef = useRef(0);
+
   const [internalQ, setInternalQ] = useState("");
   const [internalRegion, setInternalRegion] = useState("all");
   const [internalCountry, setInternalCountry] = useState("all");
@@ -258,6 +263,7 @@ export default function TopSearchForm({
   });
 
   const [bootReady, setBootReady] = useState(false);
+  const [searchValidationError, setSearchValidationError] = useState("");
 
   const [loading, setLoading] = useState({
     regions: false,
@@ -274,7 +280,7 @@ export default function TopSearchForm({
     setLoading((prev) => ({ ...prev, [key]: value }));
   };
 
-const resolveLiveFilters = async (filters) => {
+const resolveLiveFilters = async (filters, requestId) => {
   setLoadingKey("resolving", true);
 
   const params = new URLSearchParams({
@@ -291,6 +297,7 @@ const resolveLiveFilters = async (filters) => {
   const resolveRes = await fetchJson(
     `/api/companies/resolve-search-filters?${params.toString()}`
   );
+  if (requestId !== liveResolveIdRef.current) return;
 
   const data = resolveRes?.data || {};
 
@@ -621,32 +628,28 @@ const resolveLiveFilters = async (filters) => {
 
 
   useEffect(() => {
-  if (!bootReady) return;
+    if (!bootReady) return undefined;
 
-  const filters = {
-    keyword: safeQ || "",
-    region: safeRegion || "all",
-    country: safeCountry || "all",
-    state: safeStateItem || "all",
-    city: safeCity || "all",
-    sector: safeSector || "",
-    industry: safeIndustry || "all",
-    verification: safeVerified ? "ON" : "OFF",
-  };
+    const requestId = ++liveResolveIdRef.current;
+    const timeoutId = window.setTimeout(() => {
+      resolveLiveFilters({
+        keyword: safeQ || "",
+        region: safeRegion || "all",
+        country: safeCountry || "all",
+        state: safeStateItem || "all",
+        city: safeCity || "all",
+        sector: safeSector || "",
+        industry: safeIndustry || "all",
+        verification: safeVerified ? "ON" : "OFF",
+      }, requestId);
+    }, 350);
 
-  resolveLiveFilters(filters);
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [
-  safeQ,
-  safeRegion,
-  safeCountry,
-  safeStateItem,
-  safeCity,
-  safeSector,
-  safeIndustry,
-  safeVerified,
-]);
+    return () => window.clearTimeout(timeoutId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    bootReady, safeQ, safeRegion, safeCountry, safeStateItem,
+    safeCity, safeSector, safeIndustry, safeVerified,
+  ]);
 
   const stateDisabled = isAll(safeCountry);
   const cityDisabled = isAll(safeStateItem);
@@ -682,14 +685,55 @@ const resolveLiveFilters = async (filters) => {
     safeSetPage(1);
   };
 
-  const submitSearch = (e) => {
+  const submitSearch = async (e) => {
     e.preventDefault();
+    setSearchValidationError("");
+
+    // Complete all UI validation before opening the search splash.
+    if (!isAll(safeStateItem) && isAll(safeCountry)) {
+      setSearchValidationError("Select a country before selecting a state.");
+      return;
+    }
+
+    if (!isAll(safeCity) && isAll(safeStateItem)) {
+      setSearchValidationError("Select a state before selecting a city.");
+      return;
+    }
+
+    if (!isAll(safeIndustry) && isAll(safeSector)) {
+      setSearchValidationError("Select a sector before selecting an industry.");
+      return;
+    }
+
+    const payload = {
+      keyword: String(safeQ || "").trim(),
+      region: safeRegion || "all",
+      country: safeCountry || "all",
+      state: safeStateItem || "all",
+      city: safeCity || "all",
+      sector: safeSector || "all",
+      industry: safeIndustry || "all",
+      verification: Boolean(safeVerified),
+    };
+
     safeSetPage(1);
+    await queuedSearch.start(payload);
   };
 
   return (
     <>
       <style>{formCss}</style>
+
+      <SearchSplashModal
+        open={queuedSearch.open}
+        token={queuedSearch.token}
+        status={queuedSearch.status}
+        error={queuedSearch.error}
+        starting={queuedSearch.starting}
+        onStop={queuedSearch.stop}
+        onViewResults={queuedSearch.viewResults}
+        onResume={queuedSearch.resume}
+      />
 
       <div className="panel-wrap">
         <form className="sf-card" onSubmit={submitSearch}>
@@ -878,10 +922,20 @@ const resolveLiveFilters = async (filters) => {
                 </a>
               </div>
 
-              <button type="submit" className="sf-btn primary">
-                Search
+              <button
+                type="submit"
+                className="sf-btn primary"
+                disabled={queuedSearch.open}
+              >
+                {queuedSearch.open ? "Searching…" : "Search"}
               </button>
             </div>
+
+            {searchValidationError ? (
+              <p className="sf-search-error" role="alert">
+                {searchValidationError}
+              </p>
+            ) : null}
 
             {SelectedFiltersComponent && (
               <SelectedFiltersComponent
@@ -947,6 +1001,8 @@ const formCss = `
 .sf-btn{height:46px;border-radius:999px;padding:0 18px;font-weight:900;cursor:pointer;border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;user-select:none;-webkit-tap-highlight-color:transparent;}
 .sf-btn.ghost,.sf-btn.outline{background:#fff;border-color:#d7e2f5;color:#2d4fbf;}
 .sf-btn.primary{min-width:170px;background:linear-gradient(135deg,#3b82f6,#2d4fbf);border-color:transparent;color:#fff;box-shadow:0 10px 18px rgba(59,130,246,.25);}
+.sf-btn:disabled{cursor:not-allowed;opacity:.65;}
+.sf-search-error{margin:12px 0 0;padding:10px 14px;border:1px solid #fecaca;border-radius:12px;background:#fff1f2;color:#b42318;font-size:13px;font-weight:700;}
 .sf-local-filter{margin-top:16px;}
 .sf-helper{margin-top:6px;font-size:12px;color:#64748b;}
 

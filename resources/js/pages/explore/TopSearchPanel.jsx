@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from "react";
 import Select, { components } from "react-select";
 import { toast } from "sonner";
-import SearchAnimatedModal from "./SearchAnimatedModal";
+import useQueuedCompanySearch from "../../hooks/useQueuedCompanySearch";
+import SearchSplashModal from "../../components/behaviours/SearchSplashModal";
 
 function IconSearch(props) {
   return (
@@ -233,12 +234,6 @@ const selectSharedProps = {
   },
 };
 
-function getCsrfToken() {
-  return (
-    document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || ""
-  );
-}
-
 export default function TopSearchPanel({
   q,
   setQ,
@@ -267,10 +262,8 @@ export default function TopSearchPanel({
   const [fieldErrors, setFieldErrors] = useState({
     sector: false,
   });
-  const [isSearching, setIsSearching] = useState(false);
-  const [showSearchModal, setShowSearchModal] = useState(false);
-  const [searchToken, setSearchToken] = useState("");
-  const [searchPayload, setSearchPayload] = useState(null);
+  const search = useQueuedCompanySearch();
+  const isSearching = search.open && !search.status?.meta?.is_completed;
 
   const clearValidation = () => {
     setFieldErrors({
@@ -384,8 +377,6 @@ export default function TopSearchPanel({
     setSector("");
     setIndustry("");
     setVerified(false);
-    setSearchPayload(null);
-    setSearchToken("");
     clearValidation();
   };
 
@@ -472,149 +463,30 @@ export default function TopSearchPanel({
       country: country ?? "all",
       state: stateItem ?? "all",
       city: city ?? "all",
-      sector: sector ?? "",
-      industry: industry ?? "",
+      sector: sector ?? "all",
+      industry: industry ?? "all",
       verification: Boolean(verified),
     };
   };
 
-  // const submitSearch = async (e) => {
-  //   e.preventDefault();
-
-  //   if (isSearching) return;
-  //   if (!validateBeforeSearch()) return;
-
-  //   const payload = buildPayload();
-
-  //   try {
-  //     setIsSearching(true);
-  //     setSearchPayload(payload);
-
-  //     const startRes = await fetch("/api/main-search-engine/start", {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         Accept: "application/json",
-  //         "X-CSRF-TOKEN": getCsrfToken(),
-  //       },
-  //       body: JSON.stringify(payload),
-  //     });
-
-  //     const startData = await startRes.json();
-
-  //     if (!startRes.ok || !startData?.ok || !startData?.token) {
-  //       throw new Error(startData?.message || "Unable to start search.");
-  //     }
-
-  //     const token = startData.token;
-
-  //     setSearchToken(token);
-  //     setShowSearchModal(true);
-
-  //     fetch(`/api/main-search-engine/run/${token}`, {
-  //       method: "POST",
-  //       headers: {
-  //         Accept: "application/json",
-  //         "X-CSRF-TOKEN": getCsrfToken(),
-  //       },
-  //     }).catch((err) => {
-  //       console.error("Search execution failed:", err);
-  //     });
-  //   } catch (error) {
-  //     console.error(error);
-  //     toast.error(error.message || "Search could not be started.");
-  //     setIsSearching(false);
-  //     setShowSearchModal(false);
-  //     setSearchToken("");
-  //   }
-  // };
-
-
   const submitSearch = async (e) => {
-  e.preventDefault();
-
-  if (isSearching) return;
-  if (!validateBeforeSearch()) return;
-
-  const payload = buildPayload();
-
-  try {
-    setIsSearching(true);
-    setSearchPayload(payload);
-
-    const sessionRes = await fetch("/search-session/store", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "X-CSRF-TOKEN": getCsrfToken(),
-      },
-      credentials: "same-origin",
-      body: JSON.stringify(payload),
-    });
-
-    const sessionData = await sessionRes.json();
-
-    if (!sessionRes.ok || !sessionData?.ok) {
-      throw new Error(sessionData?.message || "Unable to store search session.");
-    }
-
-    const startRes = await fetch("/api/main-search-engine/start", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "X-CSRF-TOKEN": getCsrfToken(),
-      },
-      credentials: "same-origin",
-      body: JSON.stringify(payload),
-    });
-
-    const startData = await startRes.json();
-
-    if (!startRes.ok || !startData?.ok || !startData?.token) {
-      throw new Error(startData?.message || "Unable to start search.");
-    }
-
-    const token = startData.token;
-
-    setSearchToken(token);
-    setShowSearchModal(true);
-
-    fetch(`/api/main-search-engine/run/${token}`, {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "X-CSRF-TOKEN": getCsrfToken(),
-      },
-      credentials: "same-origin",
-    }).catch((err) => {
-      console.error("Search execution failed:", err);
-    });
-  } catch (error) {
-    console.error(error);
-    toast.error(error.message || "Search could not be started.");
-    setIsSearching(false);
-    setShowSearchModal(false);
-    setSearchToken("");
-  }
-};
+    e.preventDefault();
+    if (isSearching || !validateBeforeSearch()) return;
+    await search.start(buildPayload());
+  };
   return (
     <>
       <style>{css}</style>
 
-      <SearchAnimatedModal
-        open={showSearchModal}
-        token={searchToken}
-        payload={searchPayload}
-        onClose={() => {
-          setShowSearchModal(false);
-          setIsSearching(false);
-          setSearchToken("");
-        }}
-        onComplete={() => {
-          setIsSearching(false);
-        }}
+      <SearchSplashModal
+        open={search.open}
+        token={search.token}
+        status={search.status}
+        error={search.error}
+        starting={search.starting}
+        onStop={search.stop}
+        onViewResults={search.viewResults}
+        onResume={search.resume}
       />
 
       <div className="panel-wrap">

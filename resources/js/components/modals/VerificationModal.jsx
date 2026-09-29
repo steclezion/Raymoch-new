@@ -2286,8 +2286,9 @@ export default function VerificationModal({ companyContext = null } = {}) {
     readVerificationDraft(initialPageKeyRef.current),
   );
 
-  // Begin at Step 3 temporarily for testing, then continue through Step 6.
-  const [step, setStep] = useState(() => 6);
+  // VerificationModal owns the wizard position. Every fresh modal mount starts
+  // at the introduction, regardless of any retained in-progress form values.
+  const [step, setStep] = useState(1);
   const [formData, setFormData] = useState(
     () => hasConfirmedParent
       ? {
@@ -3739,8 +3740,8 @@ ${description}`,
     setSignatureOpen(false);
     setSignatureDataUrl("");
 
-    // Return to the first form-filling step after clearing everything.
-    setStep(2);
+    // A full clear restarts the complete verification journey at Step 1.
+    goToStep(1);
 
     window.scrollTo({
       top: 0,

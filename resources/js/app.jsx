@@ -32,6 +32,7 @@ import Overview from "./pages/Overview.jsx";
 import Fulloverview from "./pages/Fulloverview.jsx";
 import Security from "./pages/Security.jsx";
 import BusinessLanding from "./pages/Business_landing.jsx";
+import FulloverviewRootAuthenticated from "./pages/FulloverviewRootAuthenticated.jsx";
 /* =========================================================
    Auth Context
 ========================================================= */
@@ -356,6 +357,7 @@ mount("dashboard-root", <Dashboard />);
 mount("ServicesRoot", <Services />);
 mount("MarketInsightRoot", <Market_Insight />);
 mount("OverviewRoot", <Overview />);
+mount("FulloverviewRootAuthenticated", <FulloverviewRootAuthenticated />);//
 mount("FulloverviewRoot", <Fulloverview />);
 mount("SecurityRoot", <Security/>);
 mount("business-landing-root", <BusinessLanding />);

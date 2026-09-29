@@ -2,66 +2,82 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class StoreSessionSearchController extends Controller
 {
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
-        $filters = [
-            'keyword' => $request->input('keyword', ''),
-            'region' => $request->input('region', 'all'),
-            'country' => $request->input('country', 'all'),
-            'state' => $request->input('state', 'all'),
-            'city' => $request->input('city', 'all'),
-            'sector' => $request->input('sector', ''),
-            'industry' => $request->input('industry', 'all'),
-            'verification' => $request->boolean('verification') ? 'ON' : 'OFF',
+        $validated = $request->validate([
+            'keyword' => ['nullable', 'string', 'max:255'],
+            'region' => ['nullable', 'string', 'max:64'],
+            'country' => ['nullable', 'string', 'max:64'],
+            'state' => ['nullable', 'string', 'max:64'],
+            'city' => ['nullable', 'string', 'max:64'],
+            'sector' => ['nullable', 'string', 'max:64'],
+            'industry' => ['nullable', 'string', 'max:64'],
+            'verification' => ['required', 'boolean'],
+        ]);
+        $filters = $this->normalize($validated);
+        $request->session()->put('previous_search_filters', $filters);
+
+        return response()->json([
+            'ok' => true,
+            'data' => $filters,
+            'url' => $this->url($filters),
+        ]);
+    }
+
+    public function current(Request $request): JsonResponse
+    {
+        $filters = $request->session()->get(
+            'previous_search_filters',
+            $this->normalize(['verification' => false]),
+        );
+
+        return response()->json([
+            'ok' => true,
+            'data' => $filters,
+            'url' => $this->url($filters),
+        ]);
+    }
+
+    public function destroy(Request $request): JsonResponse
+    {
+        $request->session()->forget('previous_search_filters');
+
+        return response()->json(['ok' => true]);
+    }
+
+    private function normalize(array $values): array
+    {
+        $dimension = static function (string $key) use ($values): string {
+            $value = trim((string) ($values[$key] ?? ''));
+
+            return $value === '' || strtolower($value) === 'all' ? 'all' : $value;
+        };
+
+        return [
+            'keyword' => trim((string) ($values['keyword'] ?? '')),
+            'region' => $dimension('region'),
+            'country' => $dimension('country'),
+            'state' => $dimension('state'),
+            'city' => $dimension('city'),
+            'sector' => $dimension('sector'),
+            'industry' => $dimension('industry'),
+            'verification' => (bool) ($values['verification'] ?? false),
         ];
-
-        session(['previous_search_filters' => $filters]);
-
-        return response()->json([
-            'ok' => true,
-            'data' => $filters,
-            'url' => $this->buildUrl($filters),
-        ]);
     }
 
-    public function current()
+    private function url(array $filters): string
     {
-        $filters = session('previous_search_filters', [
-            'keyword' => '',
-            'region' => 'all',
-            'country' => 'all',
-            'state' => 'all',
-            'city' => 'all',
-            'sector' => '',
-            'industry' => 'all',
-            'verification' => 'OFF',
-        ]);
+        $parameters = array_filter(
+            $filters,
+            static fn(mixed $value): bool => !in_array($value, [null, '', 'all', false], true),
+        );
+        $parameters['from'] = 'explore';
 
-        return response()->json([
-            'ok' => true,
-            'data' => $filters,
-            'url' => $this->buildUrl($filters),
-        ]);
-    }
-
-    private function buildUrl(array $filters): string
-    {
-        $params = [];
-
-        foreach ($filters as $key => $value) {
-            if ($value === null || $value === '') {
-                continue;
-            }
-
-            $params[$key] = $value;
-        }
-
-        $params['from'] = 'explore';
-
-        return '/companies?' . http_build_query($params);
+        return '/companies?' . http_build_query($parameters);
     }
 }

@@ -452,7 +452,7 @@ function WhatWeDo({ S }) {
         </div>
 
         <div style={S.overviewButtonRow}>
-          <a href="/overview" style={S.overviewButton}>
+          <a href="/overview_auth" style={S.overviewButton}>
             Open Overview
           </a>
         </div>
@@ -659,8 +659,11 @@ function MosaicSpotlight({ S }) {
               A mosaic view of the platform’s strongest lanes: verified businesses, market signals, research, and reports.
             </p>
           </div>
-          <a href="/overview" style={{ ...S.btnSmallBase, ...S.btnGhost }}>
+          {/* <a href="/overview" >
             Open overview
+          </a> */}
+                <a href="/overview_auth" style={{ ...S.btnSmallBase, ...S.btnGhost }}>
+            Open Overview
           </a>
         </div>
 

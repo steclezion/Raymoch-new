@@ -1,0 +1,120 @@
+.account-level {
+  --account-color: #5b3825;
+  --account-soft: #f3e7cf;
+  --account-border: #d8c3ad;
+
+  min-width: 142px;
+  height: 40px;
+  padding: 4px 11px 4px 5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--account-border);
+  border-radius: 11px;
+  color: var(--account-color);
+  background: linear-gradient(135deg, #fffdf9, var(--account-soft));
+  box-shadow: 0 4px 12px rgba(56, 33, 22, 0.07);
+}
+
+.account-level__icon {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  color: #fffaf3;
+  background: var(--account-color);
+}
+
+.account-level__copy {
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+  line-height: 1.1;
+}
+
+.account-level__copy small {
+  color: #7a746d;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.account-level__copy strong {
+  color: var(--account-color);
+  font-size: 0.76rem;
+  font-weight: 850;
+}
+
+.account-level.is-individual {
+  --account-color: #5b3825;
+  --account-soft: #f3e7cf;
+  --account-border: #d8c3ad;
+}
+
+.account-level.is-business {
+  --account-color: #2f6f4f;
+  --account-soft: #e7f4ec;
+  --account-border: #b5d4c1;
+}
+
+.account-level.is-investor {
+  --account-color: #9a6233;
+  --account-soft: #fff1d6;
+  --account-border: #e1bd85;
+}
+
+.account-level--loading {
+  overflow: hidden;
+  background: #fbf8f3;
+}
+
+.account-level__skeleton-icon,
+.account-level__skeleton-copy {
+  display: block;
+  background: linear-gradient(90deg, #eee3d6, #faf5ee, #eee3d6);
+  background-size: 200% 100%;
+  animation: account-level-loading 1.4s ease-in-out infinite;
+}
+
+.account-level__skeleton-icon {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  border-radius: 9px;
+}
+
+.account-level__skeleton-copy {
+  width: 78px;
+  height: 18px;
+  border-radius: 5px;
+}
+
+@keyframes account-level-loading {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (max-width: 650px) {
+  .account-level {
+    min-width: 40px;
+    width: 40px;
+    padding: 4px;
+  }
+
+  .account-level__copy,
+  .account-level__skeleton-copy {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .account-level__skeleton-icon,
+  .account-level__skeleton-copy {
+    animation: none;
+  }
+}

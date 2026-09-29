@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Search,
   Globe2,
@@ -14,8 +14,10 @@ import {
   ChevronRight,
   Eye,
   CreditCard,
+  XCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import SearchResultsChart from "./SearchResultsChart.jsx";
 
 const STEP_META = {
   keyword: {
@@ -104,10 +106,16 @@ function normalizeStepLabel(stepKey, rawLabel) {
 }
 
 function formatStepTitle(step, meta) {
-  const label = normalizeStepLabel(step.key, step.label);
+  const label = normalizeStepLabel(
+    step.key,
+    step.display_name ??
+      step.selected_name ??
+      step.label_name ??
+      step.label
+  );
 
   if (step.key === "keyword") {
-    return `Search in progress...(Exact or Similar): ${label}`;
+    return "Keyword match found";
   }
 
   return `${meta.title}: ${label}`;
@@ -156,13 +164,12 @@ async function buildCompaniesUrlFromSession(token) {
 export default function SnakeSearchLoading({
   token,
   open = false,
-  onComplete,
+  status: statusData = null,
+  error = "",
+  onResume,
   onViewResults,
   onPayToView,
 }) {
-  const [statusData, setStatusData] = useState(null);
-  const [displayProgress, setDisplayProgress] = useState(0);
-  const [isPolling, setIsPolling] = useState(false);
   const [expandedSteps, setExpandedSteps] = useState({});
   const [subscriptionAccess, setSubscriptionAccess] = useState({
     loading: true,
@@ -172,10 +179,12 @@ export default function SnakeSearchLoading({
     message: "",
   });
 
-  const completeCalledRef = useRef(false);
 
   const progress = Number(statusData?.meta?.progress_percent ?? 0);
-  const activeStepKey = statusData?.meta?.active_step || "keyword";
+  const activeStepKey = Object.values(statusData?.steps || {}).find(
+    (step) => step.status === "running"
+  )?.key || "keyword";
+  const successful = Boolean(statusData?.meta?.is_completed && !statusData?.meta?.has_error);
 
   const hasPremiumAccess = Boolean(subscriptionAccess.can_view);
 
@@ -217,12 +226,18 @@ export default function SnakeSearchLoading({
       EMPTY_STEP("keyword");
 
     const meta = STEP_META[currentStep.key] || STEP_META.keyword;
-    const label = normalizeStepLabel(currentStep.key, currentStep.label);
+    const label = normalizeStepLabel(
+      currentStep.key,
+      currentStep.display_name ??
+        currentStep.selected_name ??
+        currentStep.label_name ??
+        currentStep.label
+    );
 
     return {
       title:
         currentStep.key === "keyword"
-          ? `Exact or Similar: ${label}`
+          ? "Keyword match found"
           : `${meta.title}: ${label}`,
       image: meta.image,
     };
@@ -293,85 +308,8 @@ export default function SnakeSearchLoading({
     };
   }, [open]);
 
-  useEffect(() => {
-    if (!open || !token) return;
-
-    let mounted = true;
-    let pollTimer = null;
-
-    completeCalledRef.current = false;
-
-    const fetchStatus = async () => {
-      try {
-        if (!mounted) return;
-
-        setIsPolling(true);
-
-        const response = await fetch(`/api/main-search-engine/status/${token}`, {
-          method: "GET",
-          headers: {
-            Accept: "application/json",
-          },
-          credentials: "same-origin",
-        });
-
-        const json = await response.json();
-
-        if (!mounted) return;
-
-        if (response.ok && json?.ok && json?.data) {
-          setStatusData(json.data);
-
-          if (json.data?.meta?.is_completed) {
-            clearInterval(pollTimer);
-
-            if (!completeCalledRef.current && typeof onComplete === "function") {
-              completeCalledRef.current = true;
-              onComplete(json.data);
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Search status polling failed:", error);
-      } finally {
-        if (mounted) {
-          setIsPolling(false);
-        }
-      }
-    };
-
-    fetchStatus();
-    pollTimer = setInterval(fetchStatus, 700);
-
-    return () => {
-      mounted = false;
-      clearInterval(pollTimer);
-    };
-  }, [open, token, onComplete]);
-
-  useEffect(() => {
-    let frameId;
-
-    const animate = () => {
-      setDisplayProgress((prev) => {
-        const diff = progress - prev;
-
-        if (Math.abs(diff) < 0.2) {
-          return progress;
-        }
-
-        return prev + diff * 0.12;
-      });
-
-      frameId = requestAnimationFrame(animate);
-    };
-
-    frameId = requestAnimationFrame(animate);
-
-    return () => cancelAnimationFrame(frameId);
-  }, [progress]);
-
-  const smoothProgress = Math.round(displayProgress);
+  // The shared hook owns polling. This component renders that one status snapshot.
+  const smoothProgress = Math.round(progress);
 
   const toggleStep = (key) => {
     setExpandedSteps((prev) => ({
@@ -381,7 +319,7 @@ export default function SnakeSearchLoading({
   };
 
 const handleSummaryAction = async () => {
-  if (subscriptionAccess.loading) return;
+  if (subscriptionAccess.loading || !successful) return;
 
   if (hasPremiumAccess) {
     if (typeof onViewResults === "function") {
@@ -407,6 +345,11 @@ const handleSummaryAction = async () => {
 
       <div className="rm-snake-root">
         <div className="rm-snake-stage">
+        {error ? (
+          <div role="alert" style={{ padding: 12, color: "#b42318", background: "#fff1f2" }}>
+            {error} {onResume ? <button type="button" onClick={onResume}>Retry status</button> : null}
+          </div>
+        ) : null}
           <div className="rm-snake-topbar">
             <div className="rm-snake-topbar-left">
               <div className="rm-snake-kicker">
@@ -430,19 +373,21 @@ const handleSummaryAction = async () => {
               </div>
 
               <div className="rm-snake-title">
-                {smoothProgress >= 100
-                  ? "Search Completed"
-                  : "Search in progress"}
+                {statusData?.meta?.is_completed
+                  ? (statusData.meta.has_error ? "Search finished with errors" : "Search Completed")
+                  : statusData?.meta?.is_stopped ? "Search stopped" : "Search in progress"}
               </div>
 
               <div className="rm-snake-subtitle-row">
                 <div className="rm-snake-subtitle-text">
-                  Search in progress...(Exact or Similar):{" "}
-                  <strong>{keywordLabel}</strong>
+                  Keyword match found
+                  {keywordStep.label && keywordStep.label !== "(empty)" ? (
+                    <>: <strong>{keywordLabel}</strong></>
+                  ) : null}
                 </div>
 
                 <div className="rm-snake-subtitle-mini">
-                  {smoothProgress >= 100 ? (
+                  {statusData?.meta?.is_completed ? (
                     <CheckCircle2 size={14} className="rm-done-icon" />
                   ) : (
                     <Loader2 size={14} className="rm-spin" />
@@ -452,15 +397,18 @@ const handleSummaryAction = async () => {
             </div>
 
             <div className="rm-snake-running-pill">
-              {smoothProgress >= 100 ? (
+              {successful ? (
                 <>
                   <span className="rm-snake-done-dot" />
                   <span>Search complete</span>
                 </>
               ) : (
                 <>
-                  <Loader2 size={15} className="rm-spin" />
-                  <span>{isPolling ? "Search running" : "Search running"}</span>
+                  <Loader2 size={15} className={
+                    statusData?.meta?.is_stopped || statusData?.meta?.is_completed ? "" : "rm-spin"
+                  } />
+                  <span>{statusData?.meta?.is_stopped ? "Search stopped" :
+                    statusData?.meta?.is_completed ? "Finished with errors" : "Search running"}</span>
                 </>
               )}
             </div>
@@ -472,8 +420,9 @@ const handleSummaryAction = async () => {
                 {stepRows.map((step) => {
                   const meta = STEP_META[step.key] || STEP_META.keyword;
                   const Icon = meta.icon;
-                  const isRunning = step.status === "running";
-                  const isDone = step.status === "done";
+                  const isRunning = ["running", "retrying"].includes(step.status);
+                  const isDone = ["done", "completed"].includes(step.status);
+                  const isTerminal = ["done", "completed", "failed", "skipped", "cancelled"].includes(step.status);
                   const hasGroups = step.grouped_results.length > 0;
                   const isExpanded = !!expandedSteps[step.key];
 
@@ -481,7 +430,8 @@ const handleSummaryAction = async () => {
                     <div
                       key={step.key}
                       className={`rm-snake-check-item ${
-                        isDone ? "done" : isRunning ? "running" : "idle"
+                        step.status === "failed" ? "failed" :
+                          isDone ? "done" : isRunning ? "running" : "idle"
                       }`}
                     >
                       <div className="rm-snake-check-main">
@@ -498,6 +448,8 @@ const handleSummaryAction = async () => {
                             <span className="rm-snake-check-state">
                               {isRunning ? (
                                 <Loader2 size={14} className="rm-spin" />
+                              ) : step.status === "failed" ? (
+                                <XCircle size={16} color="#b42318" />
                               ) : isDone ? (
                                 <CheckCircle2
                                   size={16}
@@ -512,13 +464,22 @@ const handleSummaryAction = async () => {
                           <div className="rm-snake-check-meta">
                             <span>
                               Results:{" "}
-                              <strong>{Number(step.found_count || 0)}</strong>
+                              <strong>{isDone ? Number(step.found_count || 0) : "—"}</strong>
                             </span>
                             <span>
                               Time:{" "}
-                              <strong>{Number(step.elapsed_ms || 0)} ms</strong>
+                              <strong>{isTerminal ? `${Number(step.elapsed_ms || 0)} ms` : "—"}</strong>
                             </span>
                           </div>
+
+                          <div className="rm-snake-check-meta">
+                            <span>Status: <strong>{step.status}</strong></span>
+                            {step.attempts ? <span>Attempt: {step.attempts}</span> : null}
+                          </div>
+                          {step.key === "keyword" && step.status === "skipped" ? (
+                            <p>No keyword supplied; this filter was not applied.</p>
+                          ) : null}
+                          {step.error ? <p role="alert" style={{ color: "#b42318" }}>{step.error}</p> : null}
 
                           {hasGroups && (
                             <div className="rm-snake-groups-wrap">
@@ -595,33 +556,100 @@ const handleSummaryAction = async () => {
             </aside>
 
             <section className="rm-snake-main">
-              <div className="rm-snake-card-shell">
+              <div className="rm-intelligence-shell">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={`${activeCard.title}-${activeCard.image}`}
-                    className="rm-snake-card"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{
-                      opacity: { duration: 0.5, ease: "easeInOut" },
-                    }}
+                    className="rm-intelligence-card"
+                    initial={{ opacity: 0, scale: 0.985, filter: "blur(10px)" }}
+                    animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                    exit={{ opacity: 0, scale: 1.015, filter: "blur(8px)" }}
+                    transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
                   >
-                    <img
+                    <motion.img
                       src={activeCard.image}
                       alt={activeCard.title}
-                      className="rm-snake-card-image"
+                      className="rm-intelligence-image"
+                      initial={{ scale: 1.02 }}
+                      animate={{ scale: 1.09 }}
+                      transition={{ duration: 12, ease: "linear" }}
                     />
 
-                    <div className="rm-snake-card-overlay" />
+                    <div className="rm-intelligence-vignette" />
+                    <div className="rm-intelligence-grid" />
+                    <div className="rm-intelligence-scan" />
 
-                    <div className="rm-snake-card-meta">
-                      <div className="rm-snake-card-percent">
-                        {smoothProgress}%
+                    <div className="rm-intelligence-corner top-left" />
+                    <div className="rm-intelligence-corner top-right" />
+                    <div className="rm-intelligence-corner bottom-left" />
+                    <div className="rm-intelligence-corner bottom-right" />
+
+                    <div className="rm-intelligence-topbar">
+                      <div className="rm-intelligence-live">
+                        <motion.span
+                          className="rm-intelligence-live-dot"
+                          animate={{ scale: [1, 1.45, 1], opacity: [1, 0.45, 1] }}
+                          transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                        />
+                        <span>{successful ? "INTELLIGENCE READY" : "LIVE DISCOVERY"}</span>
                       </div>
-                      <div className="rm-snake-card-title">
-                        {activeCard.title}
+
+                      <div className="rm-intelligence-step">
+                        STEP {String(Math.max(1, ORDER.indexOf(activeStepKey) + 1)).padStart(2, "0")}
+                        <span>/</span>
+                        {String(ORDER.length).padStart(2, "0")}
                       </div>
+                    </div>
+
+                    <div className="rm-intelligence-center" aria-hidden="true">
+                      <motion.div
+                        className="rm-intelligence-orbit"
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
+                      >
+                        <span />
+                        <span />
+                        <span />
+                      </motion.div>
+                    </div>
+
+                    <div className="rm-intelligence-content">
+                      <div className="rm-intelligence-progress-value">
+                        <motion.span
+                          key={smoothProgress}
+                          initial={{ opacity: 0, y: 12 }}
+                          animate={{ opacity: 1, y: 0 }}
+                        >
+                          {smoothProgress}
+                        </motion.span>
+                        <small>%</small>
+                      </div>
+
+                      <div className="rm-intelligence-copy">
+                        <span className="rm-intelligence-eyebrow">Raymoch Advanced Search</span>
+                        <motion.h2
+                          initial={{ opacity: 0, y: 18 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.18, duration: 0.7 }}
+                        >
+                          {activeCard.title}
+                        </motion.h2>
+                        <p>Analyzing verified business intelligence across your selected market.</p>
+                      </div>
+                    </div>
+
+                    <div className="rm-intelligence-progress">
+                      <motion.div
+                        className="rm-intelligence-progress-fill"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${smoothProgress}%` }}
+                        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                      />
+                      <motion.div
+                        className="rm-intelligence-progress-glow"
+                        animate={{ left: `${Math.max(0, smoothProgress - 2)}%` }}
+                        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                      />
                     </div>
                   </motion.div>
                 </AnimatePresence>
@@ -632,13 +660,14 @@ const handleSummaryAction = async () => {
                   <div className="rm-snake-summary-title">
                     Live Search Monitor
                   </div>
+                <SearchResultsChart token={token} statusData={statusData} />
 
                   <div
                     className={`rm-snake-summary-badge ${
-                      smoothProgress >= 100 ? "done" : "running"
+                      statusData?.meta?.is_completed ? "done" : "running"
                     }`}
                   >
-                    {smoothProgress >= 100 ? "Finished" : "Running"}
+                    {statusData?.meta?.is_completed ? "Finished" : "Running"}
                   </div>
                 </div>
 
@@ -652,14 +681,10 @@ const handleSummaryAction = async () => {
                           {meta.title}
                         </div>
                         <div className="rm-snake-summary-box-value">
-                          {Number(step.found_count || 0)}
+                          {["done", "completed"].includes(step.status) ? Number(step.found_count || 0) : "—"}
                         </div>
                         <div className="rm-snake-summary-box-sub">
-                          {step.status === "running"
-                            ? "Searching..."
-                            : step.status === "done"
-                              ? "Completed"
-                              : "Waiting"}
+                          {step.status === "skipped" ? "Not applied" : step.status}
                         </div>
                       </div>
                     );
@@ -669,7 +694,7 @@ const handleSummaryAction = async () => {
                 <div className="rm-snake-action-wrap">
                   <button
                     type="button"
-                    disabled={subscriptionAccess.loading}
+                    disabled={subscriptionAccess.loading || !successful}
                     className={`rm-snake-action-btn ${
                       hasPremiumAccess ? "view" : "pay"
                     } ${subscriptionAccess.loading ? "disabled" : ""}`}
@@ -900,6 +925,11 @@ const styles = `
   .rm-snake-check-item.done {
     border-color: #bbf7d0;
     background: #f0fdf4;
+  }
+
+  .rm-snake-check-item.failed {
+    border-color: #e2a39e;
+    background: #fff1f2;
   }
 
   .rm-snake-check-main {
@@ -1261,6 +1291,176 @@ const styles = `
     line-height: 1.45;
   }
 
+  .rm-intelligence-shell {
+    position: relative;
+    width: 100%;
+    max-width: 900px;
+    height: clamp(340px, 52vh, 520px);
+    min-height: 340px;
+    margin: 0 auto;
+    padding: 1px;
+    overflow: hidden;
+    border-radius: 30px;
+    background: linear-gradient(135deg, rgba(56,189,248,.9), rgba(37,99,235,.12) 32%, rgba(139,92,246,.45) 68%, rgba(34,211,238,.8));
+    box-shadow: 0 30px 80px rgba(2,6,23,.24), 0 0 60px rgba(14,165,233,.08);
+  }
+
+  .rm-intelligence-card {
+    position: relative;
+    isolation: isolate;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 29px;
+    background: #020617;
+  }
+
+  .rm-intelligence-image,
+  .rm-intelligence-vignette,
+  .rm-intelligence-grid,
+  .rm-intelligence-scan {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .rm-intelligence-image { z-index: -4; object-fit: cover; will-change: transform; }
+  .rm-intelligence-vignette {
+    z-index: -3;
+    background: radial-gradient(circle at 72% 38%, transparent 0%, rgba(2,6,23,.15) 35%, rgba(2,6,23,.78) 100%), linear-gradient(90deg, rgba(2,6,23,.88), rgba(2,6,23,.54) 48%, rgba(2,6,23,.14));
+  }
+  .rm-intelligence-grid {
+    z-index: -2;
+    opacity: .16;
+    background-image: linear-gradient(rgba(125,211,252,.18) 1px, transparent 1px), linear-gradient(90deg, rgba(125,211,252,.18) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: linear-gradient(to right, black, transparent 80%);
+  }
+  .rm-intelligence-scan {
+    z-index: -1;
+    top: -30%;
+    height: 25%;
+    pointer-events: none;
+    background: linear-gradient(to bottom, transparent, rgba(56,189,248,.12), rgba(125,211,252,.28), transparent);
+    animation: rm-intelligence-scan 5.5s ease-in-out infinite;
+  }
+
+  @keyframes rm-intelligence-scan {
+    0% { top: -30%; opacity: 0; }
+    15% { opacity: 1; }
+    85% { opacity: .8; }
+    100% { top: 110%; opacity: 0; }
+  }
+
+  .rm-intelligence-topbar {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    left: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .rm-intelligence-live,
+  .rm-intelligence-step {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 13px;
+    border: 1px solid rgba(186,230,253,.24);
+    border-radius: 999px;
+    background: rgba(2,6,23,.48);
+    backdrop-filter: blur(16px);
+    color: #e0f2fe;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .12em;
+  }
+  .rm-intelligence-live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #38bdf8;
+    box-shadow: 0 0 0 4px rgba(56,189,248,.12), 0 0 16px rgba(56,189,248,.9);
+  }
+  .rm-intelligence-step span { color: rgba(224,242,254,.45); }
+
+  .rm-intelligence-center {
+    position: absolute;
+    top: 50%;
+    right: 12%;
+    width: 170px;
+    height: 170px;
+    transform: translateY(-50%);
+    opacity: .55;
+  }
+  .rm-intelligence-orbit {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border: 1px solid rgba(125,211,252,.42);
+    border-radius: 50%;
+    box-shadow: inset 0 0 32px rgba(14,165,233,.12), 0 0 32px rgba(14,165,233,.08);
+  }
+  .rm-intelligence-orbit::before,
+  .rm-intelligence-orbit::after {
+    position: absolute;
+    content: "";
+    border: 1px dashed rgba(125,211,252,.38);
+    border-radius: 50%;
+  }
+  .rm-intelligence-orbit::before { inset: 20px; }
+  .rm-intelligence-orbit::after { inset: 46px; }
+  .rm-intelligence-orbit span {
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #7dd3fc;
+    box-shadow: 0 0 16px #38bdf8;
+  }
+  .rm-intelligence-orbit span:nth-child(1) { top: 7px; left: 50%; }
+  .rm-intelligence-orbit span:nth-child(2) { right: 12px; bottom: 37px; }
+  .rm-intelligence-orbit span:nth-child(3) { bottom: 24px; left: 18px; }
+
+  .rm-intelligence-content {
+    position: absolute;
+    right: 34px;
+    bottom: 38px;
+    left: 34px;
+    display: flex;
+    align-items: flex-end;
+    gap: 22px;
+    color: white;
+  }
+  .rm-intelligence-progress-value {
+    display: flex;
+    align-items: flex-start;
+    min-width: 94px;
+    font-size: clamp(46px, 7vw, 78px);
+    font-weight: 900;
+    line-height: .8;
+    letter-spacing: -.07em;
+    text-shadow: 0 8px 30px rgba(2,6,23,.42);
+  }
+  .rm-intelligence-progress-value small { margin: 4px 0 0 4px; color: #7dd3fc; font-size: 17px; letter-spacing: 0; }
+  .rm-intelligence-copy { max-width: 540px; padding-left: 22px; border-left: 1px solid rgba(186,230,253,.32); }
+  .rm-intelligence-eyebrow { color: #7dd3fc; font-size: 10px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
+  .rm-intelligence-copy h2 { margin: 7px 0 8px; color: white; font-size: clamp(22px, 3vw, 38px); line-height: 1.04; letter-spacing: -.035em; }
+  .rm-intelligence-copy p { max-width: 490px; margin: 0; color: rgba(224,242,254,.78); font-size: 13px; line-height: 1.55; }
+
+  .rm-intelligence-progress { position: absolute; right: 0; bottom: 0; left: 0; height: 4px; overflow: hidden; background: rgba(255,255,255,.12); }
+  .rm-intelligence-progress-fill { height: 100%; background: linear-gradient(90deg, #2563eb, #38bdf8, #a5f3fc); box-shadow: 0 0 20px rgba(56,189,248,.9); }
+  .rm-intelligence-progress-glow { position: absolute; top: -5px; width: 28px; height: 14px; border-radius: 50%; background: #e0f2fe; filter: blur(8px); }
+
+  .rm-intelligence-corner { position: absolute; width: 25px; height: 25px; opacity: .72; pointer-events: none; }
+  .rm-intelligence-corner.top-left { top: 17px; left: 17px; border-top: 2px solid #7dd3fc; border-left: 2px solid #7dd3fc; }
+  .rm-intelligence-corner.top-right { top: 17px; right: 17px; border-top: 2px solid #7dd3fc; border-right: 2px solid #7dd3fc; }
+  .rm-intelligence-corner.bottom-left { bottom: 17px; left: 17px; border-bottom: 2px solid #7dd3fc; border-left: 2px solid #7dd3fc; }
+  .rm-intelligence-corner.bottom-right { right: 17px; bottom: 17px; border-right: 2px solid #7dd3fc; border-bottom: 2px solid #7dd3fc; }
+
   @media (max-width: 980px) {
     .rm-snake-layout {
       grid-template-columns: 1fr;
@@ -1316,5 +1516,19 @@ const styles = `
     .rm-snake-action-btn {
       width: 100%;
     }
+
+    .rm-intelligence-shell { height: 360px; min-height: 360px; border-radius: 22px; }
+    .rm-intelligence-card { border-radius: 21px; }
+    .rm-intelligence-center { display: none; }
+    .rm-intelligence-topbar { top: 18px; right: 18px; left: 18px; }
+    .rm-intelligence-content { right: 22px; bottom: 30px; left: 22px; align-items: flex-start; flex-direction: column; gap: 16px; }
+    .rm-intelligence-copy { padding: 0; border: 0; }
+    .rm-intelligence-copy p { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rm-intelligence-scan { display: none; }
+    .rm-intelligence-image,
+    .rm-intelligence-orbit { animation: none !important; transition: none !important; }
   }
 `;

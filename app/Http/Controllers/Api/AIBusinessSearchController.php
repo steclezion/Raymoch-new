@@ -13,6 +13,7 @@ use App\Jobs\CountCompanySearchFacet;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Validation\Rule;
 
+
 class AIBusinessSearchController extends Controller
 {
 
@@ -156,7 +157,8 @@ class AIBusinessSearchController extends Controller
 
         $batch = Bus::batch($jobs)
             ->name("Raymoch company search {$searchId}")
-            ->onQueue('search')
+            // ->onQueue('search')
+            ->onQueue(config('search.queue_ai_search'))
             ->allowFailures()
             ->dispatch();
 

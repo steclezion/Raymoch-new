@@ -26,8 +26,9 @@ import {
 import { getAuthUser, logoutRequest } from "../lib/auth";
 import ConfirmationDialog from "./modals/ConfirmationDialog.jsx";
 import AIBusinessSearchModal from "./modals/AIBusinessSearchModal.jsx";
-import "./horizontal-navigation.css";
-
+import NavigationTooltip from "./behaviours/NavigationTooltip.jsx";
+import "../styles/horizontal-navigation.css";
+import "../styles/horizontal-navigation-ai-button.css";;
 import useRefreshingFavicon from "./behaviours/useRefreshingFavicon.jsx";
 
 const NAV_ITEMS = [
@@ -88,14 +89,6 @@ function BrandMark() {
           preserveAspectRatio="xMidYMid meet"
         />
       </svg>
-    </span>
-  );
-}
-
-function NavigationTooltip({ children }) {
-  return (
-    <span className="ray-nav__tooltip" role="tooltip" aria-hidden="true">
-      {children}
     </span>
   );
 }
@@ -170,6 +163,7 @@ export default function HorizontalNavigation({
   authUser: authUserProp,
   avatarSrc: avatarSrcProp,
   openProfileModal,
+  onBusinessSearchComplete,
   routes = {},
   setIsAuthed,
   setAuthUser,
@@ -628,7 +622,7 @@ export default function HorizontalNavigation({
         className={`ray-nav ${mobileOpen ? "is-mobile-open" : ""}`}
       >
         <div className="ray-nav__top-tier">
-        <a href="/" className="ray-nav__brand" aria-label="Raymoch home">
+        <a href="/home" className="ray-nav__brand" aria-label="Raymoch home">
           <BrandMark key={`mark-${brandAnimationCycle}`} />
           <strong
             key={`name-${brandAnimationCycle}`}
@@ -692,23 +686,31 @@ export default function HorizontalNavigation({
           ) : null}
         </div>
 
-        <form className="ray-nav__search" action={safeRoutes.search} role="search" onSubmit={(event) => { event.preventDefault(); setBusinessSearchOpen(true); }}>
-          <label className="ray-nav__sr-only" htmlFor="raymoch-navigation-search">
-            Search companies, sectors, or regions
-          </label>
-          <input
+        <form
+          className="ray-nav__search ray-nav__ai-search ray-nav__ai-search--desktop"
+          action={safeRoutes.search}
+          role="search"
+          onSubmit={(event) => {
+            event.preventDefault();
+            setBusinessSearchOpen(true);
+          }}
+        >
+          <button
             id="raymoch-navigation-search"
-            type="search"
-            name="q"
-            onFocus={() => setBusinessSearchOpen(true)}
-            onClick={() => setBusinessSearchOpen(true)}
-            readOnly
+            className="ray-nav__ai-search-button ray-navigation-tooltip-host"
+            type="submit"
+            aria-label="Ask Raymoch AI"
             aria-haspopup="dialog"
             aria-expanded={businessSearchOpen}
             aria-controls="raymoch-ai-business-search"
             title="Open guided AI Business Search"
-            placeholder="Search companies, sectors, regions…"
-          />
+          >
+            <span className="ray-nav__ai-search-icon" aria-hidden="true">
+              <Sparkles size={15} strokeWidth={2.2} />
+            </span>
+            <span className="ray-nav__ai-search-label">Ask Raymoch AI</span>
+            <NavigationTooltip>Open guided AI Business Search</NavigationTooltip>
+          </button>
         </form>
 
         <button
@@ -727,6 +729,34 @@ export default function HorizontalNavigation({
           id="raymoch-primary-navigation"
           className={`ray-nav__mobile-panel ${mobileOpen ? "is-open" : ""}`}
         >
+          <form
+            className="ray-nav__ai-search ray-nav__ai-search--mobile"
+            action={safeRoutes.search}
+            role="search"
+            onSubmit={(event) => {
+              event.preventDefault();
+              closeMobileNavigation();
+              setBusinessSearchOpen(true);
+            }}
+          >
+            <button
+              id="raymoch-mobile-navigation-search"
+              className="ray-nav__ai-search-button ray-navigation-tooltip-host"
+              type="submit"
+              aria-label="Ask Raymoch AI"
+              aria-haspopup="dialog"
+              aria-expanded={businessSearchOpen}
+              aria-controls="raymoch-ai-business-search"
+              title="Open guided AI Business Search"
+            >
+              <span className="ray-nav__ai-search-icon" aria-hidden="true">
+                <Sparkles size={15} strokeWidth={2.2} />
+              </span>
+              <span className="ray-nav__ai-search-label">Ask Raymoch AI</span>
+              <NavigationTooltip>Open guided AI Business Search</NavigationTooltip>
+            </button>
+          </form>
+
           <nav className="ray-nav__links" aria-label="Main navigation">
             {NAV_ITEMS.map(({ label, icon: Icon, href, badge }) => {
               const itemPath = normalizePath(href);
@@ -1039,9 +1069,13 @@ export default function HorizontalNavigation({
       <AIBusinessSearchModal
         open={businessSearchOpen}
         onClose={() => setBusinessSearchOpen(false)}
+        onComplete={onBusinessSearchComplete}
         regionsEndpoint={typeof routes.businessSearchRegions === "string" ? routes.businessSearchRegions : "/api/business-search/get-regions"}
         countriesEndpoint={typeof routes.businessSearchCountries === "string" ? routes.businessSearchCountries : "/api/business-search/get-countries"}
         statesEndpoint={typeof routes.businessSearchStates === "string" ? routes.businessSearchStates : "/api/business-search/get-states"}
+        citiesEndpoint={typeof routes.businessSearchCities === "string" ? routes.businessSearchCities : "/api/business-search/get-cities"}
+        sectorsEndpoint={typeof routes.businessSearchSectors === "string" ? routes.businessSearchSectors : "/api/business-search/get-sectors"}
+        companiesEndpoint={typeof routes.businessSearchCompanies === "string" ? routes.businessSearchCompanies : "/api/business-search/companies"}
       />
 
       {supportModalOpen ? (

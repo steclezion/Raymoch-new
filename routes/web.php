@@ -39,6 +39,7 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Cashier\Http\Controllers\WebhookController;
 use App\Http\Controllers\Services\InvestorMatchingController;
 use App\Http\Controllers\VerificationSubmissionFormController;
+use App\Http\Controllers\OverviewController;
 
 
 /*
@@ -47,43 +48,90 @@ use App\Http\Controllers\VerificationSubmissionFormController;
 |--------------------------------------------------------------------------
 */
 
-Route::view('/', 'pages.entire')->name('home');
-Route::view('/about', 'pages.about')->name('about'); //
-Route::view('/overview', 'pages.overview')->name('overview');
-Route::view('/fulloverview', 'pages.fulloverview')->name('fulloverview');
+Route::middleware(['guest', 'throttle:50,1'])->group(function () {
+    // Login (choose ONE system; I recommend LoginController)
+    Route::get('/login', [LoginController::class, 'showLogin'])->name('login');
+    Route::post('/login/json', [LoginController::class, 'loginJson'])->name('auth.login.json');
 
-Route::view('/services', 'pages.services')->name('services');
-Route::view('/insights', 'pages.market-insight')->name('insights');
-Route::view('/security_raymoch', 'pages.security')->name('security_raymoch');
-Route::view('/business_landing', 'pages.Business_landing')->name('business_landing');
+    //   Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
 
-// Trial request pages
-Route::get('/request-trial', fn() => view('pages.auth.trial'))->name('trial.page');
-Route::view('/trial/verify', 'pages.auth.trial-verify')->name('trial.verify.page');
-Route::view('/trial/success', 'pages.auth.trial-success')->name('trial.success.page');
-Route::get('/request', [RequestTrialController::class, 'show'])->name('request.show');
+    // If you still need legacy AuthController login, keep it but don’t duplicate /login
+    // Route::post('/login', [AuthController::class, 'loginPost'])->name('login.post');
 
-Route::view('/partner-programs', 'pages.services.partner-programs')->name('partner-programs');
-Route::view('/matching', 'pages.services.matching')->name('matching');
-Route::view('/visibility-listing', 'pages.services.visibility-listing')->name('visibility-listing');
-Route::view('/verification', 'pages.services.verification')->name('verification');
+    // Password reset
+    Route::get('forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+    Route::post('forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
 
-Route::get('/explore', [ExploreController::class, 'index'])->name('explore.index');
-Route::get('/explore/data', [ExploreController::class, 'data'])->name('explore.data');
+    Route::get('reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
+    Route::post('reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
 
-Route::view('/careers', 'pages.entire')->name('careers');
-Route::view('/press', 'pages.entire')->name('press');
-Route::view('/contact', 'pages.entire')->name('contact');
-Route::view('/blog', 'pages.entire')->name('blog');
-Route::view('/help', 'pages.entire')->name('help');
-Route::view('/security', 'pages.entire')->name('security');
-Route::view('/status', 'pages.entire')->name('status');
 
-Route::get('/privacy', fn() => view('pages.entire'))->name('privacy');
-Route::get('/terms', fn() => view('pages.entire'))->name('terms');
-Route::get('/cookies', fn() => view('pages.entire'))->name('cookies');
+    // Signup entry
+    Route::get('/signup', [SignupController::class, 'index'])->name('signup.index');
+    Route::get('/signup/investor/create', [SignupController::class, 'createInvestor'])->name('signup.investor.create');
+    Route::get('/signup/basic/create/individual', [SignupController::class, 'showPaymentPlansCreate'])->name('signup.basic.create.individual'); // Store the Basic account (JSON) Route::get('/signup/premium/create/individual/', [SignupController::class, 'showPaymentPlansCreate'])->name('signup.premium.create.individual');
 
-Route::get('/services/options', [ServiceController::class, 'options'])->name('services.options');
+    // Basic signup
+    Route::get('/signup/basic/pricing', fn() => view('pages.auth.signup.basic.pricing'))->name('signup.basic.pricing');
+    Route::get('/signup/basic/create/individual', [SignupController::class, 'showPaymentPlansCreate'])->name('signup.basic.create.individual');
+    Route::post('/signup/basic/store', [SignupController::class, 'individualAccountStore'])->name('signup.basic.store');
+    Route::post('/signup/basic/send-otp', [SignupController::class, 'sendOtp'])->name('signup.basic.send_otp');
+    Route::post('/signup/basic/verify-otp', [SignupController::class, 'verifyOtp'])->name('signup.basic.verify_otp');
+    Route::get('/signup/basic/create', [SignupController::class, 'createBasic'])->name('signup.basic.create');
+
+    // Premium signup
+    Route::get('/signup/premium/create/individual', [SignupController::class, 'showPaymentPlansCreate'])->name('signup.premium.create.individual');
+    Route::post('/signup/premium/send-otp', [PremiumSignupController::class, 'sendOtp'])->name('signup.premium.send_otp');
+    Route::post('/signup/premium/verify-otp', [PremiumSignupController::class, 'verifyOtp'])->name('signup.premium.verify_otp');
+    // Premium finalize after payment success
+    Route::post('/signup/premium/complete', [PaymentController::class, 'finalizePremiumSignup'])->name('signup.premium.complete');
+
+    // Business signup
+    Route::post('/auth/check-email', BusinessAccountController::class)->name('auth.check-email');
+    Route::get('/signup/business/create', [BusinessAccountController::class, 'createBusiness'])->name('signup.business.create');
+    Route::post('/signup/business/send-otp', [BusinessOtpController::class, 'sendOtp'])->name('signup.business.send_otp');
+    Route::post('/signup/business/verify-otp', [BusinessOtpController::class, 'verifyOtp'])->name('signup.business.verify_otp');
+
+
+    Route::view('/', 'pages.entire')->name('home');
+    Route::view('/about', 'pages.about')->name('about'); //
+    Route::view('/overview', 'pages.overview')->name('overview');
+    Route::view('/fulloverview', 'pages.fulloverview')->name('fulloverview');
+
+    Route::view('/services', 'pages.services')->name('services');
+    Route::view('/insights', 'pages.market-insight')->name('insights');
+    Route::view('/security_raymoch', 'pages.security')->name('security_raymoch');
+    Route::view('/business_landing', 'pages.Business_landing')->name('business_landing');
+
+    // Trial request pages
+    Route::get('/request-trial', fn() => view('pages.auth.trial'))->name('trial.page');
+    Route::view('/trial/verify', 'pages.auth.trial-verify')->name('trial.verify.page');
+    Route::view('/trial/success', 'pages.auth.trial-success')->name('trial.success.page');
+    Route::get('/request', [RequestTrialController::class, 'show'])->name('request.show');
+
+    Route::view('/partner-programs', 'pages.services.partner-programs')->name('partner-programs');
+    Route::view('/matching', 'pages.services.matching')->name('matching');
+    Route::view('/visibility-listing', 'pages.services.visibility-listing')->name('visibility-listing');
+    Route::view('/verification', 'pages.services.verification')->name('verification');
+
+    Route::get('/explore', [ExploreController::class, 'index'])->name('explore.index');
+    Route::get('/explore/data', [ExploreController::class, 'data'])->name('explore.data');
+
+    Route::view('/careers', 'pages.entire')->name('careers');
+    Route::view('/press', 'pages.entire')->name('press');
+    Route::view('/contact', 'pages.entire')->name('contact');
+    Route::view('/blog', 'pages.entire')->name('blog');
+    Route::view('/help', 'pages.entire')->name('help');
+    Route::view('/security', 'pages.entire')->name('security');
+    Route::view('/status', 'pages.entire')->name('status');
+
+    Route::get('/privacy', fn() => view('pages.entire'))->name('privacy');
+    Route::get('/terms', fn() => view('pages.entire'))->name('terms');
+    Route::get('/cookies', fn() => view('pages.entire'))->name('cookies');
+
+    Route::get('/services/options', [ServiceController::class, 'options'])->name('services.options');
+});
+
 
 Route::post('/chatbot', [ChatbotController::class, 'respond'])->name('chatbot.respond');
 
@@ -107,49 +155,7 @@ Route::post('/stripe/webhook/custom', [StripeWebhookController::class, 'handle']
 Route::middleware(['web', 'auth'])->get('/subscription/access', [SubscriptionController::class, 'access'])
     ->name('subscription.access');
 
-Route::middleware(['guest', 'throttle:50,1'])->group(function () {
-    // Login (choose ONE system; I recommend LoginController)
-    Route::get('/login', [LoginController::class, 'showLogin'])->name('login');
-    Route::post('/login/json', [LoginController::class, 'loginJson'])->name('auth.login.json');
 
-    //   Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
-
-    // If you still need legacy AuthController login, keep it but don’t duplicate /login
-    // Route::post('/login', [AuthController::class, 'loginPost'])->name('login.post');
-
-    // Password reset
-    Route::get('forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
-    Route::post('forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
-
-    Route::get('reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
-    Route::post('reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
-
-    // Signup entry
-    // Route::get('/signup', [SignupController::class, 'index'])->name('signup.index');
-    // Route::get('/signup/investor/create', [SignupController::class, 'createInvestor'])->name('signup.investor.create');
-    // Route::get('/signup/basic/create/individual', [SignupController::class, 'showPaymentPlansCreate'])->name('signup.basic.create.individual'); // Store the Basic account (JSON) Route::get('/signup/premium/create/individual/', [SignupController::class, 'showPaymentPlansCreate'])->name('signup.premium.create.individual');
-
-    // Basic signup
-    // Route::get('/signup/basic/pricing', fn() => view('pages.auth.signup.basic.pricing'))->name('signup.basic.pricing');
-    // Route::get('/signup/basic/create/individual', [SignupController::class, 'showPaymentPlansCreate'])->name('signup.basic.create.individual');
-    // Route::post('/signup/basic/store', [SignupController::class, 'individualAccountStore'])->name('signup.basic.store');
-    // Route::post('/signup/basic/send-otp', [SignupController::class, 'sendOtp'])->name('signup.basic.send_otp');
-    // Route::post('/signup/basic/verify-otp', [SignupController::class, 'verifyOtp'])->name('signup.basic.verify_otp');
-    // Route::get('/signup/basic/create', [SignupController::class, 'createBasic'])->name('signup.basic.create');
-
-    // Premium signup
-    // Route::get('/signup/premium/create/individual', [SignupController::class, 'showPaymentPlansCreate'])->name('signup.premium.create.individual');
-    // Route::post('/signup/premium/send-otp', [PremiumSignupController::class, 'sendOtp'])->name('signup.premium.send_otp');
-    // Route::post('/signup/premium/verify-otp', [PremiumSignupController::class, 'verifyOtp'])->name('signup.premium.verify_otp');
-    // Premium finalize after payment success
-    // Route::post('/signup/premium/complete', [PaymentController::class, 'finalizePremiumSignup'])->name('signup.premium.complete');
-
-    // Business signup
-    Route::post('/auth/check-email', BusinessAccountController::class)->name('auth.check-email');
-    // Route::get('/signup/business/create', [BusinessAccountController::class, 'createBusiness'])->name('signup.business.create');
-    // Route::post('/signup/business/send-otp', [BusinessOtpController::class, 'sendOtp'])->name('signup.business.send_otp');
-    // Route::post('/signup/business/verify-otp', [BusinessOtpController::class, 'verifyOtp'])->name('signup.business.verify_otp');
-});
 
 /*
 |--------------------------------------------------------------------------
@@ -175,12 +181,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard
     Route::get('/dashboard', fn() => view('pages.dashboard.dashboard'))->name('dashboard');
     Route::get('/home', fn() => view('pages.dashboard.home'))->name('home');
+    Route::get('/overview_auth', [OverviewController::class, 'index'])->name('overview.index');
 
     Route::post('/profile/update', [ProfileController::class, 'updateProfilePicture'])
         ->name('profile.update');
 
+
     Route::post('/search-session/store', [StoreSessionSearchController::class, 'store']);
     Route::get('/search-session/current', [StoreSessionSearchController::class, 'current']);
+    Route::delete('/search-session/current', [StoreSessionSearchController::class, 'destroy']);
+
 
     Route::get('/auth/user', [ProfileController::class, 'authUser'])
         ->name('auth.user');

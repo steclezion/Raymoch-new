@@ -379,7 +379,7 @@ import {
 } from "lucide-react";
 
 // Split components
-import TopSearchPanel from "../pages/explore/Top_search_panel.jsx";
+import TopSearchPanel from "../pages/explore/TopSearchPanel.jsx";
 import MainPanel from "../pages/explore/Main_panel.jsx";
 import BreadcrumbsNav from "../components/common/BreadcrumbsNav";
 import HorizontalNavigation from "../components/HorizontalNavigation.jsx";

@@ -1,33 +1,44 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
     /**
-     * Create the denormalized company search view.
+     * Run the migrations.
      */
     public function up(): void
     {
+
         DB::unprepared(<<<'VIEW_DEFINITION'
 CREATE OR REPLACE
 ALGORITHM = UNDEFINED
 SQL SECURITY INVOKER
-VIEW `raymoch_all_in_all_search` AS
+VIEW `raymoch_business_search_view` AS
 SELECT
     `c`.`id`,
     `c`.`CompanyName`,
     `s`.`title` AS `sector_title`,
+     `s`.`id` AS `sector_id`,
     `s`.`description` AS `sector_description`,
     `i`.`name` AS `industry_name`,
+     `i`.`id` AS `industry_id`,
     `st`.`name` AS `state_name`,
+    `st`.`id` AS `state_id`,
     `co`.`country_name`,
-     `co`.`countries_all_id` AS `co_main_ref_id`,
+    `co`.`id` AS `country_id`,
+         `co`.`countries_all_id` AS `co_main_ref_id`,
     `r`.`name` AS `region_name`,
+    `r`.`id` AS `region_id`,
     `ci`.`name` AS `city_name`,
+    `ci`.`id` AS `city_id`,
     `at`.`name` AS `account_type_name`,
+    `at`.`id` AS `account_type_id`,
     `ls`.`name` AS `legal_structure_name`,
+    `ls`.`id` AS `legal_structure_id`,      
     `c`.`FoundedYear`,
     `c`.`Stage`,
     `c`.`VerificationStatus`,
@@ -69,6 +80,7 @@ SELECT
     `c`.`date_established`,
     `c`.`number_of_employees`,
     `tc`.`name` AS `revenue_currency_name`,
+    `tc`.`id` AS `revenue_currency_id`,
     `tc`.`country_name` AS `revenue_currency_country_name`,
     `tc`.`code` AS `revenue_currency_code`,
     `c`.`is_ultimate_parent_company`,
@@ -77,6 +89,7 @@ SELECT
     `c`.`company_full_directory_path`,
     `c`.`applicant_full_name`,
     `u`.`name` AS `user_name`,
+    `u`.`id` AS `user_id`,
     `u`.`display_name` AS `user_display_name`,
     `c`.`job_title_relationship`,
     `c`.`applicant_work_email`,
@@ -114,12 +127,11 @@ LEFT OUTER JOIN `legal_structure` AS `ls`
     ON `ls`.`id` = `c`.`legal_structure_id`
 VIEW_DEFINITION);
     }
-
     /**
-     * Remove the search view.
+     * Reverse the migrations.
      */
     public function down(): void
     {
-        DB::statement('DROP VIEW IF EXISTS `raymoch_all_in_all_search`');
+        DB::statement('DROP VIEW IF EXISTS `raymoch_business_search_view`');
     }
 };
