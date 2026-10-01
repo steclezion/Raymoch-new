@@ -1,119 +1,129 @@
 // resources/js/utils/api.js
-// Centralized API + Maps helpers for re-use across pages/components.
+// Centralized API and Google Maps helpers.
 
 export const API_BASE = "/api";
 export const GOOGLE_MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY;
 
-// ---------------------------------------------------------------------
-// Shared JSON fetch helper
-// ---------------------------------------------------------------------
+export function getCsrfToken() {
+  return (
+    document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") ||
+    ""
+  );
+}
+
 export async function fetchJSON(url, options = {}) {
+  const { headers: suppliedHeaders = {}, ...requestOptions } = options;
+  const method = String(requestOptions.method || "GET").toUpperCase();
+  const csrfToken = getCsrfToken();
+  const needsCsrfToken = !["GET", "HEAD", "OPTIONS"].includes(method);
+
   const res = await fetch(url, {
+    credentials: "same-origin",
+    ...requestOptions,
     headers: {
       Accept: "application/json",
-      ...(options.headers || {}),
+      "X-Requested-With": "XMLHttpRequest",
+      ...(needsCsrfToken && csrfToken ? { "X-CSRF-TOKEN": csrfToken } : {}),
+      ...suppliedHeaders,
     },
-    ...options,
   });
 
   const text = await res.text();
 
   if (!res.ok) {
     const snippet = text ? text.slice(0, 160) : "";
-    throw new Error(`HTTP ${res.status}${snippet ? ": " + snippet : ""}`);
+    throw new Error(`HTTP ${res.status}${snippet ? `: ${snippet}` : ""}`);
   }
 
   try {
     return JSON.parse(text);
-  } catch (e) {
-    console.error("JSON parse error", url, e, text);
+  } catch (error) {
+    console.error("JSON parse error", url, error, text);
     throw new Error("Bad JSON from server");
   }
 }
 
-// ---------------------------------------------------------------------
-// Session id to correlate logs / tab events
-//   - Used by CompanyDetailDialog to pass ?session_id=... to Laravel
-// ---------------------------------------------------------------------
-export function getSessionId() {
-  try {
-    const key = "raymoch_company_detail_sid";
-    let sid = window.localStorage.getItem(key);
-    if (!sid) {
-      sid =
-        Math.random().toString(36).slice(2) +
-        "-" +
-        Date.now().toString(36);
-      window.localStorage.setItem(key, sid);
-    }
-    return sid;
-  } catch {
-    // e.g. privacy mode / disabled localStorage
-    return null;
-  }
+export function fetchSectors() {
+  return fetchJSON(`${API_BASE}/business-sectors`);
 }
 
-
-/**
- * GET /api/sectors
- * Expected: array (strings or {id,name}) depending on your backend
- */
-export async function fetchSectors() {
-  return fetchJSON(`${API_BASE}/sectors`);
+export function fetchCountries() {
+  return fetchJSON(`${API_BASE}/countries`);
 }
 
-/**
- * GET /api/companies?q=&country=&sector=
- * Expected: array/paginated companies
- */
-export async function fetchCompanies(filters = {}) {
+export function fetchCompanies(filters = {}) {
   const params = new URLSearchParams();
+  const cleanValue = (value) => {
+    if (value === undefined || value === null) return "";
+    const normalized = String(value).trim();
+    return /^(all|any)$/i.test(normalized) ? "" : normalized;
+  };
+  const country = cleanValue(filters.country);
+  const sector = cleanValue(filters.sector);
+  const countryId = cleanValue(filters.countryId) || (/^\d+$/.test(country) ? country : "");
+  const sectorId = cleanValue(filters.sectorId) || (/^\d+$/.test(sector) ? sector : "");
+  const supportedFilters = {
+    page: filters.page,
+    per_page: filters.perPage,
+    q: filters.q,
+    region_id: filters.regionId,
+    country_id: countryId,
+    state_id: filters.stateId,
+    city_id: filters.cityId,
+    sector_id: sectorId,
+    industry_id: filters.industryId,
+    verification_status: filters.verificationStatus || (filters.verified ? "verified" : ""),
+    country: /^\d+$/.test(country) ? "" : country,
+    sector: /^\d+$/.test(sector) ? "" : sector,
+  };
 
-  if (filters.q) params.set("q", filters.q);
-  if (filters.country) params.set("country", filters.country);
-  if (filters.sector) params.set("sector", filters.sector);
+  Object.entries(supportedFilters).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      params.set(key, String(value));
+    }
+  });
 
-  const qs = params.toString();f
-  return fetchJSON(`${API_BASE}/companies${qs ? `?${qs}` : ""}`);
+  const query = params.toString();
+  return fetchJSON(`${API_BASE}/companies${query ? `?${query}` : ""}`);
 }
 
-
-// ---------------------------------------------------------------------
-// Google Maps classic loader (NO Advanced Markers, NO map_id)
-//   - This is what removes your “Advanced Markers / Map ID” issues
-// ---------------------------------------------------------------------
 let googleMapsLoadingPromise = null;
 
 export function loadGoogleMapsScript() {
-  // Already loaded?
-  if (window.google && window.google.maps) {
-    return Promise.resolve();
-  }
-
-  // In-flight?
-  if (googleMapsLoadingPromise) {
-    return googleMapsLoadingPromise;
-  }
+  if (window.google?.maps) return Promise.resolve();
+  if (googleMapsLoadingPromise) return googleMapsLoadingPromise;
 
   if (!GOOGLE_MAPS_KEY) {
-    return Promise.reject(
-      new Error("Missing VITE_GOOGLE_MAPS_KEY in .env file")
-    );
+    return Promise.reject(new Error("Missing VITE_GOOGLE_MAPS_KEY in .env file"));
   }
 
   googleMapsLoadingPromise = new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    // ✅ Classic JS API only – no extra libraries, no map_id
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_KEY}`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(
+      GOOGLE_MAPS_KEY
+    )}`;
     script.async = true;
     script.defer = true;
     script.onload = () => resolve();
-    script.onerror = () =>
-      reject(new Error("Failed to load Google Maps JavaScript API"));
+    script.onerror = () => reject(new Error("Failed to load Google Maps JavaScript API"));
     document.head.appendChild(script);
   });
 
   return googleMapsLoadingPromise;
 }
 
+export function getSessionId() {
+  try {
+    const key = "raymoch_company_detail_sid";
+    let sid = window.localStorage.getItem(key);
 
+    if (!sid) {
+      sid = `${Math.random().toString(36).slice(2)}-${Date.now().toString(36)}`;
+      window.localStorage.setItem(key, sid);
+    }
+
+    return sid;
+  } catch {
+    return null;
+  }
+}

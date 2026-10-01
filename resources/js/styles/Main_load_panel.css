@@ -427,3 +427,96 @@
   background: #f5f1ec !important;
 }
 
+/* Result grouping and counts */
+.results-grouping-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--ray-border);
+  border-radius: 14px;
+  background: linear-gradient(135deg, #fff, var(--ray-surface));
+  box-shadow: var(--ray-shadow-sm);
+}
+
+.results-count {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  color: var(--ray-muted);
+  font-size: .82rem;
+}
+
+.results-count strong {
+  color: var(--ray-brand);
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.results-count-separator { color: #b8aa9d; }
+
+.group-by-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ray-muted);
+  font-size: .78rem;
+  font-weight: 750;
+}
+
+.group-by-control select {
+  min-width: 150px;
+  height: 40px;
+  padding: 0 34px 0 12px;
+  border: 1px solid var(--ray-border-strong);
+  border-radius: 10px;
+  outline: 0;
+  color: var(--ray-text);
+  background: var(--ray-surface-raised);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.group-by-control select:focus-visible {
+  border-color: var(--ray-brand-hover);
+  box-shadow: 0 0 0 3px rgba(143,104,71,.16);
+}
+
+.company-group + .company-group { margin-top: 22px; }
+
+.group-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 18px 0 10px;
+}
+
+.group-heading-row .country-heading { margin: 0; }
+.group-heading-row .country-heading span { color: var(--ray-muted); font-size: .76em; }
+
+.group-count {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border: 1px solid var(--ray-border);
+  border-radius: 999px;
+  color: var(--ray-brand);
+  background: var(--ray-accent-soft);
+  font-size: .72rem;
+  font-weight: 850;
+}
+
+@media (max-width: 640px) {
+  .results-grouping-bar,
+  .group-by-control {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .group-by-control select { width: 100%; }
+  .group-heading-row { align-items: flex-start; }
+}
+

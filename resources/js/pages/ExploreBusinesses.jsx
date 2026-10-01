@@ -180,21 +180,23 @@ export default function ExploreBusinesses() {
     const p = new URLSearchParams();
 
     if (payload?.q) p.set("q", payload.q);
-    if (payload?.region && payload.region !== "all") {
-      p.set("region_id", payload.region);
-    }
-    if (payload?.country && payload.country !== "all") {
-      p.set("country_id", payload.country);
-    }
-    if (payload?.stateItem && payload.stateItem !== "all") {
-      p.set("state_id", payload.stateItem);
-    }
-    if (payload?.city && payload.city !== "all") {
-      p.set("city_id", payload.city);
-    }
-    if (payload?.sector) p.set("sector_id", payload.sector);
-    if (payload?.industry) p.set("industry_id", payload.industry);
-    if (payload?.verified) p.set("verified", "1");
+
+    const idParameters = {
+      sector_id: payload?.sector,
+      region_id: payload?.region,
+      country_id: payload?.country,
+      state_id: payload?.stateItem,
+      city_id: payload?.city,
+      industry_id: payload?.industry,
+    };
+
+    Object.entries(idParameters).forEach(([name, value]) => {
+      if (value !== undefined && value !== null && value !== "" && value !== "all") {
+        p.set(name, String(value));
+      }
+    });
+
+    if (payload?.verified) p.set("verification_status", "verified");
 
     window.location.assign(`/companies?${p.toString()}`);
   };

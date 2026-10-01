@@ -10,7 +10,7 @@ import "../styles/companies.css";
 import "../styles/companies-dashboard.css";
 import CompanyDetailDialog from "../components/companies/CompanyDetailDialog.jsx";
 import HorizontalNavigation from "../components/HorizontalNavigation.jsx";
-import { API_BASE, fetchJSON } from "../utils/api.js";
+import { fetchCompanies, fetchCountries, fetchSectors } from "../utils/api.js";
 
 // import FilterPanel from "../pages/companies/Filter_panel.jsx"; // removed
 import TopSearchPanelCompanies from "../pages/companies/Top_search_panel_companies.jsx";
@@ -62,7 +62,10 @@ function normalizeCompany(c) {
     id: c.Id ?? c.id ?? c.ID ?? null,
     name: c.CompanyName ?? c.company_name ?? "—",
     sector: c.Sector ?? c.sector ?? "",
+    industry: c.Industry ?? c.industry ?? c.industry_name ?? "",
+    region: c.Region ?? c.region ?? c.region_name ?? "",
     country: c.Country ?? c.country ?? "",
+    state: c.State ?? c.state ?? c.state_name ?? "",
     city: c.City ?? c.city ?? "",
     stage: c.Stage ?? c.stage ?? "",
     verified: isVerified,
@@ -73,6 +76,34 @@ function normalizeCompany(c) {
     },
     logo_url: c.logo_url ?? c.site_image_url ?? null,
   };
+}
+
+const GROUP_FIELDS = {
+  region: { field: "region", fallback: "Unspecified region" },
+  country: { field: "country", fallback: "Unspecified country" },
+  state: { field: "state", fallback: "Unspecified state" },
+  city: { field: "city", fallback: "Unspecified city" },
+  sector: { field: "sector", fallback: "Unspecified sector" },
+};
+
+function groupCompanies(items, groupBy) {
+  const config = GROUP_FIELDS[groupBy] || GROUP_FIELDS.country;
+  const groups = new Map();
+
+  items.forEach((company) => {
+    const value = String(company[config.field] || "").trim() || config.fallback;
+    if (!groups.has(value)) groups.set(value, []);
+    groups.get(value).push(company);
+  });
+
+  return Array.from(groups.entries())
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([label, groupCompanies]) => ({
+      label,
+      companies: groupCompanies
+        .slice()
+        .sort((left, right) => (left.name || "").localeCompare(right.name || "")),
+    }));
 }
 
 function groupByCountry(items) {
@@ -169,7 +200,14 @@ export default function Companies() {
   const [sector, setSector] = useState("");
   const [country, setCountry] = useState("");
   const [verified, setVerified] = useState(false);
+  const [regionId, setRegionId] = useState("");
+  const [countryId, setCountryId] = useState("");
+  const [stateId, setStateId] = useState("");
+  const [cityId, setCityId] = useState("");
+  const [sectorId, setSectorId] = useState("");
+  const [industryId, setIndustryId] = useState("");
   const [localFilter, setLocalFilter] = useState("");
+  const [groupBy, setGroupBy] = useState("country");
 
   const [companies, setCompanies] = useState([]);
   const [sectorOptions, setSectorOptions] = useState([]);
@@ -191,21 +229,64 @@ export default function Companies() {
     const qs = new URLSearchParams(window.location.search);
 
     const qParam = (qs.get("q") || qs.get("search") || qs.get("keyword") || "").trim();
-    const sectorParam = (qs.get("sector") || "").trim();
-    const countryParam = canonicalizeCountry(qs.get("country") || "");
+    const rawSectorParam = (qs.get("sector") || "").trim();
+    const rawCountryParam = (qs.get("country") || "").trim();
+    const sectorParam = /^(all|any)$/i.test(rawSectorParam) || /^\d+$/.test(rawSectorParam)
+      ? ""
+      : rawSectorParam;
+    const countryParam = /^(all|any)$/i.test(rawCountryParam) || /^\d+$/.test(rawCountryParam)
+      ? ""
+      : canonicalizeCountry(rawCountryParam);
+    const regionIdParam = (qs.get("region_id") || qs.get("regio_id") || "").trim();
+    const countryIdParam = (qs.get("country_id") || (/^\d+$/.test(rawCountryParam) ? rawCountryParam : "")).trim();
+    const stateIdParam = (qs.get("state_id") || "").trim();
+    const cityIdParam = (qs.get("city_id") || "").trim();
+    const sectorIdParam = (qs.get("sector_id") || (/^\d+$/.test(rawSectorParam) ? rawSectorParam : "")).trim();
+    const industryIdParam = (qs.get("industry_id") || "").trim();
     const pageParam = parseInt(qs.get("page") || "1", 10);
-    const verifiedParam = qs.get("verified") || qs.get("verification");
+    const verifiedParam =
+      qs.get("verification_status") ||
+      qs.get("verified") ||
+      qs.get("verification");
     const from = (qs.get("from") || "").toLowerCase();
 
     if (qParam) setQ(qParam);
     if (sectorParam) setSector(sectorParam);
     if (countryParam) setCountry(countryParam);
+    setRegionId(regionIdParam);
+    setCountryId(countryIdParam);
+    setStateId(stateIdParam);
+    setCityId(cityIdParam);
+    setSectorId(sectorIdParam);
+    setIndustryId(industryIdParam);
     if (!Number.isNaN(pageParam) && pageParam > 0) setPage(pageParam);
-    if (verifiedParam === "1" || verifiedParam === "true" || verifiedParam === "ON") {
+    if (/^(1|true|on|verified)$/i.test(verifiedParam || "")) {
       setVerified(true);
     }
 
     setFromParam(from);
+
+    // Keep only canonical search parameters in the browser URL.
+    const cleanParams = new URLSearchParams();
+    if (qParam) cleanParams.set("q", qParam);
+    if (sectorIdParam) cleanParams.set("sector_id", sectorIdParam);
+    if (regionIdParam) cleanParams.set("region_id", regionIdParam);
+    if (countryIdParam) cleanParams.set("country_id", countryIdParam);
+    if (stateIdParam) cleanParams.set("state_id", stateIdParam);
+    if (cityIdParam) cleanParams.set("city_id", cityIdParam);
+    if (industryIdParam) cleanParams.set("industry_id", industryIdParam);
+    if (!Number.isNaN(pageParam) && pageParam > 1) cleanParams.set("page", String(pageParam));
+    if (/^(1|true|on|verified)$/i.test(verifiedParam || "")) {
+      cleanParams.set("verification_status", "verified");
+    }
+
+    const cleanQuery = cleanParams.toString();
+    window.history.replaceState(
+      null,
+      "",
+      window.location.pathname + (cleanQuery ? `?${cleanQuery}` : "")
+    );
+
   }, []);
 
   useEffect(() => {
@@ -214,8 +295,8 @@ export default function Companies() {
     async function loadOptions() {
       try {
         const [sectorRes, countryRes] = await Promise.all([
-          fetchJSON(`${API_BASE}/business-sectors`).catch(() => null),
-          fetchJSON(`${API_BASE}/countries`).catch(() => null),
+          fetchSectors().catch(() => null),
+          fetchCountries().catch(() => null),
         ]);
 
         if (cancelled) return;
@@ -264,8 +345,8 @@ export default function Companies() {
     return () => clearInterval(id);
   }, [loading]);
 
-  const isAllInputsEmpty = !q && !sector && !country && !verified && !localFilter.trim();
-  const hasAnyFilter = !!(q || sector || country || verified);
+  const isAllInputsEmpty = !q && !sector && !country && !regionId && !countryId && !stateId && !cityId && !sectorId && !industryId && !verified && !localFilter.trim();
+  const hasAnyFilter = !!(q || sector || country || regionId || countryId || stateId || cityId || sectorId || industryId || verified);
 
   useEffect(() => {
     let cancelled = false;
@@ -275,16 +356,19 @@ export default function Companies() {
         setLoading(true);
         setError("");
 
-        const params = new URLSearchParams();
-        params.set("page", String(page));
-
-        if (q) params.set("q", q);
-        if (sector) params.set("sector", sector);
-        if (country) params.set("country", country);
-        if (verified) params.set("verified", "1");
-
-        const url = `${API_BASE}/companies?${params.toString()}`;
-        const js = await fetchJSON(url);
+        const js = await fetchCompanies({
+          page,
+          q,
+          sector,
+          country,
+          regionId,
+          countryId,
+          stateId,
+          cityId,
+          sectorId,
+          industryId,
+          verified,
+        });
 
         if (cancelled) return;
 
@@ -308,14 +392,27 @@ export default function Companies() {
         setTotalPages(payload.last_page || 1);
         setTotal(payload.total || normalized.length || 0);
 
+        // Write canonical search parameters only. Legacy `sector`, `country`,
+        // and navigation-only `from` values are intentionally excluded.
         const qp = new URLSearchParams();
+        const setOrDelete = (key, value) => {
+          if (value !== undefined && value !== null && String(value) !== "") {
+            qp.set(key, String(value));
+          } else {
+            qp.delete(key);
+          }
+        };
 
-        if (page > 1) qp.set("page", String(page));
-        if (q) qp.set("q", q);
-        if (sector) qp.set("sector", sector);
-        if (country) qp.set("country", country);
-        if (verified) qp.set("verified", "1");
-        if (fromParam) qp.set("from", fromParam);
+        setOrDelete("page", page > 1 ? page : "");
+        setOrDelete("q", q);
+
+        setOrDelete("sector_id", sectorId);
+        setOrDelete("region_id", regionId);
+        setOrDelete("country_id", countryId);
+        setOrDelete("state_id", stateId);
+        setOrDelete("city_id", cityId);
+        setOrDelete("industry_id", industryId);
+        setOrDelete("verification_status", verified ? "verified" : "");
 
         const qs = qp.toString();
         const newUrl = window.location.pathname + (qs ? `?${qs}` : "");
@@ -335,7 +432,7 @@ export default function Companies() {
     return () => {
       cancelled = true;
     };
-  }, [page, q, sector, country, verified, fromParam]);
+  }, [page, q, sector, country, regionId, countryId, stateId, cityId, sectorId, industryId, verified, fromParam]);
 
   const visibleCompanies = useMemo(() => {
     let list = companies;
@@ -353,8 +450,8 @@ export default function Companies() {
   }, [companies, verified, q, localFilter]);
 
   const shouldGroupBySector = useMemo(
-    () => !q && !!country && !sector && !isAllInputsEmpty,
-    [q, country, sector, isAllInputsEmpty]
+    () => !q && !!(country || countryId) && !(sector || sectorId) && !isAllInputsEmpty,
+    [q, country, countryId, sector, sectorId, isAllInputsEmpty]
   );
 
   const flatGrouped = useMemo(
@@ -368,6 +465,11 @@ export default function Companies() {
   const nestedGrouped = useMemo(
     () => (isAllInputsEmpty ? groupByCountryAndSector(visibleCompanies) : []),
     [isAllInputsEmpty, visibleCompanies]
+  );
+
+  const groupedCompanies = useMemo(
+    () => groupCompanies(visibleCompanies, groupBy),
+    [visibleCompanies, groupBy]
   );
 
   const hasResults = isAllInputsEmpty
@@ -424,20 +526,32 @@ export default function Companies() {
     if (q) p.set("q", q);
     if (sector) p.set("sector", sector);
     if (country) p.set("country", country);
-    if (verified) p.set("verified", "1");
+    if (regionId) p.set("region_id", regionId);
+    if (countryId) p.set("country_id", countryId);
+    if (stateId) p.set("state_id", stateId);
+    if (cityId) p.set("city_id", cityId);
+    if (sectorId) p.set("sector_id", sectorId);
+    if (industryId) p.set("industry_id", industryId);
+    if (verified) p.set("verification_status", "verified");
 
     const extra = p.toString();
 
     return {
       backHref: dest.href + (extra ? `?${extra}` : ""),
     };
-  }, [fromParam, q, sector, country, verified]);
+  }, [fromParam, q, sector, country, regionId, countryId, stateId, cityId, sectorId, industryId, verified]);
 
   const onClearFilters = () => {
     setQ("");
     setSector("");
     setCountry("");
     setVerified(false);
+    setRegionId("");
+    setCountryId("");
+    setStateId("");
+    setCityId("");
+    setSectorId("");
+    setIndustryId("");
     setLocalFilter("");
     setPage(1);
   };
@@ -553,6 +667,10 @@ export default function Companies() {
           isAllInputsEmpty={isAllInputsEmpty}
           nestedGrouped={nestedGrouped}
           flatGrouped={flatGrouped}
+          groupedCompanies={groupedCompanies}
+          groupBy={groupBy}
+          setGroupBy={setGroupBy}
+          visibleCount={visibleCompanies.length}
           shouldGroupBySector={shouldGroupBySector}
           verified={verified}
           openDetailDialog={openDetailDialog}
@@ -576,3 +694,4 @@ export default function Companies() {
     </div>
   );
 }
+

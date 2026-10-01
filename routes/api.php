@@ -60,6 +60,9 @@ Route::post('trial-requests/verify-code', [TrialRequestController::class, 'verif
 
 Route::get('/business-sectors', [DirectoryController::class, 'sectors']);
 Route::get('/countries', [DirectoryController::class, 'countries']);
+Route::get('/companies', [DirectoryController::class, 'companies']);
+
+
 Route::get('/country-codes', [CountryCodeController::class, 'index']);
 
 // JSON API routes

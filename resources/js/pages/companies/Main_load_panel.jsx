@@ -11,6 +11,14 @@ import {
   Typography,
 } from "@mui/material";
 
+const GROUP_LABELS = {
+  region: "Region",
+  country: "Country",
+  state: "State",
+  city: "City",
+  sector: "Sector",
+};
+
 /* ---------------------------- UI COMPONENTS ---------------------------- */
 function CompanyCard({ company, onOpen, showVerifiedBadge }) {
   const tier = company.cti?.tier || "";
@@ -26,6 +34,12 @@ function CompanyCard({ company, onOpen, showVerifiedBadge }) {
         company.verified ? " professional-card--verified" : ""
       }`}
       onClick={() => onOpen(company)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onOpen(company);
+        }
+      }}
       role="button"
       tabIndex={0}
     >
@@ -59,10 +73,10 @@ export default function MainLoadPanel({
   loading,
   progress,
   hasResults,
-  isAllInputsEmpty,
-  nestedGrouped,
-  flatGrouped,
-  shouldGroupBySector,
+  groupedCompanies = [],
+  groupBy = "country",
+  setGroupBy,
+  visibleCount = 0,
   verified,
   openDetailDialog,
   totalPages,
@@ -96,73 +110,67 @@ export default function MainLoadPanel({
         <>
           {!hasResults ? (
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
-              No results.
+              No companies match the selected search parameters.
             </Typography>
-          ) : isAllInputsEmpty ? (
-            nestedGrouped.map((countryGroup) => (
-              <section key={countryGroup.country}>
-                <h2 className="country-heading">{countryGroup.country}</h2>
-
-                {countryGroup.sectors.map((sectorGroup) => (
-                  <Box key={sectorGroup.sector} sx={{ mb: 1.5 }}>
-                    <Typography
-                      variant="subtitle2"
-                      sx={{ fontWeight: 900, mb: 0.75, color: "#475569" }}
-                    >
-                      Sector: {sectorGroup.sector}
-                    </Typography>
-
-                    <div className="gridx">
-                      {sectorGroup.companies.map((c) => (
-                        <Tooltip
-                          key={c.id}
-                          title={c.name}
-                          arrow
-                          TransitionComponent={Fade}
-                          TransitionProps={{ timeout: 200 }}
-                        >
-                          <Box>
-                            <CompanyCard
-                              company={c}
-                              onOpen={openDetailDialog}
-                              showVerifiedBadge={verified}
-                            />
-                          </Box>
-                        </Tooltip>
-                      ))}
-                    </div>
-                  </Box>
-                ))}
-              </section>
-            ))
           ) : (
-            flatGrouped.map(([groupName, arr]) => (
-              <section key={groupName}>
-                <h2 className="country-heading">
-                  {shouldGroupBySector ? `Sector: ${groupName}` : groupName}
-                </h2>
-
-                <div className="gridx">
-                  {arr.map((c) => (
-                    <Tooltip
-                      key={c.id}
-                      title={c.name}
-                      arrow
-                      TransitionComponent={Fade}
-                      TransitionProps={{ timeout: 200 }}
-                    >
-                      <Box>
-                        <CompanyCard
-                          company={c}
-                          onOpen={openDetailDialog}
-                          showVerifiedBadge={verified}
-                        />
-                      </Box>
-                    </Tooltip>
-                  ))}
+            <>
+              <div className="results-grouping-bar">
+                <div className="results-count" role="status" aria-live="polite">
+                  <strong>{visibleCount.toLocaleString()}</strong>
+                  <span>{visibleCount === 1 ? "company" : "companies"}</span>
+                  <span className="results-count-separator" aria-hidden="true">•</span>
+                  <span>
+                    {groupedCompanies.length.toLocaleString()} {groupedCompanies.length === 1 ? "group" : "groups"}
+                  </span>
                 </div>
-              </section>
-            ))
+
+                <label className="group-by-control" htmlFor="company-group-by">
+                  <span>Group companies by</span>
+                  <select
+                    id="company-group-by"
+                    value={groupBy}
+                    onChange={(event) => setGroupBy(event.target.value)}
+                  >
+                    {Object.entries(GROUP_LABELS).map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              {groupedCompanies.map((group) => (
+                <section className="company-group" key={`${groupBy}-${group.label}`}>
+                  <div className="group-heading-row">
+                    <h2 className="country-heading">
+                      <span>{GROUP_LABELS[groupBy]}:</span> {group.label}
+                    </h2>
+                    <span className="group-count">
+                      {group.companies.length.toLocaleString()} {group.companies.length === 1 ? "company" : "companies"}
+                    </span>
+                  </div>
+
+                  <div className="gridx">
+                    {group.companies.map((company) => (
+                      <Tooltip
+                        key={company.id}
+                        title={company.name}
+                        arrow
+                        TransitionComponent={Fade}
+                        TransitionProps={{ timeout: 200 }}
+                      >
+                        <Box>
+                          <CompanyCard
+                            company={company}
+                            onOpen={openDetailDialog}
+                            showVerifiedBadge={verified}
+                          />
+                        </Box>
+                      </Tooltip>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </>
           )}
 
           {/* Pagination */}
@@ -207,7 +215,7 @@ export default function MainLoadPanel({
               </Stack>
 
               <div className="page-info">
-                Page {page} / {totalPages} • {total} total
+                Page {page.toLocaleString()} of {totalPages.toLocaleString()} • {total.toLocaleString()} total companies
               </div>
             </Box>
           )}
