@@ -70,24 +70,24 @@ function buildSelectStyles() {
       minHeight: 50,
       height: 50,
       borderRadius: 999,
-      borderColor: state.isFocused ? "#d97706" : "#ead9c5",
+      borderColor: state.isFocused ? "#8f6847" : "#ded2c3",
       boxShadow: state.isFocused
-        ? "0 0 0 4px rgba(217,119,6,.16)"
-        : "0 2px 10px rgba(120,53,15,.06)",
-      backgroundColor: state.isDisabled ? "#f8efe5" : "#fffdf9",
+        ? "0 0 0 4px rgba(143,104,71,.14)"
+        : "0 2px 10px rgba(72,47,30,.05)",
+      backgroundColor: state.isDisabled ? "#f4ece2" : "#fbf8f3",
       paddingLeft: 40,
       paddingRight: 8,
       cursor: state.isDisabled ? "not-allowed" : "pointer",
     }),
     valueContainer: (base) => ({ ...base, height: 50, padding: "0 8px 0 0" }),
-    input: (base) => ({ ...base, margin: 0, padding: 0, color: "#292018", fontFamily: "inherit" }),
+    input: (base) => ({ ...base, margin: 0, padding: 0, color: "#1c1d1f", fontFamily: "inherit" }),
     indicatorSeparator: () => ({ display: "none" }),
-    dropdownIndicator: (base) => ({ ...base, color: "#92400e", padding: 8 }),
-    clearIndicator: (base) => ({ ...base, color: "#a67c52", padding: 8 }),
-    placeholder: (base) => ({ ...base, color: "#9a8878", fontSize: 15 }),
+    dropdownIndicator: (base) => ({ ...base, color: "#6b7280", padding: 8 }),
+    clearIndicator: (base) => ({ ...base, color: "#94a3b8", padding: 8 }),
+    placeholder: (base) => ({ ...base, color: "#9ca3af", fontSize: 15 }),
     singleValue: (base, state) => ({
       ...base,
-      color: state.isDisabled ? "#a08f80" : "#292018",
+      color: state.isDisabled ? "#94a3b8" : "#111827",
       fontSize: 15,
     }),
     menuPortal: (base) => ({ ...base, zIndex: 99999 }),
@@ -96,9 +96,9 @@ function buildSelectStyles() {
       zIndex: 99999,
       borderRadius: 18,
       overflow: "hidden",
-      border: "1px solid #ead9c5",
-      boxShadow: "0 18px 40px rgba(120,53,15,.16)",
-      backgroundColor: "#fffdf9",
+      border: "1px solid #ded2c3",
+      boxShadow: "0 18px 40px rgba(72,47,30,.14)",
+      backgroundColor: "#fbf8f3",
     }),
     menuList: (base) => ({ ...base, padding: 8, maxHeight: 240 }),
     option: (base, state) => ({
@@ -108,9 +108,10 @@ function buildSelectStyles() {
       padding: "11px 14px",
       fontSize: 14,
       cursor: "pointer",
-      backgroundColor: state.isSelected ? "#fef3c7" : state.isFocused ? "#fff7ed" : "#fffdf9",
-      color: state.isSelected ? "#78350f" : "#292018",
+      backgroundColor: state.isSelected ? "#eee1d3" : state.isFocused ? "#f4ece2" : "#fbf8f3",
+      color: "#382116",
       fontWeight: state.isSelected ? 800 : 600,
+      ":active": { backgroundColor: "#e5d4c2" },
     }),
   };
 }
@@ -763,7 +764,7 @@ const resolveLiveFilters = async (filters, requestId) => {
                 </label>
 
                 <div className="sf-field">
-                  <IconSearch className="sf-icon" style={{ color: "#78350f" }} />
+                  <IconSearch className="sf-icon" style={{ color: "#6f452e" }} />
                   <input
                     className="sf-input"
                     type="search"
@@ -780,7 +781,7 @@ const resolveLiveFilters = async (filters, requestId) => {
               <div>
                 <label className="sf-label">Region</label>
                 <div className="sf-field sf-select-wrap">
-                  <IconGlobe className="sf-icon" style={{ color: "#78350f" }} />
+                  <IconGlobe className="sf-icon" style={{ color: "#6f452e" }} />
                   <Select
                     {...selectSharedProps}
                     value={selectedRegion}
@@ -799,7 +800,7 @@ const resolveLiveFilters = async (filters, requestId) => {
               <div>
                 <label className="sf-label">Country</label>
                 <div className="sf-field sf-select-wrap">
-                  <IconGlobe className="sf-icon" style={{ color: "#78350f" }} />
+                  <IconGlobe className="sf-icon" style={{ color: "#6f452e" }} />
                   <Select
                     {...selectSharedProps}
                     value={selectedCountry}
@@ -818,7 +819,7 @@ const resolveLiveFilters = async (filters, requestId) => {
               <div>
                 <label className="sf-label">State</label>
                 <div className="sf-field sf-select-wrap">
-                  <IconGlobe className="sf-icon" style={{ color: "#78350f" }} />
+                  <IconGlobe className="sf-icon" style={{ color: "#6f452e" }} />
                   <Select
                     {...selectSharedProps}
                     value={selectedState}
@@ -838,7 +839,7 @@ const resolveLiveFilters = async (filters, requestId) => {
               <div>
                 <label className="sf-label">City</label>
                 <div className="sf-field sf-select-wrap">
-                  <IconGlobe className="sf-icon" style={{ color: "#78350f" }} />
+                  <IconGlobe className="sf-icon" style={{ color: "#6f452e" }} />
                   <Select
                     {...selectSharedProps}
                     value={selectedCity}
@@ -858,7 +859,7 @@ const resolveLiveFilters = async (filters, requestId) => {
               <div>
                 <label className="sf-label">Sector</label>
                 <div className="sf-field sf-select-wrap">
-                  <IconBriefcase className="sf-icon" style={{ color: "#78350f" }} />
+                  <IconBriefcase className="sf-icon" style={{ color: "#6f452e" }} />
                   <Select
                     {...selectSharedProps}
                     value={selectedSector}
@@ -877,7 +878,7 @@ const resolveLiveFilters = async (filters, requestId) => {
               <div>
                 <label className="sf-label">Industry</label>
                 <div className="sf-field sf-select-wrap">
-                  <IconBriefcase className="sf-icon" style={{ color: "#78350f" }} />
+                  <IconBriefcase className="sf-icon" style={{ color: "#6f452e" }} />
                   <Select
                     {...selectSharedProps}
                     value={selectedIndustry}
@@ -967,4 +968,6 @@ const resolveLiveFilters = async (filters, requestId) => {
     </>
   );
 }
+
+
 

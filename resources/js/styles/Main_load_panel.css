@@ -1,0 +1,429 @@
+/* =============================
+   Loading (small + professional)
+   ============================= */
+.companies-loading{
+  margin: 18px 0 10px;
+  text-align:center;
+}
+.rmx-loading-wrap{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 14px;
+  border-radius:999px;
+  border:1px solid rgba(148,163,184,.45);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.92), rgba(248,250,252,.92));
+  box-shadow: 0 10px 26px rgba(15, 23, 42, .08);
+}
+.rmx-loading-dot{
+  width:9px;height:9px;border-radius:50%;
+  background: linear-gradient(135deg,#2563eb,#60a5fa);
+  box-shadow: 0 0 0 6px rgba(37,99,235,.12);
+}
+.rmx-loading-text{
+  font-size:12.5px;
+  font-weight:700;
+  color:#0f172a;
+}
+.rmx-loading-sub{
+  font-size:12px;
+  color:#64748b;
+  margin-top:6px;
+}
+
+/* =============================
+   Grid (responsive + stable)
+   - proportional cards
+   - horizontal flow
+   ============================= */
+.gridx{
+  display:grid;
+  gap:18px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items:stretch;
+  padding:18px;
+  border:1px solid #e5e7eb;
+  border-radius:22px;
+  background:linear-gradient(145deg,#ffffff 0%,#f8fafc 55%,#f1f5f9 100%);
+  box-shadow:0 12px 32px rgba(15,23,42,.06);
+}
+@media (max-width: 1280px){
+  .gridx{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 900px){
+  .gridx{ grid-template-columns: repeat(2, minmax(0, 1fr)); padding:14px; }
+}
+@media (max-width: 560px){
+  .gridx{ grid-template-columns: 1fr; padding:10px; border-radius:18px; }
+}
+
+/* Country headings keep good spacing on resize */
+.country-heading{
+  margin: 18px 0 10px;
+  font-weight: 900;
+  color:#1f2937;
+  letter-spacing:.2px;
+}
+@media (max-width: 560px){
+  .country-heading{ margin: 14px 0 8px; font-size: 1.05rem; }
+}
+
+/* =============================
+   Cards (smaller, modern, gradient)
+   ============================= */
+.rmx-card{
+  position:relative;
+  height:100%;
+  min-height:110px;
+  padding:16px;
+  border-radius:18px;
+  cursor:pointer;
+  user-select:none;
+  border:1px solid #e2e8f0;
+  box-shadow:0 8px 22px rgba(15,23,42,.07);
+  transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease;
+  outline:none;
+}
+
+/* Reusable card colors: add `professional-card` to any card element. */
+.professional-card{
+  color:#1f2937;
+  background:
+    radial-gradient(700px 180px at 12% 0%,rgba(226,232,240,.72),rgba(255,255,255,0) 58%),
+    linear-gradient(160deg,#ffffff 0%,#f8fafc 100%);
+}
+
+.professional-card--verified{
+  border-color:#cbd5e1;
+  background:
+    radial-gradient(700px 180px at 12% 0%,rgba(219,234,254,.62),rgba(255,255,255,0) 58%),
+    linear-gradient(160deg,#ffffff 0%,#f1f5f9 100%);
+}
+
+.rmx-card:hover{
+  transform:translateY(-3px);
+  border-color:#cbd5e1;
+  box-shadow:0 16px 34px rgba(15,23,42,.12);
+}
+.professional-card:hover{
+  background:linear-gradient(160deg,#ffffff 0%,#f1f5f9 100%);
+}
+.professional-card--verified:hover{
+  border-color:#94a3b8;
+  background:linear-gradient(160deg,#ffffff 0%,#eaf1f8 100%);
+}
+.rmx-card:active{ transform: translateY(-1px); }
+.rmx-card:focus-visible{
+  border-color:#94a3b8;
+  box-shadow:0 0 0 4px rgba(148,163,184,.24),0 16px 34px rgba(15,23,42,.1);
+}
+
+.rmx-card-top{ padding-right: 34px; }
+.rmx-card-title{
+  margin:0;
+  font-size: .98rem;        /* smaller */
+  line-height:1.15;
+  font-weight:900;
+  color:#111827;
+  letter-spacing:.1px;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient: vertical;
+  overflow:hidden;
+}
+.rmx-card-sub{
+  margin:6px 0 0;
+  font-size:.82rem;         /* smaller */
+  color:#64748b;
+  display:-webkit-box;
+  -webkit-line-clamp:1;
+  -webkit-box-orient: vertical;
+  overflow:hidden;
+}
+
+/* Verified badge */
+.rmx-verified-badge{
+  position:absolute;
+  top:10px; right:10px;
+  width:26px; height:26px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
+  font-size:12px;
+  color:#fff;
+  border:1px solid #475569;
+  background:linear-gradient(135deg,#64748b,#334155);
+  box-shadow:0 8px 16px rgba(51,65,85,.2);
+}
+
+/* Meta pills */
+.rmx-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:10px;
+}
+.rmx-pill{
+  font-size:.74rem;
+  font-weight:800;
+  color:#334155;
+  border:1px solid #dbe2ea;
+  background:#f1f5f9;
+  border-radius:999px;
+  padding:4px 8px;
+}
+
+/* CTI styling */
+.rmx-cti{ border-color:#d1d5db; }
+.cti-gold{
+  color:#374151;
+  background:linear-gradient(180deg,#f9fafb,#e5e7eb);
+  border-color:#cbd5e1;
+}
+.cti-silver{
+  color:#475569;
+  background:linear-gradient(180deg,#f8fafc,#e2e8f0);
+  border-color:#cbd5e1;
+}
+.cti-bronze{
+  color:#4b5563;
+  background:linear-gradient(180deg,#f3f4f6,#d1d5db);
+  border-color:#bfc7d1;
+}
+
+/* =============================
+   Pagination polish
+   ============================= */
+.pagination .MuiButton-root{
+  min-width:38px;
+  border:1px solid #dbe2ea;
+  border-radius:12px;
+  color:#334155;
+  background:#fff;
+  text-transform:none;
+  box-shadow:0 4px 12px rgba(15,23,42,.05);
+}
+.pagination .MuiButton-contained{
+  border-color:#475569;
+  color:#fff;
+  background:linear-gradient(135deg,#64748b,#334155);
+}
+.pagination .MuiButton-root:hover{
+  border-color:#94a3b8;
+  background:#f1f5f9;
+}
+.pagination .MuiButton-contained:hover{
+  background:linear-gradient(135deg,#475569,#1f2937);
+}
+.page-info{
+  margin-top:8px;
+  font-size:12.5px;
+  color:#64748b;
+}
+
+/* Responsive padding inside MUI Box container is handled by Companies.css
+   But these keep the grid clean on small screens. */
+@media (max-width: 560px){
+  .rmx-card{ padding:12px; }
+  .rmx-meta{ margin-top:8px; }
+}
+
+/*
+ * Final card-color guard.
+ * This intentionally appears last so global dashboard/theme rules cannot
+ * reintroduce an orange background on cards or their MUI wrapper.
+ */
+.gridx > .MuiBox-root {
+  min-width: 0;
+  border-radius: 18px;
+  background: transparent !important;
+}
+
+.gridx .rmx-card.professional-card {
+  background-color: #ffffff !important;
+  background-image:
+    radial-gradient(
+      700px 180px at 12% 0%,
+      rgba(226, 232, 240, .72),
+      rgba(255, 255, 255, 0) 58%
+    ),
+    linear-gradient(160deg, #ffffff 0%, #f8fafc 100%) !important;
+}
+
+.gridx .rmx-card.professional-card--verified {
+  background-color: #f8fafc !important;
+  background-image:
+    radial-gradient(
+      700px 180px at 12% 0%,
+      rgba(219, 234, 254, .62),
+      rgba(255, 255, 255, 0) 58%
+    ),
+    linear-gradient(160deg, #ffffff 0%, #f1f5f9 100%) !important;
+}
+
+.gridx .rmx-card.professional-card:hover {
+  background-color: #f8fafc !important;
+  background-image: linear-gradient(160deg, #ffffff 0%, #f1f5f9 100%) !important;
+}
+
+.gridx .rmx-card.professional-card--verified:hover {
+  background-color: #f1f5f9 !important;
+  background-image: linear-gradient(160deg, #ffffff 0%, #eaf1f8 100%) !important;
+}
+
+/* ==========================================================
+   Raymoch navigation alignment
+   Mirrors HorizontalNavigation's warm surfaces and controls.
+   ========================================================== */
+:root {
+  --ray-surface: #fbf8f3;
+  --ray-surface-soft: #f7f2ea;
+  --ray-surface-raised: #fffaf3;
+  --ray-border: #ded2c3;
+  --ray-border-strong: #cdbdac;
+  --ray-text: #2f2925;
+  --ray-muted: #7a746d;
+  --ray-brand: #5b3825;
+  --ray-brand-hover: #6f452e;
+  --ray-accent-soft: #f3e7cf;
+  --ray-success: #3f7659;
+  --ray-success-soft: #e7f4ec;
+  --ray-shadow-sm: 0 5px 18px rgba(42, 28, 18, .08);
+  --ray-shadow-md: 0 14px 32px rgba(42, 28, 18, .11);
+}
+
+.companies-loading {
+  color: var(--ray-text);
+}
+
+.rmx-loading-wrap {
+  border-color: var(--ray-border);
+  background: linear-gradient(180deg, #fff, var(--ray-surface));
+  box-shadow: var(--ray-shadow-sm);
+}
+
+.rmx-loading-dot {
+  background: linear-gradient(135deg, var(--ray-brand-hover), var(--ray-brand));
+  box-shadow: 0 0 0 6px rgba(91, 56, 37, .1);
+}
+
+.rmx-loading-text,
+.country-heading {
+  color: var(--ray-text);
+}
+
+.rmx-loading-sub,
+.rmx-card-sub,
+.page-info {
+  color: var(--ray-muted);
+}
+
+.gridx {
+  border-color: var(--ray-border);
+  background: linear-gradient(145deg, #fff 0%, var(--ray-surface) 58%, var(--ray-surface-soft) 100%);
+  box-shadow: var(--ray-shadow-sm);
+}
+
+.gridx .rmx-card.professional-card {
+  border-color: var(--ray-border) !important;
+  color: var(--ray-text);
+  background-color: var(--ray-surface) !important;
+  background-image:
+    radial-gradient(700px 180px at 12% 0%, rgba(243, 231, 207, .55), rgba(251, 248, 243, 0) 58%),
+    linear-gradient(160deg, #fff 0%, var(--ray-surface) 100%) !important;
+  box-shadow: 0 8px 22px rgba(42, 28, 18, .07);
+}
+
+.gridx .rmx-card.professional-card--verified {
+  border-color: #c8ddcf !important;
+  background-color: #f8fcf9 !important;
+  background-image:
+    radial-gradient(700px 180px at 12% 0%, rgba(231, 244, 236, .85), rgba(255, 255, 255, 0) 58%),
+    linear-gradient(160deg, #fff 0%, #f5faf7 100%) !important;
+}
+
+.gridx .rmx-card.professional-card:hover {
+  border-color: var(--ray-border-strong) !important;
+  background-color: var(--ray-surface-raised) !important;
+  background-image: linear-gradient(160deg, #fff 0%, var(--ray-surface-soft) 100%) !important;
+  box-shadow: var(--ray-shadow-md);
+}
+
+.gridx .rmx-card.professional-card--verified:hover {
+  border-color: #9fc5ac !important;
+  background-color: #f3faf5 !important;
+  background-image: linear-gradient(160deg, #fff 0%, var(--ray-success-soft) 100%) !important;
+}
+
+.rmx-card:focus-visible {
+  border-color: var(--ray-brand-hover);
+  box-shadow: 0 0 0 3px rgba(143, 104, 71, .16), var(--ray-shadow-md);
+}
+
+.rmx-card-title {
+  color: var(--ray-text);
+}
+
+.rmx-verified-badge {
+  border-color: #2f6f4f;
+  color: #fff;
+  background: linear-gradient(135deg, #4f8968, var(--ray-success));
+  box-shadow: 0 6px 18px rgba(47, 111, 79, .2);
+}
+
+.rmx-pill {
+  border-color: var(--ray-border);
+  color: #4b4038;
+  background: var(--ray-surface-soft);
+}
+
+.cti-gold {
+  border-color: #d4b899;
+  color: var(--ray-brand-hover);
+  background: linear-gradient(180deg, #fbf8f3, #f2eadf);
+}
+
+.cti-silver {
+  border-color: #d1d3d5;
+  color: #5d5149;
+  background: linear-gradient(180deg, #f8f8f7, #eceeef);
+}
+
+.cti-bronze {
+  border-color: #cdbdac;
+  color: #4f3021;
+  background: linear-gradient(180deg, #fbf8f3, #eee2d4);
+}
+
+.pagination .MuiButton-root {
+  border-color: var(--ray-border) !important;
+  color: var(--ray-brand-hover) !important;
+  background: var(--ray-surface) !important;
+  box-shadow: 0 4px 12px rgba(42, 28, 18, .06);
+}
+
+.pagination .MuiButton-root:hover {
+  border-color: var(--ray-border-strong) !important;
+  color: var(--ray-brand) !important;
+  background: var(--ray-surface-soft) !important;
+}
+
+.pagination .MuiButton-contained {
+  border-color: var(--ray-brand) !important;
+  color: #fffaf3 !important;
+  background: linear-gradient(135deg, var(--ray-brand-hover), var(--ray-brand)) !important;
+}
+
+.pagination .MuiButton-contained:hover {
+  background: linear-gradient(135deg, var(--ray-brand), #382116) !important;
+}
+
+.pagination .MuiButton-root.Mui-disabled {
+  border-color: #e7ddd1 !important;
+  color: #a89b90 !important;
+  background: #f5f1ec !important;
+}
+
