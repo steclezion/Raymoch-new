@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import Select, { components } from "react-select";
 import useQueuedCompanySearch from "../../hooks/useQueuedCompanySearch";
 import SearchSplashModal from "../../components/behaviours/SearchSplashModal";
+import "../../styles/top-search-form.css";
 
 function IconSearch(props) {
   return (
@@ -69,24 +70,24 @@ function buildSelectStyles() {
       minHeight: 50,
       height: 50,
       borderRadius: 999,
-      borderColor: state.isFocused ? "#9db7ff" : "#e5e7eb",
+      borderColor: state.isFocused ? "#d97706" : "#ead9c5",
       boxShadow: state.isFocused
-        ? "0 0 0 4px rgba(59,130,246,.14)"
-        : "0 2px 10px rgba(15,23,42,.04)",
-      backgroundColor: state.isDisabled ? "#f8fafc" : "#fff",
+        ? "0 0 0 4px rgba(217,119,6,.16)"
+        : "0 2px 10px rgba(120,53,15,.06)",
+      backgroundColor: state.isDisabled ? "#f8efe5" : "#fffdf9",
       paddingLeft: 40,
       paddingRight: 8,
       cursor: state.isDisabled ? "not-allowed" : "pointer",
     }),
     valueContainer: (base) => ({ ...base, height: 50, padding: "0 8px 0 0" }),
-    input: (base) => ({ ...base, margin: 0, padding: 0, color: "#111827" }),
+    input: (base) => ({ ...base, margin: 0, padding: 0, color: "#292018", fontFamily: "inherit" }),
     indicatorSeparator: () => ({ display: "none" }),
-    dropdownIndicator: (base) => ({ ...base, color: "#6b7280", padding: 8 }),
-    clearIndicator: (base) => ({ ...base, color: "#94a3b8", padding: 8 }),
-    placeholder: (base) => ({ ...base, color: "#9ca3af", fontSize: 15 }),
+    dropdownIndicator: (base) => ({ ...base, color: "#92400e", padding: 8 }),
+    clearIndicator: (base) => ({ ...base, color: "#a67c52", padding: 8 }),
+    placeholder: (base) => ({ ...base, color: "#9a8878", fontSize: 15 }),
     singleValue: (base, state) => ({
       ...base,
-      color: state.isDisabled ? "#94a3b8" : "#111827",
+      color: state.isDisabled ? "#a08f80" : "#292018",
       fontSize: 15,
     }),
     menuPortal: (base) => ({ ...base, zIndex: 99999 }),
@@ -95,8 +96,9 @@ function buildSelectStyles() {
       zIndex: 99999,
       borderRadius: 18,
       overflow: "hidden",
-      border: "1px solid #e5e7eb",
-      boxShadow: "0 18px 40px rgba(15,23,42,.14)",
+      border: "1px solid #ead9c5",
+      boxShadow: "0 18px 40px rgba(120,53,15,.16)",
+      backgroundColor: "#fffdf9",
     }),
     menuList: (base) => ({ ...base, padding: 8, maxHeight: 240 }),
     option: (base, state) => ({
@@ -106,8 +108,8 @@ function buildSelectStyles() {
       padding: "11px 14px",
       fontSize: 14,
       cursor: "pointer",
-      backgroundColor: state.isSelected ? "#dbeafe" : state.isFocused ? "#eff6ff" : "#fff",
-      color: "#0f172a",
+      backgroundColor: state.isSelected ? "#fef3c7" : state.isFocused ? "#fff7ed" : "#fffdf9",
+      color: state.isSelected ? "#78350f" : "#292018",
       fontWeight: state.isSelected ? 800 : 600,
     }),
   };
@@ -722,7 +724,6 @@ const resolveLiveFilters = async (filters, requestId) => {
 
   return (
     <>
-      <style>{formCss}</style>
 
       <SearchSplashModal
         open={queuedSearch.open}
@@ -735,7 +736,7 @@ const resolveLiveFilters = async (filters, requestId) => {
         onResume={queuedSearch.resume}
       />
 
-      <div className="panel-wrap">
+      <div className="sf-panel-wrap">
         <form className="sf-card" onSubmit={submitSearch}>
           <div className="sf-topbar">
             <div>
@@ -762,7 +763,7 @@ const resolveLiveFilters = async (filters, requestId) => {
                 </label>
 
                 <div className="sf-field">
-                  <IconSearch className="sf-icon" style={{ color: "#111827" }} />
+                  <IconSearch className="sf-icon" style={{ color: "#78350f" }} />
                   <input
                     className="sf-input"
                     type="search"
@@ -779,7 +780,7 @@ const resolveLiveFilters = async (filters, requestId) => {
               <div>
                 <label className="sf-label">Region</label>
                 <div className="sf-field sf-select-wrap">
-                  <IconGlobe className="sf-icon" style={{ color: "#111827" }} />
+                  <IconGlobe className="sf-icon" style={{ color: "#78350f" }} />
                   <Select
                     {...selectSharedProps}
                     value={selectedRegion}
@@ -798,7 +799,7 @@ const resolveLiveFilters = async (filters, requestId) => {
               <div>
                 <label className="sf-label">Country</label>
                 <div className="sf-field sf-select-wrap">
-                  <IconGlobe className="sf-icon" style={{ color: "#111827" }} />
+                  <IconGlobe className="sf-icon" style={{ color: "#78350f" }} />
                   <Select
                     {...selectSharedProps}
                     value={selectedCountry}
@@ -817,7 +818,7 @@ const resolveLiveFilters = async (filters, requestId) => {
               <div>
                 <label className="sf-label">State</label>
                 <div className="sf-field sf-select-wrap">
-                  <IconGlobe className="sf-icon" style={{ color: "#111827" }} />
+                  <IconGlobe className="sf-icon" style={{ color: "#78350f" }} />
                   <Select
                     {...selectSharedProps}
                     value={selectedState}
@@ -837,7 +838,7 @@ const resolveLiveFilters = async (filters, requestId) => {
               <div>
                 <label className="sf-label">City</label>
                 <div className="sf-field sf-select-wrap">
-                  <IconGlobe className="sf-icon" style={{ color: "#111827" }} />
+                  <IconGlobe className="sf-icon" style={{ color: "#78350f" }} />
                   <Select
                     {...selectSharedProps}
                     value={selectedCity}
@@ -857,7 +858,7 @@ const resolveLiveFilters = async (filters, requestId) => {
               <div>
                 <label className="sf-label">Sector</label>
                 <div className="sf-field sf-select-wrap">
-                  <IconBriefcase className="sf-icon" style={{ color: "#111827" }} />
+                  <IconBriefcase className="sf-icon" style={{ color: "#78350f" }} />
                   <Select
                     {...selectSharedProps}
                     value={selectedSector}
@@ -876,7 +877,7 @@ const resolveLiveFilters = async (filters, requestId) => {
               <div>
                 <label className="sf-label">Industry</label>
                 <div className="sf-field sf-select-wrap">
-                  <IconBriefcase className="sf-icon" style={{ color: "#111827" }} />
+                  <IconBriefcase className="sf-icon" style={{ color: "#78350f" }} />
                   <Select
                     {...selectSharedProps}
                     value={selectedIndustry}
@@ -967,46 +968,3 @@ const resolveLiveFilters = async (filters, requestId) => {
   );
 }
 
-const formCss = `
-.panel-wrap{width:100%;display:flex;justify-content:center;margin-bottom:18px;}
-.sf-card{width:100%;background:#fff;border:1px solid #e6e9f2;border-radius:26px;overflow:visible;box-shadow:0 10px 26px rgba(10,42,107,.10);}
-.sf-topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:18px 22px;background:linear-gradient(135deg,#0A2A6B 0%,#1e3a8a 55%,#2d4fbf 100%);color:#fff;border-radius:26px 26px 0 0;}
-.sf-title{font-weight:900;letter-spacing:.3px;font-size:18px;line-height:1.15;text-transform:uppercase;}
-.sf-sub{margin-top:4px;color:rgba(255,255,255,.88);font-size:13px;}
-.sf-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;font-weight:800;font-size:13px;white-space:nowrap;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.25);box-shadow:inset 0 0 0 1px rgba(0,0,0,.05);}
-.sf-badge .check{width:18px;height:18px;display:inline-grid;place-items:center;border-radius:6px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.25);font-size:12px;}
-.sf-badge.on{background:rgba(34,197,94,.18);border-color:rgba(34,197,94,.28);}
-.sf-body{padding:18px 22px 16px;overflow:visible;}
-.sf-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;align-items:end;overflow:visible;}
-.sf-label{display:block;font-size:13px;color:#6b7280;margin:0 0 6px 14px;}
-.sf-tooltip{margin-left:6px;font-size:12px;cursor:help;color:#94a3b8;}
-.sf-field{position:relative;width:100%;overflow:visible;}
-.sf-select-wrap{z-index:5;}
-.sf-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:18px;height:18px;opacity:.70;z-index:3;pointer-events:none;}
-.sf-input{width:100%;height:50px;border-radius:999px;border:1px solid #e5e7eb;background:#fff;padding:0 44px 0 46px;font-size:15px;outline:none;box-shadow:0 2px 10px rgba(15,23,42,.04);}
-.sf-input::placeholder{color:#9ca3af;}
-.sf-input:focus{border-color:#9db7ff;box-shadow:0 0 0 4px rgba(59,130,246,.14);}
-.sf-local-input{padding-left:18px;}
-.sf-verify{display:flex;align-items:center;gap:12px;padding-bottom:8px;justify-content:flex-start;}
-.sf-verify .txt{font-weight:800;color:#0f172a;white-space:nowrap;}
-.sf-switch{position:relative;width:52px;height:28px;display:inline-block;}
-.sf-switch input{display:none;}
-.sf-slider{position:absolute;inset:0;background:#e5e7eb;border-radius:999px;transition:.18s ease;border:1px solid #e5e7eb;}
-.sf-slider::after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;background:#fff;border-radius:50%;box-shadow:0 6px 14px rgba(0,0,0,.15);transition:.18s ease;}
-.sf-switch input:checked + .sf-slider{background:#3b82f6;border-color:#3b82f6;}
-.sf-switch input:checked + .sf-slider::after{transform:translateX(24px);}
-.sf-divider{height:1px;background:#eef2f7;margin:16px 0 14px;}
-.sf-actions{display:flex;align-items:center;justify-content:space-between;gap:14px;}
-.sf-left-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
-.sf-btn{height:46px;border-radius:999px;padding:0 18px;font-weight:900;cursor:pointer;border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;user-select:none;-webkit-tap-highlight-color:transparent;}
-.sf-btn.ghost,.sf-btn.outline{background:#fff;border-color:#d7e2f5;color:#2d4fbf;}
-.sf-btn.primary{min-width:170px;background:linear-gradient(135deg,#3b82f6,#2d4fbf);border-color:transparent;color:#fff;box-shadow:0 10px 18px rgba(59,130,246,.25);}
-.sf-btn:disabled{cursor:not-allowed;opacity:.65;}
-.sf-search-error{margin:12px 0 0;padding:10px 14px;border:1px solid #fecaca;border-radius:12px;background:#fff1f2;color:#b42318;font-size:13px;font-weight:700;}
-.sf-local-filter{margin-top:16px;}
-.sf-helper{margin-top:6px;font-size:12px;color:#64748b;}
-
-@media (max-width:1200px){.sf-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
-@media (max-width:900px){.sf-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.sf-actions{flex-direction:column;align-items:stretch;}.sf-btn.primary{width:100%;}}
-@media (max-width:560px){.sf-grid{grid-template-columns:1fr;}.sf-label{margin-left:8px;}.sf-body{padding:16px 14px 14px;}.sf-topbar{padding:16px 14px;flex-direction:column;}}
-`;
