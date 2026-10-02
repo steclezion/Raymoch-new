@@ -54,27 +54,33 @@ function canonicalizeCountry(input) {
 function normalizeCompany(c) {
   if (!c) return {};
 
-  const rawStatus = c.VerificationStatus ?? c.verification_status ?? "";
+  const rawStatus = c.VerificationStatus ?? "";
   const statusStr = String(rawStatus).trim().toLowerCase();
-  const isVerified = /\bverified\b/.test(statusStr) || !!c.Verified;
+  const isVerified = /\bverified\b/.test(statusStr);
 
   return {
-    id: c.Id ?? c.id ?? c.ID ?? null,
-    name: c.CompanyName ?? c.company_name ?? "—",
-    sector: c.Sector ?? c.sector ?? "",
-    industry: c.Industry ?? c.industry ?? c.industry_name ?? "",
-    region: c.Region ?? c.region ?? c.region_name ?? "",
-    country: c.Country ?? c.country ?? "",
-    state: c.State ?? c.state ?? c.state_name ?? "",
-    city: c.City ?? c.city ?? "",
-    stage: c.Stage ?? c.stage ?? "",
+    id: c.co_main_ref_id ?? null,
+    name: c.CompanyName ?? "—",
+    sector: c.sector_title ?? "",
+    sector_id: c.sector_id ?? null,
+    industry: c.industry_name ?? "",
+    industry_id: c.industry_id ?? null,
+    region: c.region_name ?? "",
+    region_id: c.region_id ?? null,
+    country: c.country_name ?? "",
+    country_id: c.country_id ?? null,
+    state: c.state_name ?? "",
+    state_id: c.state_id ?? null,
+    city: c.city_name ?? "",
+    city_id: c.city_id ?? null,
+    stage: c.Stage ?? "",
     verified: isVerified,
     verification_status: statusStr,
     cti: {
-      tier: c.CTI_Tier ?? c.cti_tier ?? "",
-      score: c.CTI_Score ?? c.cti_score ?? "",
+      tier: c.CTI_Tier ?? "",
+      score: c.CTI_Score ?? "",
     },
-    logo_url: c.logo_url ?? c.site_image_url ?? null,
+    logo_url: c.Logo ?? null,
   };
 }
 
@@ -228,31 +234,18 @@ export default function Companies() {
   useEffect(() => {
     const qs = new URLSearchParams(window.location.search);
 
-    const qParam = (qs.get("q") || qs.get("search") || qs.get("keyword") || "").trim();
-    const rawSectorParam = (qs.get("sector") || "").trim();
-    const rawCountryParam = (qs.get("country") || "").trim();
-    const sectorParam = /^(all|any)$/i.test(rawSectorParam) || /^\d+$/.test(rawSectorParam)
-      ? ""
-      : rawSectorParam;
-    const countryParam = /^(all|any)$/i.test(rawCountryParam) || /^\d+$/.test(rawCountryParam)
-      ? ""
-      : canonicalizeCountry(rawCountryParam);
-    const regionIdParam = (qs.get("region_id") || qs.get("regio_id") || "").trim();
-    const countryIdParam = (qs.get("country_id") || (/^\d+$/.test(rawCountryParam) ? rawCountryParam : "")).trim();
+    const qParam = (qs.get("q") || "").trim();
+    const regionIdParam = (qs.get("region_id") || "").trim();
+    const countryIdParam = (qs.get("country_id") || "").trim();
     const stateIdParam = (qs.get("state_id") || "").trim();
     const cityIdParam = (qs.get("city_id") || "").trim();
-    const sectorIdParam = (qs.get("sector_id") || (/^\d+$/.test(rawSectorParam) ? rawSectorParam : "")).trim();
+    const sectorIdParam = (qs.get("sector_id") || "").trim();
     const industryIdParam = (qs.get("industry_id") || "").trim();
     const pageParam = parseInt(qs.get("page") || "1", 10);
-    const verifiedParam =
-      qs.get("verification_status") ||
-      qs.get("verified") ||
-      qs.get("verification");
+    const verifiedParam = qs.get("verification_status");
     const from = (qs.get("from") || "").toLowerCase();
 
     if (qParam) setQ(qParam);
-    if (sectorParam) setSector(sectorParam);
-    if (countryParam) setCountry(countryParam);
     setRegionId(regionIdParam);
     setCountryId(countryIdParam);
     setStateId(stateIdParam);
@@ -635,12 +628,43 @@ export default function Companies() {
           <TopSearchPanelCompanies
           q={q}
           setQ={setQ}
-          sector={sector}
-          setSector={setSector}
-          country={country}
-          setCountry={setCountry}
+          region={regionId || "all"}
+          setRegion={(value) => {
+            setRegionId(value === "all" ? "" : String(value));
+            setPage(1);
+          }}
+          country={countryId || "all"}
+          setCountry={(value) => {
+            setCountryId(value === "all" ? "" : String(value));
+            setCountry("");
+            setPage(1);
+          }}
+          stateItem={stateId || "all"}
+          setStateItem={(value) => {
+            setStateId(value === "all" ? "" : String(value));
+            setPage(1);
+          }}
+          city={cityId || "all"}
+          setCity={(value) => {
+            setCityId(value === "all" ? "" : String(value));
+            setPage(1);
+          }}
+          sector={sectorId || ""}
+          setSector={(value) => {
+            setSectorId(value === "all" ? "" : String(value));
+            setSector("");
+            setPage(1);
+          }}
+          industry={industryId || "all"}
+          setIndustry={(value) => {
+            setIndustryId(value === "all" ? "" : String(value));
+            setPage(1);
+          }}
           verified={verified}
-          setVerified={setVerified}
+          setVerified={(value) => {
+            setVerified(Boolean(value));
+            setPage(1);
+          }}
           localFilter={localFilter}
           setLocalFilter={setLocalFilter}
           sectorOptions={sectorOptions}

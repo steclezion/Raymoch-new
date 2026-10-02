@@ -206,6 +206,16 @@ export default function TopSearchForm({
 }) {
   const queuedSearch = useQueuedCompanySearch();
   const liveResolveIdRef = useRef(0);
+  const hasControlledFilters = [
+    setQ,
+    setRegion,
+    setCountry,
+    setStateItem,
+    setCity,
+    setSector,
+    setIndustry,
+    setVerified,
+  ].some((setter) => typeof setter === "function");
 
   const [internalQ, setInternalQ] = useState("");
   const [internalRegion, setInternalRegion] = useState("all");
@@ -246,6 +256,10 @@ export default function TopSearchForm({
     typeof setLocalFilter === "function" ? setLocalFilter : setInternalLocalFilter;
 
   const safeSetPage = typeof setPage === "function" ? setPage : () => {};
+  const previousRegionRef = useRef(safeRegion);
+  const previousCountryRef = useRef(safeCountry);
+  const previousStateRef = useRef(safeStateItem);
+  const previousSectorRef = useRef(safeSector);
 
   const [regions, setRegions] = useState([]);
   const [countries, setCountries] = useState([]);
@@ -335,7 +349,8 @@ const resolveLiveFilters = async (filters, requestId) => {
     return [
       { value: "all", label: "All" },
       ...(countries ?? []).map((item) => ({
-        value: String(item.countries_all_id ?? item.id),
+        value: String(item.id ?? item.country_id ?? item.countries_all_id),
+        statesCountryId: String(item.countries_all_id ?? item.id ?? item.country_id),
         label: item.country_name ?? item.name,
       })),
     ];
@@ -458,16 +473,27 @@ const resolveLiveFilters = async (filters, requestId) => {
 
       const session = sessionRes?.data || {};
 
-      const filters = {
-        keyword: session.keyword || "",
-        region: session.region || "all",
-        country: session.country || "all",
-        state: session.state || "all",
-        city: session.city || "all",
-        sector: session.sector || "",
-        industry: session.industry || "all",
-        verification: session.verification || "OFF",
-      };
+      const filters = hasControlledFilters
+        ? {
+            keyword: safeQ || "",
+            region: safeRegion || "all",
+            country: safeCountry || "all",
+            state: safeStateItem || "all",
+            city: safeCity || "all",
+            sector: safeSector || "",
+            industry: safeIndustry || "all",
+            verification: safeVerified ? "ON" : "OFF",
+          }
+        : {
+            keyword: session.keyword || "",
+            region: session.region || "all",
+            country: session.country || "all",
+            state: session.state || "all",
+            city: session.city || "all",
+            sector: session.sector || "",
+            industry: session.industry || "all",
+            verification: session.verification || "OFF",
+          };
 
       safeSetQ(filters.keyword);
       safeSetRegion(filters.region);
@@ -503,7 +529,8 @@ const resolveLiveFilters = async (filters, requestId) => {
         fetchJson(industryUrl),
       ]);
 
-      setCountries(getDataArray(countryRes));
+      const countryItems = getDataArray(countryRes);
+      setCountries(countryItems);
       setIndustries(getDataArray(industryRes));
 
       setLoadingKey("countries", false);
@@ -511,8 +538,15 @@ const resolveLiveFilters = async (filters, requestId) => {
 
       if (!isAll(filters.country)) {
         setLoadingKey("states", true);
+        const selectedCountryItem = countryItems.find((item) =>
+          String(item.id ?? item.country_id ?? item.countries_all_id) === String(filters.country)
+        );
+        const statesCountryId =
+          selectedCountryItem?.countries_all_id ??
+          selectedCountryItem?.id ??
+          filters.country;
         const stateRes = await fetchJson(
-          `/api/states-all?countries_all_id=${encodeURIComponent(filters.country)}`
+          `/api/states-all?countries_all_id=${encodeURIComponent(statesCountryId)}`
         );
         setStates(getDataArray(stateRes));
         setLoadingKey("states", false);
@@ -527,6 +561,10 @@ const resolveLiveFilters = async (filters, requestId) => {
         setLoadingKey("cities", false);
       }
 
+      previousRegionRef.current = filters.region;
+      previousCountryRef.current = filters.country;
+      previousStateRef.current = filters.state;
+      previousSectorRef.current = filters.sector;
       setBootReady(true);
       safeSetPage(1);
     };
@@ -537,6 +575,8 @@ const resolveLiveFilters = async (filters, requestId) => {
 
   useEffect(() => {
     if (!bootReady) return;
+    if (previousRegionRef.current === safeRegion) return;
+    previousRegionRef.current = safeRegion;
 
     const fetchCountries = async () => {
       safeSetCountry("all");
@@ -562,6 +602,8 @@ const resolveLiveFilters = async (filters, requestId) => {
 
   useEffect(() => {
     if (!bootReady) return;
+    if (previousCountryRef.current === safeCountry) return;
+    previousCountryRef.current = safeCountry;
 
     const fetchStates = async () => {
       safeSetStateItem("all");
@@ -573,8 +615,9 @@ const resolveLiveFilters = async (filters, requestId) => {
 
       setLoadingKey("states", true);
 
+      const statesCountryId = selectedCountry?.statesCountryId ?? safeCountry;
       const res = await fetchJson(
-        `/api/states-all?countries_all_id=${encodeURIComponent(safeCountry)}`
+        `/api/states-all?countries_all_id=${encodeURIComponent(statesCountryId)}`
       );
 
       setStates(getDataArray(res));
@@ -583,10 +626,12 @@ const resolveLiveFilters = async (filters, requestId) => {
 
     fetchStates();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [safeCountry]);
+  }, [safeCountry, selectedCountry]);
 
   useEffect(() => {
     if (!bootReady) return;
+    if (previousStateRef.current === safeStateItem) return;
+    previousStateRef.current = safeStateItem;
 
     const fetchCities = async () => {
       safeSetCity("all");
@@ -610,6 +655,8 @@ const resolveLiveFilters = async (filters, requestId) => {
 
   useEffect(() => {
     if (!bootReady) return;
+    if (previousSectorRef.current === safeSector) return;
+    previousSectorRef.current = safeSector;
 
     const fetchIndustries = async () => {
       safeSetIndustry("all");
@@ -968,6 +1015,7 @@ const resolveLiveFilters = async (filters, requestId) => {
     </>
   );
 }
+
 
 
 
