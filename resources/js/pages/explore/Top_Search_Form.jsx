@@ -966,18 +966,18 @@ const resolveLiveFilters = async (filters, requestId) => {
                   Clear
                 </button>
 
-                <a className="sf-btn outline" href="/companies">
+                {/* <a className="sf-btn outline" href="/companies">
                   All Companies <span aria-hidden="true">↗</span>
-                </a>
+                </a> */}
               </div>
 
-              <button
+              {/* <button
                 type="submit"
                 className="sf-btn primary"
                 disabled={queuedSearch.open}
               >
                 {queuedSearch.open ? "Searching…" : "Search"}
-              </button>
+              </button> */}
             </div>
 
             {searchValidationError ? (
