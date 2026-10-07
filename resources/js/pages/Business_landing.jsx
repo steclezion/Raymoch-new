@@ -24,6 +24,7 @@ import Footer from "../components/layout_master/Footer.jsx";
 import { ResponsiveController } from "../components/ResponsiveController.jsx";
 import RaymochInformationSupporter from "../components/RaymochInformationSupporter.jsx";
 import "../styles/Business.css";
+import "../styles/business-hero-security-theme.css";
 
 const ACCOUNT_TIERS = [
   {

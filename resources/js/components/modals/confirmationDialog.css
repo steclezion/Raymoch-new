@@ -1,77 +1,115 @@
 .vr-confirmOverlay {
+  --vr-nav-espresso: #5b3825;
+  --vr-nav-dark: #382116;
+  --vr-nav-coffee: #8b6248;
+  --vr-nav-gold: #b57b3f;
+  --vr-nav-ivory: #f7f2ea;
+  --vr-nav-card: #fffdf9;
+  --vr-nav-oat: #ded2c3;
+  --vr-nav-ink: #1c1d1f;
+  --vr-nav-muted: #6f675f;
   position: fixed;
   inset: 0;
-  z-index: 99999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background: rgba(15, 23, 42, 0.46);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  animation: vr-confirm-overlay-in 160ms ease-out;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(28, 18, 13, 0.58);
+  backdrop-filter: blur(7px);
+}
+
+.vr-confirmDialog,
+.vr-confirmDialog *,
+.vr-confirmDialog *::before,
+.vr-confirmDialog *::after {
+  box-sizing: border-box;
 }
 
 .vr-confirmDialog {
   position: relative;
-  width: min(100%, 460px);
-  padding: 28px;
-  border: 1px solid rgba(226, 232, 240, 0.95);
+  width: min(100%, 440px);
+  padding: 30px;
+  border: 1px solid var(--vr-nav-oat);
   border-radius: 22px;
-  background: #ffffff;
-  box-shadow:
-    0 24px 70px rgba(15, 23, 42, 0.22),
-    0 8px 24px rgba(15, 23, 42, 0.10);
-  animation: vr-confirm-dialog-in 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  color: var(--vr-nav-ink);
+  background: var(--vr-nav-card);
+  box-shadow: 0 24px 70px rgba(45, 25, 15, 0.26);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.vr-confirmBrand {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 1px solid rgba(181, 123, 63, 0.28);
+  border-radius: 7px;
+  background: rgba(247, 242, 234, 0.9);
+  box-shadow: 0 3px 9px rgba(56, 33, 22, 0.1);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.vr-confirmBrand img {
+  display: block;
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
 }
 
 .vr-confirmClose {
   position: absolute;
   top: 14px;
   right: 14px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
+  display: inline-grid;
+  width: 36px;
+  height: 36px;
   padding: 0;
-  border: 0;
-  border-radius: 10px;
-  background: transparent;
-  color: #64748b;
+  place-items: center;
+  border: 1px solid var(--vr-nav-oat);
+  border-radius: 999px;
+  color: var(--vr-nav-coffee);
+  background: var(--vr-nav-ivory);
   cursor: pointer;
-  transition: background 150ms ease, color 150ms ease;
+  transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease,
+    transform 0.18s ease;
 }
 
 .vr-confirmClose:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  border-color: #c8b49e;
+  color: var(--vr-nav-dark);
+  background: #f2e8dc;
+  transform: translateY(-1px);
 }
 
 .vr-confirmIcon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 54px;
-  height: 54px;
+  display: grid;
+  width: 50px;
+  height: 50px;
   margin-bottom: 18px;
-  border-radius: 16px;
-  background: #fff1f2;
-  color: #dc2626;
+  place-items: center;
+  border: 1px solid #dcc2a5;
+  border-radius: 15px;
+  color: var(--vr-nav-espresso);
+  background: #f4e8d8;
 }
 
 .vr-confirmContent h3 {
-  margin: 0 40px 10px 0;
-  color: #0f172a;
-  font-size: 21px;
-  line-height: 1.25;
-  font-weight: 750;
+  margin: 0;
+  padding-right: 36px;
+  color: var(--vr-nav-dark);
+  font-family: Merriweather, Georgia, serif;
+  font-size: clamp(1.25rem, 3vw, 1.55rem);
+  line-height: 1.2;
 }
 
 .vr-confirmContent p {
-  margin: 0;
-  color: #64748b;
-  font-size: 14px;
+  margin: 10px 0 0;
+  color: var(--vr-nav-muted);
+  font-size: 0.92rem;
   line-height: 1.65;
 }
 
@@ -79,94 +117,99 @@
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  margin-top: 26px;
+  margin-top: 25px;
 }
 
+/* Same compact, rounded control language used by HorizontalNavigation. */
 .vr-confirmButton {
-  min-width: 96px;
-  min-height: 42px;
-  padding: 10px 16px;
-  border-radius: 11px;
-  font-size: 14px;
-  font-weight: 700;
+  display: inline-flex;
+  min-width: 132px;
+  min-height: 44px;
+  padding: 0 18px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
   cursor: pointer;
-  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+  transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease,
+    box-shadow 0.18s ease, transform 0.18s ease;
 }
 
-.vr-confirmButton:active {
-  transform: translateY(1px);
+.vr-confirmButton svg {
+  flex: 0 0 auto;
+  stroke-width: 2.2;
+}
+
+.vr-confirmButton--secondary {
+  border-color: #cdbba9;
+  color: var(--vr-nav-dark);
+  background: var(--vr-nav-ivory);
+}
+
+.vr-confirmButton--secondary:hover {
+  border-color: var(--vr-nav-coffee);
+  background: #eee2d4;
+  box-shadow: 0 7px 16px rgba(73, 45, 29, 0.1);
+  transform: translateY(-1px);
+}
+
+.vr-confirmButton--danger,
+.vr-confirmButton--primary {
+  border-color: var(--vr-nav-dark);
+  color: #fffaf3;
+  background: linear-gradient(135deg, var(--vr-nav-espresso), var(--vr-nav-dark));
+  box-shadow: 0 7px 16px rgba(56, 33, 22, 0.22);
+}
+
+.vr-confirmButton--danger:hover,
+.vr-confirmButton--primary:hover {
+  color: #fffaf3;
+  background: linear-gradient(135deg, #6b432d, #2f1b12);
+  box-shadow: 0 10px 22px rgba(56, 33, 22, 0.3);
+  transform: translateY(-1px);
+}
+
+.vr-confirmButton:active,
+.vr-confirmClose:active {
+  transform: translateY(0);
 }
 
 .vr-confirmButton:focus-visible,
 .vr-confirmClose:focus-visible {
-  outline: 3px solid rgba(59, 130, 246, 0.25);
-  outline-offset: 2px;
+  outline: 3px solid rgba(181, 123, 63, 0.32);
+  outline-offset: 3px;
 }
 
-.vr-confirmButton--secondary {
-  border: 1px solid #dbe2ea;
-  background: #ffffff;
-  color: #334155;
+.vr-confirmButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
 }
 
-.vr-confirmButton--secondary:hover {
-  background: #f8fafc;
-}
-
-.vr-confirmButton--danger {
-  border: 1px solid #dc2626;
-  background: #dc2626;
-  color: #ffffff;
-  box-shadow: 0 8px 18px rgba(220, 38, 38, 0.18);
-}
-
-.vr-confirmButton--danger:hover {
-  background: #b91c1c;
-}
-
-.vr-confirmButton--warning {
-  border: 1px solid #d97706;
-  background: #d97706;
-  color: #ffffff;
-}
-
-.vr-confirmButton--primary {
-  border: 1px solid #1d4ed8;
-  background: #1d4ed8;
-  color: #ffffff;
-}
-
-@keyframes vr-confirm-overlay-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes vr-confirm-dialog-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@media (max-width: 560px) {
-  .vr-confirmOverlay {
-    padding: 16px;
-  }
-
+@media (max-width: 520px) {
   .vr-confirmDialog {
     padding: 24px 20px 20px;
-    border-radius: 18px;
   }
 
   .vr-confirmActions {
-    flex-direction: column-reverse;
+    display: grid;
+    grid-template-columns: 1fr;
   }
 
   .vr-confirmButton {
     width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vr-confirmButton,
+  .vr-confirmClose {
+    transition: none;
   }
 }

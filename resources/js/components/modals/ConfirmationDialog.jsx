@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { AlertTriangle, X } from "lucide-react";
+import { AlertTriangle, Check, X } from "lucide-react";
 import "./confirmationDialog.css";
 
 export default function ConfirmationDialog({
@@ -45,9 +45,7 @@ export default function ConfirmationDialog({
   if (!open) return null;
 
   const handleBackdropClick = (event) => {
-    if (event.target === event.currentTarget) {
-      onCancel?.();
-    }
+    if (event.target === event.currentTarget) onCancel?.();
   };
 
   return (
@@ -64,13 +62,17 @@ export default function ConfirmationDialog({
         aria-describedby="vr-confirm-message"
         onMouseDown={(event) => event.stopPropagation()}
       >
+        <span className="vr-confirmBrand" aria-hidden="true">
+          <img src="/images/logo_preview_exact.svg" alt="" />
+        </span>
+
         <button
           type="button"
           className="vr-confirmClose"
           aria-label="Close confirmation"
           onClick={onCancel}
         >
-          <X size={18} />
+          <X size={18} aria-hidden="true" />
         </button>
 
         <div className="vr-confirmIcon" aria-hidden="true">
@@ -89,7 +91,8 @@ export default function ConfirmationDialog({
             className="vr-confirmButton vr-confirmButton--secondary"
             onClick={onCancel}
           >
-            {cancelLabel}
+            <X size={16} aria-hidden="true" />
+            <span>{cancelLabel}</span>
           </button>
 
           <button
@@ -97,7 +100,8 @@ export default function ConfirmationDialog({
             className={`vr-confirmButton vr-confirmButton--${tone}`}
             onClick={onConfirm}
           >
-            {confirmLabel}
+            <Check size={16} aria-hidden="true" />
+            <span>{confirmLabel}</span>
           </button>
         </div>
       </section>

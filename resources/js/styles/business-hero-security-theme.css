@@ -1,0 +1,232 @@
+/*
+ * Business hero aligned with the Security page design system.
+ * Add this after the existing Business_landing.css rules, or replace the
+ * matching hero rules in that file with these declarations.
+ */
+
+.ray-business {
+  --rb-night: #f7f2ea;
+  --rb-panel: #fbf8f3;
+  --rb-panel-soft: #f2e8dc;
+  --rb-line: rgba(255, 250, 243, 0.25);
+  --rb-amber: #b57b3f;
+  --rb-amber-bright: #d8aa5c;
+  --rb-teal: #2f6f4f;
+  --rb-violet: #8b6248;
+  --rb-text: #fffaf3;
+  --rb-muted: #7a746d;
+  background: #f7f2ea;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.ray-business__wrap {
+  width: min(100% - 40px, 1328px);
+  margin-inline: auto;
+}
+
+.ray-business__hero {
+  position: relative;
+  min-height: 0;
+  display: grid;
+  place-items: initial;
+  padding-block: clamp(64px, 8vw, 112px);
+  border-bottom: 0;
+  color: #fffaf3;
+  background: linear-gradient(
+    110deg,
+    #28160f 0%,
+    #3d2418 31%,
+    #5c3a27 59%,
+    #96673a 85%,
+    #d8aa5c 100%
+  );
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.ray-business__hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(circle at 78% 48%, rgba(255, 250, 243, 0.13), transparent 24rem),
+    linear-gradient(90deg, rgba(40, 22, 15, 0.2), transparent 62%);
+  pointer-events: none;
+}
+
+.ray-business__hero-content {
+  position: relative;
+  z-index: 2;
+  width: min(100% - 40px, 1328px);
+  margin-inline: auto;
+  padding-block: 0;
+  text-align: left;
+}
+
+.ray-business__hero-content > * {
+  max-width: 770px;
+}
+
+.ray-business__kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #d8aa5c;
+  font-size: 0.76rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ray-business__hero h1 {
+  max-width: 840px;
+  margin: 18px 0 0;
+  color: #fffaf3;
+  font-family: Merriweather, Georgia, serif;
+  font-size: clamp(2.5rem, 5.5vw, 4.8rem);
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  text-align: left;
+  text-wrap: balance;
+}
+
+.ray-business__hero p {
+  max-width: 770px;
+  margin: 20px 0 0;
+  color: rgba(255, 250, 243, 0.83);
+  font-size: clamp(1rem, 1.5vw, 1.17rem);
+  line-height: 1.72;
+  text-align: left;
+}
+
+.ray-business__hero-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 152px;
+  min-height: 48px;
+  margin-top: 30px;
+  padding-inline: 20px;
+  border: 1px solid #382116;
+  border-radius: 999px;
+  color: #fffaf3 !important;
+  background: linear-gradient(135deg, #5b3825, #382116);
+  box-shadow: 0 7px 16px rgba(56, 33, 22, 0.22);
+  font-size: 0.94rem;
+  font-weight: 800;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.ray-business__hero-action:hover {
+  color: #fffaf3 !important;
+  box-shadow: 0 10px 22px rgba(56, 33, 22, 0.3);
+  transform: translateY(-1px);
+}
+
+.ray-business__hero-action:focus-visible {
+  outline: 3px solid rgba(235, 191, 96, 0.38);
+  outline-offset: 3px;
+}
+
+/* Keep the business illustration, but recolor it to belong to Security. */
+.ray-business__ambient {
+  opacity: 0.7;
+}
+
+.ray-business__orbit {
+  border-color: rgba(255, 250, 243, 0.38);
+  box-shadow:
+    0 0 22px rgba(216, 170, 92, 0.14),
+    inset 0 0 22px rgba(255, 250, 243, 0.07);
+}
+
+.ray-business__orbit::before {
+  border-color: rgba(216, 170, 92, 0.42);
+}
+
+.ray-business__orbit::after {
+  border-color: rgba(255, 250, 243, 0.25);
+}
+
+.ray-business__sigil {
+  border-color: rgba(255, 250, 243, 0.4);
+  color: #d8aa5c;
+  background: rgba(56, 33, 22, 0.78);
+  box-shadow: 0 0 42px rgba(216, 170, 92, 0.23);
+}
+
+.ray-business__capability-position > button {
+  border-color: rgba(255, 250, 243, 0.3);
+  color: #5b3825;
+  background: rgba(255, 253, 249, 0.94);
+  box-shadow:
+    0 9px 24px rgba(35, 18, 10, 0.22),
+    0 0 18px rgba(216, 170, 92, 0.1);
+}
+
+.ray-business__capability-position:nth-child(even) > button {
+  border-color: rgba(216, 170, 92, 0.55);
+  color: #382116;
+}
+
+.ray-business__capability-position > button svg,
+.ray-business__capability-position:nth-child(even) > button svg {
+  color: #b57b3f;
+}
+
+.ray-business__capability-position > button:hover {
+  border-color: #b57b3f;
+  box-shadow:
+    0 12px 30px rgba(35, 18, 10, 0.3),
+    0 0 24px rgba(216, 170, 92, 0.2);
+}
+
+@media (max-width: 1000px) {
+  .ray-business__ambient {
+    right: -280px;
+    opacity: 0.3;
+  }
+}
+
+@media (max-width: 680px) {
+  .ray-business__wrap,
+  .ray-business__hero-content {
+    width: min(100% - 28px, 1328px);
+  }
+
+  .ray-business__hero {
+    min-height: 0;
+    padding-block: 64px;
+  }
+
+  .ray-business__ambient {
+    right: -430px;
+    opacity: 0.2;
+  }
+
+  .ray-business__hero-action {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ray-business__hero-action {
+    transition: none;
+  }
+}
+
+.ray-business #accounts-title,
+.ray-business #connection-title {
+  color: #382116;
+}
+
+.ray-business__section-heading > span {
+  color: #8b6248;
+}
+
+.ray-business__section-heading > p {
+  color: #5f574f;
+}
