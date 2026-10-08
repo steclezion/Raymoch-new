@@ -102,8 +102,9 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
     Route::view('/insights', 'pages.market-insight')->name('insights');
     Route::view('/security_raymoch', 'pages.security')->name('security_raymoch');
     Route::view('/business_landing', 'pages.Business_landing')->name('business_landing');
+    Route::view('/customer', 'pages.customer')->name('customer');
 
-    // Trial request pages
+    // Trial request pagesbusiness_landing
     Route::get('/request-trial', fn() => view('pages.auth.trial'))->name('trial.page');
     Route::view('/trial/verify', 'pages.auth.trial-verify')->name('trial.verify.page');
     Route::view('/trial/success', 'pages.auth.trial-success')->name('trial.success.page');

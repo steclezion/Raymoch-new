@@ -20,6 +20,7 @@ import {
 import Header from "../components/layout_master/Header.jsx";
 import Footer from "../components/layout_master/Footer.jsx";
 import { ResponsiveController } from "../components/ResponsiveController.jsx";
+import RaymochInformationSupporter from "../components/RaymochInformationSupporter.jsx";
 import "../styles/security.css";
 
 const SECURITY_DOMAINS = [
@@ -278,6 +279,14 @@ export default function Security() {
           </main>
         </div>
 
+        <RaymochInformationSupporter
+          page="security"
+          topic="Raymoch security controls, data protection, incident response, and responsible disclosure"
+          welcomeMessage="Welcome. Ask me about Raymoch security controls, data protection, access management, incident response, or responsible disclosure."
+          inputLabel="Ask about Raymoch security"
+          placeholder="Ask about encryption, access, monitoring, incidents..."
+        />
+
         <Footer />
       </>
     </ResponsiveController>
@@ -293,3 +302,5 @@ function SectionHeading({ eyebrow, title, text, light = false }) {
     </header>
   );
 }
+
+

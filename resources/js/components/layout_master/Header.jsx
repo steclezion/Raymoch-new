@@ -441,6 +441,7 @@ export default function Header({ routes = {} }) {
       explore: routes.explore ?? "/explore",
       services: routes.services ?? "/services",
       insights: routes.insights ?? "/insights",
+      customer: routes.customer ?? "/customer",
       about: routes.about ?? "/about",
       security: routes.security_raymoch ?? "/security_raymoch",
       businessLanding: routes.business_landing ?? "/business_landing",
@@ -1045,10 +1046,10 @@ setTimeout(() => {
                   Security
                 </RouterSafeButton>
                 
-                      <RouterSafeButton to={safeRoutes.about} sx={secondaryNavBtnSx}>
+                      <RouterSafeButton to={safeRoutes.customer} sx={secondaryNavBtnSx}>
                   Customers
                 </RouterSafeButton>
-                      <RouterSafeButton to={safeRoutes.about} sx={secondaryNavBtnSx}>
+                      <RouterSafeButton to={safeRoutes.pricing} sx={secondaryNavBtnSx}>
                   Pricing
                 </RouterSafeButton>
                       <RouterSafeButton to={safeRoutes.about} sx={secondaryNavBtnSx}>
@@ -1144,7 +1145,7 @@ setTimeout(() => {
             </SafeLink>
      
                 <SafeLink
-              to={safeRoutes.about}
+              to={safeRoutes.customer}
               style={mobileMenuStyles.link}
               onClick={() => setMobileOpen(false)}
             >

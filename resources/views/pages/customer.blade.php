@@ -1,7 +1,7 @@
 @extends('layouts.appshellotest')
 <link href="{{ asset('css/style_entire.css')  }}" rel="stylesheet" type="text/css" id="bootstrap">
 <!-- Bootstrap CSS for Section 4 African Slides -->
-@section('title','Raymoch • Services')
+@section('title','Raymoch • Customer')
 @section('content')
 
   @viteReactRefresh
@@ -13,7 +13,7 @@
     cookies: "{{ url('/cookies') }}",
   };
 </script>
-  <div id="ServicesRoot"></div>
+  <div id="customer-root"></div>
 
 
 @push('scripts')

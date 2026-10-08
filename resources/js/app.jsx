@@ -31,6 +31,7 @@ import MembershipSuccess from "./pages/membership_success.jsx";
 import Overview from "./pages/Overview.jsx";
 import Fulloverview from "./pages/Fulloverview.jsx";
 import Security from "./pages/Security.jsx";
+import Customer from "./pages/Customer.jsx";
 import BusinessLanding from "./pages/Business_landing.jsx";
 import FulloverviewRootAuthenticated from "./pages/FulloverviewRootAuthenticated.jsx";
 /* =========================================================
@@ -361,6 +362,7 @@ mount("FulloverviewRootAuthenticated", <FulloverviewRootAuthenticated />);//
 mount("FulloverviewRoot", <Fulloverview />);
 mount("SecurityRoot", <Security/>);
 mount("business-landing-root", <BusinessLanding />);
+mount("customer-root", <Customer />);
 
 mount("explore-root",
 <BrowserRouter>   <ExploreBusinesses /></BrowserRouter>   
