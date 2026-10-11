@@ -1,0 +1,25 @@
+/*
+ * Application-wide typography
+ *
+ * Keep the font stack in one place so React components, Blade pages, MUI,
+ * and native form controls all render with the same typeface.
+ */
+:root {
+  --font-family-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+html,
+body {
+  font-family: var(--font-family-sans) !important;
+}
+
+body * {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif !important;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}

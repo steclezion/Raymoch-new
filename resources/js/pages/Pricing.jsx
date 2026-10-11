@@ -1,449 +1,274 @@
-// resources/js/pages/Pricing.jsx
-
-import React, { useMemo, useState, useEffect } from "react";
-import { CheckCircle2 } from "lucide-react";
+import React from "react";
+import {
+  ArrowRight,
+  BriefcaseBusiness,
+  Check,
+  CreditCard,
+  RefreshCw,
+  ShieldCheck,
+  UserRound,
+} from "lucide-react";
 
 import Header from "../components/layout_master/Header.jsx";
 import Footer from "../components/layout_master/Footer.jsx";
-import BreadcrumbsNav from "../components/common/BreadcrumbsNav";
+import BreadcrumbsNav from "../components/common/BreadcrumbsNav.jsx";
+import "../styles/pricing.css";
 
 const PLANS = [
   {
     key: "basic",
-    label: "Current Plan",
     name: "Basic",
-    quality: "Limited Access",
-    price: "$0.00",
-    tag: "Free",
-    isCurrent: true,
+    eyebrow: "Start exploring",
+    price: "$0",
+    cadence: "Free",
+    description:
+      "A simple way to browse the platform and understand how Raymoch organizes business information.",
+    icon: UserRound,
     features: [
-      ["Search access", "Basic"],
-      ["Company result visibility", "Limited"],
-      ["Trust summary", "Locked"],
-      ["Investor matching", "Not included"],
-      ["Verification insights", "Not included"],
-      ["Best for", "General browsing"],
+      "Basic company search",
+      "Limited company result visibility",
+      "General business browsing",
+      "No payment required",
     ],
+    action: "Explore for free",
   },
   {
     key: "business",
     name: "Business",
-    quality: "Company Growth",
+    eyebrow: "For growing companies",
     price: "$19.99",
-    tag: "Recommended",
+    cadence: "per month",
+    description:
+      "For companies that need greater visibility, trust information, and access to relevant opportunities.",
+    icon: BriefcaseBusiness,
     features: [
-      ["Search access", "Full"],
-      ["Company result visibility", "Included"],
-      ["Trust summary", "Included"],
-      ["Investor matching", "Included"],
-      ["Verification insights", "Included"],
-      ["Best for", "SMEs and companies"],
+      "Full company search access",
+      "Complete result visibility",
+      "Trust summaries and verification insights",
+      "Investor matching access",
+      "Business-focused platform tools",
     ],
+    action: "Choose Business",
+    recommended: true,
   },
   {
     key: "investor",
     name: "Investor",
-    quality: "Deal Discovery",
+    eyebrow: "For deal discovery",
     price: "$26.99",
-    tag: "Premium",
+    cadence: "per month",
+    description:
+      "For investors and partners evaluating businesses with deeper trust signals and priority matching.",
+    icon: ShieldCheck,
     features: [
-      ["Search access", "Full"],
-      ["Company result visibility", "Included"],
-      ["Trust summary", "Advanced"],
-      ["Investor matching", "Priority"],
-      ["Verification insights", "Advanced"],
-      ["Best for", "Investors and partners"],
+      "Full company search access",
+      "Advanced trust summaries",
+      "Advanced verification insights",
+      "Priority investor matching",
+      "Investor-focused discovery tools",
     ],
+    action: "Choose Investor",
   },
 ];
 
-export default function Pricing() {
-  const [selectedPlan, setSelectedPlan] = useState("business");
+const COMPARISON_ROWS = [
+  ["Company search", "Basic", "Full", "Full"],
+  ["Result visibility", "Limited", "Included", "Included"],
+  ["Trust summaries", "—", "Included", "Advanced"],
+  ["Verification insights", "—", "Included", "Advanced"],
+  ["Investor matching", "—", "Included", "Priority"],
+];
 
-  useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  }, []);
+const STEPS = [
+  {
+    number: "01",
+    icon: UserRound,
+    title: "Choose your account type",
+    text: "Select the plan that matches how you intend to use Raymoch: browsing, business growth, or investment discovery.",
+  },
+  {
+    number: "02",
+    icon: CreditCard,
+    title: "Review and confirm",
+    text: "Paid plans continue to a clear order review where you can confirm the selected plan before payment.",
+  },
+  {
+    number: "03",
+    icon: RefreshCw,
+    title: "Access your plan",
+    text: "Once confirmed, your account receives the access level and platform capabilities included with that plan.",
+  },
+];
 
-  const selected = useMemo(
-    () => PLANS.find((plan) => plan.key === selectedPlan),
-    [selectedPlan]
-  );
+export default function Pricing({ routes = {} }) {
+  const paymentPath = routes.priceHowToPay || "/price-how-to-pay";
+  const explorePath = routes.explore || "/explore";
 
-  const handleContinue = () => {
-    if (!selected) return;
-
-    if (selected.key === "basic") {
-      window.location.href = "/explore";
-      return;
-    }
-
- window.location.href = `/price-how-to-pay?plan=${selected.key}`;
-  };
+  const planHref = (plan) =>
+    plan.key === "basic"
+      ? explorePath
+      : `${paymentPath}?plan=${plan.key}`;
 
   return (
     <>
-      <style>{styles}</style>
+      <Header routes={routes} />
 
-      <Header />
+      <main className="pricing-page">
+        <div className="pricing-container">
+          {/* <BreadcrumbsNav /> */}
 
-      <main className="rm-pricing-page">
-      
-        <section className="rm-pricing-shell">
-              <BreadcrumbsNav />
-          <div className="rm-pricing-header">
-            <h1>Change Plan</h1>
-
-            <p>
-              Try out a new plan. You can always switch back if you do not love
-              it.
+          <section className="pricing-intro" aria-labelledby="pricing-title">
+            <p className="pricing-kicker">Plans and pricing</p>
+            <h1 id="pricing-title">Straightforward access for every stage</h1>
+            <p className="pricing-intro-copy">
+              Start with free discovery, then choose a plan based on the level
+              of business intelligence, verification detail, and matching
+              support you need.
             </p>
-          </div>
+          </section>
 
-          <div className="rm-plan-grid">
-            {PLANS.map((plan) => {
-              const isSelected = selectedPlan === plan.key;
+          <section className="pricing-process" aria-labelledby="pricing-process-title">
+            <div className="pricing-section-heading">
+              <p className="pricing-section-label">How pricing works</p>
+              <h2 id="pricing-process-title">Three clear steps</h2>
+            </div>
 
-              return (
-                <button
-                  key={plan.key}
-                  type="button"
-                  className={`rm-plan-card ${isSelected ? "selected" : ""}`}
-                  onClick={() => setSelectedPlan(plan.key)}
-                >
-                  {plan.isCurrent && (
-                    <div className="rm-current-ribbon">
-                      Current Plan
-                    </div>
-                  )}
+            <div className="pricing-process-grid">
+              {STEPS.map(({ number, icon: Icon, title, text }) => (
+                <article className="pricing-step" key={number}>
+                  <div className="pricing-step-topline">
+                    <span className="pricing-step-icon" aria-hidden="true">
+                      <Icon size={20} strokeWidth={1.8} />
+                    </span>
+                    <span className="pricing-step-number">{number}</span>
+                  </div>
+                  <h3>{title}</h3>
+                  <p>{text}</p>
+                </article>
+              ))}
+            </div>
+          </section>
 
-                  <div className="rm-plan-banner">
-                    <div>
-                      <h2>{plan.name}</h2>
-                      <span>{plan.quality}</span>
-                    </div>
+          <section className="pricing-plans" aria-labelledby="pricing-plans-title">
+            <div className="pricing-section-heading pricing-section-heading--centered">
+              <p className="pricing-section-label">Choose a plan</p>
+              <h2 id="pricing-plans-title">Select the access that fits your goals</h2>
+              <p>Prices are shown in USD. Paid plans are billed monthly.</p>
+            </div>
 
-                    {isSelected && (
-                      <CheckCircle2
-                        size={20}
-                        className="rm-plan-check"
-                      />
+            <div className="pricing-plan-grid">
+              {PLANS.map((plan) => {
+                const Icon = plan.icon;
+
+                return (
+                  <article
+                    className={`pricing-card${plan.recommended ? " pricing-card--recommended" : ""}`}
+                    key={plan.key}
+                  >
+                    {plan.recommended && (
+                      <span className="pricing-card-badge">Recommended</span>
                     )}
-                  </div>
 
-                  <div className="rm-plan-body">
-                    <div className="rm-feature-row price">
-                      <span>Monthly price</span>
-                      <strong>{plan.price} / month</strong>
+                    <div className="pricing-card-heading">
+                      <span className="pricing-card-icon" aria-hidden="true">
+                        <Icon size={22} strokeWidth={1.8} />
+                      </span>
+                      <div>
+                        <p>{plan.eyebrow}</p>
+                        <h3>{plan.name}</h3>
+                      </div>
                     </div>
 
-                    {plan.features.map(([label, value]) => (
-                      <div
-                        className="rm-feature-row"
-                        key={label}
-                      >
-                        <span>{label}</span>
-                        <strong>{value}</strong>
-                      </div>
-                    ))}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+                    <div className="pricing-price">
+                      <strong>{plan.price}</strong>
+                      <span>{plan.cadence}</span>
+                    </div>
 
-          <div className="rm-pricing-action">
-            <button
-              type="button"
-              onClick={handleContinue}
-            >
-              Continue
-            </button>
-          </div>
-        </section>
+                    <p className="pricing-card-description">{plan.description}</p>
+
+                    <ul className="pricing-feature-list">
+                      {plan.features.map((feature) => (
+                        <li key={feature}>
+                          <Check size={17} strokeWidth={2.4} aria-hidden="true" />
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <a
+                      className={`pricing-card-action${plan.recommended ? " pricing-card-action--primary" : ""}`}
+                      href={planHref(plan)}
+                    >
+                      {plan.action}
+                      <ArrowRight size={17} aria-hidden="true" />
+                    </a>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="pricing-comparison" aria-labelledby="pricing-comparison-title">
+            <div className="pricing-section-heading">
+              <p className="pricing-section-label">Compare access</p>
+              <h2 id="pricing-comparison-title">What each plan includes</h2>
+            </div>
+
+            <div className="pricing-table-wrap">
+              <table className="pricing-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Capability</th>
+                    <th scope="col">Basic</th>
+                    <th scope="col">Business</th>
+                    <th scope="col">Investor</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {COMPARISON_ROWS.map(([label, ...values]) => (
+                    <tr key={label}>
+                      <th scope="row">{label}</th>
+                      {values.map((value, index) => (
+                        <td key={`${label}-${index}`}>{value}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section className="pricing-notes" aria-labelledby="pricing-notes-title">
+            <div>
+              <p className="pricing-section-label">Before you continue</p>
+              <h2 id="pricing-notes-title">Clear billing, no surprises</h2>
+            </div>
+            <ul>
+              <li>Basic access does not require payment.</li>
+              <li>Paid plan pricing is displayed in USD per month.</li>
+              <li>You can review your selected plan before completing payment.</li>
+              <li>Available features depend on the account plan selected.</li>
+            </ul>
+          </section>
+
+          <section className="pricing-help" aria-labelledby="pricing-help-title">
+            <div>
+              <p className="pricing-section-label">Need guidance?</p>
+              <h2 id="pricing-help-title">Choose based on what you need to accomplish</h2>
+              <p>
+                Business is designed for company growth and visibility.
+                Investor is designed for deeper evaluation and deal discovery.
+              </p>
+            </div>
+            <a href={routes.contact || "/contact"}>
+              Contact us
+              <ArrowRight size={17} aria-hidden="true" />
+            </a>
+          </section>
+        </div>
       </main>
 
-      <Footer />
+      <Footer routes={routes} />
     </>
   );
 }
-
-const styles = `
-  * {
-    box-sizing: border-box;
-  }
-
- .breadcrumb{
-  display:flex;
-  align-items:center;
-  flex-wrap:wrap;
-  gap:8px;
-  margin:0 0 18px;
-  padding:12px 16px;
-  background:#fff;
-  border:1px solid #e5e7eb;
-  border-radius:14px;
-  box-shadow:0 4px 14px rgba(15,23,42,.06);
-  font-size:13px;
-  text-transform: uppercase;
-  letter-spacing: .6px;
-}
-.breadcrumb a{
-  color:#2d4fbf;
-  text-decoration:none;
-  font-weight:600;
-  transition:color .18s ease;
-}
-.breadcrumb a:hover{
-  color:#0A2A6B;
-  text-decoration:underline;
-}
-.breadcrumb .sep{
-  color:#94a3b8;
-  font-weight:700;
-}
-.breadcrumb .current{
-  color:#0f172a;
-  font-weight:800;
-}
-
-  .rm-pricing-page {
-    min-height: 100vh;
-    background: #f8fafc;
-    padding: 48px 18px 80px;
-  }
-
-  .rm-pricing-shell {
-    width: 100%;
-    max-width: 1180px;
-    margin: 0 auto;
-  }
-
-  .rm-pricing-header {
-    text-align: center;
-    margin-bottom: 38px;
-  }
-
-  .rm-pricing-header h1 {
-    margin: 0;
-    font-size: 42px;
-    font-weight: 900;
-    color: #020617;
-    line-height: 1.1;
-  }
-
-  .rm-pricing-header p {
-    margin: 12px 0 0;
-    color: #475569;
-    font-size: 15px;
-    line-height: 1.6;
-  }
-
-  .rm-plan-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 22px;
-    align-items: stretch;
-  }
-
-  .rm-plan-card {
-    position: relative;
-    border: 1px solid #d1d5db;
-    border-radius: 22px;
-    background: #ffffff;
-    padding: 10px;
-    text-align: left;
-    cursor: pointer;
-    min-height: 680px;
-    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
-    transition:
-      transform 0.22s ease,
-      box-shadow 0.22s ease,
-      border-color 0.22s ease;
-  }
-
-  .rm-plan-card:hover {
-    transform: translateY(-4px);
-  }
-
-  .rm-plan-card.selected {
-    border-color: #64748b;
-    box-shadow: 0 24px 44px rgba(15, 23, 42, 0.16);
-  }
-
-  .rm-current-ribbon {
-    height: 30px;
-    margin: -10px -10px 10px;
-    border-radius: 20px 20px 0 0;
-    background: #222222;
-    color: #ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 900;
-    letter-spacing: 0.02em;
-  }
-
-.rm-plan-banner {
-  min-height: 100px;
-  border-radius: 16px;
-  padding: 22px 18px;
-
-  background:
-    linear-gradient(
-      135deg,
-      #0A2A6B 0%,
-      #1e3a8a 15%,
-      #2d4fbf 35%
-    );
-
-  color: #ffffff;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-  .rm-plan-banner h2 {
-    margin: 0;
-    font-size: 22px;
-    font-weight: 900;
-    line-height: 1.1;
-  }
-
-  .rm-plan-banner span {
-    display: block;
-    margin-top: 7px;
-    font-size: 14px;
-    font-weight: 800;
-    opacity: 0.96;
-  }
-
-  .rm-plan-check {
-    flex: 0 0 auto;
-  }
-
-  .rm-plan-body {
-    padding: 18px 14px 8px;
-  }
-
-  .rm-feature-row {
-    padding: 18px 0;
-    border-bottom: 1px solid #dbe2ea;
-  }
-
-  .rm-feature-row:last-child {
-    border-bottom: 0;
-  }
-
-  .rm-feature-row span {
-    display: block;
-    margin-bottom: 7px;
-    font-size: 12px;
-    color: #64748b;
-    font-weight: 800;
-    letter-spacing: 0.01em;
-  }
-
-  .rm-feature-row strong {
-    display: block;
-    color: #0f172a;
-    font-size: 15px;
-    font-weight: 800;
-    line-height: 1.45;
-  }
-
-  .rm-feature-row.price strong {
-    font-size: 21px;
-  }
-
-  .rm-pricing-action {
-    margin-top: 56px;
-    display: flex;
-    justify-content: center;
-  }
-
-  .rm-pricing-action button {
-    width: min(620px, 100%);
-    height: 58px;
-    border: 0;
-    border-radius: 8px;
-    background: #000000;
-    color: #ffffff;
-    font-size: 16px;
-    font-weight: 900;
-    cursor: pointer;
-    transition:
-      opacity 0.2s ease,
-      transform 0.2s ease;
-  }
-
-  .rm-pricing-action button:hover {
-    opacity: 0.92;
-    transform: translateY(-1px);
-  }
-
-  @media (max-width: 1080px) {
-    .rm-plan-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .rm-plan-card {
-      min-height: auto;
-    }
-  }
-
-  @media (max-width: 768px) {
-    .rm-pricing-page {
-      padding: 38px 14px 60px;
-    }
-
-    .rm-pricing-header h1 {
-      font-size: 34px;
-    }
-
-    .rm-plan-banner h2 {
-      font-size: 20px;
-    }
-  }
-
-  @media (max-width: 520px) {
-    .rm-pricing-page {
-      padding: 28px 10px 50px;
-    }
-
-    .rm-pricing-header h1 {
-      font-size: 28px;
-    }
-
-    .rm-pricing-header p {
-      font-size: 14px;
-    }
-
-    .rm-plan-banner {
-      min-height: 92px;
-      padding: 18px 16px;
-    }
-
-    .rm-plan-banner h2 {
-      font-size: 18px;
-    }
-
-    .rm-feature-row.price strong {
-      font-size: 19px;
-    }
-
-    .rm-pricing-action {
-      margin-top: 40px;
-    }
-
-    .rm-pricing-action button {
-      height: 54px;
-      font-size: 15px;
-    }
-  }
-`;

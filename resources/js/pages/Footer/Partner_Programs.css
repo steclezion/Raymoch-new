@@ -1,0 +1,52 @@
+.partner-programs-page {
+  --pp-ink: #17251f;
+  --pp-brand: #1f5142;
+  --pp-accent: #b78642;
+  --pp-muted: #607069;
+  --pp-line: #d6dfda;
+  min-height: 75vh;
+  padding: 30px 20px 84px;
+  color: var(--pp-ink);
+  background: #f7faf8;
+}
+
+.partner-programs-page * { box-sizing: border-box; }
+.partner-programs-page__wrap { width: min(1080px, 100%); margin: 0 auto; }
+.partner-programs-page__intro { max-width: 890px; padding: 62px 0 50px; }
+.partner-programs-page__eyebrow { display: flex; align-items: center; gap: 9px; margin-bottom: 15px; color: var(--pp-accent); font-size: .75rem; font-weight: 850; letter-spacing: .12em; text-transform: uppercase; }
+.partner-programs-page__intro h1 { margin: 0; color: var(--pp-ink); font-size: clamp(2.3rem, 5.4vw, 4.4rem); font-weight: 800; line-height: 1.04; letter-spacing: -.045em; text-wrap: balance; }
+.partner-programs-page__intro p { max-width: 770px; margin: 24px 0 0; color: var(--pp-muted); font-size: 1.05rem; line-height: 1.75; }
+.partner-programs-page__stages { border-top: 1px solid var(--pp-line); }
+.partner-programs-page__stage { border-bottom: 1px solid var(--pp-line); }
+.partner-programs-page__stage summary { display: grid; grid-template-columns: 52px minmax(0, 1fr) 36px; gap: 20px; align-items: center; padding: 25px 8px; cursor: pointer; list-style: none; }
+.partner-programs-page__stage summary::-webkit-details-marker { display: none; }
+.partner-programs-page__stage summary:focus-visible { outline: 3px solid rgba(31, 81, 66, .22); outline-offset: -3px; }
+.partner-programs-page__number { color: var(--pp-accent); font-size: .74rem; font-weight: 850; letter-spacing: .11em; }
+.partner-programs-page__summary { display: grid; gap: 6px; }
+.partner-programs-page__summary strong { color: var(--pp-ink); font-size: clamp(1.08rem, 2vw, 1.35rem); transition: color 180ms ease; }
+.partner-programs-page__summary small { color: var(--pp-muted); font-size: .86rem; line-height: 1.55; }
+.partner-programs-page__stage summary:hover .partner-programs-page__summary strong { color: var(--pp-brand); }
+.partner-programs-page__chevron { display: grid; width: 34px; height: 34px; place-items: center; border: 1px solid var(--pp-line); color: var(--pp-brand); transition: transform 220ms ease, color 220ms ease, background-color 220ms ease; }
+.partner-programs-page__stage[open] .partner-programs-page__chevron { color: #fff; background: var(--pp-brand); transform: rotate(180deg); }
+.partner-programs-page__detail { padding: 0 64px 28px 80px; }
+.partner-programs-page__detail p { max-width: 830px; margin: 0; color: #52635b; font-size: .96rem; line-height: 1.82; }
+.partner-programs-page__action { display: flex; align-items: center; justify-content: space-between; gap: 34px; margin-top: 56px; padding: 34px 38px; border-left: 4px solid var(--pp-accent); background: #e7eee9; }
+.partner-programs-page__action span { display: block; margin-bottom: 8px; color: #80633a; font-size: .72rem; font-weight: 850; letter-spacing: .1em; text-transform: uppercase; }
+.partner-programs-page__action h2 { max-width: 650px; margin: 0; font-size: clamp(1.3rem, 3vw, 1.9rem); line-height: 1.25; }
+.partner-programs-page__action a { display: inline-flex; align-items: center; justify-content: center; gap: 8px; flex: 0 0 auto; min-height: 46px; padding: 0 18px; color: #fff; background: var(--pp-brand); text-decoration: none; font-size: .86rem; font-weight: 850; }
+.partner-programs-page__action a:focus-visible { outline: 3px solid rgba(183, 134, 66, .45); outline-offset: 3px; }
+
+@media (max-width: 680px) {
+  .partner-programs-page { padding: 22px 14px 58px; }
+  .partner-programs-page__intro { padding: 44px 0 38px; }
+  .partner-programs-page__stage summary { grid-template-columns: 34px minmax(0, 1fr) 34px; gap: 11px; padding: 21px 2px; }
+  .partner-programs-page__summary small { display: none; }
+  .partner-programs-page__detail { padding: 0 8px 23px 45px; }
+  .partner-programs-page__action { align-items: flex-start; flex-direction: column; padding: 28px 23px; }
+  .partner-programs-page__action a { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .partner-programs-page__summary strong,
+  .partner-programs-page__chevron { transition: none; }
+}

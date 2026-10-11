@@ -31,15 +31,8 @@
   place-items: initial;
   padding-block: clamp(64px, 8vw, 112px);
   border-bottom: 0;
-  color: #fffaf3;
-  background: linear-gradient(
-    110deg,
-    #28160f 0%,
-    #3d2418 31%,
-    #5c3a27 59%,
-    #96673a 85%,
-    #d8aa5c 100%
-  );
+  color: #382116;
+  background: #f7f2ea;
   isolation: isolate;
   overflow: hidden;
 }
@@ -50,8 +43,8 @@
   inset: 0;
   z-index: -2;
   background:
-    radial-gradient(circle at 78% 48%, rgba(255, 250, 243, 0.13), transparent 24rem),
-    linear-gradient(90deg, rgba(40, 22, 15, 0.2), transparent 62%);
+    radial-gradient(circle at 82% 48%, rgba(216, 170, 92, .16), transparent 25rem),
+    linear-gradient(90deg, #f7f2ea 0%, rgba(247, 242, 234, .96) 51%, rgba(247, 242, 234, .38) 76%, transparent 100%);
   pointer-events: none;
 }
 
@@ -72,7 +65,7 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  color: #d8aa5c;
+  color: #8b6248;
   font-size: 0.76rem;
   font-weight: 850;
   letter-spacing: 0.08em;
@@ -82,7 +75,7 @@
 .ray-business__hero h1 {
   max-width: 840px;
   margin: 18px 0 0;
-  color: #fffaf3;
+  color: #382116;
   font-family: Merriweather, Georgia, serif;
   font-size: clamp(2.5rem, 5.5vw, 4.8rem);
   font-weight: 700;
@@ -95,11 +88,195 @@
 .ray-business__hero p {
   max-width: 770px;
   margin: 20px 0 0;
-  color: rgba(255, 250, 243, 0.83);
+  color: #655d56;
   font-size: clamp(1rem, 1.5vw, 1.17rem);
   line-height: 1.72;
   text-align: left;
 }
+
+/* Africa line-art: a lightweight SVG data network, not a background image. */
+.ray-business__africa {
+  position: absolute;
+  top: 50%;
+  right: max(-26px, calc((100vw - 1440px) / 2));
+  z-index: 0;
+  width: min(47vw, 660px);
+  aspect-ratio: 560 / 650;
+  transform: translateY(-50%);
+  margin: 0;
+  pointer-events: auto;
+  transition: filter .24s ease, transform .24s ease;
+}
+
+.ray-business__africa:hover,
+.ray-business__africa:focus-within {
+  filter: saturate(1.08);
+  transform: translateY(-50%) scale(1.012);
+}
+
+.ray-business__africa::before {
+  content: "";
+  position: absolute;
+  inset: 7% 3% 4%;
+  border: 1px solid rgba(255, 250, 243, .1);
+  background:
+    radial-gradient(circle at 50% 42%, rgba(216, 170, 92, .14), transparent 44%),
+    radial-gradient(circle at 62% 64%, rgba(111, 216, 207, .08), transparent 34%);
+  clip-path: polygon(50% 0, 100% 18%, 91% 76%, 54% 100%, 12% 77%, 0 24%);
+}
+
+.ray-business__africa-map {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 18px 34px rgba(22, 10, 5, .3));
+}
+
+.ray-business__map-grid path {
+  fill: none;
+  stroke: rgba(255, 250, 243, .055);
+  stroke-width: 1;
+  stroke-dasharray: 2 9;
+}
+
+.ray-business__africa-fill { fill: url(#ray-business-africa-surface); }
+
+.ray-business__africa-outline {
+  fill: none;
+  stroke: url(#ray-business-africa-stroke);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 9 5;
+  animation: rb-africa-outline 24s linear infinite;
+}
+
+.ray-business__madagascar {
+  fill: rgba(255, 250, 243, .035);
+  stroke: #d8aa5c;
+  stroke-width: 1.8;
+  stroke-dasharray: 6 5;
+}
+
+.ray-business__contour-lines path {
+  fill: none;
+  stroke: rgba(255, 250, 243, .18);
+  stroke-width: 1;
+}
+
+.ray-business__contour-lines path:nth-child(even) {
+  stroke: rgba(255, 216, 138, .22);
+}
+
+.ray-business__map-orbits {
+  transform-origin: 282px 305px;
+  animation: rb-map-spin 34s linear infinite;
+}
+
+.ray-business__map-orbits circle {
+  fill: none;
+  stroke: rgba(255, 250, 243, .32);
+  stroke-width: 1.15;
+  stroke-dasharray: 5 10;
+  transform-origin: 282px 305px;
+}
+
+.ray-business__map-orbits circle:nth-child(2) {
+  stroke: rgba(255, 216, 138, .46);
+  stroke-dasharray: 2 8;
+  animation: rb-map-spin-reverse 21s linear infinite;
+}
+
+.ray-business__map-orbits circle:nth-child(3) {
+  stroke: rgba(155, 215, 202, .5);
+  stroke-dasharray: 12 7;
+  animation: rb-map-spin 15s linear infinite;
+}
+
+.ray-business__network-lines path {
+  fill: none;
+  stroke: rgba(255, 216, 138, .48);
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 5 7;
+  animation: rb-africa-flow 14s linear infinite;
+}
+
+.ray-business__network-lines path:nth-child(even) {
+  stroke: rgba(155, 215, 202, .43);
+  animation-direction: reverse;
+  animation-duration: 18s;
+}
+
+.ray-business__map-nodes circle {
+  fill: #fff3d7;
+  stroke: rgba(91, 56, 37, .8);
+  stroke-width: 1.5;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: rb-africa-node 3.6s ease-in-out infinite;
+}
+
+.ray-business__map-nodes circle:nth-child(3n) {
+  fill: #9bd7ca;
+  animation-delay: -1.2s;
+}
+
+.ray-business__map-nodes circle:nth-child(4n) {
+  animation-delay: -2.4s;
+}
+
+.ray-business__africa-label {
+  position: absolute;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 8px 11px;
+  border: 1px solid rgba(255, 250, 243, .3);
+  border-radius: 3px;
+  color: rgba(255, 250, 243, .92);
+  background: rgba(56, 33, 22, .78);
+  box-shadow: 0 10px 28px rgba(22, 10, 5, .22);
+  backdrop-filter: blur(8px);
+  font-size: .68rem;
+  font-weight: 760;
+  letter-spacing: .035em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color .18s ease, border-color .18s ease, transform .18s ease;
+}
+
+.ray-business__africa-label svg { color: #ffd88a; }
+.ray-business__africa-label:is(:hover, :focus-visible) {
+  border-color: #ffd88a;
+  background: rgba(91, 56, 37, .96);
+  outline: none;
+  transform: translateY(-2px);
+}
+.ray-business__africa-label--trust { top: 24%; left: 20%; }
+.ray-business__africa-label--market { top: 45%; right: 9%; }
+.ray-business__africa-label--network { right: 18%; bottom: 21%; }
+
+@keyframes rb-africa-outline {
+  to { stroke-dashoffset: -280; }
+}
+
+@keyframes rb-africa-flow {
+  to { stroke-dashoffset: -190; }
+}
+
+@keyframes rb-africa-node {
+  50% { transform: scale(1.55); opacity: .7; }
+}
+
+@keyframes rb-map-spin { to { transform: rotate(360deg); } }
+@keyframes rb-map-spin-reverse { to { transform: rotate(-360deg); } }
 
 .ray-business__hero-action {
   display: inline-flex;
@@ -189,6 +366,14 @@
     right: -280px;
     opacity: 0.3;
   }
+
+  .ray-business__africa {
+    right: -150px;
+    width: min(61vw, 610px);
+    opacity: .62;
+  }
+
+  .ray-business__africa-label { display: none; }
 }
 
 @media (max-width: 680px) {
@@ -207,6 +392,13 @@
     opacity: 0.2;
   }
 
+  .ray-business__africa {
+    top: 52%;
+    right: -265px;
+    width: 590px;
+    opacity: .28;
+  }
+
   .ray-business__hero-action {
     width: 100%;
   }
@@ -215,6 +407,12 @@
 @media (prefers-reduced-motion: reduce) {
   .ray-business__hero-action {
     transition: none;
+  }
+
+  .ray-business__africa-outline,
+  .ray-business__network-lines path,
+  .ray-business__map-nodes circle {
+    animation: none;
   }
 }
 

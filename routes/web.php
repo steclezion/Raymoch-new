@@ -11,6 +11,7 @@ use App\Http\Controllers\company_description;
 use App\Http\Controllers\company_description_type_controller;
 use App\Http\Controllers\CompanyClassificationController;
 use App\Http\Controllers\CompanyInfosController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ControlLayoutController;
 use App\Http\Controllers\ExploreController;
 use App\Http\Controllers\ForgotPasswordController;
@@ -67,7 +68,7 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
 
 
     // Signup entry
-    // Route::get('/signup', [SignupController::class, 'index'])->name('signup.index');
+    Route::view('/signup', 'pages.auth.signup.signup')->name('signup.index');
     // Route::get('/signup/investor/create', [SignupController::class, 'createInvestor'])->name('signup.investor.create');
     // Route::get('/signup/basic/create/individual', [SignupController::class, 'showPaymentPlansCreate'])->name('signup.basic.create.individual'); // Store the Basic account (JSON) Route::get('/signup/premium/create/individual/', [SignupController::class, 'showPaymentPlansCreate'])->name('signup.premium.create.individual');
 
@@ -101,7 +102,7 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
     Route::view('/services', 'pages.services')->name('services');
     Route::view('/insights', 'pages.market-insight')->name('insights');
     Route::view('/security_raymoch', 'pages.security')->name('security_raymoch');
-    Route::view('/business_landing', 'pages.Business_landing')->name('business_landing');
+    Route::view('/business', 'pages.Business_landing')->name('business_landing');
     Route::view('/customer', 'pages.customer')->name('customer');
 
     // Trial request pagesbusiness_landing
@@ -120,7 +121,6 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
 
     Route::view('/careers', 'pages.entire')->name('careers');
     Route::view('/press', 'pages.entire')->name('press');
-    Route::view('/contact', 'pages.entire')->name('contact');
     Route::view('/blog', 'pages.entire')->name('blog');
     Route::view('/help', 'pages.entire')->name('help');
     Route::view('/security', 'pages.entire')->name('security');
@@ -132,6 +132,35 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
 
     Route::get('/services/options', [ServiceController::class, 'options'])->name('services.options');
 });
+
+// Public pricing overview: available to both guests and authenticated users.
+Route::view('/pricing', 'pages.Pricing')->name('pricing');
+
+// Public footer information pages: available with or without an account.
+// $footerInformationPages = [
+//     '/trust-methodology' => ['trust-methodology', 'footer.company.trust'],
+//     '/for-businesses' => ['for-businesses', 'footer.product.businesses'],
+//     '/for-investors' => ['for-investors', 'footer.product.investors'],
+//     '/business-readiness-guides' => ['business-readiness-guides', 'footer.resources.readiness'],
+//     '/verification-guide' => ['verification-guide', 'footer.resources.verification'],
+//     '/investor-resources' => ['investor-resources', 'footer.resources.investors'],
+//     '/faqs' => ['faqs', 'footer.resources.faqs'],
+//     '/data-protection' => ['data-protection', 'footer.legal.data'],
+//     '/accessibility' => ['accessibility', 'footer.legal.accessibility'],
+// ];
+
+// foreach ($footerInformationPages as $uri => [$footerPage, $routeName]) {
+//     Route::view($uri, 'pages.Footer.page', compact('footerPage'))->name($routeName);
+// }
+
+Route::view('/how-raymoch-works', 'pages.Footer.How_Raymoch_Works')->name('footer.company.how');
+Route::view('/Trust_and_Methodology', 'pages.Footer.Trust_and_Methodology')->name('footer.company.trust');
+Route::view('/Partner_Programs', 'pages.Footer.Partner_Programs')->name('footer.company.partners');
+Route::view('/Careers', 'pages.Footer.Careers')->name('footer.company.careers');
+Route::get('/Contact', [ContactController::class, 'index'])->name('footer.company.contact');
+Route::post('/contact/messages', [ContactController::class, 'store'])
+    ->middleware('throttle:8,1')
+    ->name('contact.messages.store');
 
 
 Route::post('/chatbot', [ChatbotController::class, 'respond'])->name('chatbot.respond');
@@ -239,10 +268,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('company_classifications', CompanyClassificationController::class);
     Route::view('/companies', 'pages.companies')->name('companies'); // main companies listing page // Static placeholders used in header/footer links (wire up later as you build them)
     Route::view('/matching', 'pages.matching')->name('matching'); // main companies listing page // Static placeholders used in header/footer links (wire up later as you build them)
+    Route::view('/verification', 'pages.services.verification')->name('verification');
     Route::view('/services', 'pages.services')->name('services'); // temp → point to real page later
     Route::view('/insights', 'pages.market-insight')->name('insights'); // temp // services sub-pages
     Route::view('/partner-programs', 'pages.services.partner-programs')->name('partner-programs'); // partner programs page
-    Route::view('/pricing', 'pages.Pricing')->name('pricing');
     Route::view('/price-how-to-pay', 'pages.price_how_to_pay')->name('price.how.to.pay');
 
 

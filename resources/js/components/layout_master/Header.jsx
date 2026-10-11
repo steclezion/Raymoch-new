@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useInRouterContext } from "react-router-dom";
+import { Link, NavLink, useInRouterContext } from "react-router-dom";
 
 // MUI
 import AppBar from "@mui/material/AppBar";
@@ -17,8 +17,7 @@ import Collapse from "@mui/material/Collapse";
 import Paper from "@mui/material/Paper";
 import ClickAwayListener from "@mui/material/ClickAwayListener";
 import Portal from "@mui/material/Portal";
-import useMediaQuery from "@mui/material/useMediaQuery";
-import { createTheme, ThemeProvider, useTheme } from "@mui/material/styles";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -38,7 +37,54 @@ import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
 import PhotoCameraRoundedIcon from "@mui/icons-material/PhotoCameraRounded";
 
 import { getAuthUser, logoutRequest } from "../../lib/auth";
+import useResponsiveViewport from "../../hooks/useResponsiveViewport.js";
+import useRefreshingFavicon from "../behaviours/useRefreshingFavicon.jsx";
 import "../../styles/headerFooter.css";
+
+const BRAND_ICON_URL = "/images/logo_preview_exact.svg";
+
+const PAGE_TITLES = {
+  "/": "Home",
+  "/home": "Home",
+  "/dashboard": "Dashboard",
+  "/about": "About",
+  "/overview": "Overview",
+  "/overview_auth": "Overview",
+  "/fulloverview": "Full Overview",
+  "/explore": "Businesses",
+  "/companies": "Companies",
+  "/business": "Business",
+  "/customer": "Customers",
+  
+  "/services": "Services",
+  "/matching": "Business Matching",
+  "/verification": "Business Verification",
+  "/visibility-listing": "Visibility Listing",
+  "/partner-programs": "Partner Programs",
+  "/insights": "Market Insights",
+  "/security": "Security",
+  "/security_raymoch": "Security",
+  "/pricing": "Pricing",
+  "/price-how-to-pay": "Payment Options",
+  "/membership-success": "Membership Confirmed",
+  "/membership-success-page": "Membership Confirmed",
+  "/request-trial": "Request a Free Trial",
+  "/trial/verify": "Verify Your Trial",
+  "/trial/success": "Trial Request Confirmed",
+  "/login": "Log In",
+  "/signup": "Create an Account",
+  "/careers": "Careers",
+  "/press": "Press",
+  "/contact": "Contact",
+  "/blog": "Blog",
+  "/help": "Help Centre",
+  "/status": "System Status",
+  "/privacy": "Privacy Policy",
+  "/terms": "Terms of Use",
+  "/cookies": "Cookie Policy",
+  "/incentives": "Policy and Incentives",
+  "/whitespace": "Whitespace Map",
+};
 
 const HORIZONTAL_NAV_THEME = createTheme({
   palette: {
@@ -111,6 +157,35 @@ const HORIZONTAL_NAV_THEME = createTheme({
 /* =========================================================
    Helpers
 ========================================================= */
+function normalizePagePath(path) {
+  if (!path) return "/";
+  const normalized = path.split(/[?#]/)[0].replace(/\/+$/, "");
+  return normalized || "/";
+}
+
+function getPageTitle(path) {
+  const normalizedPath = normalizePagePath(path);
+  const exactTitle = PAGE_TITLES[normalizedPath];
+
+  if (exactTitle) return `Raymoch — ${exactTitle}`;
+
+  const parentPath = Object.keys(PAGE_TITLES)
+    .filter((route) => route !== "/")
+    .sort((a, b) => b.length - a.length)
+    .find((route) => normalizedPath.startsWith(`${route}/`));
+
+  if (parentPath) return `Raymoch — ${PAGE_TITLES[parentPath]}`;
+
+  const fallbackTitle = normalizedPath
+    .split("/")
+    .filter(Boolean)
+    .pop()
+    ?.replace(/[-_]+/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+
+  return `Raymoch — ${fallbackTitle || "Home"}`;
+}
+
 function getCsrf() {
   return (
     document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") ||
@@ -184,17 +259,53 @@ function SafeLink({ to, children, ...rest }) {
 //   );
 // }
 
+function routePath(to) {
+  if (typeof to !== "string") return "/";
+
+  try {
+    return new URL(to, window.location.origin).pathname.replace(/\/+$/, "") || "/";
+  } catch {
+    return to.split(/[?#]/)[0].replace(/\/+$/, "") || "/";
+  }
+}
+
+function isCurrentRoute(to) {
+  if (typeof window === "undefined") return false;
+
+  const targetPath = routePath(to);
+  const currentPath = window.location.pathname.replace(/\/+$/, "") || "/";
+
+  return targetPath === "/"
+    ? currentPath === "/"
+    : currentPath === targetPath || currentPath.startsWith(`${targetPath}/`);
+}
+
 function RouterSafeButton({ to, children, sx, ...rest }) {
   const hasRouter = useInRouterContext?.() ?? false;
+  const targetPath = routePath(to);
 
   if (hasRouter) {
-    return <Button component={Link} to={to} sx={sx} {...rest}>{children}</Button>;
+    return (
+      <Button
+        component={NavLink}
+        to={to}
+        end={targetPath === "/"}
+        sx={sx}
+        {...rest}
+      >
+        {children}
+      </Button>
+    );
   }
+
+  const isActive = isCurrentRoute(to);
 
   return (
     <Button
       component="a"
       href={typeof to === "string" ? to : "/"}
+      aria-current={isActive ? "page" : undefined}
+      className={isActive ? "active" : undefined}
       sx={sx}
       {...rest}
     >
@@ -295,10 +406,38 @@ const desktopDropdownStyles = {
 };
 
 const secondaryNavBtnSx = {
+  position: "relative",
+  minHeight: 40,
+  px: 1.5,
+  borderRadius: 2,
   fontWeight: 800,
   textTransform: "none",
   color: "#382116",
-  "&:hover": { color: "#382116", bgcolor: "action.hover" },
+  transition: "color .18s ease, background-color .18s ease, box-shadow .18s ease",
+  "&:hover": {
+    color: "#5b3825",
+    bgcolor: "rgba(181, 123, 63, .10)",
+  },
+  "&.active": {
+    color: "#fffaf3",
+    bgcolor: "#5b3825",
+    boxShadow: "0 4px 12px rgba(91, 56, 37, .20)",
+  },
+  "&.active:hover": {
+    color: "#fffaf3",
+    bgcolor: "#68442f",
+  },
+  "&.active::after": {
+    content: '\"\"',
+    position: "absolute",
+    left: "50%",
+    bottom: -8,
+    width: 18,
+    height: 3,
+    borderRadius: 999,
+    bgcolor: "#b57b3f",
+    transform: "translateX(-50%)",
+  },
 };
 
 const authActionBaseSx = {
@@ -399,8 +538,15 @@ function HamburgerIcon({ open }) {
 }
 
 export default function Header({ routes = {} }) {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  useRefreshingFavicon(BRAND_ICON_URL, 5_000);
+
+  const { isMobile, width: viewportWidth } = useResponsiveViewport();
+  const currentPagePath =
+    typeof window !== "undefined" ? window.location.pathname : "/";
+
+  useEffect(() => {
+    document.title = getPageTitle(currentPagePath);
+  }, [currentPagePath]);
 
   // Auth state
   const [isAuthed, setIsAuthed] = useState(false);
@@ -442,9 +588,10 @@ export default function Header({ routes = {} }) {
       services: routes.services ?? "/services",
       insights: routes.insights ?? "/insights",
       customer: routes.customer ?? "/customer",
+      pricing: routes.pricing ?? "/pricing",
       about: routes.about ?? "/about",
       security: routes.security_raymoch ?? "/security_raymoch",
-      businessLanding: routes.business_landing ?? "/business_landing",
+      businessLanding: routes.business_landing ?? "/business",
       matching: routes.matching ?? "/matching",
       verification: routes.verification ?? "/verification",
       incentives: routes.incentives ?? "/incentives",
@@ -517,9 +664,9 @@ export default function Header({ routes = {} }) {
     const gap = 10;
     const top = rect.bottom + gap;
     const left = rect.left;
-    const maxWidth = Math.min(760, Math.floor(window.innerWidth * 0.92));
+    const maxWidth = Math.min(760, Math.floor(viewportWidth * 0.92));
     const width = maxWidth;
-    const overflowRight = left + width - window.innerWidth;
+    const overflowRight = left + width - viewportWidth;
 
     const safeLeft =
       overflowRight > 0
@@ -554,17 +701,14 @@ export default function Header({ routes = {} }) {
 
     computeDropdownPosition();
 
-    const onResize = () => computeDropdownPosition();
     const onScroll = () => computeDropdownPosition();
 
-    window.addEventListener("resize", onResize);
     window.addEventListener("scroll", onScroll, true);
 
     return () => {
-      window.removeEventListener("resize", onResize);
       window.removeEventListener("scroll", onScroll, true);
     };
-  }, [openExplore]);
+  }, [openExplore, viewportWidth]);
 
   const openProfileModal = () => {
     setProfileError("");
@@ -1137,7 +1281,7 @@ setTimeout(() => {
             </SafeLink>
  
               <SafeLink
-              to={safeRoutes.about}
+              to={safeRoutes.customer}
               style={mobileMenuStyles.link}
               onClick={() => setMobileOpen(false)}
             >
@@ -1145,7 +1289,7 @@ setTimeout(() => {
             </SafeLink>
      
                 <SafeLink
-              to={safeRoutes.customer}
+              to={safeRoutes.pricing}
               style={mobileMenuStyles.link}
               onClick={() => setMobileOpen(false)}
             >

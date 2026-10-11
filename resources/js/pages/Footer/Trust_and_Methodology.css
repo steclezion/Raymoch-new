@@ -1,0 +1,52 @@
+.trust-methodology {
+  --tm-ink: #172033;
+  --tm-brand: #183b5b;
+  --tm-accent: #b78642;
+  --tm-muted: #607084;
+  --tm-line: #d9e0e7;
+  min-height: 75vh;
+  padding: 30px 20px 84px;
+  color: var(--tm-ink);
+  background: #f7f9fb;
+}
+
+.trust-methodology * { box-sizing: border-box; }
+.trust-methodology__wrap { width: min(1080px, 100%); margin: 0 auto; }
+.trust-methodology__intro { max-width: 880px; padding: 62px 0 50px; }
+.trust-methodology__eyebrow { display: flex; align-items: center; gap: 9px; margin-bottom: 15px; color: var(--tm-accent); font-size: .75rem; font-weight: 850; letter-spacing: .12em; text-transform: uppercase; }
+.trust-methodology__intro h1 { margin: 0; color: var(--tm-ink); font-size: clamp(2.3rem, 5.4vw, 4.4rem); font-weight: 800; line-height: 1.04; letter-spacing: -.045em; text-wrap: balance; }
+.trust-methodology__intro p { max-width: 760px; margin: 24px 0 0; color: var(--tm-muted); font-size: 1.05rem; line-height: 1.75; }
+.trust-methodology__principles { border-top: 1px solid var(--tm-line); }
+.trust-methodology__principle { border-bottom: 1px solid var(--tm-line); }
+.trust-methodology__principle summary { display: grid; grid-template-columns: 52px minmax(0, 1fr) 36px; gap: 20px; align-items: center; padding: 25px 8px; cursor: pointer; list-style: none; }
+.trust-methodology__principle summary::-webkit-details-marker { display: none; }
+.trust-methodology__principle summary:focus-visible { outline: 3px solid rgba(24, 59, 91, .2); outline-offset: -3px; }
+.trust-methodology__number { color: var(--tm-accent); font-size: .74rem; font-weight: 850; letter-spacing: .11em; }
+.trust-methodology__summary { display: grid; gap: 6px; }
+.trust-methodology__summary strong { color: var(--tm-ink); font-size: clamp(1.08rem, 2vw, 1.35rem); transition: color 180ms ease; }
+.trust-methodology__summary small { color: var(--tm-muted); font-size: .86rem; line-height: 1.55; }
+.trust-methodology__principle summary:hover .trust-methodology__summary strong { color: var(--tm-brand); }
+.trust-methodology__chevron { display: grid; width: 34px; height: 34px; place-items: center; border: 1px solid var(--tm-line); color: var(--tm-brand); transition: transform 220ms ease, color 220ms ease, background-color 220ms ease; }
+.trust-methodology__principle[open] .trust-methodology__chevron { color: #fff; background: var(--tm-brand); transform: rotate(180deg); }
+.trust-methodology__detail { padding: 0 64px 28px 80px; }
+.trust-methodology__detail p { max-width: 830px; margin: 0; color: #536274; font-size: .96rem; line-height: 1.82; }
+.trust-methodology__notice { display: flex; align-items: center; justify-content: space-between; gap: 34px; margin-top: 56px; padding: 34px 38px; border-left: 4px solid var(--tm-accent); background: #e9eef3; }
+.trust-methodology__notice span { display: block; margin-bottom: 8px; color: #7f633c; font-size: .72rem; font-weight: 850; letter-spacing: .1em; text-transform: uppercase; }
+.trust-methodology__notice h2 { max-width: 650px; margin: 0; font-size: clamp(1.3rem, 3vw, 1.9rem); line-height: 1.25; }
+.trust-methodology__notice a { display: inline-flex; align-items: center; justify-content: center; gap: 8px; flex: 0 0 auto; min-height: 46px; padding: 0 18px; color: #fff; background: var(--tm-brand); text-decoration: none; font-size: .86rem; font-weight: 850; }
+.trust-methodology__notice a:focus-visible { outline: 3px solid rgba(183, 134, 66, .45); outline-offset: 3px; }
+
+@media (max-width: 680px) {
+  .trust-methodology { padding: 22px 14px 58px; }
+  .trust-methodology__intro { padding: 44px 0 38px; }
+  .trust-methodology__principle summary { grid-template-columns: 34px minmax(0, 1fr) 34px; gap: 11px; padding: 21px 2px; }
+  .trust-methodology__summary small { display: none; }
+  .trust-methodology__detail { padding: 0 8px 23px 45px; }
+  .trust-methodology__notice { align-items: flex-start; flex-direction: column; padding: 28px 23px; }
+  .trust-methodology__notice a { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trust-methodology__summary strong,
+  .trust-methodology__chevron { transition: none; }
+}

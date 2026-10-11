@@ -1,22 +1,37 @@
 // resources/js/lib/auth.js
 
+let authRequest = null;
+
+export function clearAuthUserCache() {
+  authRequest = null;
+}
+
 export async function getAuthUser() {
-  const res = await fetch("/auth/user", {
-    method: "GET",
-    credentials: "same-origin",
-    headers: { Accept: "application/json" },
-  });
+  if (!authRequest) {
+    authRequest = fetch("/auth/user", {
+      method: "GET",
+      credentials: "same-origin",
+      headers: { Accept: "application/json" },
+    })
+      .then(async (res) => {
+        const json = await res.json().catch(() => ({}));
 
-  const json = await res.json().catch(() => ({}));
+        return {
+          authenticated: res.ok && !!json.authenticated,
+          user: json.user || null,
+        };
+      })
+      .catch((error) => {
+        authRequest = null;
+        throw error;
+      });
+  }
 
-  // Your backend returns: { authenticated: boolean, user: {...} }
-  return {
-    authenticated: !!json.authenticated,
-    user: json.user || null,
-  };
+  return authRequest;
 }
 
 export async function logoutRequest({ logoutUrl = "/logout", csrfToken } = {}) {
+  clearAuthUserCache();
   const token =
     csrfToken ||
     document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") ||

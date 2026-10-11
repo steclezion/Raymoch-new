@@ -1,3 +1,4 @@
+import "../css/app.css";
 import React, {
   createContext,
   useContext,
@@ -9,31 +10,7 @@ import React, {
 import { createRoot } from "react-dom/client";
 import { Toaster } from "sonner";
 import { BrowserRouter } from "react-router-dom";
-import Login from "./components/Login.jsx";
-import SignupPage from "./components/signup/SignupPage.jsx";
-import PricingBasic from "./components/PricingBasic.jsx";
-import SignupBasic from "./components/signup/SignupBasic.jsx";
-import SignupPremium from "./components/signup/SignupPremium.jsx";
-import SignupBusinessAccount from "./components/signup/SignupBusinessAccount.jsx";
-import SignupInvestorAccount from "./components/signup/SignupInvestorAccount.jsx";
-import ExploreBusinesses from "./pages/ExploreBusinesses.jsx";
-import Companies from "./pages/Companies.jsx";
-import Entire from "./pages/Entire.jsx";
-import Dashboard from "./pages/Dashboard.jsx";
-import Home from "./pages/Home.jsx";
-import Services from "./pages/Services.jsx";
-import Matching from "./pages/Matching.jsx";
-import Market_Insight from "./pages/Market_Insight.jsx";
-import About from "./pages/About.jsx";
-import Pricing from "./pages/Pricing.jsx";
-import PriceHowToPay  from "./pages/Pricehowtopay.jsx";
-import MembershipSuccess from "./pages/membership_success.jsx";
-import Overview from "./pages/Overview.jsx";
-import Fulloverview from "./pages/Fulloverview.jsx";
-import Security from "./pages/Security.jsx";
-import Customer from "./pages/Customer.jsx";
-import BusinessLanding from "./pages/Business_landing.jsx";
-import FulloverviewRootAuthenticated from "./pages/FulloverviewRootAuthenticated.jsx";
+import { clearAuthUserCache, getAuthUser } from "./lib/auth.js";
 /* =========================================================
    Auth Context
 ========================================================= */
@@ -56,27 +33,6 @@ function getCsrf() {
   );
 }
 
-async function api(path, { method = "GET", body } = {}) {
-  const headers = {
-    Accept: "application/json",
-  };
-
-  if (method !== "GET") {
-    headers["Content-Type"] = "application/json";
-    headers["X-CSRF-TOKEN"] = getCsrf();
-  }
-
-  const res = await fetch(path, {
-    method,
-    headers,
-    credentials: "include",
-    body: body ? JSON.stringify(body) : undefined,
-  });
-
-  const json = await res.json().catch(() => ({}));
-  return { res, json };
-}
-
 function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authUser, setAuthUser] = useState(null);
@@ -97,11 +53,11 @@ function AuthProvider({ children }) {
 
   const refreshAuth = async () => {
     try {
-      const { res, json } = await api("/auth/user");
+      const { authenticated, user } = await getAuthUser();
 
-      if (res.ok && json?.authenticated) {
+      if (authenticated) {
         setIsAuthenticated(true);
-        setAuthUser(json?.user || null);
+        setAuthUser(user || null);
       } else {
         setIsAuthenticated(false);
         setAuthUser(null);
@@ -130,6 +86,7 @@ function AuthProvider({ children }) {
 
   const logout = async ({ silent = false, broadcast = true } = {}) => {
     clearIdleTimer();
+    clearAuthUserCache();
 
     try {
       await fetch("/logout", {
@@ -335,74 +292,99 @@ function AppShell({ children }) {
 }
 
 /* =========================================================
-   Mount helpers
-========================================================= */
-function mount(id, element) {
-  const el = document.getElementById(id);
-  if (!el) return;
+   Lazy mount helper
 
-  createRoot(el).render(<AppShell>{element}</AppShell>);
+   The importer is only called when its matching Blade mount exists. This
+   keeps unrelated page code out of the initial download.
+========================================================= */
+async function mountPage(id, importer, { props = {}, wrap } = {}) {
+  const el = document.getElementById(id);
+  if (!el) return false;
+
+  try {
+    const module = await importer();
+    const Component = module.default;
+    const page = <Component {...props} />;
+    const content = wrap ? wrap(page) : page;
+
+    createRoot(el).render(<AppShell>{content}</AppShell>);
+    return true;
+  } catch (error) {
+    console.error(`Unable to load the page mounted at #${id}.`, error);
+    return false;
+  }
 }
 
+const routeProps = { routes: window.ROUTES || window.APP?.routes || {} };
+
 /* =========================================================
-   Your mounts
+   Page mounts
 ========================================================= */
-mount("about-root", <About />);
-mount(
+mountPage("about-root", () => import("./pages/About.jsx"));
+mountPage(
   "SignupInvestorAccountRoot",
-  <SignupInvestorAccount routes={window.ROUTES || window.APP?.routes || {}} />
+  () => import("./components/signup/SignupInvestorAccount.jsx"),
+  { props: routeProps }
 );
-mount("entire-root", <Entire />);
-mount("home-root", <Home />);
-mount("dashboard-root", <Dashboard />);
-mount("ServicesRoot", <Services />);
-mount("MarketInsightRoot", <Market_Insight />);
-mount("OverviewRoot", <Overview />);
-mount("FulloverviewRootAuthenticated", <FulloverviewRootAuthenticated />);//
-mount("FulloverviewRoot", <Fulloverview />);
-mount("SecurityRoot", <Security/>);
-mount("business-landing-root", <BusinessLanding />);
-mount("customer-root", <Customer />);
+mountPage("entire-root", () => import("./pages/Entire.jsx"));
+mountPage("home-root", () => import("./pages/Home.jsx"));
+mountPage("dashboard-root", () => import("./pages/Dashboard.jsx"));
+mountPage("ServicesRoot", () => import("./pages/Services.jsx"));
+mountPage("MarketInsightRoot", () => import("./pages/Market_Insight.jsx"));
+mountPage("OverviewRoot", () => import("./pages/Overview.jsx"));
+mountPage("FulloverviewRootAuthenticated",() => import("./pages/FulloverviewRootAuthenticated.jsx"));
+mountPage("FulloverviewRoot", () => import("./pages/Fulloverview.jsx"));
+mountPage("SecurityRoot", () => import("./pages/Security.jsx"));
+mountPage("business-landing-root", () => import("./pages/Business_landing.jsx"));
+mountPage("customer-root", () => import("./pages/Customer.jsx"));
+mountPage("verification-root", () => import("./pages/Verification.jsx"));
+mountPage("explore-root", () => import("./pages/ExploreBusinesses.jsx"), {wrap: (page) => <BrowserRouter>{page}</BrowserRouter>});
+mountPage("explore-companies", () => import("./pages/Companies.jsx"));
+mountPage("matching-root", () => import("./pages/Matching.jsx"));
 
-mount("explore-root",
-<BrowserRouter>   <ExploreBusinesses /></BrowserRouter>   
-  );
-
-mount("explore-companies", <Companies />);
-
-mount("matching-root", <Matching />);
-
-mount(
+mountPage(
   "signupBasicRoot",
-  <SignupBasic routes={window.ROUTES || window.APP?.routes || {}} />
+  () => import("./components/signup/SignupBasic.jsx"),
+  { props: routeProps }
 );
-mount(
+mountPage(
   "signupPremiumRoot",
-  <SignupPremium routes={window.ROUTES || window.APP?.routes || {}} />
+  () => import("./components/signup/SignupPremium.jsx"),
+  { props: routeProps }
 );
-mount(
+mountPage(
   "SignupBusinessAccountRoot",
-  <SignupBusinessAccount routes={window.ROUTES || window.APP?.routes || {}} />
+  () => import("./components/signup/SignupBusinessAccount.jsx"),
+  { props: routeProps }
 );
-mount(
+mountPage(
   "pricingBasic",
-  <PricingBasic routes={window.ROUTES || window.APP?.routes || {}} />
+  () => import("./components/PricingBasic.jsx"),
+  { props: routeProps }
 );
-mount(
+mountPage(
   "signup-root",
-  <SignupPage routes={window.ROUTES || window.APP?.routes || {}} />
+  () => import("./components/signup/SignupPage.jsx"),
+  { props: routeProps }
 );
-
-mount(
-  "pricing-root", <Pricing routes={window.ROUTES || window.APP?.routes || {}} />
-);
-
-mount(
-  "price-how-to-pay-root", <PriceHowToPay  routes={window.ROUTES || window.APP?.routes || {}} />
-);
-
-mount(
-  "membership-success-root", <MembershipSuccess  routes={window.ROUTES || window.APP?.routes || {}} />
+mountPage("pricing-root", () => import("./pages/Pricing.jsx"), {
+  props: routeProps,
+});
+mountPage("footer-information-root", () => import("./pages/Footer/FooterPage.jsx"), {
+  props: { pageKey: window.FOOTER_PAGE },
+});
+mountPage("how-raymoch-works-root", () => import("./pages/Footer/How_Raymoch_Works.jsx"));
+mountPage("trust-and-methodology-root", () => import("./pages/Footer/Trust_and_Methodology.jsx"));
+mountPage("partner-programs-root", () => import("./pages/Footer/Partner_Programs.jsx"));
+mountPage("careers-page-root", () => import("./pages/Footer/Careers.jsx"));
+mountPage("contact-page-root", () => import("./pages/Footer/Contact.jsx"));
+mountPage("price-how-to-pay-root", () => import("./pages/Pricehowtopay.jsx"), {
+  props: routeProps,
+});
+mountPage(
+  "membership-success-root",
+  () => import("./pages/membership_success.jsx"),
+  { props: routeProps }
 );
 
 /* =========================================================
@@ -412,13 +394,19 @@ const loginMount =
   document.getElementById("doot") || document.getElementById("login-root");
 
 if (loginMount) {
-  createRoot(loginMount).render(
-    <AppShell>
-      <Login
-        apiUrl="/login/json"
-        csrfToken={getCsrf()}
-        redirectTo="/dashboard"
-      />
-    </AppShell>
-  );
+  import("./components/Login.jsx")
+    .then(({ default: Login }) => {
+      createRoot(loginMount).render(
+        <AppShell>
+          <Login
+            apiUrl="/login/json"
+            csrfToken={getCsrf()}
+            redirectTo="/dashboard"
+          />
+        </AppShell>
+      );
+    })
+    .catch((error) => {
+      console.error("Unable to load the login page.", error);
+    });
 }
