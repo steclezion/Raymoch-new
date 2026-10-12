@@ -125,16 +125,17 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
     Route::view('/security', 'pages.entire')->name('security');
     Route::view('/status', 'pages.entire')->name('status');
 
-    Route::get('/privacy', fn() => view('pages.entire'))->name('privacy');
-    Route::get('/terms', fn() => view('pages.entire'))->name('terms');
-    Route::get('/cookies', fn() => view('pages.entire'))->name('cookies');
-
     Route::get('/services/options', [ServiceController::class, 'options'])->name('services.options');
 });
 
 // Public pricing overview: available to both guests and authenticated users.
 Route::view('/pricing', 'pages.Pricing')->name('pricing');
 Route::view('/blog', 'pages.blog')->name('blog');
+Route::view('/privacy', 'pages.policies.privacy')->name('privacy');
+Route::view('/terms', 'pages.policies.terms')->name('terms');
+Route::view('/cookies', 'pages.policies.cookies')->name('cookies');
+Route::view('/data-protection', 'pages.policies.data-protection')->name('data-protection');
+Route::view('/accessibility', 'pages.policies.accessibility')->name('accessibility');
 
 // Public footer information pages: available with or without an account.
 // $footerInformationPages = [

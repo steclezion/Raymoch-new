@@ -1,7 +1,8 @@
 import React from "react";
 import { ArrowRight, ChevronDown, Handshake } from "lucide-react";
-import Header from "../../components/layout_master/Header.jsx";
+import AuthAwareNavigation from "../../components/AuthAwareNavigation.jsx";
 import Footer from "../../components/layout_master/Footer.jsx";
+import RaymochInformationSupporter from "../../components/RaymochInformationSupporter.jsx";
 import "./Partner_Programs.css";
 
 const PROGRAM_STAGES = [
@@ -46,7 +47,7 @@ const PROGRAM_STAGES = [
 export default function PartnerPrograms() {
   return (
     <>
-      <Header />
+      <AuthAwareNavigation activePath="/Partner_Programs" />
 
       <main className="partner-programs-page">
         <div className="partner-programs-page__wrap">
@@ -93,6 +94,7 @@ export default function PartnerPrograms() {
         </div>
       </main>
 
+      <RaymochInformationSupporter />
       <Footer />
     </>
   );

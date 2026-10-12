@@ -1,7 +1,8 @@
 // resources/js/pages/About.jsx
 import React, { useEffect } from "react";
-import Header from "../components/layout_master/Header.jsx";
+import AuthAwareNavigation from "../components/AuthAwareNavigation.jsx";
 import Footer from "../components/layout_master/Footer.jsx";
+import RaymochInformationSupporter from "../components/RaymochInformationSupporter.jsx";
 import { ResponsiveController } from "../components/ResponsiveController.jsx";
 import "../styles/about.css";
 
@@ -12,7 +13,7 @@ const About = () => {
 
   return (
     <ResponsiveController>
-      <Header />
+      <AuthAwareNavigation activePath="/about" />
 
       <div className="ray-about">
         {/* HERO */}
@@ -283,6 +284,7 @@ const About = () => {
       </div>
 
       {/* ✅ Footer OUTSIDE rm-about so it sticks to bottom properly */}
+      <RaymochInformationSupporter />
       <Footer />
     </ResponsiveController>
   );

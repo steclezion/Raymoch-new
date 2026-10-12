@@ -38,18 +38,7 @@ function AuthProvider({ children }) {
   const [authUser, setAuthUser] = useState(null);
   const [booted, setBooted] = useState(false);
 
-  const IDLE_LIMIT_MS = 30 * 60 * 1000; // 30 minutes
-
-  const idleTimerRef = useRef(null);
-  const lastActivityRef = useRef(Date.now());
   const bcRef = useRef(null);
-
-  const clearIdleTimer = () => {
-    if (idleTimerRef.current) {
-      clearTimeout(idleTimerRef.current);
-      idleTimerRef.current = null;
-    }
-  };
 
   const refreshAuth = async () => {
     try {
@@ -73,19 +62,9 @@ function AuthProvider({ children }) {
   const login = (user) => {
     setIsAuthenticated(true);
     setAuthUser(user || null);
-
-    lastActivityRef.current = Date.now();
-
-    try {
-      localStorage.setItem(
-        "raymoch:lastActivity",
-        String(lastActivityRef.current)
-      );
-    } catch {}
   };
 
   const logout = async ({ silent = false, broadcast = true } = {}) => {
-    clearIdleTimer();
     clearAuthUserCache();
 
     try {
@@ -103,7 +82,6 @@ function AuthProvider({ children }) {
     setAuthUser(null);
 
     try {
-      localStorage.removeItem("raymoch:lastActivity");
       localStorage.setItem("raymoch:logout", String(Date.now()));
     } catch {}
 
@@ -118,60 +96,8 @@ function AuthProvider({ children }) {
     }
   };
 
-  const armIdleTimer = () => {
-    clearIdleTimer();
-
-    if (!isAuthenticated) return;
-
-    const now = Date.now();
-    const elapsed = now - lastActivityRef.current;
-    const remaining = IDLE_LIMIT_MS - elapsed;
-
-    if (remaining <= 0) {
-      logout();
-      return;
-    }
-
-    idleTimerRef.current = setTimeout(() => {
-      logout();
-    }, remaining);
-  };
-
-  const recordActivity = () => {
-    if (!isAuthenticated) return;
-
-    lastActivityRef.current = Date.now();
-
-    try {
-      localStorage.setItem(
-        "raymoch:lastActivity",
-        String(lastActivityRef.current)
-      );
-    } catch {}
-
-    if (bcRef.current) {
-      try {
-        bcRef.current.postMessage({
-          type: "activity",
-          at: lastActivityRef.current,
-        });
-      } catch {}
-    }
-
-    armIdleTimer();
-  };
-
   useEffect(() => {
     refreshAuth();
-  }, []);
-
-  useEffect(() => {
-    try {
-      const saved = Number(localStorage.getItem("raymoch:lastActivity") || 0);
-      if (saved > 0) {
-        lastActivityRef.current = saved;
-      }
-    } catch {}
   }, []);
 
   useEffect(() => {
@@ -183,13 +109,7 @@ function AuthProvider({ children }) {
 
         if (!msg?.type) return;
 
-        if (msg.type === "activity" && msg.at) {
-          lastActivityRef.current = msg.at;
-          armIdleTimer();
-        }
-
         if (msg.type === "logout") {
-          clearIdleTimer();
           setIsAuthenticated(false);
           setAuthUser(null);
           window.location.href = "/";
@@ -202,20 +122,11 @@ function AuthProvider({ children }) {
         bcRef.current?.close();
       } catch {}
     };
-  }, [isAuthenticated]);
+  }, []);
 
   useEffect(() => {
     const onStorage = (e) => {
-      if (e.key === "raymoch:lastActivity" && e.newValue) {
-        const ts = Number(e.newValue);
-        if (ts > 0) {
-          lastActivityRef.current = ts;
-          armIdleTimer();
-        }
-      }
-
       if (e.key === "raymoch:logout" && e.newValue) {
-        clearIdleTimer();
         setIsAuthenticated(false);
         setAuthUser(null);
         window.location.href = "/";
@@ -224,38 +135,7 @@ function AuthProvider({ children }) {
 
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      clearIdleTimer();
-      return;
-    }
-
-    const events = [
-      "mousemove",
-      "mousedown",
-      "click",
-      "scroll",
-      "keydown",
-      "touchstart",
-    ];
-
-    const handler = () => recordActivity();
-
-    events.forEach((event) => {
-      window.addEventListener(event, handler, { passive: true });
-    });
-
-    armIdleTimer();
-
-    return () => {
-      events.forEach((event) => {
-        window.removeEventListener(event, handler);
-      });
-      clearIdleTimer();
-    };
-  }, [isAuthenticated]);
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -322,6 +202,11 @@ const routeProps = { routes: window.ROUTES || window.APP?.routes || {} };
 ========================================================= */
 mountPage("about-root", () => import("./pages/About.jsx"));
 mountPage("blog-root", () => import("./pages/blog.jsx"));
+mountPage("privacy-page-root", () => import("./pages/legal/Privacy.jsx"));
+mountPage("terms-page-root", () => import("./pages/legal/Terms.jsx"));
+mountPage("cookies-page-root", () => import("./pages/legal/Cookies.jsx"));
+mountPage("data-protection-page-root", () => import("./pages/legal/DataProtection.jsx"));
+mountPage("accessibility-page-root", () => import("./pages/legal/Accessibility.jsx"));
 mountPage(
   "SignupInvestorAccountRoot",
   () => import("./components/signup/SignupInvestorAccount.jsx"),

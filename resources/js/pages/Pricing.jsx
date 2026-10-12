@@ -9,8 +9,9 @@ import {
   UserRound,
 } from "lucide-react";
 
-import Header from "../components/layout_master/Header.jsx";
+import AuthAwareNavigation from "../components/AuthAwareNavigation.jsx";
 import Footer from "../components/layout_master/Footer.jsx";
+import RaymochInformationSupporter from "../components/RaymochInformationSupporter.jsx";
 import BreadcrumbsNav from "../components/common/BreadcrumbsNav.jsx";
 import "../styles/pricing.css";
 
@@ -111,7 +112,7 @@ export default function Pricing({ routes = {} }) {
 
   return (
     <>
-      <Header routes={routes} />
+      <AuthAwareNavigation routes={routes} activePath="/pricing" />
 
       <main className="pricing-page">
         <div className="pricing-container">
@@ -268,6 +269,7 @@ export default function Pricing({ routes = {} }) {
         </div>
       </main>
 
+      <RaymochInformationSupporter />
       <Footer routes={routes} />
     </>
   );

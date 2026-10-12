@@ -1,7 +1,8 @@
 import React from "react";
 import { ArrowRight, BriefcaseBusiness, ChevronDown } from "lucide-react";
-import Header from "../../components/layout_master/Header.jsx";
+import AuthAwareNavigation from "../../components/AuthAwareNavigation.jsx";
 import Footer from "../../components/layout_master/Footer.jsx";
+import RaymochInformationSupporter from "../../components/RaymochInformationSupporter.jsx";
 import "./Careers.css";
 
 const CAREER_STAGES = [
@@ -46,7 +47,7 @@ const CAREER_STAGES = [
 export default function Careers() {
   return (
     <>
-      <Header />
+      <AuthAwareNavigation activePath="/Careers" />
 
       <main className="careers-page">
         <div className="careers-page__wrap">
@@ -93,6 +94,7 @@ export default function Careers() {
         </div>
       </main>
 
+      <RaymochInformationSupporter />
       <Footer />
     </>
   );

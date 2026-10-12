@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { ArrowRight, CheckCircle2, ChevronDown, Mail, MessageSquareText, ShieldCheck } from "lucide-react";
-import Header from "../../components/layout_master/Header.jsx";
+import AuthAwareNavigation from "../../components/AuthAwareNavigation.jsx";
 import Footer from "../../components/layout_master/Footer.jsx";
+import RaymochInformationSupporter from "../../components/RaymochInformationSupporter.jsx";
 import "./Contact.css";
 
 const TOPICS = [
@@ -100,7 +101,7 @@ export default function Contact() {
 
   return (
     <>
-      <Header />
+      <AuthAwareNavigation activePath="/Contact" />
       <main className="contact-page">
         <div className="contact-page__wrap">
           <header className="contact-page__intro">
@@ -158,6 +159,7 @@ export default function Contact() {
           </section>
         </div>
       </main>
+      <RaymochInformationSupporter />
       <Footer />
     </>
   );

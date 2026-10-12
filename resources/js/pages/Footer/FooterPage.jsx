@@ -1,6 +1,6 @@
 import React from "react";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
-import Header from "../../components/layout_master/Header.jsx";
+import AuthAwareNavigation from "../../components/AuthAwareNavigation.jsx";
 import Footer from "../../components/layout_master/Footer.jsx";
 import "../../styles/footer-pages.css";
 
@@ -92,7 +92,7 @@ export default function FooterPage({ pageKey = window.FOOTER_PAGE }) {
 
   return (
     <>
-      <Header />
+      <AuthAwareNavigation />
       <main className="footer-page">
         <div className="footer-page__wrap">
           <nav className="footer-page__breadcrumb" aria-label="Breadcrumb">

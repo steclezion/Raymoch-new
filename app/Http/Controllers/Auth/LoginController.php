@@ -36,6 +36,7 @@ class LoginController extends Controller
         $validated = $request->validate([
             'user' => ['required', 'string', 'max:191'],
             'password' => ['required', 'string', 'min:6'],
+            'remember' => ['sometimes', 'boolean'],
         ]);
 
         $login = trim($validated['user']);
@@ -44,7 +45,7 @@ class LoginController extends Controller
         if (! Auth::attempt([
             $credentialKey => $login,
             'password' => $validated['password'],
-        ], false)) {
+        ], (bool) ($validated['remember'] ?? false))) {
             RateLimiter::hit($this->throttleKey($request));
 
             return response()->json([

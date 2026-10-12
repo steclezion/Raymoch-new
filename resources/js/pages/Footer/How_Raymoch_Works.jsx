@@ -1,7 +1,8 @@
 import React from "react";
 import { ArrowRight, ChevronDown } from "lucide-react";
-import Header from "../../components/layout_master/Header.jsx";
+import AuthAwareNavigation from "../../components/AuthAwareNavigation.jsx";
 import Footer from "../../components/layout_master/Footer.jsx";
+import RaymochInformationSupporter from "../../components/RaymochInformationSupporter.jsx";
 import "./How_Raymoch_Works.css";
 
 const EXPLANATIONS = [
@@ -40,7 +41,7 @@ const EXPLANATIONS = [
 export default function HowRaymochWorks() {
   return (
     <>
-      <Header />
+      <AuthAwareNavigation activePath="/how-raymoch-works" />
 
       <main className="how-raymoch">
         <div className="how-raymoch__wrap">
@@ -86,6 +87,7 @@ export default function HowRaymochWorks() {
         </div>
       </main>
 
+      <RaymochInformationSupporter />
       <Footer />
     </>
   );

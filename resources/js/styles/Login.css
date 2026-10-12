@@ -142,16 +142,32 @@
   opacity:.85;
 }
 .toggle:hover{opacity:1;}
-.forgot{
-  text-align:right;
+.loginOptions{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
   font-size:.92rem;
   margin:12px 0 18px;
 }
-.forgot a{
+.loginOptions a{
   color: var(--brand-blue-700);
   text-decoration:none;
 }
-.forgot a:hover{text-decoration:underline;}
+.loginOptions a:hover{text-decoration:underline;}
+.rememberOption{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  color:#4f5b6c;
+  cursor:pointer;
+}
+.rememberOption input{
+  width:16px;
+  height:16px;
+  margin:0;
+  accent-color:var(--brand-blue-700);
+}
 button.cta{
   width:100%;
   padding:14px;
@@ -198,5 +214,6 @@ button.cta[disabled]{opacity:.62;cursor:not-allowed;}
 @media (max-width: 640px){
   .card{padding:28px 22px;}
   .title{font-size:1.8rem;}
+  .loginOptions{align-items:flex-start;flex-direction:column;gap:10px;}
 }
 

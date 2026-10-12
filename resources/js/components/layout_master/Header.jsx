@@ -82,6 +82,8 @@ const PAGE_TITLES = {
   "/privacy": "Privacy Policy",
   "/terms": "Terms of Use",
   "/cookies": "Cookie Policy",
+  "/data-protection": "Data Protection",
+  "/accessibility": "Accessibility",
   "/incentives": "Policy and Incentives",
   "/whitespace": "Whitespace Map",
 };

@@ -8,7 +8,7 @@ export default function Login({
   apiUrl,
   csrfToken,
   redirectTo,
-  sessionLifetimeMinutes = 120,
+  sessionLifetimeMinutes = 10080,
   brandName = "Raymoch",
   signupHref = "/signup",
   resetHref = "/forgot-password",
@@ -18,6 +18,7 @@ export default function Login({
 }) {
   const [showPass, setShowPass] = useState(false);
   const [values, setValues] = useState({ user: "", pass: "" });
+  const [remember, setRemember] = useState(false);
   const [errors, setErrors] = useState({ user: "", pass: "" });
   const [busy, setBusy] = useState(false);
 
@@ -167,6 +168,7 @@ export default function Login({
         body: JSON.stringify({
           user: values.user.trim(),
           password: values.pass,
+          remember,
         }),
         credentials: "same-origin",
       });
@@ -368,7 +370,15 @@ export default function Login({
                 ) : null}
               </div>
 
-              <div className="forgot">
+              <div className="loginOptions">
+                <label className="rememberOption">
+                  <input
+                    type="checkbox"
+                    checked={remember}
+                    onChange={(event) => setRemember(event.target.checked)}
+                  />
+                  <span>Keep me signed in</span>
+                </label>
                 <a href={resetHref}>
                   Forgot password?
                 </a>

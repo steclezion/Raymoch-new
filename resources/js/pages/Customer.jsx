@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import Header from "../components/layout_master/Header.jsx";
 import Footer from "../components/layout_master/Footer.jsx";
+import RaymochInformationSupporter from "../components/RaymochInformationSupporter.jsx";
 import { ResponsiveController } from "../components/ResponsiveController.jsx";
 import "../styles/customer.css";
 
@@ -490,6 +491,7 @@ export default function Customer() {
           </main>
         </div>
 
+        <RaymochInformationSupporter />
         <Footer />
       </>
     </ResponsiveController>

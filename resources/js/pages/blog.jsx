@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
-import Header from "../components/layout_master/Header.jsx";
+import AuthAwareNavigation from "../components/AuthAwareNavigation.jsx";
 import Footer from "../components/layout_master/Footer.jsx";
+import RaymochInformationSupporter from "../components/RaymochInformationSupporter.jsx";
 import { ResponsiveController } from "../components/ResponsiveController.jsx";
 import "../styles/blog.css";
 
@@ -105,7 +106,7 @@ export default function Blog() {
 
   return (
     <ResponsiveController>
-      <Header />
+      <AuthAwareNavigation activePath="/blog" />
       <main className="ray-blog">
         <section className="ray-blog__hero" aria-labelledby="blog-title">
           <div className="ray-blog__shell ray-blog__hero-grid">
@@ -190,6 +191,7 @@ export default function Blog() {
           </div>
         </section>
       </main>
+      <RaymochInformationSupporter />
       <Footer />
     </ResponsiveController>
   );
