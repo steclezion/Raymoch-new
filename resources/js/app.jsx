@@ -321,6 +321,7 @@ const routeProps = { routes: window.ROUTES || window.APP?.routes || {} };
    Page mounts
 ========================================================= */
 mountPage("about-root", () => import("./pages/About.jsx"));
+mountPage("blog-root", () => import("./pages/blog.jsx"));
 mountPage(
   "SignupInvestorAccountRoot",
   () => import("./components/signup/SignupInvestorAccount.jsx"),

@@ -121,7 +121,6 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
 
     Route::view('/careers', 'pages.entire')->name('careers');
     Route::view('/press', 'pages.entire')->name('press');
-    Route::view('/blog', 'pages.entire')->name('blog');
     Route::view('/help', 'pages.entire')->name('help');
     Route::view('/security', 'pages.entire')->name('security');
     Route::view('/status', 'pages.entire')->name('status');
@@ -135,6 +134,7 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
 
 // Public pricing overview: available to both guests and authenticated users.
 Route::view('/pricing', 'pages.Pricing')->name('pricing');
+Route::view('/blog', 'pages.blog')->name('blog');
 
 // Public footer information pages: available with or without an account.
 // $footerInformationPages = [
