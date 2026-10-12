@@ -68,7 +68,7 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
 
 
     // Signup entry
-    Route::view('/signup', 'pages.auth.signup.signup')->name('signup.index');
+    // Route::view('/signup', 'pages.auth.signup.signup')->name('signup.index');
     // Route::get('/signup/investor/create', [SignupController::class, 'createInvestor'])->name('signup.investor.create');
     // Route::get('/signup/basic/create/individual', [SignupController::class, 'showPaymentPlansCreate'])->name('signup.basic.create.individual'); // Store the Basic account (JSON) Route::get('/signup/premium/create/individual/', [SignupController::class, 'showPaymentPlansCreate'])->name('signup.premium.create.individual');
 

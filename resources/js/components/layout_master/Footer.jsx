@@ -1,4 +1,5 @@
 import React from "react";
+import { useAuth } from "../../app.jsx";
 
 const GROUPS = [
   { title: "Company", links: [["About Raymoch", "about", "/about"], ["How Raymoch Works", "howRaymochWorks", "/how-raymoch-works"], ["Trust & Methodology", "trustMethodology", "/Trust_and_Methodology"], ["Partner Programs", "partnerPrograms", "/Partner_Programs"], ["Careers", "careers", "/Careers"], ["Contact", "contact", "/Contact"]] },
@@ -7,6 +8,7 @@ const GROUPS = [
 ];
 
 export default function Footer({ routes = {} }) {
+  const { isAuthenticated } = useAuth();
   const href = (name, fallback) => routes[name] || fallback;
   const normalizePath = (path) => {
     const normalized = path.replace(/\/+$/, "") || "/";
@@ -69,14 +71,16 @@ export default function Footer({ routes = {} }) {
           </nav>
         </div>
 
-        <nav className="site-footer__actions" aria-label="Account actions">
-          <span>Ready to explore trusted business opportunity?</span>
-          <div>
-            <a href={href("login", "/login")} {...activeProps(href("login", "/login"))}>Log in</a>
-            <a href={href("signup", "/signup")} {...activeProps(href("signup", "/signup"))}>Create an account</a>
-            <a href={href("trial", "/request-trial")} {...activeProps(href("trial", "/request-trial"))}>Request a free trial</a>
-          </div>
-        </nav>
+        {!isAuthenticated && (
+          <nav className="site-footer__actions" aria-label="Account actions">
+            <span>Ready to explore trusted business opportunity?</span>
+            <div>
+              <a href={href("login", "/login")} {...activeProps(href("login", "/login"))}>Log in</a>
+              <a href={href("signup", "/signup")} {...activeProps(href("signup", "/signup"))}>Create an account</a>
+              <a href={href("trial", "/request-trial")} {...activeProps(href("trial", "/request-trial"))}>Request a free trial</a>
+            </div>
+          </nav>
+        )}
 
         <div className="site-footer__bottom">
           <p>© {new Date().getFullYear()} Raymoch. All rights reserved.</p>

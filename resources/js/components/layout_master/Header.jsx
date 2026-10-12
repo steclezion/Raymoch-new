@@ -693,6 +693,10 @@ export default function Header({ routes = {} }) {
     if (isMobile) {
       setOpenExplore(false);
       setShowGrid(false);
+    } else {
+      // A drawer opened in the mobile layout must not leave its modal backdrop
+      // mounted when browser zoom or resizing returns to the desktop layout.
+      setMobileOpen(false);
     }
   }, [isMobile]);
 

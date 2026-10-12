@@ -27,8 +27,12 @@ function readViewport(mobileBreakpoint) {
     };
   }
 
-  const width = Math.round(window.visualViewport?.width || window.innerWidth);
-  const height = Math.round(window.visualViewport?.height || window.innerHeight);
+  // Responsive layout should follow the CSS/layout viewport. visualViewport
+  // represents the currently magnified portion of the page and can shrink or
+  // acquire offsets while zooming, which makes breakpoint-driven UI jump.
+  const root = document.documentElement;
+  const width = Math.round(root.clientWidth || window.innerWidth);
+  const height = Math.round(root.clientHeight || window.innerHeight);
 
   return {
     width,
@@ -53,8 +57,10 @@ export default function useResponsiveViewport({
     if (typeof window === "undefined") return undefined;
 
     const updateViewport = () => {
+      // Keep the first scheduled update. Cancelling and rescheduling on every
+      // visualViewport event can starve rendering during continuous zoom.
       if (animationFrameRef.current !== null) {
-        window.cancelAnimationFrame(animationFrameRef.current);
+        return;
       }
 
       animationFrameRef.current = window.requestAnimationFrame(() => {
