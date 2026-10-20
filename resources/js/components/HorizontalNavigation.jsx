@@ -121,7 +121,7 @@ function getPageTitle(path) {
   const normalizedPath = normalizePath(path);
 
   const exactTitle = PAGE_TITLES[normalizedPath];
-  if (exactTitle) return `Raymoch-${exactTitle}`;
+  if (exactTitle) return `Raymoch • ${exactTitle}`;
 
   // Nested pages inherit the title of their top-level section.
   const parentPath = Object.keys(PAGE_TITLES)
@@ -129,7 +129,7 @@ function getPageTitle(path) {
     .sort((a, b) => b.length - a.length)
     .find((route) => normalizedPath.startsWith(`${route}/`));
 
-  if (parentPath) return `Raymoch-${PAGE_TITLES[parentPath]}`;
+  if (parentPath) return `Raymoch • ${PAGE_TITLES[parentPath]}`;
 
   // Produce a readable title for routes that are not listed above.
   const fallbackTitle = normalizedPath
@@ -139,7 +139,7 @@ function getPageTitle(path) {
     ?.replace(/[-_]+/g, " ")
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 
-  return `Raymoch-${fallbackTitle || "Home"}`;
+  return `Raymoch • ${fallbackTitle || "Home"}`;
 }
 
 function absoluteImageUrl(path) {

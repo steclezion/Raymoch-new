@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Bot, LoaderCircle, Mic, Send, X } from "lucide-react";
+import { Bot, LoaderCircle, MessageCircle, Mic, Send, X } from "lucide-react";
 import "../styles/RaymochInformationSupporter.css";
 
 const ENDPOINT = "api/help/information";
@@ -42,10 +42,6 @@ function csrfToken() {
 
 export default function RaymochInformationSupporter() {
   const [open, setOpen] = useState(false);
-  const [launching, setLaunching] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [dragging, setDragging] = useState(false);
-  const [launcherPosition, setLauncherPosition] = useState({ x: 32, y: 204 });
   const [closing, setClosing] = useState(false);
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState([
@@ -57,8 +53,6 @@ export default function RaymochInformationSupporter() {
   const recognitionRef = useRef(null);
   const inputRef = useRef(null);
   const messageEndRef = useRef(null);
-  const dragRef = useRef(null);
-  const launcherMovedRef = useRef(false);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -80,92 +74,16 @@ export default function RaymochInformationSupporter() {
   useEffect(() => () => recognitionRef.current?.abort?.(), []);
 
   useEffect(() => {
-    try {
-      const saved = JSON.parse(window.localStorage.getItem("raymoch-ai-position"));
-      if (Number.isFinite(saved?.x) && Number.isFinite(saved?.y)) {
-        setLauncherPosition({
-          x: Math.max(8, Math.min(saved.x, window.innerWidth - 72)),
-          y: Math.max(8, Math.min(saved.y, window.innerHeight - 72)),
-        });
-      }
-    } catch {
-      // Local storage is optional.
-    }
-  }, []);
-
-  useEffect(() => {
-    const keepInView = () => setLauncherPosition((current) => ({
-      x: Math.max(8, Math.min(current.x, window.innerWidth - 72)),
-      y: Math.max(8, Math.min(current.y, window.innerHeight - 72)),
-    }));
-    window.addEventListener("resize", keepInView);
-    return () => window.removeEventListener("resize", keepInView);
-  }, []);
-
-  useEffect(() => {
-    let refreshTimer;
-    const interval = window.setInterval(() => {
-      setRefreshing(true);
-      refreshTimer = window.setTimeout(() => setRefreshing(false), 900);
-    }, 25000);
+    if (!open || !window.matchMedia("(max-width: 720px), (max-height: 600px)").matches) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     return () => {
-      window.clearInterval(interval);
-      window.clearTimeout(refreshTimer);
+      document.body.style.overflow = previousOverflow;
     };
-  }, []);
+  }, [open]);
 
   const launchAssistant = () => {
-    if (launcherMovedRef.current) {
-      launcherMovedRef.current = false;
-      return;
-    }
-    if (launching) return;
-    setLaunching(true);
-    window.setTimeout(() => {
-      setOpen(true);
-      setLaunching(false);
-    }, 420);
-  };
-
-  const beginLauncherDrag = (event) => {
-    if (open || launching) return;
-    event.currentTarget.setPointerCapture(event.pointerId);
-    dragRef.current = {
-      pointerId: event.pointerId,
-      offsetX: event.clientX - launcherPosition.x,
-      offsetY: event.clientY - launcherPosition.y,
-      startX: event.clientX,
-      startY: event.clientY,
-    };
-    launcherMovedRef.current = false;
-    setDragging(true);
-  };
-
-  const moveLauncher = (event) => {
-    const drag = dragRef.current;
-    if (!drag || drag.pointerId !== event.pointerId) return;
-    if (Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) > 5) {
-      launcherMovedRef.current = true;
-    }
-    setLauncherPosition({
-      x: Math.max(8, Math.min(event.clientX - drag.offsetX, window.innerWidth - 72)),
-      y: Math.max(8, Math.min(event.clientY - drag.offsetY, window.innerHeight - 72)),
-    });
-  };
-
-  const endLauncherDrag = (event) => {
-    if (dragRef.current?.pointerId !== event.pointerId) return;
-    event.currentTarget.releasePointerCapture?.(event.pointerId);
-    dragRef.current = null;
-    setDragging(false);
-    setLauncherPosition((current) => {
-      try {
-        window.localStorage.setItem("raymoch-ai-position", JSON.stringify(current));
-      } catch {
-        // The position still works for the current visit.
-      }
-      return current;
-    });
+    setOpen(true);
   };
 
   const closeAssistant = () => {
@@ -267,24 +185,16 @@ export default function RaymochInformationSupporter() {
   return (
     <>
       <div
-        className={`ray-supporter-launcher${launching ? " is-launching" : ""}${refreshing ? " is-refreshing" : ""}${dragging ? " is-dragging" : ""}${open ? " is-hidden" : ""}`}
-        style={{ left: launcherPosition.x, top: launcherPosition.y }}
+        className={`ray-supporter-launcher${open ? " is-hidden" : ""}`}
       >
         <button
           type="button"
           onClick={launchAssistant}
-          onPointerDown={beginLauncherDrag}
-          onPointerMove={moveLauncher}
-          onPointerUp={endLauncherDrag}
-          onPointerCancel={endLauncherDrag}
-          aria-label="Open or drag Raymoch Information Supporter"
-          data-tooltip="Drag to move · Click to ask Raymoch AI"
+          aria-label="Open Raymoch Information Supporter"
+          data-tooltip="Ask Raymoch AI"
         >
-          <span className="ray-supporter-pulse" aria-hidden="true" />
-          <span className="ray-supporter-pulse ray-supporter-pulse--delayed" aria-hidden="true" />
           <span className="ray-supporter-ai-mark" aria-hidden="true">
-            <img src="/images/logo_preview_exact.svg" alt="" />
-            <span><Bot size={14} /></span>
+            <MessageCircle size={29} strokeWidth={2} />
           </span>
         </button>
       </div>

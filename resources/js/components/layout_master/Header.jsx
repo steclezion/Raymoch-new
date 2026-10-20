@@ -169,14 +169,14 @@ function getPageTitle(path) {
   const normalizedPath = normalizePagePath(path);
   const exactTitle = PAGE_TITLES[normalizedPath];
 
-  if (exactTitle) return `Raymoch — ${exactTitle}`;
+  if (exactTitle) return `Raymoch • ${exactTitle}`;
 
   const parentPath = Object.keys(PAGE_TITLES)
     .filter((route) => route !== "/")
     .sort((a, b) => b.length - a.length)
     .find((route) => normalizedPath.startsWith(`${route}/`));
 
-  if (parentPath) return `Raymoch — ${PAGE_TITLES[parentPath]}`;
+  if (parentPath) return `Raymoch • ${PAGE_TITLES[parentPath]}`;
 
   const fallbackTitle = normalizedPath
     .split("/")
@@ -185,7 +185,7 @@ function getPageTitle(path) {
     ?.replace(/[-_]+/g, " ")
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 
-  return `Raymoch — ${fallbackTitle || "Home"}`;
+  return `Raymoch • ${fallbackTitle || "Home"}`;
 }
 
 function getCsrf() {

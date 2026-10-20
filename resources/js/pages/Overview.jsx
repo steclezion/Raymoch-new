@@ -352,7 +352,7 @@ export default function Overview() {
         label: "Businesses",
         title: "Verified entities and standout profiles",
         text: "A selective preview of businesses gaining visibility across sectors and countries.",
-        href: "/businesses",
+        href: "/explore",
       },
       {
         label: "Insights",
@@ -370,7 +370,7 @@ export default function Overview() {
         label: "Matching",
         title: "Preview where trust meets routing",
         text: "A light signal of the future matching and allocation layer without overselling it.",
-        href: "/services/matching",
+        href: "/matching",
       },
     ],
     []
@@ -791,7 +791,7 @@ export default function Overview() {
 
   return (
     <ResponsiveController>
-      <div style={S.page}>
+      <div className="overview-page" style={S.page}>
         <style>{`
           [data-tooltip] { position: relative; }
           [data-tooltip]::before,
@@ -842,6 +842,19 @@ export default function Overview() {
           [data-tooltip]:focus-visible::after { transform: translate(-50%, -4px) rotate(45deg); }
           @media (prefers-reduced-motion: reduce) {
             [data-tooltip]::before, [data-tooltip]::after { transition: none; }
+          }
+          .overview-page, .overview-page * { box-sizing: border-box; }
+          .overview-page img, .overview-page svg { max-width: 100%; }
+          .overview-page a:focus-visible,
+          .overview-page button:focus-visible,
+          .overview-page select:focus-visible {
+            outline: 3px solid #d79810;
+            outline-offset: 3px;
+          }
+          @media (max-width: 640px) {
+            .overview-page { overflow-x: hidden; }
+            .overview-page main { min-width: 0; }
+            [data-tooltip]::before, [data-tooltip]::after { display: none; }
           }
         `}</style>
         <Header user={user} />
@@ -977,7 +990,7 @@ function JoinRaymochSection({ S, isTablet, isMobile }) {
         </p>
 
         <div style={S.joinButtonRow}>
-          <a href="/signup" style={S.joinPrimaryButton} data-tooltip="Create your Raymoch account">
+          <a href="/pricing" style={S.joinPrimaryButton} data-tooltip="Choose a Raymoch membership plan">
             Subscribe now
           </a>
 

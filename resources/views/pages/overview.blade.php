@@ -13,7 +13,7 @@
     cookies: "{{ url('/cookies') }}",
   };
 </script>
-  <div id="FulloverviewRoot"></div>
+  <div id="OverviewRoot"></div>
 
 
 @push('scripts')

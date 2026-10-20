@@ -218,6 +218,7 @@ mountPage("dashboard-root", () => import("./pages/Dashboard.jsx"));
 mountPage("ServicesRoot", () => import("./pages/Services.jsx"));
 mountPage("MarketInsightRoot", () => import("./pages/Market_Insight.jsx"));
 mountPage("OverviewRoot", () => import("./pages/Overview.jsx"));
+mountPage("insight-detail-root", () => import("./pages/InsightDetail.jsx"));
 mountPage("FulloverviewRootAuthenticated",() => import("./pages/FulloverviewRootAuthenticated.jsx"));
 mountPage("FulloverviewRoot", () => import("./pages/Fulloverview.jsx"));
 mountPage("SecurityRoot", () => import("./pages/Security.jsx"));
