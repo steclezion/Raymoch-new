@@ -550,20 +550,20 @@ export default function Entire() {
 
   const signals = useMemo(
     () => [
-      { tag: "Incentive", text: "Kenya: VAT relief on solar mini-grid components announced.", href: "/signals/kenya-vat-solar" },
-      { tag: "Policy", text: "Ghana: FX repatriation rules eased for exporters (pilot Q4).", href: "/signals/ghana-fx-repatriation" },
-      { tag: "Grant", text: "AfDB SME window expands to climate-adaptive agritech, $50m tranche.", href: "/signals/afdb-sme-climate" },
-      { tag: "Regulatory", text: "Egypt: sandbox fast-track for healthtech devices (duty cut 5%).", href: "/signals/egypt-healthtech-sandbox" },
+      { tag: "Incentive", text: "Kenya: VAT relief on solar mini-grid components announced.", href: "/insights" },
+      { tag: "Policy", text: "Ghana: FX repatriation rules eased for exporters (pilot Q4).", href: "/insights" },
+      { tag: "Grant", text: "AfDB SME window expands to climate-adaptive agritech, $50m tranche.", href: "/insights" },
+      { tag: "Regulatory", text: "Egypt: sandbox fast-track for healthtech devices (duty cut 5%).", href: "/insights" },
     ],
     []
   );
 
   const reports = useMemo(
     () => [
-      { title: "Africa’s energy transition", href: "/insights/energy-transition" },
-      { title: "Generative AI and the workforce", href: "/insights/genai-workforce" },
-      { title: "Climate adaptation and capital", href: "/insights/climate-adaptation" },
-      { title: "Future of African capital markets", href: "/insights/capital-markets" },
+      { title: "Africa’s energy transition", href: "/insights" },
+      { title: "Generative AI and the workforce", href: "/insights" },
+      { title: "Climate adaptation and capital", href: "/insights" },
+      { title: "Future of African capital markets", href: "/insights" },
     ],
     []
   );
@@ -584,7 +584,7 @@ export default function Entire() {
 
   return (
     <ResponsiveController>
-      <div style={S.page}>
+      <div className="entire-page" style={S.page}>
         <Header user={user} />
         <main>
         
@@ -620,18 +620,18 @@ export default function Entire() {
    ============================================================================= */
 function Hero({ S }) {
   return (
-    <section style={S.hero}>
+    <section className="entire-hero" style={S.hero} aria-labelledby="entire-hero-title">
       <div style={S.heroGridFade} aria-hidden="true" />
       <div style={S.wrap}>
         <div style={S.heroInner}>
           <div style={S.kicker}>Verify • CTI™ • Market Signals</div>
-          <h1 style={S.h1}>Redefining African Potential</h1>
+          <h1 id="entire-hero-title" style={S.h1}>Redefining African Potential</h1>
           <p style={S.sub}>
             Raymoch connects investors and entrepreneurs through verified data,
             a transparent trust score, and actionable market intelligence.
           </p>
           <div style={S.ctaRow}>
-            <a href="/businesses" style={{ ...S.btnBase, ...S.btnPrimary }}>Explore</a>
+            <a href="/explore" style={{ ...S.btnBase, ...S.btnPrimary }}>Explore businesses</a>
             <a href="/verification" style={{ ...S.btnBase, ...S.btnGhostLight }}>Get verified</a>
           </div>
         </div>
@@ -663,7 +663,7 @@ function WhoWeAre({ S }) {
   return (
     <section style={S.sectionSurface}>
       <div style={S.wrap}>
-        <div style={S.aboutGrid}>
+        <div className="entire-two-column" style={S.aboutGrid}>
           <div>
             <h2 style={S.h2}>Who we are</h2>
             <p style={S.leadBody}>
@@ -671,7 +671,7 @@ function WhoWeAre({ S }) {
               profiles, the Comprehensive Trust Index, and market intelligence make it easier
               to discover credible African businesses and back them with confidence.
             </p>
-            <div style={S.aboutStats}>
+            <div className="entire-stats-grid" style={S.aboutStats}>
               <Stat S={S} label="Companies tracked" value="12,400+" />
               <Stat S={S} label="Active sectors" value="24+" />
               <Stat S={S} label="Countries covered" value="54+" />
@@ -711,7 +711,7 @@ function WhatWeDo({ S }) {
           </p>
         </div>
 
-        <div style={S.featureBand}>
+        <div className="entire-feature-grid" style={S.featureBand}>
           <a href="/matching" style={{ ...S.featureBlock, ...S.featureBlockDeep }}>
             <div>
               <div style={S.featureEyebrow}>Match</div>
@@ -732,7 +732,7 @@ function WhatWeDo({ S }) {
             </div>
           </a>
 
-          <a href="/cti" style={{ ...S.featureBlock, ...S.featureBlockGold }}>
+          <a href="/Trust_and_Methodology" style={{ ...S.featureBlock, ...S.featureBlockGold }}>
             <div>
               <div style={S.featureEyebrowDark}>Trust Score</div>
               <div style={S.featureTitleDark}>CTI™ scoring</div>
@@ -742,7 +742,7 @@ function WhatWeDo({ S }) {
             </div>
           </a>
 
-          <a href="/updates" style={{ ...S.featureBlock, ...S.featureBlockSoft }}>
+          <a href="/insights" style={{ ...S.featureBlock, ...S.featureBlockSoft }}>
             <div>
               <div style={S.featureEyebrowDark}>Updates</div>
               <div style={S.featureTitleDark}>Latest updates</div>
@@ -752,7 +752,7 @@ function WhatWeDo({ S }) {
             </div>
           </a>
 
-          <a href="/programs" style={{ ...S.featureBlock, ...S.featureBlockLight }}>
+          <a href="/partner-programs" style={{ ...S.featureBlock, ...S.featureBlockLight }}>
             <div>
               <div style={S.featureEyebrowDark}>Growth</div>
               <div style={S.featureTitleDark}>Community & growth</div>
@@ -809,11 +809,11 @@ function SignalsOverview({ S, signals }) {
 
         <div style={S.signalsHead}>Latest Policy Updates Across the Continent.</div>
 
-        <div style={S.grid4}>
-          <InfoCard S={S} title="Latest incentives" text="Tax credits, grants, and concessional financing recently announced." href="/incentives" />
-          <InfoCard S={S} title="Policy changes" text="Regulatory updates that unlock or constrain sectors and regions." href="/policy" />
+        <div className="entire-four-column" style={S.grid4}>
+          <InfoCard S={S} title="Latest incentives" text="Tax credits, grants, and concessional financing recently announced." href="/insights" />
+          <InfoCard S={S} title="Policy changes" text="Regulatory updates that unlock or constrain sectors and regions." href="/insights" />
           <InfoCard S={S} title="Market news" text="Signals from M&A, funding rounds, and trade flows." href="/insights" />
-          <InfoCard S={S} title="Whitespace map" text="A data-led view of unmet demand by sector and country." href="/whitespace" />
+          <InfoCard S={S} title="Whitespace map" text="A data-led view of unmet demand by sector and country." href="/insights" />
         </div>
       </div>
     </section>
@@ -850,7 +850,7 @@ function SpecialReports({ S, reports }) {
           </div>
         </div>
 
-        <div style={S.reportsGrid}>
+        <div className="entire-reports-grid" style={S.reportsGrid}>
           <div style={S.reportIntroCard}>
             <div style={S.reportIntroText}>
               A changing market requires analysis that connects capital, context, and growth across sectors and regions.
@@ -861,7 +861,7 @@ function SpecialReports({ S, reports }) {
             </a>
           </div>
 
-          <a href="/insights/featured" style={S.reportFeaturedCard}>
+          <a href="/insights" className="entire-report-featured" style={S.reportFeaturedCard}>
             <img
               src="/images/reports/featured-report.jpg"
               alt="Featured report"
@@ -928,11 +928,11 @@ function MarketIntelCarousel({ S, intel }) {
           </div>
         </div>
 
-        <div style={S.carouselGrid}>
+        <div className="entire-carousel-grid" style={S.carouselGrid}>
           {visible.map((x, i) => {
             const isCenter = i === 1;
             return (
-              <a key={`${x.source}-${x.title}`} href={x.href} target="_blank" rel="noreferrer" style={{ ...S.intelItemCard, ...(isCenter ? S.intelCenter : S.intelSide) }}>
+              <a className={`entire-intel-card${isCenter ? " is-center" : ""}`} key={`${x.source}-${x.title}`} href={x.href} target="_blank" rel="noopener noreferrer" style={{ ...S.intelItemCard, ...(isCenter ? S.intelCenter : S.intelSide) }}>
                 <div>
                   {x.image ? <img src={x.image} alt={x.source} style={S.intelImage} /> : null}
                   <div style={S.intelSource}>{x.source}</div>
@@ -976,8 +976,8 @@ function MosaicSpotlight({ S }) {
           </a>
         </div>
 
-        <div style={S.mosaicGrid}>
-          <a href="/businesses" style={{ ...S.mosaicCard, ...S.mosaicHeroCard }}>
+        <div className="entire-mosaic-grid" style={S.mosaicGrid}>
+          <a className="entire-mosaic-hero" href="/explore" style={{ ...S.mosaicCard, ...S.mosaicHeroCard }}>
             <div>
               <div style={S.mosaicEyebrowLight}>Featured lane</div>
               <div style={S.mosaicHeroTitle}>Verified businesses with context, not noise.</div>
@@ -988,7 +988,7 @@ function MosaicSpotlight({ S }) {
             <div style={S.mosaicLinkLight}>Explore businesses</div>
           </a>
 
-          <a href="/updates" style={{ ...S.mosaicCard, ...S.mosaicWarmCard }}>
+          <a href="/insights" style={{ ...S.mosaicCard, ...S.mosaicWarmCard }}>
             <div>
               <div style={S.mosaicEyebrowDark}>Signals</div>
               <div style={S.mosaicCardTitleDark}>Policy updates</div>
@@ -1021,7 +1021,7 @@ function MosaicSpotlight({ S }) {
             <div style={S.mosaicLinkLight}>Get verified</div>
           </a>
 
-          <a href="/cti" style={{ ...S.mosaicCard, ...S.mosaicGoldCard }}>
+          <a href="/Trust_and_Methodology" style={{ ...S.mosaicCard, ...S.mosaicGoldCard }}>
             <div>
               <div style={S.mosaicEyebrowDark}>CTI™</div>
               <div style={S.mosaicCardTitleDark}>Comprehensive Trust Index</div>
@@ -1057,7 +1057,7 @@ function HowItWorks({ S }) {
   return (
     <section style={S.sectionSurface}>
       <div style={S.wrap}>
-        <div style={S.aboutGrid}>
+        <div className="entire-two-column" style={S.aboutGrid}>
           <div>
             <h2 style={S.h2}>How it works</h2>
             <p style={S.leadBody}>
@@ -1097,7 +1097,7 @@ function CTADeep({ S }) {
   return (
     <section style={S.ctaBand}>
       <div style={S.wrap}>
-        <div style={S.ctaInner}>
+        <div className="entire-cta-inner" style={S.ctaInner}>
           <div>
             <div style={S.ctaTitle}>Build trust. Unlock capital. Move faster.</div>
             <div style={S.ctaText}>Whether you’re investing or raising, Raymoch gives you verified context so decisions are clearer and diligence is faster.</div>

@@ -195,9 +195,133 @@
   @media (max-width: 420px){
     .l2-metric{ min-width: 100%; }
   }
-  
 
+/* Entire landing page responsive overrides.
+   The component uses inline design tokens, so these targeted rules provide
+   the viewport-specific behavior that inline styles cannot express. */
+.entire-page,
+.entire-page * {
+  box-sizing: border-box;
+}
 
+.entire-page img,
+.entire-page svg {
+  max-width: 100%;
+}
 
+.entire-page a:focus-visible,
+.entire-page button:focus-visible {
+  outline: 3px solid #d79810;
+  outline-offset: 3px;
+}
 
-  
+@media (max-width: 1180px) {
+  .entire-feature-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .entire-reports-grid {
+    grid-template-columns: minmax(220px, .8fr) minmax(0, 1.7fr) !important;
+  }
+
+  .entire-reports-grid > :last-child {
+    grid-column: 1 / -1;
+    margin-top: 0 !important;
+  }
+
+  .entire-four-column {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .entire-hero {
+    padding-top: 110px !important;
+    padding-bottom: 150px !important;
+  }
+
+  .entire-two-column,
+  .entire-reports-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .entire-report-featured {
+    transform: none !important;
+  }
+
+  .entire-reports-grid > :last-child {
+    grid-column: auto;
+  }
+
+  .entire-carousel-grid {
+    grid-template-columns: repeat(3, minmax(240px, 1fr)) !important;
+    justify-content: start !important;
+    overflow-x: auto;
+    padding: 24px 4px 34px;
+    scroll-snap-type: x mandatory;
+  }
+
+  .entire-intel-card {
+    width: auto !important;
+    min-width: 240px;
+    scroll-snap-align: center;
+  }
+
+  .entire-intel-card.is-center {
+    transform: none !important;
+  }
+
+  .entire-mosaic-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: auto !important;
+  }
+
+  .entire-mosaic-hero {
+    grid-row: auto !important;
+    grid-column: 1 / -1;
+    min-height: 320px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .entire-hero {
+    padding-top: 84px !important;
+    padding-bottom: 120px !important;
+  }
+
+  .entire-feature-grid,
+  .entire-four-column,
+  .entire-stats-grid,
+  .entire-mosaic-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .entire-mosaic-hero {
+    grid-column: auto;
+    min-height: 280px !important;
+  }
+
+  .entire-cta-inner {
+    align-items: flex-start !important;
+    flex-direction: column;
+  }
+
+  .entire-page h1 {
+    font-size: clamp(42px, 13vw, 58px) !important;
+  }
+
+  .entire-page h2 {
+    font-size: clamp(28px, 9vw, 34px) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entire-page *,
+  .entire-page *::before,
+  .entire-page *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
