@@ -240,10 +240,14 @@ mountPage("authenticator-setup-root", () => import("./pages/AuthenticatorSetup.j
 mountPage("password-recovery-root", () => import("./pages/PasswordRecovery.jsx"), {
   props: window.PASSWORD_RECOVERY_BOOT || {},
 });
+mountPage("settings-root", () => import("./pages/Settings.jsx"), {
+  props: window.SETTINGS_BOOT || {},
+});
 mountPage("trial-request-root", () => import("./components/RequestTrial.jsx"), {
   props: {
-    apiUrl: window.APP?.apiTrial || "/api/trial-requests",
-    csrfToken: getCsrf(),
+    apiUrl: window.TRIAL_BOOT?.apiTrial || "/api/trial-requests",
+    apiCheckUrl: window.TRIAL_BOOT?.apiCheck || "/api/trial-requests/check",
+    csrfToken: window.TRIAL_BOOT?.csrf || getCsrf(),
   },
 });
 mountPage("trial-verify-root", () => import("./components/VerifyCode.jsx"), {

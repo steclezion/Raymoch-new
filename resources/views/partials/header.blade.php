@@ -4,7 +4,7 @@
   <header class="header" id="nav" data-version="HeaderFooter_v1.0">
     <div class="row1">
       <div class="brandrow">
-        <a class="brand" href="{{ route('entire') }}" aria-label="Raymoch home">
+        <a class="brand" href="{{ route('/') }}" aria-label="Raymoch home">
           <svg width="28" height="28" viewBox="0 0 200 200" aria-hidden="true">
             <polygon fill="none" stroke="currentColor" stroke-width="10" points="100,18 172,59 172,141 100,182 28,141 28,59"/>
             <text x="100" y="118" text-anchor="middle" style="fill:currentColor;font:700 105px Georgia">R</text>

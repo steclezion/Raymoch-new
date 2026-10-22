@@ -31,6 +31,7 @@ use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RoutePdfController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SignupController;
 use App\Http\Controllers\StoreSessionSearchController;
 use App\Http\Controllers\StripePaymentController;
@@ -233,6 +234,11 @@ Route::middleware('auth')->prefix('auth/activity')->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/settings', [SettingsController::class, 'page'])->name('settings.page');
+    Route::get('/settings/data', [SettingsController::class, 'show'])->name('settings.data');
+    Route::put('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.profile');
+    Route::put('/settings/password', [SettingsController::class, 'updatePassword'])->name('settings.password');
+    Route::put('/settings/preferences', [SettingsController::class, 'updatePreferences'])->name('settings.preferences');
     Route::get('/security/authenticator', [AuthenticatorController::class, 'page'])->name('authenticator.page');
     Route::get('/security/authenticator/status', [AuthenticatorController::class, 'status'])->name('authenticator.status');
     Route::post('/security/authenticator/begin', [AuthenticatorController::class, 'begin'])->name('authenticator.begin');
