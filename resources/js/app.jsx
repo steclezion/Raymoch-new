@@ -237,6 +237,9 @@ mountPage("cookies-page-root", () => import("./pages/legal/Cookies.jsx"));
 mountPage("data-protection-page-root", () => import("./pages/legal/DataProtection.jsx"));
 mountPage("accessibility-page-root", () => import("./pages/legal/Accessibility.jsx"));
 mountPage("authenticator-setup-root", () => import("./pages/AuthenticatorSetup.jsx"));
+mountPage("password-recovery-root", () => import("./pages/PasswordRecovery.jsx"), {
+  props: window.PASSWORD_RECOVERY_BOOT || {},
+});
 mountPage(
   "SignupInvestorAccountRoot",
   () => import("./components/signup/SignupInvestorAccount.jsx"),
