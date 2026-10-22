@@ -243,6 +243,9 @@ mountPage("password-recovery-root", () => import("./pages/PasswordRecovery.jsx")
 mountPage("settings-root", () => import("./pages/Settings.jsx"), {
   props: window.SETTINGS_BOOT || {},
 });
+mountPage("notifications-root", () => import("./pages/Notifications.jsx"), {
+  props: window.NOTIFICATIONS_BOOT || {},
+});
 mountPage("explore-topic-root", () => import("./pages/ExploreTopic.jsx"), {
   props: { topicKey: window.EXPLORE_TOPIC },
 });

@@ -22,6 +22,7 @@ use App\Http\Controllers\HomePageWelcomeController;
 use App\Http\Controllers\HomeWelcomeSecondPageController;
 use App\Http\Controllers\HomeWelcomeThirdPageController;
 use App\Http\Controllers\OneTapController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\PremiumSignupController;
@@ -250,6 +251,12 @@ Route::middleware('auth')->prefix('auth/activity')->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/notifications', [NotificationController::class, 'page'])->name('notifications.page');
+    Route::get('/notifications/data', [NotificationController::class, 'index'])->name('notifications.data');
+    Route::patch('/notifications/{notification}/read', [NotificationController::class, 'update'])->name('notifications.update');
+    Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
+    Route::delete('/notifications/read', [NotificationController::class, 'clearRead'])->name('notifications.clear-read');
+    Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
     Route::get('/settings', [SettingsController::class, 'page'])->name('settings.page');
     Route::get('/settings/data', [SettingsController::class, 'show'])->name('settings.data');
     Route::put('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.profile');
