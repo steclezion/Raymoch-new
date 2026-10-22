@@ -204,7 +204,7 @@ export default function RaymochInformationSupporter() {
           <section className="ray-supporter-dialog" role="dialog" aria-modal="true" aria-labelledby="ray-supporter-title">
             <header>
               <span className="ray-supporter-avatar"><Bot size={22} /></span>
-              <div><h2 id="ray-supporter-title">Raymoch Information Supporter</h2><p><span /> AI platform guidance</p></div>
+              <div><h2 id="ray-supporter-title">Raymoch bot</h2><p><span /> AI platform guidance</p></div>
               <button type="button" className="ray-supporter-close" onClick={closeAssistant} aria-label="Close Raymoch Information Supporter"><X size={19} /></button>
             </header>
 
