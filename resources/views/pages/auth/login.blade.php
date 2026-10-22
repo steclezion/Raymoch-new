@@ -9,6 +9,7 @@
     window.LOGIN_BOOT = {
       csrf: "{{ csrf_token() }}",
       apiLogin: "{{ route('auth.login.json') }}",
+      apiMfa: "{{ route('auth.login.mfa') }}",
       redirectTo: "{{ url('/dashboard') }}",
     };
   </script>

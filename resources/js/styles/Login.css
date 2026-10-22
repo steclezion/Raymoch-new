@@ -168,6 +168,23 @@
   margin:0;
   accent-color:var(--brand-blue-700);
 }
+.secureSignInOption{
+  margin:12px 0 16px;
+  padding:14px;
+  border:1px solid #d9cec0;
+  border-radius:12px;
+  background:#fbf8f3;
+}
+.secureSignInOption label{display:flex;align-items:flex-start;gap:11px;cursor:pointer;}
+.secureSignInOption input{width:18px;height:18px;margin-top:2px;accent-color:var(--brand-blue-700);}
+.secureSignInOption span{display:grid;gap:3px;color:#374151;}
+.secureSignInOption strong{color:#063122;font-size:.94rem;}
+.secureSignInOption small{color:#667085;line-height:1.45;}
+.authenticatorSetupLink{display:block;margin:10px 0 0 29px;color:var(--muted);font-size:.82rem;font-weight:600;line-height:1.45;}
+.mfaInput{text-align:center;font-size:1.45rem;font-weight:800;letter-spacing:.32em;font-variant-numeric:tabular-nums;}
+.mfaHelp{margin-top:7px;color:#667085;font-size:.82rem;text-align:center;}
+.backToLogin{display:block;margin:12px auto 0;border:0;color:var(--brand-blue-700);background:transparent;font-weight:700;cursor:pointer;}
+.backToLogin:hover{text-decoration:underline;}
 button.cta{
   width:100%;
   padding:14px;

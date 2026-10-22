@@ -6,6 +6,7 @@ import "../styles/Login.css";
 
 export default function Login({
   apiUrl,
+  mfaApiUrl,
   csrfToken,
   redirectTo,
   sessionLifetimeMinutes = 10080,
@@ -19,6 +20,10 @@ export default function Login({
   const [showPass, setShowPass] = useState(false);
   const [values, setValues] = useState({ user: "", pass: "" });
   const [remember, setRemember] = useState(false);
+  const [secureSignIn, setSecureSignIn] = useState(false);
+  const [mfaStep, setMfaStep] = useState(false);
+  const [mfaKey, setMfaKey] = useState("");
+  const [challenge, setChallenge] = useState("");
   const [errors, setErrors] = useState({ user: "", pass: "" });
   const [busy, setBusy] = useState(false);
 
@@ -77,6 +82,11 @@ export default function Login({
     apiUrl ??
     window.LOGIN_BOOT?.apiLogin ??
     "/login/json";
+
+  const getMfaApiUrl = () =>
+    mfaApiUrl ??
+    window.LOGIN_BOOT?.apiMfa ??
+    "/login/mfa";
 
   const getRedirect = (json) =>
     json?.redirect ||
@@ -147,14 +157,19 @@ export default function Login({
       return;
     }
 
-    if (!validate()) {
+    if (!mfaStep && !validate()) {
+      return;
+    }
+
+    if (mfaStep && !/^\d{6}$/.test(mfaKey)) {
+      toast.error("Enter the six-digit authentication key.");
       return;
     }
 
     setBusy(true);
     submittingRef.current = true;
 
-    const url = getApiUrl();
+    const url = mfaStep ? getMfaApiUrl() : getApiUrl();
     const token = getCsrf();
 
     try {
@@ -165,15 +180,26 @@ export default function Login({
           "Content-Type": "application/json",
           "X-CSRF-TOKEN": token,
         },
-        body: JSON.stringify({
+        body: JSON.stringify(mfaStep ? {
+          challenge,
+          mfa_key: mfaKey,
+        } : {
           user: values.user.trim(),
           password: values.pass,
           remember,
+          secure_sign_in: secureSignIn,
         }),
         credentials: "same-origin",
       });
 
       const json = await response.json().catch(() => ({}));
+
+      if (response.status === 202 && json.requires_mfa && json.challenge) {
+        setChallenge(json.challenge);
+        setMfaStep(true);
+        toast.success(json.message || "Authentication key sent.");
+        return;
+      }
 
       if (response.ok && json.ok) {
         sessionStorage.removeItem("login-csrf-refresh");
@@ -210,6 +236,11 @@ export default function Login({
 
       // A non-419 response confirms that the current CSRF token works.
       sessionStorage.removeItem("login-csrf-refresh");
+
+      if (mfaStep && response.status === 422) {
+        toast.error(json?.message || "The authentication key is invalid or expired.");
+        return;
+      }
 
       if (
         response.status === 401 ||
@@ -263,7 +294,7 @@ export default function Login({
               <h1 className="title">Log In</h1>
 
               <p className="sub">
-                Welcome back. Please enter your credentials.
+                {mfaStep ? "Enter the current code from your authenticator app." : "Welcome back. Please enter your credentials."}
               </p>
             </header>
 
@@ -272,7 +303,7 @@ export default function Login({
               noValidate
               onSubmit={handleSubmit}
             >
-              <div className="field">
+              {!mfaStep ? <div className="field">
                 <label
                   className="label"
                   htmlFor="login-user"
@@ -308,9 +339,9 @@ export default function Login({
                     {errors.user}
                   </div>
                 ) : null}
-              </div>
+              </div> : null}
 
-              <div className="field">
+              {!mfaStep ? <div className="field">
                 <label
                   className="label"
                   htmlFor="login-pass"
@@ -368,9 +399,36 @@ export default function Login({
                     {errors.pass}
                   </div>
                 ) : null}
-              </div>
+              </div> : null}
 
-              <div className="loginOptions">
+              {!mfaStep ? <div className="secureSignInOption">
+                <label>
+                  <input type="checkbox" checked={secureSignIn} onChange={(event) => setSecureSignIn(event.target.checked)} />
+                  <span><strong>Secure sign in</strong><small>Use a six-digit code from Microsoft or Google Authenticator.</small></span>
+                </label>
+                <span className="authenticatorSetupLink">First time? Sign in normally, then open User Profile → Authenticator Security.</span>
+              </div> : null}
+
+              {mfaStep ? <div className="field mfaField">
+                <label className="label" htmlFor="login-mfa-key">Multifactor authentication key</label>
+                <input
+                  id="login-mfa-key"
+                  className="input mfaInput"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  pattern="[0-9]{6}"
+                  maxLength={6}
+                  value={mfaKey}
+                  onChange={(event) => setMfaKey(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                  placeholder="000000"
+                  autoFocus
+                  required
+                />
+                <p className="mfaHelp">Codes rotate every 30 seconds. Use the current code shown in your authenticator app.</p>
+              </div> : null}
+
+              {!mfaStep ? <div className="loginOptions">
                 <label className="rememberOption">
                   <input
                     type="checkbox"
@@ -382,7 +440,7 @@ export default function Login({
                 <a href={resetHref}>
                   Forgot password?
                 </a>
-              </div>
+              </div> : null}
 
               <button
                 type="submit"
@@ -396,9 +454,11 @@ export default function Login({
                     aria-hidden="true"
                   />
                 ) : (
-                  "Log In"
+                  mfaStep ? "Verify and sign in" : "Log In"
                 )}
               </button>
+
+              {mfaStep ? <button type="button" className="backToLogin" onClick={() => { setMfaStep(false); setMfaKey(""); setChallenge(""); }}>Back to login</button> : null}
 
               <div className="hint">
                 Don’t have an account?{" "}

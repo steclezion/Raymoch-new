@@ -4,6 +4,8 @@ use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Auth\BusinessAccountController;
 use App\Http\Controllers\Auth\BusinessOtpController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\LoginActivityController;
+use App\Http\Controllers\Auth\AuthenticatorController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Billing\StripeWebhookController;
 use App\Http\Controllers\ChatbotController;
@@ -53,6 +55,7 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
     // Login (choose ONE system; I recommend LoginController)
     Route::get('/login', [LoginController::class, 'showLogin'])->name('login');
     Route::post('/login/json', [LoginController::class, 'loginJson'])->name('auth.login.json');
+    Route::post('/login/mfa', [LoginController::class, 'verifyMfa'])->name('auth.login.mfa');
 
     //   Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
 
@@ -218,7 +221,18 @@ Route::get('/auth/user', function () {
     ], 200);
 })->name('auth.user');
 
+Route::middleware('auth')->prefix('auth/activity')->group(function () {
+    Route::get('/status', [LoginActivityController::class, 'status'])->name('auth.activity.status');
+    Route::post('/touch', [LoginActivityController::class, 'touch'])->name('auth.activity.touch');
+    Route::post('/expire', [LoginActivityController::class, 'expire'])->name('auth.activity.expire');
+});
+
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/security/authenticator', [AuthenticatorController::class, 'page'])->name('authenticator.page');
+    Route::get('/security/authenticator/status', [AuthenticatorController::class, 'status'])->name('authenticator.status');
+    Route::post('/security/authenticator/begin', [AuthenticatorController::class, 'begin'])->name('authenticator.begin');
+    Route::post('/security/authenticator/confirm', [AuthenticatorController::class, 'confirm'])->name('authenticator.confirm');
+    Route::delete('/security/authenticator', [AuthenticatorController::class, 'disable'])->name('authenticator.disable');
     // Dashboard
     Route::get('/dashboard', fn() => view('pages.dashboard.dashboard'))->name('dashboard');
     Route::get('/home', fn() => view('pages.dashboard.home'))->name('home');

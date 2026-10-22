@@ -838,6 +838,7 @@
   font: inherit;
   font-size: 0.84rem;
   font-weight: 750;
+  text-decoration: none;
   cursor: pointer;
   transition: border-color 160ms ease, color 160ms ease,
     background-color 160ms ease, box-shadow 160ms ease;

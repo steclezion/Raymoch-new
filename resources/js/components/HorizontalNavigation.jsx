@@ -115,6 +115,7 @@ const PAGE_TITLES = {
   "/settings": "Settings",
   "/search": "Search",
   "/profile": "Profile",
+  "/security/authenticator": "Authenticator Security",
 };
 
 function getPageTitle(path) {
@@ -1023,6 +1024,16 @@ export default function HorizontalNavigation({
                 >
                   <Edit3 size={17} aria-hidden="true" /> Edit profile
                 </button>
+
+                <a
+                  className="ray-profile__edit"
+                  href="/security/authenticator"
+                  onClick={closeProfileEditor}
+                >
+                  <ShieldCheck size={17} aria-hidden="true" />
+                  Authenticator Security
+                </a>
+
 
                 <div className="ray-profile__status">
                   <span aria-hidden="true" /> Authenticated

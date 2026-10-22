@@ -11,6 +11,7 @@ import { createRoot } from "react-dom/client";
 import { Toaster } from "sonner";
 import { BrowserRouter } from "react-router-dom";
 import { clearAuthUserCache, getAuthUser } from "./lib/auth.js";
+import { LoginActivityService } from "./services/LoginActivityService.js";
 /* =========================================================
    Auth Context
 ========================================================= */
@@ -39,6 +40,7 @@ function AuthProvider({ children }) {
   const [booted, setBooted] = useState(false);
 
   const bcRef = useRef(null);
+  const activityServiceRef = useRef(null);
 
   const refreshAuth = async () => {
     try {
@@ -99,6 +101,33 @@ function AuthProvider({ children }) {
   useEffect(() => {
     refreshAuth();
   }, []);
+
+  useEffect(() => {
+    if (!booted || !isAuthenticated) {
+      activityServiceRef.current?.stop();
+      activityServiceRef.current = null;
+      return undefined;
+    }
+
+    const activityService = new LoginActivityService({
+      onAcknowledgement: (state) => {
+        window.dispatchEvent(new CustomEvent("raymoch:login-activity", { detail: state }));
+      },
+      onExpired: () => {
+        clearAuthUserCache();
+        setIsAuthenticated(false);
+        setAuthUser(null);
+        window.location.replace("/");
+      },
+    });
+    activityServiceRef.current = activityService;
+    activityService.start();
+
+    return () => {
+      activityService.stop();
+      if (activityServiceRef.current === activityService) activityServiceRef.current = null;
+    };
+  }, [booted, isAuthenticated]);
 
   useEffect(() => {
     if (typeof BroadcastChannel !== "undefined") {
@@ -207,6 +236,7 @@ mountPage("terms-page-root", () => import("./pages/legal/Terms.jsx"));
 mountPage("cookies-page-root", () => import("./pages/legal/Cookies.jsx"));
 mountPage("data-protection-page-root", () => import("./pages/legal/DataProtection.jsx"));
 mountPage("accessibility-page-root", () => import("./pages/legal/Accessibility.jsx"));
+mountPage("authenticator-setup-root", () => import("./pages/AuthenticatorSetup.jsx"));
 mountPage(
   "SignupInvestorAccountRoot",
   () => import("./components/signup/SignupInvestorAccount.jsx"),

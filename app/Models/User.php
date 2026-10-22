@@ -47,6 +47,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_secret',
     ];
 
     /**
@@ -58,15 +59,11 @@ class User extends Authenticatable
     {
 
         return [
-            'name',
-            'email',
-            'password',
-            'type_account',
-            'company_name',
-            'display_name',
-            'stripe_customer_id',
-            'stripe_subscription_id',
-            'email_verified_at'
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+            'two_factor_secret' => 'encrypted',
+            'two_factor_confirmed_at' => 'datetime',
+            'two_factor_last_used_step' => 'integer',
         ];
     }
     public function industry()
