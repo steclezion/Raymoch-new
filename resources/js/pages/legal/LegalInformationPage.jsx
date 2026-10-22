@@ -51,7 +51,7 @@ export default function LegalInformationPage({ document }) {
                 <div><h2>{section.title}</h2>{section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}{section.items && <ul>{section.items.map((item) => <li key={item}>{item}</li>)}</ul>}</div>
               </section>
             ))}
-            <aside className="legal-info__contact"><div><span className="legal-info__eyebrow">Questions or requests</span><h2>We’re here to help you understand this information.</h2><p>Contact Raymoch with the relevant topic and enough detail for the appropriate team to respond.</p></div><a href="/Contact">Contact Raymoch <ArrowRight size={17} /></a></aside>
+            <aside className="legal-info__contact"><div><span className="legal-info__eyebrow">Questions or requests</span><h2>We’re here to help you understand this information.</h2><p>Contact Raymoch with the relevant topic and enough detail for the appropriate team to respond.</p></div><a href="/contact">Contact Raymoch <ArrowRight size={17} /></a></aside>
           </article>
         </div>
       </main>

@@ -1,0 +1,1 @@
+@include('pages.resources.page', ['resourcePage' => 'faqs', 'pageTitle' => 'Frequently Asked Questions', 'description' => 'Answers to common questions about Raymoch accounts, services, verification, and security.'])

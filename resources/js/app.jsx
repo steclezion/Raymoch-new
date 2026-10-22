@@ -316,11 +316,15 @@ mountPage("pricing-root", () => import("./pages/Pricing.jsx"), {
 mountPage("footer-information-root", () => import("./pages/Footer/FooterPage.jsx"), {
   props: { pageKey: window.FOOTER_PAGE },
 });
+mountPage("for-investors-root", () => import("./pages/ForInvestors.jsx"));
+mountPage("resource-page-root", () => import("./pages/resources/ResourcePage.jsx"), {
+  props: { pageKey: window.RESOURCE_PAGE },
+});
 mountPage("how-raymoch-works-root", () => import("./pages/Footer/How_Raymoch_Works.jsx"));
 mountPage("trust-and-methodology-root", () => import("./pages/Footer/Trust_and_Methodology.jsx"));
 mountPage("partner-programs-root", () => import("./pages/Footer/Partner_Programs.jsx"));
 mountPage("careers-page-root", () => import("./pages/Footer/Careers.jsx"));
-mountPage("contact-page-root", () => import("./pages/Footer/Contact.jsx"));
+mountPage("contact-page-root", () => import("./pages/Footer/contact.jsx"));
 mountPage("price-how-to-pay-root", () => import("./pages/Pricehowtopay.jsx"), {
   props: routeProps,
 });

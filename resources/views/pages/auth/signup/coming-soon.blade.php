@@ -49,7 +49,7 @@
         <div class="actions"><a class="primary" href="/">Explore Raymoch</a><a class="secondary" href="/login">Already have an account? Sign in</a></div>
       </section>
     </main>
-    <footer><span>© {{ date('Y') }} Raymoch</span><nav><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/Contact">Contact</a></nav></footer>
+    <footer><span>© {{ date('Y') }} Raymoch</span><nav><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/contact">Contact</a></nav></footer>
   </div>
 </body>
 </html>

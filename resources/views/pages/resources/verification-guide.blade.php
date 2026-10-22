@@ -1,0 +1,1 @@
+@include('pages.resources.page', ['resourcePage' => 'verification-guide', 'pageTitle' => 'Verification Guide', 'description' => 'Understand Raymoch verification, evidence review, statuses, and next steps.'])

@@ -261,7 +261,7 @@ export default function Pricing({ routes = {} }) {
                 Investor is designed for deeper evaluation and deal discovery.
               </p>
             </div>
-            <a href={routes.contact || "/Contact"}>
+            <a href={routes.contact || "/contact"}>
               Contact us
               <ArrowRight size={17} aria-hidden="true" />
             </a>

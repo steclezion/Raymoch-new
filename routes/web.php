@@ -135,15 +135,24 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
 
     Route::view('/careers', 'pages.entire')->name('careers');
     Route::view('/press', 'pages.entire')->name('press');
-    Route::view('/help', 'pages.entire')->name('help');
     Route::view('/security', 'pages.entire')->name('security');
-    Route::view('/status', 'pages.entire')->name('status');
 
     Route::get('/services/options', [ServiceController::class, 'options'])->name('services.options');
 });
 
 // Public pricing overview: available to both guests and authenticated users.
 Route::view('/pricing', 'pages.Pricing')->name('pricing');
+Route::view('/for-investors', 'pages.for-investors')->name('for-investors');
+$resourcePages = [
+    '/business-readiness-guides' => ['business-readiness', 'business-readiness-guides'],
+    '/verification-guide' => ['verification-guide', 'verification-guide'],
+    '/help' => ['help-centre', 'help'],
+    '/faqs' => ['faqs', 'faqs'],
+    '/status' => ['system-status', 'status'],
+];
+foreach ($resourcePages as $uri => [$resourcePage, $routeName]) {
+    Route::view($uri, "pages.resources.{$resourcePage}")->name($routeName);
+}
 $exploreTopicPages = [
     'trusted-matching' => 'trusted-matching',
     'verification' => 'verification',
@@ -194,7 +203,7 @@ Route::view('/how-raymoch-works', 'pages.Footer.How_Raymoch_Works')->name('foote
 Route::view('/Trust_and_Methodology', 'pages.Footer.Trust_and_Methodology')->name('footer.company.trust');
 Route::view('/Partner_Programs', 'pages.Footer.Partner_Programs')->name('footer.company.partners');
 Route::view('/Careers', 'pages.Footer.Careers')->name('footer.company.careers');
-Route::get('/Contact', [ContactController::class, 'index'])->name('footer.company.contact');
+Route::get('/contact', [ContactController::class, 'index'])->name('footer.company.contact');
 Route::post('/contact/messages', [ContactController::class, 'store'])
     ->middleware('throttle:8,1')
     ->name('contact.messages.store');

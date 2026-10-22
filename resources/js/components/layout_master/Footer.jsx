@@ -2,99 +2,223 @@ import React from "react";
 import { useAuth } from "../../app.jsx";
 
 const GROUPS = [
-  { title: "Company", links: [["About Raymoch", "about", "/about"], ["How Raymoch Works", "howRaymochWorks", "/how-raymoch-works"], ["Trust & Methodology", "trustMethodology", "/Trust_and_Methodology"], ["Partner Programs", "partnerPrograms", "/Partner_Programs"], ["Careers", "careers", "/Careers"], ["Contact", "contact", "/Contact"]] },
-  { title: "Product", links: [["Business Discovery", "explore", "/explore"], ["Business Verification", "verification", "/verification"], ["Trusted Matching", "matching", "/matching"], ["Market Insights", "insights", "/insights"], ["For Businesses", "forBusinesses", "/for-businesses"], ["For Investors", "forInvestors", "/for-investors"], ["Pricing", "pricing", "/pricing"]] },
-  { title: "Resources", links: [["Insights & Research", "insights", "/insights"], ["Business Readiness Guides", "businessReadiness", "/business-readiness-guides"], ["Verification Guide", "verificationGuide", "/verification-guide"], ["Investor Resources", "investorResources", "/investor-resources"], ["Help Centre", "help", "/help"], ["FAQs", "faqs", "/faqs"], ["Blog", "blog", "/blog"], ["System Status", "status", "/status"]] },
+    {
+        title: "Company",
+        links: [
+            ["About Raymoch", "about", "/about"],
+            ["How Raymoch Works", "howRaymochWorks", "/how-raymoch-works"],
+            [
+                "Trust & Methodology",
+                "trustMethodology",
+                "/Trust_and_Methodology",
+            ],
+            ["Partner Programs", "partnerPrograms", "/Partner_Programs"],
+            ["Careers", "careers", "/Careers"],
+            ["Contact", "contact", "/contact"],
+        ],
+    },
+    {
+        title: "Product",
+        links: [
+            ["Business Discovery", "explore", "/explore"],
+            ["Business Verification", "verification", "/verification"],
+            ["Trusted Matching", "matching", "/matching"],
+            ["Market Insights", "insights", "/insights"],
+            ["For Businesses", "forBusinesses", "/for-businesses"],
+            ["For Investors", "forInvestors", "/for-investors"],
+            ["Pricing", "pricing", "/pricing"],
+        ],
+    },
+    {
+        title: "Resources",
+        links: [
+            [
+                "Business Readiness Guides",
+                "businessReadiness",
+                "/business-readiness-guides",
+            ],
+            ["Verification Guide", "verificationGuide", "/verification-guide"],
+            ["Help Centre", "help", "/help"],
+            ["FAQs", "faqs", "/faqs"],
+            ["System Status", "status", "/status"],
+        ],
+    },
 ];
 
 export default function Footer({ routes = {} }) {
-  const { isAuthenticated } = useAuth();
-  const href = (name, fallback) => routes[name] || fallback;
-  const normalizePath = (path) => {
-    const normalized = path.replace(/\/+$/, "") || "/";
-    return normalized.toLowerCase();
-  };
-  const currentPath = typeof window !== "undefined"
-    ? normalizePath(window.location.pathname)
-    : "/";
-  const isActive = (target) => {
-    if (typeof window === "undefined" || !target) return false;
+    const { isAuthenticated } = useAuth();
+    const href = (name, fallback) => routes[name] || fallback;
+    const normalizePath = (path) => {
+        const normalized = path.replace(/\/+$/, "") || "/";
+        return normalized.toLowerCase();
+    };
+    const currentPath =
+        typeof window !== "undefined"
+            ? normalizePath(window.location.pathname)
+            : "/";
+    const isActive = (target) => {
+        if (typeof window === "undefined" || !target) return false;
 
-    try {
-      const url = new URL(target, window.location.origin);
-      return url.origin === window.location.origin && normalizePath(url.pathname) === currentPath;
-    } catch {
-      return false;
-    }
-  };
-  const activeProps = (target) => isActive(target)
-    ? { className: "is-active", "aria-current": "page" }
-    : {};
+        try {
+            const url = new URL(target, window.location.origin);
+            return (
+                url.origin === window.location.origin &&
+                normalizePath(url.pathname) === currentPath
+            );
+        } catch {
+            return false;
+        }
+    };
+    const activeProps = (target) =>
+        isActive(target)
+            ? { className: "is-active", "aria-current": "page" }
+            : {};
 
-  return (
-    <footer className="site-footer" id="site-footer">
-      <div className="site-footer__accent" aria-hidden="true" />
-      <div className="site-footer__inner">
-        <div className="site-footer__main">
-          <section className="site-footer__brand" aria-label="About Raymoch">
-            <a className="site-footer__brand-link" href="/" aria-label="Raymoch home">
-              <span className="site-footer__logo" aria-hidden="true">
-                <img src="/images/logo_preview_exact.svg" alt="" />
-              </span>
-              <span>Raymoch</span>
-            </a>
-            <p>
-              Connecting investors and entrepreneurs through trusted data,
-              verified opportunities, and actionable African market insights.
-            </p>
-            <div className="site-footer__trust">
-              <span aria-hidden="true" /> Built for trusted growth
+    return (
+        <footer className="site-footer" id="site-footer">
+            <div className="site-footer__accent" aria-hidden="true" />
+            <div className="site-footer__inner">
+                <div className="site-footer__main">
+                    <section
+                        className="site-footer__brand"
+                        aria-label="About Raymoch"
+                    >
+                        <a
+                            className="site-footer__brand-link"
+                            href="/"
+                            aria-label="Raymoch home"
+                        >
+                            <span
+                                className="site-footer__logo"
+                                aria-hidden="true"
+                            >
+                                <img
+                                    src="/images/logo_preview_exact.svg"
+                                    alt=""
+                                />
+                            </span>
+                            <span>Raymoch</span>
+                        </a>
+                        <p>
+                            Connecting investors and entrepreneurs through
+                            trusted data, verified opportunities, and actionable
+                            African market insights.
+                        </p>
+                        <div className="site-footer__trust">
+                            <span aria-hidden="true" /> Built for trusted growth
+                        </div>
+                    </section>
+
+                    <nav
+                        className="site-footer__navigation"
+                        aria-label="Footer navigation"
+                    >
+                        {GROUPS.map((group) => (
+                            <div
+                                className="site-footer__group"
+                                key={group.title}
+                            >
+                                <h2>{group.title}</h2>
+                                <ul>
+                                    {group.links.map(
+                                        ([label, name, fallback]) => {
+                                            const target = href(name, fallback);
+                                            return (
+                                                <li key={name}>
+                                                    <a
+                                                        href={target}
+                                                        {...activeProps(target)}
+                                                    >
+                                                        {label}
+                                                    </a>
+                                                </li>
+                                            );
+                                        },
+                                    )}
+                                </ul>
+                            </div>
+                        ))}
+                    </nav>
+                </div>
+
+                {!isAuthenticated && (
+                    <nav
+                        className="site-footer__actions"
+                        aria-label="Account actions"
+                    >
+                        <span>
+                            Ready to explore trusted business opportunity?
+                        </span>
+                        <div>
+                            <a
+                                href={href("login", "/login")}
+                                {...activeProps(href("login", "/login"))}
+                            >
+                                Log in
+                            </a>
+                            <a
+                                href={href("signup", "/signup")}
+                                {...activeProps(href("signup", "/signup"))}
+                            >
+                                Create an account
+                            </a>
+                            <a
+                                href={href("trial", "/request-trial")}
+                                {...activeProps(
+                                    href("trial", "/request-trial"),
+                                )}
+                            >
+                                Request a free trial
+                            </a>
+                        </div>
+                    </nav>
+                )}
+
+                <div className="site-footer__bottom">
+                    <p>
+                        © {new Date().getFullYear()} Raymoch. All rights
+                        reserved.
+                    </p>
+                    <nav aria-label="Legal">
+                        <a
+                            href={href("privacy", "/privacy")}
+                            {...activeProps(href("privacy", "/privacy"))}
+                        >
+                            Privacy
+                        </a>
+                        <a
+                            href={href("terms", "/terms")}
+                            {...activeProps(href("terms", "/terms"))}
+                        >
+                            Terms
+                        </a>
+                        <a
+                            href={href("cookies", "/cookies")}
+                            {...activeProps(href("cookies", "/cookies"))}
+                        >
+                            Cookies
+                        </a>
+                        <a
+                            href={href("dataProtection", "/data-protection")}
+                            {...activeProps(
+                                href("dataProtection", "/data-protection"),
+                            )}
+                        >
+                            Data protection
+                        </a>
+                        <a
+                            href={href("accessibility", "/accessibility")}
+                            {...activeProps(
+                                href("accessibility", "/accessibility"),
+                            )}
+                        >
+                            Accessibility
+                        </a>
+                    </nav>
+                </div>
             </div>
-          </section>
 
-          <nav className="site-footer__navigation" aria-label="Footer navigation">
-            {GROUPS.map((group) => (
-              <div className="site-footer__group" key={group.title}>
-                <h2>{group.title}</h2>
-                <ul>
-                  {group.links.map(([label, name, fallback]) => {
-                    const target = href(name, fallback);
-                    return (
-                      <li key={name}>
-                        <a href={target} {...activeProps(target)}>{label}</a>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ))}
-          </nav>
-        </div>
-
-        {!isAuthenticated && (
-          <nav className="site-footer__actions" aria-label="Account actions">
-            <span>Ready to explore trusted business opportunity?</span>
-            <div>
-              <a href={href("login", "/login")} {...activeProps(href("login", "/login"))}>Log in</a>
-              <a href={href("signup", "/signup")} {...activeProps(href("signup", "/signup"))}>Create an account</a>
-              <a href={href("trial", "/request-trial")} {...activeProps(href("trial", "/request-trial"))}>Request a free trial</a>
-            </div>
-          </nav>
-        )}
-
-        <div className="site-footer__bottom">
-          <p>© {new Date().getFullYear()} Raymoch. All rights reserved.</p>
-          <nav aria-label="Legal">
-            <a href={href("privacy", "/privacy")} {...activeProps(href("privacy", "/privacy"))}>Privacy</a>
-            <a href={href("terms", "/terms")} {...activeProps(href("terms", "/terms"))}>Terms</a>
-            <a href={href("cookies", "/cookies")} {...activeProps(href("cookies", "/cookies"))}>Cookies</a>
-            <a href={href("dataProtection", "/data-protection")} {...activeProps(href("dataProtection", "/data-protection"))}>Data protection</a>
-            <a href={href("accessibility", "/accessibility")} {...activeProps(href("accessibility", "/accessibility"))}>Accessibility</a>
-          </nav>
-        </div>
-      </div>
-
-      <style>{`
+            <style>{`
         .site-footer, .site-footer * { box-sizing: border-box; }
         .site-footer {
           position: relative; width: 100%; overflow: hidden;
@@ -205,6 +329,6 @@ export default function Footer({ routes = {} }) {
         }
         @media (prefers-reduced-motion: reduce) { .site-footer a { transition: none; } }
       `}</style>
-    </footer>
-  );
+        </footer>
+    );
 }

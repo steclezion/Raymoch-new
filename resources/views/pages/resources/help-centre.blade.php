@@ -1,0 +1,1 @@
+@include('pages.resources.page', ['resourcePage' => 'help-centre', 'pageTitle' => 'Help Centre', 'description' => 'Find guidance for accounts, discovery, verification, matching, billing, and privacy.'])

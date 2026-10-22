@@ -3,7 +3,7 @@ import { ArrowRight, CheckCircle2, ChevronDown, Mail, MessageSquareText, ShieldC
 import AuthAwareNavigation from "../../components/AuthAwareNavigation.jsx";
 import Footer from "../../components/layout_master/Footer.jsx";
 import RaymochInformationSupporter from "../../components/RaymochInformationSupporter.jsx";
-import "./Contact.css";
+import "./contact.css";
 
 const TOPICS = [
   ["", "Select a topic"],
@@ -101,7 +101,7 @@ export default function Contact() {
 
   return (
     <>
-      <AuthAwareNavigation activePath="/Contact" />
+      <AuthAwareNavigation activePath="/contact" />
       <main className="contact-page">
         <div className="contact-page__wrap">
           <header className="contact-page__intro">

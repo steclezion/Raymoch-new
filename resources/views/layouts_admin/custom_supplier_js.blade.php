@@ -671,7 +671,7 @@ $('#save_agent_info').click(function () {
     var ag_tele = document.getElementById('ag_tele').value ;
     var ag_website_url = document.getElementById('ag_website_url').value ;
   
-        //Contact Supplier Full Information
+        //contact Supplier Full Information
     var cont_ag_first_name  = document.getElementById('cont_ag_first_name').value ;
     var cont_ag_middle_name = document.getElementById('cont_ag_middle_name').value ;
     var cont_ag_last_name  = document.getElementById('cont_ag_last_name').value ;
@@ -790,7 +790,7 @@ var age_tele_code = document.getElementById('age_response_tele').innerHTML ;
 ag_tele = ag_tele+age_tele_code;
 
 
-  //Contact Supplier Full Information
+  //contact Supplier Full Information
 var cont_ag_first_name  = document.getElementById('cont_ag_first_name').value ;
 var cont_ag_middle_name = document.getElementById('cont_ag_middle_name').value ;
 var cont_ag_last_name  = document.getElementById('cont_ag_last_name').value ;
@@ -933,7 +933,7 @@ toastr.error(data.AgentInfo.errorInfo[2])
     var tele_code_supplier = document.getElementById('cs_response_tele').innerHTML ;
      //tele =  tele_code_supplier+tele;
        
-        //Contact Supplier Full Information
+        //contact Supplier Full Information
     var contact_supplier_firstname  = document.getElementById('cont_first_name').value ;
     var contact_supplier_middlename = document.getElementById('cont_middle_name').value ;
     var contact_supplier_lastname  =  document.getElementById('cont_last_name').value ;
@@ -1056,7 +1056,7 @@ toastr.success("Applicant Information and Applicant Contact Infomation Successfu
     var tele_code_supplier = document.getElementById('cs_response_tele').innerHTML ;
      //tele =  tele_code_supplier+tele;
        
-        //Contact Supplier Full Information
+        //contact Supplier Full Information
     var contact_supplier_firstname  = document.getElementById('cont_first_name').value ;
     var contact_supplier_middlename = document.getElementById('cont_middle_name').value ;
     var contact_supplier_lastname  =  document.getElementById('cont_last_name').value ;
@@ -1204,7 +1204,7 @@ toastr.success("Applicant Information and Applicant Contact Infomation Successfu
    
        
        
-        //Contact Supplier Full Information
+        //contact Supplier Full Information
     var contact_supplier_firstname  = document.getElementById('cont_first_name').value ;
     var contact_supplier_middlename = document.getElementById('cont_middle_name').value ;
     var contact_supplier_lastname  = document.getElementById('cont_last_name').value ;
@@ -1338,7 +1338,7 @@ toastr.info("No update is made -- Changes not Affected!!")
    
        
        
-        //Contact Supplier Full Information
+        //contact Supplier Full Information
     var contact_supplier_firstname  = document.getElementById('cont_first_name').value ;
     var contact_supplier_middlename = document.getElementById('cont_middle_name').value ;
     var contact_supplier_lastname  = document.getElementById('cont_last_name').value ;

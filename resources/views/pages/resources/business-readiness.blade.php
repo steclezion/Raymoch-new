@@ -1,0 +1,1 @@
+@include('pages.resources.page', ['resourcePage' => 'business-readiness', 'pageTitle' => 'Business Readiness Guides', 'description' => 'Practical guidance for preparing business information, evidence, and opportunity materials.'])

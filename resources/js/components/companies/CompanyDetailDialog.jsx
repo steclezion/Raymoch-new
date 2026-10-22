@@ -68,7 +68,7 @@ import PaidOutlinedIcon from "@mui/icons-material/PaidOutlined";
 import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
 import PhotoLibraryOutlinedIcon from "@mui/icons-material/PhotoLibraryOutlined";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
-import ContactMailOutlinedIcon from "@mui/icons-material/ContactMailOutlined";
+import ContactMailOutlinedIcon from "@mui/icons-material/contactMailOutlined";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import PsychologyOutlinedIcon from "@mui/icons-material/PsychologyOutlined";
 
