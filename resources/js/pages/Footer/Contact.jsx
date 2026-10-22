@@ -3,7 +3,7 @@ import { ArrowRight, CheckCircle2, ChevronDown, Mail, MessageSquareText, ShieldC
 import AuthAwareNavigation from "../../components/AuthAwareNavigation.jsx";
 import Footer from "../../components/layout_master/Footer.jsx";
 import RaymochInformationSupporter from "../../components/RaymochInformationSupporter.jsx";
-import "./contact.css";
+import "./Contact.css";
 
 const TOPICS = [
   ["", "Select a topic"],
