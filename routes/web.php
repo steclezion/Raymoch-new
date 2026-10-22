@@ -35,6 +35,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SignupController;
 use App\Http\Controllers\StoreSessionSearchController;
 use App\Http\Controllers\StripePaymentController;
+use App\Http\Controllers\TrialRequestController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
@@ -117,6 +118,9 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
     // Trial request pagesbusiness_landing
     Route::get('/request-trial', fn() => view('pages.auth.trial'))->name('trial.page');
     Route::view('/trial/verify', 'pages.auth.trial-verify')->name('trial.verify.page');
+    Route::post('/trial/verify-coupon', [TrialRequestController::class, 'verifyCoupon'])
+        ->middleware('throttle:5,1')
+        ->name('trial.coupon.verify');
     Route::view('/trial/success', 'pages.auth.trial-success')->name('trial.success.page');
     Route::get('/request', [RequestTrialController::class, 'show'])->name('request.show');
 
@@ -139,6 +143,18 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
 
 // Public pricing overview: available to both guests and authenticated users.
 Route::view('/pricing', 'pages.Pricing')->name('pricing');
+$exploreTopicPages = [
+    'trusted-matching' => 'trusted-matching',
+    'verification' => 'verification',
+    'research-insights' => 'research-insights',
+    'programs-services' => 'programs-services',
+    'policy-incentives' => 'policy-incentives',
+    'whitespace-map' => 'whitespace-map',
+];
+foreach ($exploreTopicPages as $slug => $topicKey) {
+    Route::view("/explore/{$slug}", 'pages.explore-topic', compact('topicKey'))
+        ->name("explore.topic.{$slug}");
+}
 Route::view('/blog', 'pages.blog')->name('blog');
 Route::view('/privacy', 'pages.policies.privacy')->name('privacy');
 Route::view('/terms', 'pages.policies.terms')->name('terms');

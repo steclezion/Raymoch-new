@@ -15,9 +15,15 @@ class TrialRequest extends Model
         'phone',
         'company',
         'agree_privacy',
+        'coupon',
         'status',
         'ip',
         'user_agent'
+    ];
+
+    protected $hidden = [
+        'coupon',
+        'verification_code',
     ];
 
     protected function casts(): array

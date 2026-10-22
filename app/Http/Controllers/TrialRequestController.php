@@ -3,10 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\TrialRequest;
+use App\Models\User;
+use App\Services\Auth\LoginActivityService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 
 class TrialRequestController extends Controller
 {
@@ -23,8 +30,15 @@ class TrialRequestController extends Controller
             'agree_privacy'  => ['accepted'],
         ]);
 
-        // Create the request
-        $trial = TrialRequest::create([
+        // Reuse an unfinished request so a user can request a fresh coupon after
+        // an expired or undelivered email without creating duplicate rows.
+        $trial = TrialRequest::where('business_email', $data['business_email'])
+            ->whereNull('verified_at')
+            ->latest('id')
+            ->first();
+        $wasCreated = !$trial;
+        $trial ??= new TrialRequest();
+        $trial->fill([
             'first_name'     => $data['first_name'],
             'last_name'      => $data['last_name'],
             'business_email' => $data['business_email'],
@@ -35,19 +49,22 @@ class TrialRequestController extends Controller
             'user_agent'     => mb_substr((string) $request->userAgent(), 0, 255),
         ]);
 
-        // Generate a 6-digit code and store it w/ expiry
-        $code = random_int(100000, 999999);
-        $trial->verification_code = (string)$code;         // For production, hash this
+        // Store only a one-way hash. The readable coupon exists only in the email.
+        $coupon = (string) random_int(100000, 999999);
+        $trial->coupon = Hash::make($coupon);
+        $trial->verification_code = null;
         $trial->code_expires_at   = Carbon::now()->addMinutes(15);
+        $trial->verified_at = null;
+        $trial->status = 'pending';
         $trial->save();
 
         // Send email (simple)
         try {
             Mail::raw(
-                "Your Raymoch verification code is: {$code}\nThis code expires in 15 minutes.",
+                "Your Raymoch trial coupon is: {$coupon}\n\nEnter this six-digit coupon on the verification page. It expires in 15 minutes and can be used once.",
                 function ($message) use ($trial) {
                     $message->to($trial->business_email)
-                        ->subject('Your Raymoch verification code');
+                        ->subject('Your Raymoch trial coupon');
                 }
             );
         } catch (\Throwable $exception) {
@@ -55,7 +72,14 @@ class TrialRequestController extends Controller
                 'trial_request_id' => $trial->id,
                 'exception' => $exception->getMessage(),
             ]);
-            $trial->delete();
+            if ($wasCreated) {
+                $trial->delete();
+            } else {
+                $trial->forceFill([
+                    'coupon' => null,
+                    'code_expires_at' => null,
+                ])->save();
+            }
 
             return response()->json([
                 'ok' => false,
@@ -65,21 +89,19 @@ class TrialRequestController extends Controller
 
         return response()->json([
             'ok'       => true,
-            'message'  => 'Request created and code sent.',
+            'message'  => 'Request created and trial coupon sent.',
             'redirect' => route('trial.verify.page', ['email' => $trial->business_email]),
         ], 201);
     }
 
-    public function verifyCode(Request $request)
+    public function verifyCoupon(Request $request, LoginActivityService $activity)
     {
         $data = $request->validate([
             'email' => ['required', 'email'],
-            'code'  => ['required', 'digits:6'],
+            'coupon' => ['required', 'digits:6'],
         ]);
 
-        $trial = TrialRequest::where('business_email', $data['email'])
-            ->latest('id')
-            ->first();
+        $trial = TrialRequest::where('business_email', $data['email'])->latest('id')->first();
 
         if (!$trial) {
             return response()->json([
@@ -88,37 +110,79 @@ class TrialRequestController extends Controller
             ], 404);
         }
 
-        if (!$trial->verification_code || !$trial->code_expires_at) {
+        if (!$trial->coupon || !$trial->code_expires_at || $trial->verified_at) {
             return response()->json([
                 'ok' => false,
-                'message' => 'No code has been generated yet.',
-            ], 400);
+                'message' => $trial->verified_at ? 'This coupon has already been used.' : 'No coupon has been generated yet.',
+            ], 422);
         }
 
         if (Carbon::now()->greaterThan($trial->code_expires_at)) {
             return response()->json([
                 'ok' => false,
-                'message' => 'The code has expired. Please submit again.',
+                'message' => 'The coupon has expired. Please submit a new trial request.',
             ], 422);
         }
 
-        if ($data['code'] !== $trial->verification_code) {
+        if (!Hash::check($data['coupon'], $trial->coupon)) {
             return response()->json([
                 'ok' => false,
-                'message' => 'Invalid code. Please try again.',
+                'message' => 'The coupon does not match our records.',
             ], 422);
         }
 
-        // Mark verified and clear code
-        $trial->verified_at = Carbon::now();
-        $trial->verification_code = null;
-        $trial->code_expires_at = null;
-        $trial->save();
+        $existingUser = User::where('email', $trial->business_email)->first();
+        if ($existingUser) {
+            return response()->json([
+                'ok' => false,
+                'existing_account' => true,
+                'message' => 'An account already uses this email. Sign in with its existing security credentials.',
+                'redirect' => route('login'),
+            ], 409);
+        }
+
+        $user = DB::transaction(function () use ($trial) {
+            $lockedTrial = TrialRequest::whereKey($trial->id)->lockForUpdate()->firstOrFail();
+            if ($lockedTrial->verified_at) abort(422, 'This coupon has already been used.');
+
+            $lockedTrial->forceFill([
+                'verified_at' => now(),
+                'code_expires_at' => null,
+                'status' => 'verified',
+            ])->save();
+
+            return User::create([
+                'name' => trim($lockedTrial->first_name.' '.$lockedTrial->last_name),
+                'email' => $lockedTrial->business_email,
+                'email_verified_at' => now(),
+                'password' => Str::random(48),
+                'phone' => $lockedTrial->phone,
+                'company_name' => $lockedTrial->company,
+                'type_of_account' => 'trial',
+                'is_active' => true,
+                'trial_ends_at' => now()->addDays(14),
+            ]);
+        });
+
+        Auth::login($user);
+        $request->session()->regenerate();
+        $activity->start($request);
+
+        // The coupon signs the user in now. This separate link lets them create
+        // a private password for future sessions without exposing a temporary one.
+        try {
+            Password::sendResetLink(['email' => $user->email]);
+        } catch (\Throwable $exception) {
+            Log::warning('Trial user signed in, but password setup email failed.', [
+                'user_id' => $user->id,
+                'exception' => $exception->getMessage(),
+            ]);
+        }
 
         return response()->json([
             'ok' => true,
-            'message' => 'Verified.',
-            'redirect' => route('trial.success.page'),
+            'message' => 'Coupon verified. Your trial account is ready.',
+            'redirect' => url('/home'),
         ]);
     }
 
@@ -133,17 +197,21 @@ class TrialRequestController extends Controller
         $exists = false;
 
         if (!empty($data['email'])) {
-            $exists = TrialRequest::where('business_email', $data['email'])->exists();
+            $exists = TrialRequest::where('business_email', $data['email'])
+                ->whereNotNull('verified_at')
+                ->exists();
         }
 
         if (!$exists && !empty($data['phone'])) {
-            $exists = TrialRequest::where('phone', $data['phone'])->exists();
+            $exists = TrialRequest::where('phone', $data['phone'])
+                ->whereNotNull('verified_at')
+                ->exists();
         }
 
         if ($exists) {
             return response()->json([
                 'exists'  => true,
-                'message' => 'Your request is already in the system.',
+                'message' => 'This email already has an activated trial. Please sign in instead.',
             ], 200);
         }
 

@@ -1,54 +1,22 @@
-{{-- from Entire.html --}}
-@extends('layouts.app_raymoch_new')
-<link href="{{ asset('css/style_entire.css')  }}" rel="stylesheet" type="text/css" id="bootstrap">
-{{-- <link href="{{ asset('css/style_entire_2.css')  }}" rel="stylesheet" type="text/css" id="bootstrap"> --}}
-<!-- JS libs -->
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
- {{-- <script rel="stylesheet" src="{{ asset('js/script_african_slider.js') }}"></script> --}}
-
-
-<!-- Bootstrap CSS for Section 4 African Slides -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
-
-  <style>
-    :rooot{
-      --page-bg:#f5f6f7; --ink:#0f172a; --muted:#6b7280;
-      --primary:#3b57d0; --primary-600:#2f46ad;
-      --border:#e5e7eb; --card:#ffffff;
-    }
-    html,body{height:100%}
-    body{margin:0;background:var(--page-bg);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial}
-    /* .wrap{min-height:100%;display:grid;place-items:start center;padding:32px} */
-    .hdr{width:100%;max-width:1200px;margin-bottom:20px;display:flex;align-items:center;gap:8px;color:var(--ink)}
-    .logo{font-weight:700}
-    #trial-verify-root{width:100%}
-
-  </style>
-
-
-  @viteReactRefresh
-  @vite('resources/js/app.jsx')
-
-
-@section('title','Raymoch • Request a Trial')
-@section('content')
-  <main class="wrap">
-    <div class="hdr"><!--<div class="logo">Raymoch</div>--> </div>
-    <div id="trial-verify-root"></div>
-  </main>
-  <br><br><br>
- 
-@endsection
-
-
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta name="description" content="Verify your six-digit Raymoch trial coupon.">
+  <title>Raymoch • Verify Trial Coupon</title>
   <script>
-    window.APP = {
-      csrf: "{{ csrf_token() }}",
-      apiVerify: "{{ route('api.trial-requests.verify') }}",
-      // optional: server-side pass-through (your VerifyCode also reads from URL)
-      // email: "{{ request('email') }}"
+    window.TRIAL_COUPON_BOOT = {
+      csrf: @json(csrf_token()),
+      verifyUrl: @json(route('trial.coupon.verify')),
+      email: @json(request('email', '')),
     };
   </script>
-
+  @viteReactRefresh
+  @vite('resources/js/app.jsx')
+</head>
+<body>
+  <div id="trial-verify-root"></div>
+</body>
+</html>

@@ -243,6 +243,9 @@ mountPage("password-recovery-root", () => import("./pages/PasswordRecovery.jsx")
 mountPage("settings-root", () => import("./pages/Settings.jsx"), {
   props: window.SETTINGS_BOOT || {},
 });
+mountPage("explore-topic-root", () => import("./pages/ExploreTopic.jsx"), {
+  props: { topicKey: window.EXPLORE_TOPIC },
+});
 mountPage("trial-request-root", () => import("./components/RequestTrial.jsx"), {
   props: {
     apiUrl: window.TRIAL_BOOT?.apiTrial || "/api/trial-requests",
@@ -252,9 +255,9 @@ mountPage("trial-request-root", () => import("./components/RequestTrial.jsx"), {
 });
 mountPage("trial-verify-root", () => import("./components/VerifyCode.jsx"), {
   props: {
-    apiVerifyUrl: window.APP?.apiVerify || "/api/trial-requests/verify-code",
-    csrfToken: getCsrf(),
-    emailProp: new URLSearchParams(window.location.search).get("email") || "",
+    apiVerifyUrl: window.TRIAL_COUPON_BOOT?.verifyUrl || "/trial/verify-coupon",
+    csrfToken: window.TRIAL_COUPON_BOOT?.csrf || getCsrf(),
+    emailProp: window.TRIAL_COUPON_BOOT?.email || new URLSearchParams(window.location.search).get("email") || "",
   },
 });
 mountPage(

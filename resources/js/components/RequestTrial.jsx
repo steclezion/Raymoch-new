@@ -113,7 +113,7 @@ export default function RequestTrial({ apiUrl, apiCheckUrl, csrfToken }) {
         setErrors(serverErrors);
         throw new Error(Object.values(serverErrors).flat()[0] || data.message || "We could not submit your request.");
       }
-      setNotice({ type: "success", message: "Request received. Opening secure email verification…" });
+      setNotice({ type: "success", message: "Coupon sent. Opening secure coupon verification…" });
       window.setTimeout(() => {
         window.location.assign(data.redirect || `/trial/verify?email=${encodeURIComponent(form.business_email)}`);
       }, 450);
@@ -164,7 +164,7 @@ export default function RequestTrial({ apiUrl, apiCheckUrl, csrfToken }) {
           <div className="trial-form-card__heading">
             <p>Request access</p>
             <h2 id="trial-form-title">Start your free trial</h2>
-            <span>Tell us a little about you. We’ll verify your email next.</span>
+            <span>Tell us a little about you. We’ll email your secure six-digit trial coupon next.</span>
           </div>
 
           {notice ? <div ref={noticeRef} tabIndex={-1} className={`trial-notice is-${notice.type}`} role={notice.type === "error" ? "alert" : "status"}>{notice.type === "success" ? <Check size={18} /> : null}{notice.message}</div> : null}
@@ -196,7 +196,7 @@ export default function RequestTrial({ apiUrl, apiCheckUrl, csrfToken }) {
       </main>
 
       <section className="trial-assurance" aria-label="Trial assurance">
-        <p><strong>What happens next?</strong> Verify your email, then our team reviews your request and contacts you within one business day.</p>
+        <p><strong>What happens next?</strong> Enter the six-digit coupon from your email to activate the trial and sign in securely.</p>
       </section>
       <Footer />
 

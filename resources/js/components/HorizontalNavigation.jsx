@@ -44,32 +44,32 @@ const EXPLORE_ITEMS = [
   {
     label: "Trusted Matching",
     description: "Connect with credible businesses using CTI and verification.",
-    href: "/matching",
+    href: "/explore/trusted-matching",
   },
   {
     label: "Verification",
     description: "Review CTI badges, document checks, and data provenance.",
-    href: "/verification",
+    href: "/explore/verification",
   },
   {
     label: "Research & Insights",
     description: "Explore sector reports, trends, and regional briefs.",
-    href: "/insights",
+    href: "/explore/research-insights",
   },
   {
     label: "Programs & Services",
     description: "Discover advisory, partner programs, and support options.",
-    href: "/services",
+    href: "/explore/programs-services",
   },
   {
     label: "Policy & Incentives",
     description: "Track tax credits, grants, and regulatory signals.",
-    href: "/incentives",
+    href: "/explore/policy-incentives",
   },
   {
     label: "Whitespace Map",
     description: "See where demand outpaces supply across sectors.",
-    href: "/whitespace",
+    href: "/explore/whitespace-map",
   },
 ];
 
@@ -104,6 +104,12 @@ const PAGE_TITLES = {
   "/home": "Home",
   "/dashboard": "Dashboard",
   "/explore": "Businesses",
+  "/explore/trusted-matching": "Trusted Matching",
+  "/explore/verification": "Verification Explained",
+  "/explore/research-insights": "Research & Insights",
+  "/explore/programs-services": "Programs & Services",
+  "/explore/policy-incentives": "Policy & Incentives",
+  "/explore/whitespace-map": "Whitespace Map",
   "/matching": "Matching",
   "/investors": "Investors",
   "/verification": "Verification",
