@@ -4,10 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\TrialRequest;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class TrialRequestController extends Controller
 {
@@ -21,7 +20,7 @@ class TrialRequestController extends Controller
             'business_email' => ['required', 'email', 'max:255'],
             'phone'          => ['nullable', 'string', 'max:40'],
             'company'        => ['nullable', 'string', 'max:255'],
-            'agree_privacy'  => ['required', 'boolean'],
+            'agree_privacy'  => ['accepted'],
         ]);
 
         // Create the request
@@ -32,6 +31,8 @@ class TrialRequestController extends Controller
             'phone'          => $data['phone'] ?? null,
             'company'        => $data['company'] ?? null,
             'agree_privacy'  => $data['agree_privacy'],
+            'ip'             => $request->ip(),
+            'user_agent'     => mb_substr((string) $request->userAgent(), 0, 255),
         ]);
 
         // Generate a 6-digit code and store it w/ expiry
@@ -41,13 +42,26 @@ class TrialRequestController extends Controller
         $trial->save();
 
         // Send email (simple)
-        Mail::raw(
-            "Your Raymoch verification code is: {$code}\nThis code expires in 15 minutes.",
-            function ($message) use ($trial) {
-                $message->to($trial->business_email)
-                    ->subject('Your verification code');
-            }
-        );
+        try {
+            Mail::raw(
+                "Your Raymoch verification code is: {$code}\nThis code expires in 15 minutes.",
+                function ($message) use ($trial) {
+                    $message->to($trial->business_email)
+                        ->subject('Your Raymoch verification code');
+                }
+            );
+        } catch (\Throwable $exception) {
+            Log::error('Unable to send trial verification email.', [
+                'trial_request_id' => $trial->id,
+                'exception' => $exception->getMessage(),
+            ]);
+            $trial->delete();
+
+            return response()->json([
+                'ok' => false,
+                'message' => 'We could not send the verification email. Please try again shortly.',
+            ], 503);
+        }
 
         return response()->json([
             'ok'       => true,
@@ -60,7 +74,7 @@ class TrialRequestController extends Controller
     {
         $data = $request->validate([
             'email' => ['required', 'email'],
-            'code'  => ['required', 'string', 'max:10'],
+            'code'  => ['required', 'digits:6'],
         ]);
 
         $trial = TrialRequest::where('business_email', $data['email'])

@@ -34,7 +34,6 @@ use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\SignupController;
 use App\Http\Controllers\StoreSessionSearchController;
 use App\Http\Controllers\StripePaymentController;
-use App\Http\Controllers\TrialRequestController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
@@ -99,6 +98,8 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
     // Route::get('/signup/business/create', [BusinessAccountController::class, 'createBusiness'])->name('signup.business.create');
     // Route::post('/signup/business/send-otp', [BusinessOtpController::class, 'sendOtp'])->name('signup.business.send_otp');
     // Route::post('/signup/business/verify-otp', [BusinessOtpController::class, 'verifyOtp'])->name('signup.business.verify_otp');
+
+    Route::view('/signup', 'pages.auth.signup.coming-soon')->name('signup.coming-soon');
 
 
     Route::view('/', 'pages.entire')->name('home');
@@ -428,13 +429,3 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 Route::get('/auth/google', [GoogleAuthController::class, 'redirectToGoogle'])->name('auth_google');
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleCallback'])->name('auth_google_callback');
 Route::post('/auth/google/onetap', [OneTapController::class, 'login'])->name('onetap.login');
-
-/*
-|--------------------------------------------------------------------------
-| Trial APIs (public, but rate-limit them)
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['throttle:trial'])->group(function () {
-    Route::post('/trial-requests', [TrialRequestController::class, 'store'])->name('api.trial-requests.store');
-    Route::post('/trial-requests/check', [TrialRequestController::class, 'checkExisting'])->name('api.trial-requests.check');
-});

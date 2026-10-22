@@ -23,7 +23,7 @@
     /* .wrap{min-height:100%;display:grid;place-items:start center;padding:32px} */
     .hdr{width:100%;max-width:1200px;margin-bottom:20px;display:flex;align-items:center;gap:8px;color:var(--ink)}
     .logo{font-weight:700}
-    #root{width:100%}
+    #trial-request-root{width:100%}
 
     
     
@@ -44,7 +44,7 @@
 @section('content')
   <main class="wrap">
     <div class="hdr"><!--<div class="logo">Raymoch</div>--> </div>
-    <div id="root"></div>
+    <div id="trial-request-root"></div>
   </main>
   <br><br><br>
  

@@ -1,5 +1,6 @@
 // resources/js/components/RequestTrial.jsx
 import React, { useEffect, useRef, useState } from "react";
+import "./trial.css";
 
 export default function RequestTrial({ apiUrl, csrfToken }) {
   const [form, setForm] = useState({

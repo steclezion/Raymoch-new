@@ -23,21 +23,20 @@
     /* .wrap{min-height:100%;display:grid;place-items:start center;padding:32px} */
     .hdr{width:100%;max-width:1200px;margin-bottom:20px;display:flex;align-items:center;gap:8px;color:var(--ink)}
     .logo{font-weight:700}
-    #root{width:100%}
+    #trial-verify-root{width:100%}
 
   </style>
 
 
   @viteReactRefresh
-  {{-- Only load the verify entry on this page --}}
-  @vite('resources/js/verify.jsx')
+  @vite('resources/js/app.jsx')
 
 
 @section('title','Raymoch • Request a Trial')
 @section('content')
   <main class="wrap">
     <div class="hdr"><!--<div class="logo">Raymoch</div>--> </div>
-    <div id="root"></div>
+    <div id="trial-verify-root"></div>
   </main>
   <br><br><br>
  

@@ -19,4 +19,13 @@ class TrialRequest extends Model
         'ip',
         'user_agent'
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'agree_privacy' => 'boolean',
+            'code_expires_at' => 'datetime',
+            'verified_at' => 'datetime',
+        ];
+    }
 }

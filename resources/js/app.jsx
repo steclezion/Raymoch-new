@@ -240,6 +240,19 @@ mountPage("authenticator-setup-root", () => import("./pages/AuthenticatorSetup.j
 mountPage("password-recovery-root", () => import("./pages/PasswordRecovery.jsx"), {
   props: window.PASSWORD_RECOVERY_BOOT || {},
 });
+mountPage("trial-request-root", () => import("./components/RequestTrial.jsx"), {
+  props: {
+    apiUrl: window.APP?.apiTrial || "/api/trial-requests",
+    csrfToken: getCsrf(),
+  },
+});
+mountPage("trial-verify-root", () => import("./components/VerifyCode.jsx"), {
+  props: {
+    apiVerifyUrl: window.APP?.apiVerify || "/api/trial-requests/verify-code",
+    csrfToken: getCsrf(),
+    emailProp: new URLSearchParams(window.location.search).get("email") || "",
+  },
+});
 mountPage(
   "SignupInvestorAccountRoot",
   () => import("./components/signup/SignupInvestorAccount.jsx"),
