@@ -2,7 +2,7 @@ import React from "react";
 import LegalInformationPage from "./LegalInformationPage.jsx";
 
 const document = {
-  key: "data-protection", title: "Raymoch Data Protection", effective: "Interim framework · 2026",
+  key: "data-protection", title: "Raymoch Data Protection Policy", effective: "October 26, 2026", status: "Published policy",
   summary: "The operational principles Raymoch uses to guide responsible information handling, access, security, and customer rights.",
   sections: [
     { title: "Our protection principles", paragraphs: ["Raymoch aims to process personal information fairly, transparently, and for defined purposes. Collection should be proportionate, information should be kept appropriately accurate, and retention should not continue without a valid need." ] },

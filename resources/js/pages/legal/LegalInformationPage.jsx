@@ -28,7 +28,7 @@ export default function LegalInformationPage({ document }) {
               </div>
               <dl className="legal-info__meta">
                 <div><dt><CalendarDays size={17} /> Effective period</dt><dd>{document.effective}</dd></div>
-                <div><dt><FileText size={17} /> Document status</dt><dd>Interim information</dd></div>
+                <div><dt><FileText size={17} /> Document status</dt><dd>{document.status || "Published policy"}</dd></div>
               </dl>
             </div>
           </div>
@@ -43,7 +43,7 @@ export default function LegalInformationPage({ document }) {
           </aside>
 
           <article className="legal-info__article">
-            <div className="legal-info__notice"><CheckCircle2 size={21} aria-hidden="true" /><div><strong>Interim customer information</strong><p>This page provides a clear overview while Raymoch prepares its final approved wording. It may be updated when formal policies, service terms, or regulatory requirements are confirmed.</p></div></div>
+            <div className="legal-info__notice"><CheckCircle2 size={21} aria-hidden="true" /><div><strong>Official Raymoch documentation</strong><p>This document describes Raymoch’s current policy and forms part of the company information available to customers, partners, and website visitors. Material changes will be published on this page with an updated effective date.</p></div></div>
             <nav className="legal-info__contents" aria-label="On this page"><strong>On this page</strong>{document.sections.map((section, index) => <a key={section.title} href={`#section-${index + 1}`}>{section.title}</a>)}</nav>
             {document.sections.map((section, index) => (
               <section id={`section-${index + 1}`} className="legal-info__section" key={section.title}>

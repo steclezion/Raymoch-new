@@ -2,7 +2,7 @@ import React from "react";
 import LegalInformationPage from "./LegalInformationPage.jsx";
 
 const document = {
-  key: "accessibility", title: "Raymoch Accessibility", effective: "Interim statement · 2026",
+  key: "accessibility", title: "Raymoch Accessibility Statement", effective: "October 26, 2026", status: "Published statement",
   summary: "Our approach to making Raymoch understandable, navigable, and usable across devices, input methods, and access needs.",
   sections: [
     { title: "Our commitment", paragraphs: ["Raymoch aims to provide an inclusive experience for customers, partners, and visitors. Accessibility is considered as the platform and its content evolve, rather than treated as a one-time activity."] },

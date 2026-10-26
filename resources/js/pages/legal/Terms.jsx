@@ -2,10 +2,10 @@ import React from "react";
 import LegalInformationPage from "./LegalInformationPage.jsx";
 
 const document = {
-  key: "terms", title: "Raymoch Terms of Use", effective: "Interim edition · 2026",
+  key: "terms", title: "Raymoch Terms of Use", effective: "October 26, 2026", status: "Published terms",
   summary: "The principles and responsibilities that support fair, secure, and appropriate use of Raymoch’s website, accounts, and services.",
   sections: [
-    { title: "Using Raymoch", paragraphs: ["By accessing Raymoch, users are expected to follow these interim terms and any service-specific instructions presented during use. If you do not agree, you should stop using the affected service."] },
+    { title: "Using Raymoch", paragraphs: ["By accessing or using Raymoch, you agree to these terms and any service-specific terms presented during use. If you do not agree, you must not use the affected service."] },
     { title: "Accounts and security", paragraphs: ["Users should provide accurate registration information, protect their credentials, maintain appropriate control over their accounts, and notify Raymoch promptly about suspected unauthorized access."] },
     { title: "Responsible use", paragraphs: ["Raymoch must not be used to misrepresent a person or business, submit unlawful or misleading material, interfere with platform security, scrape restricted information, distribute harmful code, or violate another party’s rights."] },
     { title: "Business information and verification", paragraphs: ["Businesses and authorized representatives remain responsible for the accuracy and authority of submitted information. Verification signals provide context about reviewed evidence; they are not guarantees of performance, legality, creditworthiness, or investment suitability."] },
