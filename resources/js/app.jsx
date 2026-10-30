@@ -269,6 +269,7 @@ mountPage(
   { props: routeProps }
 );
 mountPage("entire-root", () => import("./pages/Entire.jsx"));
+
 mountPage("home-root", () => import("./pages/Home.jsx"));
 mountPage("dashboard-root", () => import("./pages/Dashboard.jsx"));
 mountPage("ServicesRoot", () => import("./pages/Services.jsx"));

@@ -234,9 +234,9 @@ function resolveAccountDashboard(user) {
   if (role.includes("invest")) return "investment";
   if (role.includes("business") || role.includes("company")) return "business";
 
-//   return "individual";
-//    return "business";
-    return "investment";
+   return "individual";
+   // return "business";
+   // return "investment";
 }
 
 export default function Dashboard() {
