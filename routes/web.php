@@ -46,6 +46,8 @@ use App\Http\Controllers\Services\InvestorMatchingController;
 use App\Http\Controllers\VerificationSubmissionFormController;
 use App\Http\Controllers\OverviewController;
 use App\Models\TrialRequest;
+use App\Http\Controllers\CookieConsentController;
+use App\Http\Controllers\Admin\CookieConsentAdminController;
 
 
 /*
@@ -217,6 +219,9 @@ Route::post('/contact/messages', [ContactController::class, 'store'])
 
 
 Route::post('/chatbot', [ChatbotController::class, 'respond'])->name('chatbot.respond');
+Route::post('/cookie-consents', [CookieConsentController::class, 'store'])
+    ->middleware('throttle:20,1')
+    ->name('cookie-consents.store');
 
 /*
 |--------------------------------------------------------------------------
@@ -482,6 +487,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::resource('users', UserController::class);
     Route::resource('roles', RoleController::class);
     Route::resource('permissions', PermissionController::class);
+    Route::get('/admin/cookie-consents', [CookieConsentAdminController::class, 'index'])
+        ->name('admin.cookie-consents.index');
 });
 
 /*

@@ -1,5 +1,5 @@
 import React from "react";
-import { useAuth } from "../app.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 import HorizontalNavigation from "./HorizontalNavigation.jsx";
 import Header from "./layout_master/Header.jsx";
 

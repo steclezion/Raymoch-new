@@ -1,5 +1,5 @@
 import React from "react";
-import { useAuth } from "../../app.jsx";
+import { useAuth } from "../../context/AuthContext.jsx";
 
 const GROUPS = [
     {

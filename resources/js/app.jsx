@@ -12,6 +12,8 @@ import { Toaster } from "sonner";
 import { BrowserRouter } from "react-router-dom";
 import { clearAuthUserCache, getAuthUser } from "./lib/auth.js";
 import { LoginActivityService } from "./services/LoginActivityService.js";
+import CookiePreferences from "./components/CookiePreferences.jsx";
+import { AuthProvider as SharedAuthProvider } from "./context/AuthContext.jsx";
 /* =========================================================
    Auth Context
 ========================================================= */
@@ -186,9 +188,10 @@ function AuthProvider({ children }) {
 ========================================================= */
 function AppShell({ children }) {
   return (
-    <AuthProvider>
+    <SharedAuthProvider>
       <>
         {children}
+        <CookiePreferences />
         <Toaster
           position="top-right"
           richColors
@@ -196,7 +199,7 @@ function AppShell({ children }) {
           duration={3500}
         />
       </>
-    </AuthProvider>
+    </SharedAuthProvider>
   );
 }
 
