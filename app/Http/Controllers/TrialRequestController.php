@@ -2,18 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\TrialCouponMail;
 use App\Models\TrialRequest;
 use App\Models\User;
-use App\Services\Auth\LoginActivityService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class TrialRequestController extends Controller
 {
@@ -30,14 +29,19 @@ class TrialRequestController extends Controller
             'agree_privacy'  => ['accepted'],
         ]);
 
-        // Reuse an unfinished request so a user can request a fresh coupon after
-        // an expired or undelivered email without creating duplicate rows.
-        $trial = TrialRequest::where('business_email', $data['business_email'])
-            ->whereNull('verified_at')
-            ->latest('id')
-            ->first();
-        $wasCreated = !$trial;
-        $trial ??= new TrialRequest();
+        $data['business_email'] = Str::lower(trim($data['business_email']));
+        $data['phone'] = isset($data['phone']) ? trim($data['phone']) : null;
+
+        $duplicateErrors = $this->duplicateContactErrors(
+            $data['business_email'],
+            $data['phone']
+        );
+
+        if ($duplicateErrors !== []) {
+            throw ValidationException::withMessages($duplicateErrors);
+        }
+
+        $trial = new TrialRequest();
         $trial->fill([
             'first_name'     => $data['first_name'],
             'last_name'      => $data['last_name'],
@@ -58,28 +62,20 @@ class TrialRequestController extends Controller
         $trial->status = 'pending';
         $trial->save();
 
-        // Send email (simple)
+        // Send a branded, actionable security notification.
         try {
-            Mail::raw(
-                "Your Raymoch trial coupon is: {$coupon}\n\nEnter this six-digit coupon on the verification page. It expires in 15 minutes and can be used once.",
-                function ($message) use ($trial) {
-                    $message->to($trial->business_email)
-                        ->subject('Your Raymoch trial coupon');
-                }
-            );
+            Mail::to($trial->business_email)->send(new TrialCouponMail(
+                firstName: $trial->first_name,
+                email: $trial->business_email,
+                coupon: $coupon,
+                verificationUrl: route('trial.verify.page', ['email' => $trial->business_email]),
+            ));
         } catch (\Throwable $exception) {
             Log::error('Unable to send trial verification email.', [
                 'trial_request_id' => $trial->id,
                 'exception' => $exception->getMessage(),
             ]);
-            if ($wasCreated) {
-                $trial->delete();
-            } else {
-                $trial->forceFill([
-                    'coupon' => null,
-                    'code_expires_at' => null,
-                ])->save();
-            }
+            $trial->delete();
 
             return response()->json([
                 'ok' => false,
@@ -94,7 +90,7 @@ class TrialRequestController extends Controller
         ], 201);
     }
 
-    public function verifyCoupon(Request $request, LoginActivityService $activity)
+    public function verifyCoupon(Request $request)
     {
         $data = $request->validate([
             'email' => ['required', 'email'],
@@ -141,48 +137,29 @@ class TrialRequestController extends Controller
             ], 409);
         }
 
-        $user = DB::transaction(function () use ($trial) {
+        $trialEndsAt = now()->addDays(3);
+
+        $verifiedTrial = DB::transaction(function () use ($trial, $trialEndsAt) {
             $lockedTrial = TrialRequest::whereKey($trial->id)->lockForUpdate()->firstOrFail();
             if ($lockedTrial->verified_at) abort(422, 'This coupon has already been used.');
 
             $lockedTrial->forceFill([
                 'verified_at' => now(),
                 'code_expires_at' => null,
+                'trial_ends_at' => $trialEndsAt,
                 'status' => 'verified',
             ])->save();
 
-            return User::create([
-                'name' => trim($lockedTrial->first_name.' '.$lockedTrial->last_name),
-                'email' => $lockedTrial->business_email,
-                'email_verified_at' => now(),
-                'password' => Str::random(48),
-                'phone' => $lockedTrial->phone,
-                'company_name' => $lockedTrial->company,
-                'type_of_account' => 'trial',
-                'is_active' => true,
-                'trial_ends_at' => now()->addDays(14),
-            ]);
+            return $lockedTrial;
         });
 
-        Auth::login($user);
         $request->session()->regenerate();
-        $activity->start($request);
-
-        // The coupon signs the user in now. This separate link lets them create
-        // a private password for future sessions without exposing a temporary one.
-        try {
-            Password::sendResetLink(['email' => $user->email]);
-        } catch (\Throwable $exception) {
-            Log::warning('Trial user signed in, but password setup email failed.', [
-                'user_id' => $user->id,
-                'exception' => $exception->getMessage(),
-            ]);
-        }
+        $request->session()->put('trial_access_id', $verifiedTrial->id);
 
         return response()->json([
             'ok' => true,
-            'message' => 'Coupon verified. Your trial account is ready.',
-            'redirect' => url('/home'),
+            'message' => 'Coupon verified. Your three-day trial is ready.',
+            'redirect' => url('/explore'),
         ]);
     }
 
@@ -194,24 +171,15 @@ class TrialRequestController extends Controller
             'phone' => ['nullable', 'string', 'max:40'],
         ]);
 
-        $exists = false;
+        $email = !empty($data['email']) ? Str::lower(trim($data['email'])) : null;
+        $phone = !empty($data['phone']) ? trim($data['phone']) : null;
+        $errors = $this->duplicateContactErrors($email, $phone);
 
-        if (!empty($data['email'])) {
-            $exists = TrialRequest::where('business_email', $data['email'])
-                ->whereNotNull('verified_at')
-                ->exists();
-        }
-
-        if (!$exists && !empty($data['phone'])) {
-            $exists = TrialRequest::where('phone', $data['phone'])
-                ->whereNotNull('verified_at')
-                ->exists();
-        }
-
-        if ($exists) {
+        if ($errors !== []) {
             return response()->json([
                 'exists'  => true,
-                'message' => 'This email already has an activated trial. Please sign in instead.',
+                'message' => collect($errors)->flatten()->first(),
+                'errors' => $errors,
             ], 200);
         }
 
@@ -219,5 +187,36 @@ class TrialRequestController extends Controller
             'exists'  => false,
             'message' => 'No existing request found.',
         ], 200);
+    }
+
+    /**
+     * Check both trial requests and registered users for contact details that
+     * must remain unique during trial signup.
+     *
+     * @return array<string, array<int, string>>
+     */
+    private function duplicateContactErrors(?string $email, ?string $phone): array
+    {
+        $errors = [];
+
+        if ($email !== null && $email !== '') {
+            $emailExists = TrialRequest::whereRaw('LOWER(business_email) = ?', [$email])->exists()
+                || User::whereRaw('LOWER(email) = ?', [$email])->exists();
+
+            if ($emailExists) {
+                $errors['business_email'] = ['This email is already registered.'];
+            }
+        }
+
+        if ($phone !== null && $phone !== '') {
+            $phoneExists = TrialRequest::where('phone', $phone)->exists()
+                || User::where('phone', $phone)->exists();
+
+            if ($phoneExists) {
+                $errors['phone'] = ['This phone number is already registered.'];
+            }
+        }
+
+        return $errors;
     }
 }

@@ -52,10 +52,14 @@ Route::get('/companies', [AllCompaniesController::class, 'index']);
 // Receive “Request Update / Claim” form posts
 Route::post('/company-update-request', [UpdateRequestController::class, 'store'])->name('api.company.update-request');
 
-Route::middleware('throttle:5,1')->group(function (): void {
+
+
+Route::middleware('throttle:10,1')->group(function (): void {
     Route::post('/trial-requests', [TrialRequestController::class, 'store'])->name('api.trial-requests.store');
     Route::post('/trial-requests/check', [TrialRequestController::class, 'checkExisting'])->name('api.trial-requests.check');
 });
+
+
 
 Route::get('/business-sectors', [DirectoryController::class, 'sectors']);
 Route::get('/countries', [DirectoryController::class, 'countries']);

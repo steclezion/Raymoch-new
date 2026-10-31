@@ -30,7 +30,6 @@ export default function RequestTrial({ apiUrl, apiCheckUrl, csrfToken }) {
   const [errors, setErrors] = useState({});
   const [busy, setBusy] = useState(false);
   const [checking, setChecking] = useState(false);
-  const [existingEmail, setExistingEmail] = useState("");
   const [notice, setNotice] = useState(null);
   const [showPolicy, setShowPolicy] = useState(false);
   const noticeRef = useRef(null);
@@ -50,7 +49,6 @@ export default function RequestTrial({ apiUrl, apiCheckUrl, csrfToken }) {
   const update = (event) => {
     const { name, type, checked, value } = event.target;
     setForm((current) => ({ ...current, [name]: type === "checkbox" ? checked : value }));
-    if (name === "business_email") setExistingEmail("");
     setErrors((current) => ({ ...current, [name]: undefined }));
     setNotice(null);
   };
@@ -76,8 +74,10 @@ export default function RequestTrial({ apiUrl, apiCheckUrl, csrfToken }) {
       });
       const data = await response.json().catch(() => ({}));
       if (response.ok && data.exists) {
-        setExistingEmail(form.business_email);
-        setErrors((current) => ({ ...current, business_email: data.message || "A trial request already exists for this email." }));
+        const duplicateErrors = data.errors || {
+          business_email: [data.message || "This email is already registered."],
+        };
+        setErrors((current) => ({ ...current, ...duplicateErrors }));
         return true;
       }
     } catch {
@@ -91,10 +91,6 @@ export default function RequestTrial({ apiUrl, apiCheckUrl, csrfToken }) {
   const submit = async (event) => {
     event.preventDefault();
     if (!validate()) return;
-    if (existingEmail === form.business_email) {
-      setNotice({ type: "error", message: "A trial request already exists for this email. Contact support if you need help continuing it." });
-      return;
-    }
     setBusy(true);
     setNotice(null);
     try {
@@ -177,7 +173,7 @@ export default function RequestTrial({ apiUrl, apiCheckUrl, csrfToken }) {
                 {field("business_email", "Business email", Mail, { type: "email", autoComplete: "email", placeholder: "you@company.com", maxLength: 255, required: true })}
                 {checking ? <span className="trial-checking">Checking availability…</span> : null}
               </div>
-              {field("phone", "Phone number", Phone, { type: "tel", autoComplete: "tel", placeholder: "+1 555 000 0000", maxLength: 40 })}
+              {field("phone", "Phone number", Phone, { type: "tel", autoComplete: "tel", placeholder: "+1 555 000 0000", maxLength: 40, onBlur: checkExisting })}
               {field("company", "Company or organization", Building2, { type: "text", autoComplete: "organization", placeholder: "Your organization", maxLength: 255 })}
             </div>
 

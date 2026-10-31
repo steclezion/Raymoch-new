@@ -45,6 +45,7 @@ use Laravel\Cashier\Http\Controllers\WebhookController;
 use App\Http\Controllers\Services\InvestorMatchingController;
 use App\Http\Controllers\VerificationSubmissionFormController;
 use App\Http\Controllers\OverviewController;
+use App\Models\TrialRequest;
 
 
 /*
@@ -93,7 +94,7 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
     // Route::get('/signup/premium/create/individual', [SignupController::class, 'showPaymentPlansCreate'])->name('signup.premium.create.individual');
     // Route::post('/signup/premium/send-otp', [PremiumSignupController::class, 'sendOtp'])->name('signup.premium.send_otp');
     // Route::post('/signup/premium/verify-otp', [PremiumSignupController::class, 'verifyOtp'])->name('signup.premium.verify_otp');
-    // // Premium finalize after payment success
+    // Premium finalize after payment success
     // Route::post('/signup/premium/complete', [PaymentController::class, 'finalizePremiumSignup'])->name('signup.premium.complete');
 
     // // Business signup
@@ -120,8 +121,14 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
     Route::get('/request-trial', fn() => view('pages.auth.trial'))->name('trial.page');
     Route::view('/trial/verify', 'pages.auth.trial-verify')->name('trial.verify.page');
     Route::post('/trial/verify-coupon', [TrialRequestController::class, 'verifyCoupon'])
-        ->middleware('throttle:5,1')
+        ->middleware('throttle:10,1')
         ->name('trial.coupon.verify');
+    Route::post('/trial/logout', function (\Illuminate\Http\Request $request) {
+        $request->session()->forget('trial_access_id');
+        $request->session()->regenerateToken();
+
+        return response()->json(['ok' => true]);
+    })->name('trial.logout');
     Route::view('/trial/success', 'pages.auth.trial-success')->name('trial.success.page');
     Route::get('/request', [RequestTrialController::class, 'show'])->name('request.show');
 
@@ -240,7 +247,25 @@ Route::middleware(['web', 'auth'])->get('/subscription/access', [SubscriptionCon
 */
 Route::get('/auth/user', function () {
     if (! Auth::check()) {
-        return response()->json(['authenticated' => false], 200);
+        $trialId = session('trial_access_id');
+        $trial = $trialId ? TrialRequest::find($trialId) : null;
+
+        if (!$trial || !$trial->verified_at || !$trial->trial_ends_at || $trial->trial_ends_at->isPast()) {
+            session()->forget('trial_access_id');
+            return response()->json(['authenticated' => false], 200);
+        }
+
+        return response()->json([
+            'authenticated' => true,
+            'user' => [
+                'id' => 'trial-' . $trial->id,
+                'name' => trim($trial->first_name . ' ' . $trial->last_name),
+                'email' => $trial->business_email,
+                'type_of_account' => 'trial',
+                'auth_kind' => 'trial_request',
+                'trial_ends_at' => $trial->trial_ends_at->toIso8601String(),
+            ],
+        ], 200);
     }
 
     return response()->json([

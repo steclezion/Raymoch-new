@@ -40,11 +40,11 @@
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM19 8v6M22 11h-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </span>
         <p class="eyebrow">Something new is coming</p>
-        <h1 id="signup-coming-soon-title">Signup launches October 30</h1>
-        <p class="intro">We’re putting the final touches on the Raymoch registration experience. Account creation will officially open on October 30, 2026.</p>
+        <h1 id="signup-coming-soon-title">Signup launches November 26</h1>
+        <p class="intro">We’re putting the final touches on the Raymoch registration experience. Account creation will officially open on November 26, 2026.</p>
         <div class="launch">
           <svg width="21" height="21" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-          Friday, October 30, 2026
+         Thursday, November 26, 2026
         </div>
         <div class="actions"><a class="primary" href="/">Explore Raymoch</a><a class="secondary" href="/login">Already have an account? Sign in</a></div>
       </section>

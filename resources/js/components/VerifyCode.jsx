@@ -56,7 +56,7 @@ export default function VerifyCode({ apiVerifyUrl = "/trial/verify-coupon", csrf
         <p className="coupon-eyebrow">Secure trial activation</p>
         <h1 id="coupon-title">Enter your trial coupon</h1>
         <p>We sent a one-time six-digit coupon to <strong>{email || "your business email"}</strong>. Enter it below to verify your request and open your trial workspace.</p>
-        <ol><li><span>1</span><div><strong>Check your inbox</strong><small>Look for “Your Raymoch trial coupon.”</small></div></li><li><span>2</span><div><strong>Enter the coupon</strong><small>It expires 15 minutes after it is issued.</small></div></li><li><span>3</span><div><strong>Access Raymoch</strong><small>A verified trial account is created and signed in.</small></div></li></ol>
+        <ol><li><span>1</span><div><strong>Check your inbox</strong><small>Look for “Your Raymoch trial coupon.”</small></div></li><li><span>2</span><div><strong>Enter the coupon</strong><small>It expires 15 minutes after it is issued.</small></div></li><li><span>3</span><div><strong>Access Raymoch</strong><small>Your temporary three-day trial session will begin.</small></div></li></ol>
       </section>
       <section className="coupon-card">
         <div className="coupon-card__heading"><span><ShieldCheck /></span><div><p>Identity check</p><h2>Verify your email</h2></div></div>

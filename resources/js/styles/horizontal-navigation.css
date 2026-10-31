@@ -245,6 +245,29 @@
   background: #5b3825;
 }
 
+.ray-nav__trial-countdown {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 3px 8px;
+  border: 1px solid rgba(91, 56, 37, 0.18);
+  border-radius: 999px;
+  color: #5b3825;
+  background: #f3c94f;
+  font-size: 0.66rem;
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.ray-nav__explore-trigger:hover .ray-nav__trial-countdown,
+.ray-nav__explore-trigger.is-open .ray-nav__trial-countdown {
+  color: #382116;
+  border-color: rgba(255, 255, 255, 0.3);
+  background: #f3c94f;
+}
+
 .ray-nav__dropdown-trigger svg:last-child {
   transition: transform 0.18s ease;
 }

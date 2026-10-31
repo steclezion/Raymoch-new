@@ -169,6 +169,16 @@ function getCsrfToken() {
   );
 }
 
+function formatTrialRemaining(expiresAt) {
+  const milliseconds = new Date(expiresAt).getTime() - Date.now();
+  if (!Number.isFinite(milliseconds) || milliseconds <= 0) return "Trial ended";
+  const totalMinutes = Math.ceil(milliseconds / 60000);
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+  return days > 0 ? `${days}d ${hours}h ${minutes}m` : `${hours}h ${minutes}m`;
+}
+
 export default function HorizontalNavigation({
   activePath,
   isAuthed: isAuthedProp,
@@ -199,6 +209,7 @@ export default function HorizontalNavigation({
   const [brandAnimationCycle, setBrandAnimationCycle] = useState(0);
   const [supportModalOpen, setSupportModalOpen] = useState(false);
   const [businessSearchOpen, setBusinessSearchOpen] = useState(false);
+  const [trialRemaining, setTrialRemaining] = useState("");
   const [supportModalClosing, setSupportModalClosing] = useState(false);
   const [supportQuestion, setSupportQuestion] = useState("");
   const [supportLoading, setSupportLoading] = useState(false);
@@ -230,6 +241,7 @@ export default function HorizontalNavigation({
     ? Boolean(authLoadingProp)
     : sessionLoading;
   const authUser = authUserProp ?? sessionUser;
+  const isTrialRequestUser = authUser?.auth_kind === "trial_request";
   const avatarSrc =
     avatarSrcProp ||
     absoluteImageUrl(authUser?.avatar_url || authUser?.avatar);
@@ -240,7 +252,7 @@ export default function HorizontalNavigation({
     currentPath === "/dashboard" || currentPath.startsWith("/dashboard/");
   const safeRoutes = {
     search: typeof routes.search === "string" ? routes.search : "/search",
-    logout: typeof routes.logout === "string" ? routes.logout : "/logout",
+    logout: typeof routes.logout === "string" ? routes.logout : isTrialRequestUser ? "/trial/logout" : "/logout",
     profileUpdate:
       typeof routes.profileUpdate === "string"
         ? routes.profileUpdate
@@ -255,6 +267,18 @@ export default function HorizontalNavigation({
   useEffect(() => {
     document.title = getPageTitle(currentPath);
   }, [currentPath]);
+
+  useEffect(() => {
+    if (!isTrialRequestUser || !authUser?.trial_ends_at) {
+      setTrialRemaining("");
+      return undefined;
+    }
+
+    const updateCountdown = () => setTrialRemaining(formatTrialRemaining(authUser.trial_ends_at));
+    updateCountdown();
+    const intervalId = window.setInterval(updateCountdown, 60_000);
+    return () => window.clearInterval(intervalId);
+  }, [authUser?.trial_ends_at, isTrialRequestUser]);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -671,6 +695,7 @@ export default function HorizontalNavigation({
               <i />
             </span>
             <span>Explore</span>
+            {trialRemaining ? <span className="ray-nav__trial-countdown" title="Time remaining in your trial">{trialRemaining}</span> : null}
             <ChevronDown size={15} aria-hidden="true" />
           </button>
 

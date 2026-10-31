@@ -17,6 +17,7 @@ class TrialRequest extends Model
         'agree_privacy',
         'coupon',
         'status',
+        'trial_ends_at',
         'ip',
         'user_agent'
     ];
@@ -32,6 +33,7 @@ class TrialRequest extends Model
             'agree_privacy' => 'boolean',
             'code_expires_at' => 'datetime',
             'verified_at' => 'datetime',
+            'trial_ends_at' => 'datetime',
         ];
     }
 }
