@@ -20,7 +20,7 @@
       "signup.index": "{{ route('signup.index') }}",
       "signup.basic.create": "{{ route('signup.basic.create') }}",
       "signup.business.create": "{{ route('signup.business.create') }}",
-      "signup.investor.create": "{{ route('signup.investor.create') }}",up
+      "signup.investor.create": "{{ route('signup.investor.create') }}",
       "request.show": "{{ route('request.show') }}",
       privacy: "{{ route('privacy') }}",
       terms: "{{ route('terms') }}",

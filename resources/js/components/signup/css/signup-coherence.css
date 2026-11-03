@@ -1,0 +1,165 @@
+:root {
+  --signup-espresso-950: #2f1d14;
+  --signup-espresso-900: #382116;
+  --signup-espresso-800: #4f3021;
+  --signup-espresso-700: #6f452e;
+  --signup-espresso-600: #8a5b3d;
+  --signup-amber: #c88936;
+  --signup-parchment: #f3e7cf;
+  --signup-cream: #fbf8f3;
+  --signup-surface: #ffffff;
+  --signup-muted: #746a62;
+  --signup-border: #ded2c3;
+  --signup-border-strong: #cdbdac;
+  --signup-focus: rgba(143, 104, 71, 0.2);
+  --signup-shadow: 0 22px 60px rgba(42, 28, 18, 0.12);
+}
+
+html, body { min-height: 100%; background: var(--signup-cream); }
+
+.page.page,
+.page.sb-page {
+  min-height: 100dvh;
+  color: var(--signup-espresso-950);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(243, 231, 207, 0.72), transparent 32rem),
+    linear-gradient(180deg, #fff 0, var(--signup-cream) 22rem, #f7f2ea 100%);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.page.page > main,
+.page.sb-page > main {
+  align-items: flex-start;
+  padding: clamp(28px, 5vw, 64px) clamp(16px, 4vw, 40px) 72px;
+}
+
+.page.page .hero {
+  color: var(--signup-espresso-950);
+  border-bottom: 1px solid var(--signup-border);
+  background:
+    radial-gradient(circle at 78% 15%, rgba(200, 137, 54, 0.13), transparent 18rem),
+    linear-gradient(135deg, #fff 0%, #faf5ec 100%);
+}
+
+.page.page .hero-inner { max-width: 1180px; padding: clamp(42px, 7vw, 78px) 24px 42px; }
+.page.page .hero h1 { color: var(--signup-espresso-900); font-size: clamp(2rem, 4vw, 3.35rem); letter-spacing: -.045em; }
+.page.page .hero p { color: var(--signup-muted); font-size: 1.02rem; }
+.page.page .wrap { max-width: 1180px; padding: 0; }
+
+.page.page .card,
+.page.sb-page .card {
+  color: var(--signup-espresso-950);
+  border: 1px solid var(--signup-border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--signup-shadow);
+}
+
+.page.page main > .card,
+.page.sb-page main > .card { max-width: 860px; padding: clamp(24px, 4vw, 38px); }
+
+.page.page .grid .card { height: auto; min-height: 500px; padding: 0; overflow: hidden; box-shadow: 0 14px 38px rgba(42, 28, 18, 0.09); }
+.page.page .grid .card:hover { border-color: #c8aa8b !important; box-shadow: 0 22px 48px rgba(42, 28, 18, .13) !important; transform: translateY(-3px) !important; }
+.page.page .card-body { padding: 26px 24px 10px; }
+.page.page .card h3,
+.page.page .card .card-body h3,
+.page.page .cardHeader h1,
+.page.sb-page .cardHeader h1,
+.page.page .otpTitle,
+.page.sb-page .otpTitle { color: var(--signup-espresso-900) !important; -webkit-text-fill-color: var(--signup-espresso-900) !important; }
+.page.page .card p,
+.page.page .card .card-body p,
+.page.page .muted,
+.page.sb-page .muted,
+.page.sb-page .cardSub { color: var(--signup-muted) !important; -webkit-text-fill-color: var(--signup-muted) !important; }
+.page.page .features li { color: var(--signup-espresso-800) !important; -webkit-text-fill-color: var(--signup-espresso-800) !important; }
+.page.page .features li::before { color: var(--signup-amber); }
+.page.page .price-row strong { color: var(--signup-espresso-700); }
+
+.page.page .planbar {
+  padding: 16px 20px;
+  border-top-color: var(--signup-border);
+  background: #faf6f1;
+}
+
+.page.page .primary,
+.page.page button.cta,
+.page.page .btnPrimary,
+.page.sb-page button.cta,
+.page.sb-page .btnPrimary {
+  border: 1px solid var(--signup-espresso-700);
+  color: #fff !important;
+  background: linear-gradient(135deg, var(--signup-espresso-700), var(--signup-espresso-900));
+  box-shadow: 0 8px 20px rgba(111, 69, 46, 0.22);
+}
+
+.page.page .primary:hover,
+.page.page button.cta:hover:not(:disabled),
+.page.sb-page button.cta:hover:not(:disabled) { filter: none; transform: translateY(-1px); box-shadow: 0 11px 26px rgba(111, 69, 46, .28); }
+
+.page.page .backBtn,
+.page.page .ghost,
+.page.page .btnGhost,
+.page.page .btnSoft,
+.page.sb-page .btnGhost,
+.page.sb-page .btnSoft {
+  border-color: var(--signup-border-strong);
+  color: var(--signup-espresso-700);
+  background: #faf6f1;
+}
+
+.page.page label,
+.page.sb-page label { color: var(--signup-espresso-800); }
+.page.page .input,
+.page.page input:not([type="checkbox"]):not([type="radio"]),
+.page.page select,
+.page.sb-page .input,
+.page.sb-page input:not([type="checkbox"]):not([type="radio"]) {
+  border-color: var(--signup-border-strong);
+  color: var(--signup-espresso-950);
+  background: #fff;
+}
+.page.page .input:focus,
+.page.page input:focus,
+.page.page select:focus,
+.page.sb-page .input:focus,
+.page.sb-page input:focus {
+  border-color: var(--signup-espresso-600);
+  outline: 0;
+  box-shadow: 0 0 0 3px var(--signup-focus);
+}
+.page.page .revealBtn:hover,
+.page.sb-page .revealBtn:hover { color: var(--signup-espresso-700); background: var(--signup-parchment); }
+.page.page .consent a,
+.page.sb-page .consent a,
+.page.page .linkBtn { color: var(--signup-espresso-700); }
+.page.page .otpBox,
+.page.sb-page .otpBox { border-color: var(--signup-border-strong); background: #fffdf9; }
+.page.page .timer,
+.page.sb-page .timer { color: var(--signup-espresso-700); }
+
+.modalOverlay { background: rgba(42, 28, 18, 0.58); backdrop-filter: blur(5px); }
+.modalCard { border-color: var(--signup-border); color: var(--signup-espresso-950); background: var(--signup-cream); box-shadow: 0 28px 80px rgba(42, 28, 18, .3); }
+.modalHead { border-bottom-color: var(--signup-border); background: var(--signup-parchment); }
+.modalHead h3 { color: var(--signup-espresso-900); }
+.modalFoot { border-top-color: var(--signup-border); background: #fff; }
+
+.page.page .ft,
+.page.sb-page .ft {
+  margin-top: auto;
+  border-top: 1px solid #5e4030;
+  color: #eadfd3;
+  background: var(--signup-espresso-950);
+}
+.page.page .ft a,
+.page.sb-page .ft a { color: #f3e7cf; }
+
+@media (max-width: 780px) {
+  .page.page > main, .page.sb-page > main { padding: 22px 14px 48px; }
+  .page.page .grid { gap: 14px; }
+  .page.page main > .card, .page.sb-page main > .card { padding: 22px 18px; border-radius: 15px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page.page *, .page.sb-page * { transition: none !important; animation: none !important; }
+}
