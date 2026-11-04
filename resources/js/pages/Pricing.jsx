@@ -13,6 +13,7 @@ import AuthAwareNavigation from "../components/AuthAwareNavigation.jsx";
 import Footer from "../components/layout_master/Footer.jsx";
 import RaymochInformationSupporter from "../components/RaymochInformationSupporter.jsx";
 import BreadcrumbsNav from "../components/common/BreadcrumbsNav.jsx";
+import { PLAN_PRICES } from "../data/planPricing.js";
 import "../styles/pricing.css";
 
 const PLANS = [
@@ -20,7 +21,7 @@ const PLANS = [
     key: "basic",
     name: "Basic",
     eyebrow: "Start exploring",
-    price: "$0",
+    price: PLAN_PRICES.basic,
     cadence: "Free",
     description:
       "A simple way to browse the platform and understand how Raymoch organizes business information.",
@@ -37,7 +38,7 @@ const PLANS = [
     key: "business",
     name: "Business",
     eyebrow: "For growing companies",
-    price: "$19.99",
+    price: PLAN_PRICES.business,
     cadence: "per month",
     description:
       "For companies that need greater visibility, trust information, and access to relevant opportunities.",
@@ -56,7 +57,7 @@ const PLANS = [
     key: "investor",
     name: "Investor",
     eyebrow: "For deal discovery",
-    price: "$26.99",
+    price: PLAN_PRICES.investor,
     cadence: "per month",
     description:
       "For investors and partners evaluating businesses with deeper trust signals and priority matching.",

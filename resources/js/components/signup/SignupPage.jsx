@@ -2,6 +2,7 @@
 import React from "react";
 import Header from "./Header.jsx";
 import PlanCard from "./PlanCard.jsx";
+import { PLAN_PRICES } from "../../data/planPricing.js";
 
 export default function SignupPage({ routes = {} }) {
   // ✅ safe fallbacks (prevents undefined links)
@@ -35,7 +36,7 @@ export default function SignupPage({ routes = {} }) {
             <section className="grid" aria-label="Account types">
               <PlanCard
                 title="Individual Account"
-                price="$0"
+                price={PLAN_PRICES.basic}
                 per="mo"
                 unitNote="per user"
                 description="Browse and keep tabs on companies. Perfect for getting started."
@@ -50,7 +51,7 @@ export default function SignupPage({ routes = {} }) {
 
               <PlanCard
                 title="Business Account"
-                price="$69"
+                price={PLAN_PRICES.business}
                 per="mo"
                 unitNote="per company"
                 description="Create a verified profile, submit proofs, reach aligned capital."
@@ -69,7 +70,7 @@ export default function SignupPage({ routes = {} }) {
 
               <PlanCard
                 title="Investor Account"
-                price="$79"
+                price={PLAN_PRICES.investor}
                 per="mo"
                 unitNote="per user"
                 description="Access deal flow, CTI signals, and portfolio tools."
