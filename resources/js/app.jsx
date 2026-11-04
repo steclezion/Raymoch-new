@@ -257,6 +257,7 @@ mountPage("trial-request-root", () => import("./components/RequestTrial.jsx"), {
     apiUrl: window.TRIAL_BOOT?.apiTrial || "/api/trial-requests",
     apiCheckUrl: window.TRIAL_BOOT?.apiCheck || "/api/trial-requests/check",
     csrfToken: window.TRIAL_BOOT?.csrf || getCsrf(),
+    countries: window.TRIAL_BOOT?.countries || [],
   },
 });
 mountPage("trial-verify-root", () => import("./components/VerifyCode.jsx"), {
@@ -316,6 +317,7 @@ mountPage(
 mountPage("pricing-root", () => import("./pages/Pricing.jsx"), {
   props: routeProps,
 });
+mountPage("for-businesses-root", () => import("./pages/ForBusinesses.jsx"));
 mountPage("footer-information-root", () => import("./pages/Footer/FooterPage.jsx"), {
   props: { pageKey: window.FOOTER_PAGE },
 });

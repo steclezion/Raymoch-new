@@ -113,6 +113,7 @@ const PAGE_TITLES = {
   "/matching": "Matching",
   "/investors": "Investors",
   "/for-investors": "For Investors",
+  "/for-businesses": "For Businesses",
   "/business-readiness-guides": "Business Readiness Guides",
   "/verification-guide": "Verification Guide",
   "/help": "Help Centre",

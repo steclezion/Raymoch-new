@@ -103,6 +103,10 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
     // Route::post('/signup/business/send-otp', [BusinessOtpController::class, 'sendOtp'])->name('signup.business.send_otp');
     // Route::post('/signup/business/verify-otp', [BusinessOtpController::class, 'verifyOtp'])->name('signup.business.verify_otp');
 
+
+
+
+
     Route::view('/signup', 'pages.auth.signup.coming-soon')->name('signup.coming-soon');
 
 
@@ -118,7 +122,7 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
     Route::view('/customer', 'pages.customer')->name('customer');
 
     // Trial request pagesbusiness_landing
-    Route::get('/request-trial', fn() => view('pages.auth.trial'))->name('trial.page');
+    Route::get('/request-trial', [TrialRequestController::class, 'create'])->name('trial.page');
     Route::view('/trial/verify', 'pages.auth.trial-verify')->name('trial.verify.page');
     Route::post('/trial/verify-coupon', [TrialRequestController::class, 'verifyCoupon'])
         ->middleware('throttle:10,1')
@@ -149,6 +153,7 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
 
 // Public pricing overview: available to both guests and authenticated users.
 Route::view('/pricing', 'pages.Pricing')->name('pricing');
+Route::view('/for-businesses', 'pages.for-businesses')->name('for-businesses');
 Route::view('/for-investors', 'pages.for-investors')->name('for-investors');
 $resourcePages = [
     '/business-readiness-guides' => ['business-readiness', 'business-readiness-guides'],

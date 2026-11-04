@@ -3,34 +3,56 @@
 namespace App\Http\Controllers;
 
 use App\Mail\TrialCouponMail;
+use App\Models\CountryAll;
 use App\Models\TrialRequest;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class TrialRequestController extends Controller
 {
-    //
+    public function create()
+    {
+        $countries = CountryAll::query()
+            ->whereNotNull('name')
+            ->whereNotNull('tele_code')
+            ->where('tele_code', '!=', '')
+            ->orderBy('name')
+            ->get(['name', 'tele_code']);
+
+        return view('pages.auth.trial', compact('countries'));
+    }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'first_name'     => ['required', 'string', 'max:100'],
-            'last_name'      => ['required', 'string', 'max:100'],
+            'first_name' => ['required', 'string', 'max:100'],
+            'last_name' => ['required', 'string', 'max:100'],
             'business_email' => ['required', 'email', 'max:255'],
-            'phone'          => ['nullable', 'string', 'max:40'],
-            'company'        => ['nullable', 'string', 'max:255'],
-            'agree_privacy'  => ['accepted'],
+            'country' => ['required', 'string', 'max:100', Rule::exists('countries_all', 'name')],
+            'country_code' => [
+                'required',
+                'string',
+                'max:10',
+                Rule::exists('countries_all', 'tele_code')->where(
+                    fn ($query) => $query->where('name', $request->input('country'))
+                ),
+            ],
+            'phone' => ['nullable', 'string', 'max:40'],
+            'company' => ['nullable', 'string', 'max:255'],
+            'agree_privacy' => ['accepted'],
         ]);
 
         $data['business_email'] = Str::lower(trim($data['business_email']));
-        $data['phone'] = isset($data['phone']) ? trim($data['phone']) : null;
+        $data['country_code'] = trim($data['country_code']);
+        $data['phone'] = $this->normalizePhone($data['phone'] ?? null, $data['country_code']);
 
         $duplicateErrors = $this->duplicateContactErrors(
             $data['business_email'],
@@ -41,23 +63,25 @@ class TrialRequestController extends Controller
             throw ValidationException::withMessages($duplicateErrors);
         }
 
-        $trial = new TrialRequest();
+        $trial = new TrialRequest;
         $trial->fill([
-            'first_name'     => $data['first_name'],
-            'last_name'      => $data['last_name'],
+            'first_name' => $data['first_name'],
+            'last_name' => $data['last_name'],
             'business_email' => $data['business_email'],
-            'phone'          => $data['phone'] ?? null,
-            'company'        => $data['company'] ?? null,
-            'agree_privacy'  => $data['agree_privacy'],
-            'ip'             => $request->ip(),
-            'user_agent'     => mb_substr((string) $request->userAgent(), 0, 255),
+            'country' => $data['country'],
+            'country_code' => $data['country_code'],
+            'phone' => $data['phone'] ?? null,
+            'company' => $data['company'] ?? null,
+            'agree_privacy' => $data['agree_privacy'],
+            'ip' => $request->ip(),
+            'user_agent' => mb_substr((string) $request->userAgent(), 0, 255),
         ]);
 
         // Store only a one-way hash. The readable coupon exists only in the email.
         $coupon = (string) random_int(100000, 999999);
         $trial->coupon = Hash::make($coupon);
         $trial->verification_code = null;
-        $trial->code_expires_at   = Carbon::now()->addMinutes(15);
+        $trial->code_expires_at = Carbon::now()->addMinutes(15);
         $trial->verified_at = null;
         $trial->status = 'pending';
         $trial->save();
@@ -84,8 +108,8 @@ class TrialRequestController extends Controller
         }
 
         return response()->json([
-            'ok'       => true,
-            'message'  => 'Request created and trial coupon sent.',
+            'ok' => true,
+            'message' => 'Request created and trial coupon sent.',
             'redirect' => route('trial.verify.page', ['email' => $trial->business_email]),
         ], 201);
     }
@@ -99,14 +123,14 @@ class TrialRequestController extends Controller
 
         $trial = TrialRequest::where('business_email', $data['email'])->latest('id')->first();
 
-        if (!$trial) {
+        if (! $trial) {
             return response()->json([
                 'ok' => false,
                 'message' => 'We could not find your request.',
             ], 404);
         }
 
-        if (!$trial->coupon || !$trial->code_expires_at || $trial->verified_at) {
+        if (! $trial->coupon || ! $trial->code_expires_at || $trial->verified_at) {
             return response()->json([
                 'ok' => false,
                 'message' => $trial->verified_at ? 'This coupon has already been used.' : 'No coupon has been generated yet.',
@@ -120,7 +144,7 @@ class TrialRequestController extends Controller
             ], 422);
         }
 
-        if (!Hash::check($data['coupon'], $trial->coupon)) {
+        if (! Hash::check($data['coupon'], $trial->coupon)) {
             return response()->json([
                 'ok' => false,
                 'message' => 'The coupon does not match our records.',
@@ -141,7 +165,9 @@ class TrialRequestController extends Controller
 
         $verifiedTrial = DB::transaction(function () use ($trial, $trialEndsAt) {
             $lockedTrial = TrialRequest::whereKey($trial->id)->lockForUpdate()->firstOrFail();
-            if ($lockedTrial->verified_at) abort(422, 'This coupon has already been used.');
+            if ($lockedTrial->verified_at) {
+                abort(422, 'This coupon has already been used.');
+            }
 
             $lockedTrial->forceFill([
                 'verified_at' => now(),
@@ -163,28 +189,28 @@ class TrialRequestController extends Controller
         ]);
     }
 
-
     public function checkExisting(Request $request)
     {
         $data = $request->validate([
             'email' => ['nullable', 'email', 'max:255'],
+            'country_code' => ['nullable', 'string', 'max:10'],
             'phone' => ['nullable', 'string', 'max:40'],
         ]);
 
-        $email = !empty($data['email']) ? Str::lower(trim($data['email'])) : null;
-        $phone = !empty($data['phone']) ? trim($data['phone']) : null;
+        $email = ! empty($data['email']) ? Str::lower(trim($data['email'])) : null;
+        $phone = $this->normalizePhone($data['phone'] ?? null, $data['country_code'] ?? null);
         $errors = $this->duplicateContactErrors($email, $phone);
 
         if ($errors !== []) {
             return response()->json([
-                'exists'  => true,
+                'exists' => true,
                 'message' => collect($errors)->flatten()->first(),
                 'errors' => $errors,
             ], 200);
         }
 
         return response()->json([
-            'exists'  => false,
+            'exists' => false,
             'message' => 'No existing request found.',
         ], 200);
     }
@@ -218,5 +244,28 @@ class TrialRequestController extends Controller
         }
 
         return $errors;
+    }
+
+    private function normalizePhone(?string $phone, ?string $countryCode): ?string
+    {
+        $phone = trim((string) $phone);
+
+        if ($phone === '') {
+            return null;
+        }
+
+        $countryCode = trim((string) $countryCode);
+
+        if ($countryCode === '') {
+            return $phone;
+        }
+
+        if (str_starts_with(str_replace(' ', '', $phone), str_replace(' ', '', $countryCode))) {
+            return $phone;
+        }
+
+        $localNumber = ltrim($phone, "+ \t\n\r\0\x0B");
+
+        return trim($countryCode.' '.$localNumber);
     }
 }

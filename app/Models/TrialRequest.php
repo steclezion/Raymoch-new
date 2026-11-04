@@ -12,6 +12,8 @@ class TrialRequest extends Model
         'first_name',
         'last_name',
         'business_email',
+        'country',
+        'country_code',
         'phone',
         'company',
         'agree_privacy',
@@ -19,7 +21,7 @@ class TrialRequest extends Model
         'status',
         'trial_ends_at',
         'ip',
-        'user_agent'
+        'user_agent',
     ];
 
     protected $hidden = [

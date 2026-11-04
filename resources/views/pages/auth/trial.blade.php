@@ -11,6 +11,7 @@
       apiTrial: @json(route('api.trial-requests.store')),
       apiCheck: @json(route('api.trial-requests.check')),
       csrf: @json(csrf_token()),
+      countries: @json($countries),
     };
   </script>
   @viteReactRefresh

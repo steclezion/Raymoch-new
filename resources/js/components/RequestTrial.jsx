@@ -5,6 +5,7 @@ import {
   Building2,
   Check,
   Clock3,
+  Globe2,
   Mail,
   Phone,
   ShieldCheck,
@@ -20,12 +21,14 @@ const INITIAL_FORM = {
   first_name: "",
   last_name: "",
   business_email: "",
+  country: "",
+  country_code: "",
   phone: "",
   company: "",
   agree_privacy: false,
 };
 
-export default function RequestTrial({ apiUrl, apiCheckUrl, csrfToken }) {
+export default function RequestTrial({ apiUrl, apiCheckUrl, csrfToken, countries = [] }) {
   const [form, setForm] = useState(INITIAL_FORM);
   const [errors, setErrors] = useState({});
   const [busy, setBusy] = useState(false);
@@ -33,6 +36,8 @@ export default function RequestTrial({ apiUrl, apiCheckUrl, csrfToken }) {
   const [notice, setNotice] = useState(null);
   const [showPolicy, setShowPolicy] = useState(false);
   const noticeRef = useRef(null);
+  const dialingCodes = [...new Set(countries.map((country) => country.tele_code).filter(Boolean))]
+    .sort((left, right) => left.localeCompare(right, undefined, { numeric: true }));
 
   useEffect(() => {
     if (!showPolicy) return undefined;
@@ -58,6 +63,8 @@ export default function RequestTrial({ apiUrl, apiCheckUrl, csrfToken }) {
     if (!form.first_name.trim()) next.first_name = "Enter your first name.";
     if (!form.last_name.trim()) next.last_name = "Enter your last name.";
     if (!/^\S+@\S+\.\S+$/.test(form.business_email)) next.business_email = "Enter a valid business email.";
+    if (!form.country) next.country = "Choose your country.";
+    if (!form.country_code) next.country_code = "Choose a country code.";
     if (!form.agree_privacy) next.agree_privacy = "Please accept the privacy policy to continue.";
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -70,7 +77,11 @@ export default function RequestTrial({ apiUrl, apiCheckUrl, csrfToken }) {
       const response = await fetch(apiCheckUrl, {
         method: "POST",
         headers: { Accept: "application/json", "Content-Type": "application/json" },
-        body: JSON.stringify({ email: form.business_email, phone: form.phone || null }),
+        body: JSON.stringify({
+          email: form.business_email,
+          country_code: form.country_code || null,
+          phone: form.phone || null,
+        }),
       });
       const data = await response.json().catch(() => ({}));
       if (response.ok && data.exists) {
@@ -139,6 +150,30 @@ export default function RequestTrial({ apiUrl, apiCheckUrl, csrfToken }) {
     </label>
   );
 
+  const selectField = (name, label, options, props = {}) => (
+    <label className={`trial-field ${errors[name] ? "has-error" : ""}`}>
+      <span>{label}{props.required ? <em aria-hidden="true">*</em> : null}</span>
+      <span className="trial-input-shell">
+        <Globe2 size={18} aria-hidden="true" />
+        <select
+          name={name}
+          value={form[name]}
+          onChange={props.onChange || update}
+          autoComplete={props.autoComplete}
+          required={props.required}
+          aria-invalid={Boolean(errors[name])}
+          aria-describedby={errors[name] ? `${name}-error` : undefined}
+        >
+          <option value="">{props.placeholder}</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>{option.label}</option>
+          ))}
+        </select>
+      </span>
+      {errors[name] ? <small id={`${name}-error`} role="alert">{Array.isArray(errors[name]) ? errors[name][0] : errors[name]}</small> : null}
+    </label>
+  );
+
   return (
     <div className="trial-page">
       <AuthAwareNavigation activePath="/request-trial" />
@@ -173,7 +208,33 @@ export default function RequestTrial({ apiUrl, apiCheckUrl, csrfToken }) {
                 {field("business_email", "Business email", Mail, { type: "email", autoComplete: "email", placeholder: "you@company.com", maxLength: 255, required: true })}
                 {checking ? <span className="trial-checking">Checking availability…</span> : null}
               </div>
-              {field("phone", "Phone number", Phone, { type: "tel", autoComplete: "tel", placeholder: "+1 555 000 0000", maxLength: 40, onBlur: checkExisting })}
+              {selectField(
+                "country",
+                "Country",
+                countries.map((country) => ({ value: country.name, label: country.name })),
+                {
+                  required: true,
+                  autoComplete: "country-name",
+                  placeholder: "Choose a country",
+                  onChange: (event) => {
+                    const selected = countries.find((country) => country.name === event.target.value);
+                    setForm((current) => ({
+                      ...current,
+                      country: event.target.value,
+                      country_code: selected?.tele_code || "",
+                    }));
+                    setErrors((current) => ({ ...current, country: undefined, country_code: undefined }));
+                    setNotice(null);
+                  },
+                }
+              )}
+              {selectField(
+                "country_code",
+                "Country code",
+                dialingCodes.map((code) => ({ value: code, label: code })),
+                { required: true, autoComplete: "tel-country-code", placeholder: "Code" }
+              )}
+              {field("phone", "Phone number", Phone, { type: "tel", autoComplete: "tel-national", placeholder: "555 000 0000", maxLength: 40, onBlur: checkExisting })}
               {field("company", "Company or organization", Building2, { type: "text", autoComplete: "organization", placeholder: "Your organization", maxLength: 255 })}
             </div>
 

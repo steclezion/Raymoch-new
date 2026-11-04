@@ -27,6 +27,8 @@ class TrialRequestDuplicateTest extends TestCase
             $table->string('first_name')->nullable();
             $table->string('last_name')->nullable();
             $table->string('business_email');
+            $table->string('country')->nullable();
+            $table->string('country_code')->nullable();
             $table->string('phone')->nullable();
             $table->string('company')->nullable();
             $table->boolean('agree_privacy')->default(false);
@@ -49,6 +51,17 @@ class TrialRequestDuplicateTest extends TestCase
             $table->string('password');
             $table->timestamps();
         });
+
+        Schema::create('countries_all', function (Blueprint $table): void {
+            $table->id();
+            $table->string('name');
+            $table->string('tele_code')->nullable();
+        });
+
+        DB::table('countries_all')->insert([
+            'name' => 'United States',
+            'tele_code' => '+1',
+        ]);
     }
 
     public function test_check_endpoint_reports_trial_request_email_and_phone_duplicates(): void
@@ -104,7 +117,9 @@ class TrialRequestDuplicateTest extends TestCase
             'first_name' => 'Amara',
             'last_name' => 'Okafor',
             'business_email' => 'registered@example.com',
-            'phone' => '+1 555 900 1000',
+            'country' => 'United States',
+            'country_code' => '+1',
+            'phone' => '555 900 1000',
             'company' => 'Example Company',
             'agree_privacy' => true,
         ])->assertUnprocessable()
