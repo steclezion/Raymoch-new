@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { CheckCircle2, RefreshCw } from "lucide-react";
 import "../../styles/raymoch-ai-supported-search-screen.css";
 
-const BRAND_ICON_URL = "/images/logo_preview_exact.svg";
+const BRAND_ICON_URL = "/images/raymoch_logo_deer.svg";
 
 const csrf = () =>
   document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") ?? "";

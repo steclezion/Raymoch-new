@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import "../styles/password-recovery.css";
 
-const BRAND_ICON = "/images/logo_preview_exact.svg";
+const BRAND_ICON = "/images/raymoch_logo_deer.svg";
 
 async function submitRecovery(url, csrf, payload) {
   const response = await fetch(url, {

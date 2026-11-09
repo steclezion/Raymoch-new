@@ -63,7 +63,7 @@ export default function ConfirmationDialog({
         onMouseDown={(event) => event.stopPropagation()}
       >
         <span className="vr-confirmBrand" aria-hidden="true">
-          <img src="/images/logo_preview_exact.svg" alt="" />
+          <img src="/images/raymoch_logo_deer.svg" alt="" />
         </span>
 
         <button

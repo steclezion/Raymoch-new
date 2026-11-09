@@ -74,7 +74,7 @@ const EXPLORE_ITEMS = [
 ];
 
 const BRAND_NAME = "Raymoch";
-const BRAND_ICON_URL = "/images/logo_preview_exact.svg";
+const BRAND_ICON_URL = "/images/raymoch_logo_deer.svg";
 
 function BrandMark() {
   return (
