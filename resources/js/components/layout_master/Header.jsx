@@ -41,7 +41,7 @@ import useResponsiveViewport from "../../hooks/useResponsiveViewport.js";
 import useRefreshingFavicon from "../behaviours/useRefreshingFavicon.jsx";
 import "../../styles/headerFooter.css";
 
-const BRAND_ICON_URL = "/images/raymoch_logo_deer.svg";
+const BRAND_ICON_URL = "/images/raymoch_logo_11_10-26.svg";
 
 const PAGE_TITLES = {
   "/": "Home",
@@ -887,7 +887,7 @@ setTimeout(() => {
       aria-hidden="true"
     >
       <image
-        href="/images/raymoch_logo_deer.svg"
+        href="/images/raymoch_logo_11_10-26.svg"
         x="0"
         y="0"
         width="200"

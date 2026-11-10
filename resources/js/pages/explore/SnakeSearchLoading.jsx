@@ -361,7 +361,7 @@ const handleSummaryAction = async () => {
                   aria-hidden="true"
                 >
                   <image
-                    href="/images/raymoch_logo_deer.svg"
+                    href="/images/raymoch_logo_11_10-26.svg"
                     x="0"
                     y="0"
                     width="200"

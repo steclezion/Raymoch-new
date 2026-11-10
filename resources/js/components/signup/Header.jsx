@@ -59,7 +59,7 @@ export default function Header({ routes: routesProp, homeHref }) {
 
       <header className="header">
         <a className="brand" href={hrefs.home} aria-label="Raymoch home">
-          <img src="/images/raymoch_logo_deer.svg" alt="" aria-hidden="true" />
+          <img src="/images/raymoch_logo_11_10-26.svg" alt="" aria-hidden="true" />
           <span>Raymoch</span>
         </a>
 

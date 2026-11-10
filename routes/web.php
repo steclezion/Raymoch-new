@@ -194,22 +194,7 @@ Route::view('/insights/{path}', 'pages.insight-detail')
     ->where('path', '.*')
     ->name('insights.show');
 
-// Public footer information pages: available with or without an account.
-// $footerInformationPages = [
-//     '/trust-methodology' => ['trust-methodology', 'footer.company.trust'],
-//     '/for-businesses' => ['for-businesses', 'footer.product.businesses'],
-//     '/for-investors' => ['for-investors', 'footer.product.investors'],
-//     '/business-readiness-guides' => ['business-readiness-guides', 'footer.resources.readiness'],
-//     '/verification-guide' => ['verification-guide', 'footer.resources.verification'],
-//     '/investor-resources' => ['investor-resources', 'footer.resources.investors'],
-//     '/faqs' => ['faqs', 'footer.resources.faqs'],
-//     '/data-protection' => ['data-protection', 'footer.legal.data'],
-//     '/accessibility' => ['accessibility', 'footer.legal.accessibility'],
-// ];
 
-// foreach ($footerInformationPages as $uri => [$footerPage, $routeName]) {
-//     Route::view($uri, 'pages.Footer.page', compact('footerPage'))->name($routeName);
-// }
 
 Route::view('/how-raymoch-works', 'pages.Footer.How_Raymoch_Works')->name('footer.company.how');
 Route::view('/Trust_and_Methodology', 'pages.Footer.Trust_and_Methodology')->name('footer.company.trust');

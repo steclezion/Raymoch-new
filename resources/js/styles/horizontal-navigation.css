@@ -48,10 +48,10 @@
 }
 
 .ray-nav__brand-mark {
-  width: 46px;
-  height: 46px;
+  width: 64px;
+  height: 64px;
   display: inline-flex;
-  flex: 0 0 46px;
+  flex: 0 0 64px;
   align-items: center;
   justify-content: center;
   overflow: hidden;
@@ -1590,9 +1590,9 @@
   }
 
   .ray-nav__brand-mark {
-    width: 34px;
-    height: 34px;
-    flex-basis: 34px;
+    width: 46px;
+    height: 46px;
+    flex-basis: 46px;
   }
 
   .ray-nav__menu-button {

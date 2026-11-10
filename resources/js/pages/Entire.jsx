@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import "../styles/landingv2.css";
 import Header from "../components/layout_master/Header.jsx";
 import Footer from "../components/layout_master/Footer.jsx";
+import { ResponsiveController } from "../components/ResponsiveController.jsx";
+import RaymochInformationSupporter from "../components/RaymochInformationSupporter.jsx";
 import "../styles/headerFooter.css";
 
 /**
@@ -288,9 +290,10 @@ export default function Entire() {
   const S = makeStyles(BRAND, TYPE, LAYOUT, COMPONENTS, SECTION_CONTROLLERS);
 
   return (
-    <div className="landing-v2-content" style={S.page}>
-      <Header />
-      <main>
+    <ResponsiveController>
+      <div className="landing-v2-content" style={S.page}>
+        <Header />
+        <main>
         
         <Hero S={S} />
         <WhoWeAre S={S} />
@@ -309,9 +312,11 @@ export default function Entire() {
         {/* <TrustEngine S={S} /> */}
         
         
-      </main>
-      <Footer />
-    </div>
+        </main>
+        <RaymochInformationSupporter />
+        <Footer />
+      </div>
+    </ResponsiveController>
   );
 }
 

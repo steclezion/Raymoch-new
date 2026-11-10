@@ -36,7 +36,7 @@
         <div class="accent" aria-hidden="true"></div>
         <div class="content">
             <div class="brand">
-                <img src="/images/raymoch_logo_deer.svg" alt="">
+                <img src="/images/raymoch_logo_11_10-26.svg" alt="">
                 <span>Raymoch</span>
             </div>
             <div class="status">Scheduled maintenance</div>

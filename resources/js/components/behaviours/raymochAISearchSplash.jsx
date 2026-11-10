@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { createPortal } from "react-dom";
 import "../../styles/raymoch-ai-search-splash.css";
 
-const BRAND_ICON_URL = "/images/raymoch_logo_deer.svg";
+const BRAND_ICON_URL = "/images/raymoch_logo_11_10-26.svg";
 
 export default function RaymochAISearchSplash({
   open,
