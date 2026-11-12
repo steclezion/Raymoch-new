@@ -14,6 +14,7 @@ const GROUPS = [
             ],
             ["Partner Programs", "partnerPrograms", "/Partner_Programs"],
             ["Careers", "careers", "/Careers"],
+            ["Security", "security_raymoch", "/security_raymoch"],
             ["Contact", "contact", "/contact"],
         ],
     },

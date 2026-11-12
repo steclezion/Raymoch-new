@@ -1243,10 +1243,6 @@ setTimeout(() => {
          <RouterSafeButton to={safeRoutes.businessLanding} sx={secondaryNavBtnSx}>
                   Business
                 </RouterSafeButton>
-                <RouterSafeButton to={safeRoutes.security} sx={secondaryNavBtnSx}>
-                  Security
-                </RouterSafeButton>
-                
                       <RouterSafeButton to={safeRoutes.customer} sx={secondaryNavBtnSx}>
                   Customers
                 </RouterSafeButton>
@@ -1329,14 +1325,6 @@ setTimeout(() => {
             >
               Business
             </SafeLink>
-              <SafeLink
-              to={safeRoutes.security}
-              style={mobileMenuStyles.link}
-              onClick={() => setMobileOpen(false)}
-            >
-              Security
-            </SafeLink>
- 
               <SafeLink
               to={safeRoutes.customer}
               style={mobileMenuStyles.link}
