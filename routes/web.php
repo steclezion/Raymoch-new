@@ -193,6 +193,8 @@ Route::view('/insights/{path}', 'pages.insight-detail')
 
 
 Route::view('/how-raymoch-works', 'pages.Footer.How_Raymoch_Works')->name('footer.company.how');
+Route::view('/webinar-training-hub', 'pages.resources.webinar-training-hub')->name('resources.webinar-training');
+Route::view('/success-stories', 'pages.resources.success-stories')->name('resources.success-stories');
 Route::view('/Trust_and_Methodology', 'pages.Footer.Trust_and_Methodology')->name('footer.company.trust');
 Route::view('/Partner_Programs', 'pages.Footer.Partner_Programs')->name('footer.company.partners');
 Route::view('/Careers', 'pages.Footer.Careers')->name('footer.company.careers');

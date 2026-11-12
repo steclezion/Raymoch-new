@@ -325,6 +325,8 @@ mountPage("for-investors-root", () => import("./pages/ForInvestors.jsx"));
 mountPage("resource-page-root", () => import("./pages/resources/ResourcePage.jsx"), {
   props: { pageKey: window.RESOURCE_PAGE },
 });
+mountPage("webinar-training-hub-root", () => import("./pages/resources/WebinarTrainingHub.jsx"));
+mountPage("success-stories-root", () => import("./pages/resources/SuccessStories.jsx"));
 mountPage("how-raymoch-works-root", () => import("./pages/Footer/How_Raymoch_Works.jsx"));
 mountPage("trust-and-methodology-root", () => import("./pages/Footer/Trust_and_Methodology.jsx"));
 mountPage("partner-programs-root", () => import("./pages/Footer/Partner_Programs.jsx"));

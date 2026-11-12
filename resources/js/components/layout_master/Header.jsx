@@ -83,6 +83,8 @@ const PAGE_TITLES = {
   "/press": "Press",
   "/contact": "Contact",
   "/Newsletters": "Newsletter",
+  "/webinar-training-hub": "Webinar & Training Hub",
+  "/success-stories": "Success Stories",
   "/help": "Help Centre",
   "/status": "System Status",
   "/privacy": "Privacy Policy",
@@ -583,6 +585,9 @@ export default function Header({ routes = {} }) {
   // Guest account dropdown
   const [guestMenuOpen, setGuestMenuOpen] = useState(false);
 
+  // Resources navigation dropdown
+  const [resourcesOpen, setResourcesOpen] = useState(false);
+
   // Portal positioning
   const btnRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -601,6 +606,9 @@ export default function Header({ routes = {} }) {
       customer: routes.customer ?? "/customer",
       pricing: routes.pricing ?? "/pricing",
       about: routes.about ?? "/about",
+      howRaymochWorks: routes.howRaymochWorks ?? "/how-raymoch-works",
+      webinarTrainingHub: routes.webinarTrainingHub ?? "/webinar-training-hub",
+      successStories: routes.successStories ?? "/success-stories",
       newsletter: routes.newsletter ?? routes.newsletters ?? "/Newsletters",
       security: routes.security_raymoch ?? "/security_raymoch",
       businessLanding: routes.business_landing ?? "/business",
@@ -619,6 +627,13 @@ export default function Header({ routes = {} }) {
     }),
     [routes]
   );
+
+  const resourcesIsActive = [
+    safeRoutes.about,
+    safeRoutes.howRaymochWorks,
+    safeRoutes.webinarTrainingHub,
+    safeRoutes.successStories,
+  ].some((route) => isCurrentRoute(route));
 
   const avatarSrc =
     profileForm.avatarPreview ||
@@ -695,6 +710,7 @@ export default function Header({ routes = {} }) {
         setShowGrid(false);
         setMobileOpen(false);
         setGuestMenuOpen(false);
+        setResourcesOpen(false);
       }
     };
 
@@ -706,6 +722,7 @@ export default function Header({ routes = {} }) {
     if (isMobile) {
       setOpenExplore(false);
       setShowGrid(false);
+      setResourcesOpen(false);
     } else {
       // A drawer opened in the mobile layout must not leave its modal backdrop
       // mounted when browser zoom or resizing returns to the desktop layout.
@@ -1252,6 +1269,71 @@ setTimeout(() => {
                       <RouterSafeButton to={safeRoutes.newsletter} sx={secondaryNavBtnSx}>
                   Newsletter
                 </RouterSafeButton>
+                <ClickAwayListener onClickAway={() => setResourcesOpen(false)}>
+                  <Box sx={{ position: "relative" }}>
+                    <Button
+                      aria-haspopup="menu"
+                      aria-expanded={resourcesOpen}
+                      aria-current={resourcesIsActive ? "page" : undefined}
+                      className={resourcesIsActive ? "active" : undefined}
+                      onClick={() => setResourcesOpen((open) => !open)}
+                      endIcon={
+                        resourcesOpen ? (
+                          <KeyboardArrowUpRoundedIcon />
+                        ) : (
+                          <KeyboardArrowDownRoundedIcon />
+                        )
+                      }
+                      sx={secondaryNavBtnSx}
+                    >
+                      Resources
+                    </Button>
+                    {resourcesOpen ? (
+                      <Paper
+                        role="menu"
+                        aria-label="Resources"
+                        elevation={5}
+                        sx={{
+                          position: "absolute",
+                          top: "calc(100% + 9px)",
+                          right: 0,
+                          zIndex: 3100,
+                          width: 250,
+                          p: 1,
+                          border: "1px solid",
+                          borderColor: "divider",
+                          borderRadius: 2,
+                        }}
+                      >
+                        <Stack spacing={0.5}>
+                          {[
+                            ["About us", safeRoutes.about],
+                            ["How Raymoch works", safeRoutes.howRaymochWorks],
+                            ["Webinar & training hub", safeRoutes.webinarTrainingHub],
+                            ["Success stories", safeRoutes.successStories],
+                          ].map(([label, href]) => (
+                            <Button
+                              key={label}
+                              component="a"
+                              href={href}
+                              role="menuitem"
+                              onClick={() => setResourcesOpen(false)}
+                              sx={{
+                                justifyContent: "flex-start",
+                                color: "text.primary",
+                                textAlign: "left",
+                                textTransform: "none",
+                                "&:hover": { bgcolor: "action.hover" },
+                              }}
+                            >
+                              {label}
+                            </Button>
+                          ))}
+                        </Stack>
+                      </Paper>
+                    ) : null}
+                  </Box>
+                </ClickAwayListener>
               </Box>
             </Container>
           </Box>
@@ -1348,6 +1430,57 @@ setTimeout(() => {
             >
              Newsletter
             </SafeLink>
+            <Button
+              aria-expanded={resourcesOpen}
+              aria-controls="mobile-resources-menu"
+              aria-current={resourcesIsActive ? "page" : undefined}
+              onClick={() => setResourcesOpen((open) => !open)}
+              endIcon={
+                resourcesOpen ? (
+                  <KeyboardArrowUpRoundedIcon />
+                ) : (
+                  <KeyboardArrowDownRoundedIcon />
+                )
+              }
+              sx={{
+                width: "100%",
+                justifyContent: "space-between",
+                px: 0,
+                color: "#382116",
+                fontWeight: 800,
+                textTransform: "none",
+                ...(resourcesIsActive && {
+                  color: "#fffaf3",
+                  bgcolor: "#5b3825",
+                  px: 1.5,
+                  "&:hover": { bgcolor: "#68442f" },
+                }),
+              }}
+            >
+              Resources
+            </Button>
+            <Collapse in={resourcesOpen} unmountOnExit sx={{ width: "100%" }}>
+              <Stack id="mobile-resources-menu" spacing={1.25} sx={{ pl: 2, pt: 0.5 }}>
+                {[
+                  ["About us", safeRoutes.about],
+                  ["How Raymoch works", safeRoutes.howRaymochWorks],
+                  ["Webinar & training hub", safeRoutes.webinarTrainingHub],
+                  ["Success stories", safeRoutes.successStories],
+                ].map(([label, href]) => (
+                  <SafeLink
+                    key={label}
+                    to={href}
+                    style={mobileMenuStyles.link}
+                    onClick={() => {
+                      setResourcesOpen(false);
+                      setMobileOpen(false);
+                    }}
+                  >
+                    {label}
+                  </SafeLink>
+                ))}
+              </Stack>
+            </Collapse>
             
             <Divider flexItem sx={{ width: "100%" }} />
 
