@@ -224,6 +224,8 @@ export default function Footer({ routes = {} }) {
         .site-footer, .site-footer * { box-sizing: border-box; }
         .site-footer {
           position: relative; width: 100%; overflow: hidden;
+          margin: 0; box-shadow: 0 0 0 100vmax #0b1425;
+          clip-path: inset(0 -100vmax);
           color: #b8c4d6; background: #0b1425;
           border-top: 1px solid #1d2b42;
         }
