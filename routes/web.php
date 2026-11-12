@@ -104,11 +104,7 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
     // Route::post('/signup/business/verify-otp', [BusinessOtpController::class, 'verifyOtp'])->name('signup.business.verify_otp');
 
 
-
-
-
     Route::view('/signup', 'pages.auth.signup.coming-soon')->name('signup.coming-soon');
-
 
     Route::view('/', 'pages.entire')->name('home');
     Route::view('/about', 'pages.about')->name('about'); //

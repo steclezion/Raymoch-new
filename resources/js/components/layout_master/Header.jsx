@@ -580,6 +580,9 @@ export default function Header({ routes = {} }) {
   // Mobile drawer
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  // Guest account dropdown
+  const [guestMenuOpen, setGuestMenuOpen] = useState(false);
+
   // Portal positioning
   const btnRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -691,6 +694,7 @@ export default function Header({ routes = {} }) {
         setOpenExplore(false);
         setShowGrid(false);
         setMobileOpen(false);
+        setGuestMenuOpen(false);
       }
     };
 
@@ -1064,38 +1068,78 @@ setTimeout(() => {
                     </Box>
 
                     {!isAuthed && !authLoading && (
-                      <>
-                        <Button
-                          component="a"
-                          href={safeRoutes.trial}
-                      //    target="_blank"
-                          variant="contained"
-                          sx={authActionStyles.trial}
-                        >
-                          Request a free trial
-                        </Button>
+                      <ClickAwayListener onClickAway={() => setGuestMenuOpen(false)}>
+                        <Box sx={{ position: "relative" }}>
+                          <IconButton
+                            aria-label="Account menu"
+                            aria-haspopup="menu"
+                            aria-expanded={guestMenuOpen}
+                            onClick={() => setGuestMenuOpen((open) => !open)}
+                            sx={{
+                              width: 44,
+                              height: 44,
+                              border: "1px solid",
+                              borderColor: "divider",
+                              bgcolor: "background.paper",
+                              "&:hover": { bgcolor: "action.hover" },
+                            }}
+                          >
+                            <HamburgerIcon open={guestMenuOpen} />
+                          </IconButton>
 
-                        <Button
-                          component="a"
-                          href={safeRoutes.login}
-                      //    target="_blank"
-                          variant="contained"
-                          color="primary"
-                          sx={authActionStyles.login}
-                        >
-                          Login
-                        </Button>
-
-                        <Button
-                          component="a"
-                          href={safeRoutes.signup}
-                      //    target="_blank"
-                          variant="contained"
-                          sx={authActionStyles.signup}
-                        >
-                          Sign up
-                        </Button>
-                      </>
+                          {guestMenuOpen ? (
+                            <Paper
+                              role="menu"
+                              aria-label="Account actions"
+                              elevation={5}
+                              sx={{
+                                position: "absolute",
+                                top: "calc(100% + 10px)",
+                                right: 0,
+                                zIndex: 3100,
+                                width: 260,
+                                p: 1.25,
+                                border: "1px solid",
+                                borderColor: "divider",
+                                borderRadius: 2,
+                              }}
+                            >
+                              <Stack spacing={1}>
+                                <Button
+                                  component="a"
+                                  href={safeRoutes.login}
+                                  role="menuitem"
+                                  variant="contained"
+                                  sx={{ ...authActionStyles.login, width: "100%" }}
+                                  onClick={() => setGuestMenuOpen(false)}
+                                >
+                                  Login
+                                </Button>
+                                <Button
+                                  component="a"
+                                  href={safeRoutes.signup}
+                                  role="menuitem"
+                                  variant="contained"
+                                  sx={{ ...authActionStyles.signup, width: "100%" }}
+                                  onClick={() => setGuestMenuOpen(false)}
+                                >
+                                  Sign up
+                                </Button>
+                                <Button
+                                  component="a"
+                                  href={safeRoutes.trial}
+                                  role="menuitem"
+                                  variant="contained"
+                                  sx={{ ...authActionStyles.trial, width: "100%" }}
+                                  onClick={() => setGuestMenuOpen(false)}
+                                >
+                                  Request a free trial
+                                </Button>
+                              </Stack>
+                            </Paper>
+                          ) : null}
+                        </Box>
+                      </ClickAwayListener>
                     )}
 
                     {isAuthed && !authLoading && (
