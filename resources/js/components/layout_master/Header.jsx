@@ -82,7 +82,7 @@ const PAGE_TITLES = {
   "/careers": "Careers",
   "/press": "Press",
   "/contact": "Contact",
-  "/blog": "Blog",
+  "/Newsletters": "Newsletter",
   "/help": "Help Centre",
   "/status": "System Status",
   "/privacy": "Privacy Policy",
@@ -601,7 +601,7 @@ export default function Header({ routes = {} }) {
       customer: routes.customer ?? "/customer",
       pricing: routes.pricing ?? "/pricing",
       about: routes.about ?? "/about",
-      blog: routes.blog ?? "/blog",
+      newsletter: routes.newsletter ?? routes.newsletters ?? "/Newsletters",
       security: routes.security_raymoch ?? "/security_raymoch",
       businessLanding: routes.business_landing ?? "/business",
       matching: routes.matching ?? "/matching",
@@ -1249,8 +1249,8 @@ setTimeout(() => {
                       <RouterSafeButton to={safeRoutes.pricing} sx={secondaryNavBtnSx}>
                   Pricing
                 </RouterSafeButton>
-                      <RouterSafeButton to={safeRoutes.blog} sx={secondaryNavBtnSx}>
-                  Blog
+                      <RouterSafeButton to={safeRoutes.newsletter} sx={secondaryNavBtnSx}>
+                  Newsletter
                 </RouterSafeButton>
               </Box>
             </Container>
@@ -1342,11 +1342,11 @@ setTimeout(() => {
             </SafeLink>
             
              <SafeLink
-              to={safeRoutes.blog}
+              to={safeRoutes.newsletter}
               style={mobileMenuStyles.link}
               onClick={() => setMobileOpen(false)}
             >
-             Blog
+             Newsletter
             </SafeLink>
             
             <Divider flexItem sx={{ width: "100%" }} />

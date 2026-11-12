@@ -39,6 +39,7 @@ const GROUPS = [
                 "/business-readiness-guides",
             ],
             ["Verification Guide", "verificationGuide", "/verification-guide"],
+            ["Newsletter", "newsletter", "/Newsletters"],
             ["Help Centre", "help", "/help"],
             ["FAQs", "faqs", "/faqs"],
             ["System Status", "status", "/status"],

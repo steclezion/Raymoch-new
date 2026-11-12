@@ -106,7 +106,7 @@ export default function Blog() {
 
   return (
     <ResponsiveController>
-      <AuthAwareNavigation activePath="/blog" />
+      <AuthAwareNavigation activePath="/Newsletters" />
       <main className="ray-blog">
         <section className="ray-blog__hero" aria-labelledby="blog-title">
           <div className="ray-blog__shell ray-blog__hero-grid">

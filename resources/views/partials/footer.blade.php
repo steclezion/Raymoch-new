@@ -33,7 +33,7 @@
       </div>
       <div>
         <h5 style="margin:0 0 10px;color:#e5e7eb;font-size:.95rem;">Resources</h5>
-        <a href="{{ route('blog') }}" style="display:block;color:#cbd5e1;margin:6px 0;">Blog</a>
+        <a href="{{ route('newsletters') }}" style="display:block;color:#cbd5e1;margin:6px 0;">Newsletter</a>
         <a href="{{ route('help') }}" style="display:block;color:#cbd5e1;margin:6px 0;">Help Center</a>
         <a href="{{ route('security') }}" style="display:block;color:#cbd5e1;margin:6px 0;">Security</a>
         <a href="{{ route('status') }}" style="display:block;color:#cbd5e1;margin:6px 0;">Status</a>

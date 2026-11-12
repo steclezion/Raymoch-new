@@ -173,7 +173,7 @@ foreach ($exploreTopicPages as $slug => $topicKey) {
     Route::view("/explore/{$slug}", 'pages.explore-topic', compact('topicKey'))
         ->name("explore.topic.{$slug}");
 }
-Route::view('/blog', 'pages.blog')->name('blog');
+Route::view('/Newsletters', 'pages.blog')->name('newsletters');
 Route::view('/privacy', 'pages.policies.privacy')->name('privacy');
 Route::view('/terms', 'pages.policies.terms')->name('terms');
 Route::view('/cookies', 'pages.policies.cookies')->name('cookies');
