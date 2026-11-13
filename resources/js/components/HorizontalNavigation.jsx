@@ -79,16 +79,7 @@ const BRAND_ICON_URL = "/images/raymoch_logo_11_10-26.svg";
 function BrandMark() {
   return (
     <span className="ray-nav__brand-mark" aria-hidden="true">
-      <svg viewBox="0 0 200 200" role="presentation" focusable="false">
-        <image
-          href={BRAND_ICON_URL}
-          x="0"
-          y="0"
-          width="200"
-          height="200"
-          preserveAspectRatio="xMidYMid meet"
-        />
-      </svg>
+      <img src={BRAND_ICON_URL} alt="" />
     </span>
   );
 }

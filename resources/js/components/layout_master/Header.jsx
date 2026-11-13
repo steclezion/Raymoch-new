@@ -901,21 +901,12 @@ setTimeout(() => {
   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
     
     <Box
-      component="svg"
-      width="28"
-      height="28"
-      viewBox="0 0 200 200"
+      component="img"
+      src={BRAND_ICON_URL}
+      alt=""
       aria-hidden="true"
-    >
-      <image
-        href="/images/raymoch_logo_11_10-26.svg"
-        x="0"
-        y="0"
-        width="200"
-        height="200"
-        preserveAspectRatio="xMidYMid meet"
-      />
-    </Box>
+      sx={{ width: 28, height: 28, display: "block", objectFit: "contain" }}
+    />
 
     <Typography
       sx={{
