@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <meta name="description" content="Verify your six-digit Raymoch trial coupon.">
+  <meta name="description" content="Verify your six-digit Raymoch email verification number.">
   <title>Raymoch • Verify Trial Coupon</title>
   <script>
     window.TRIAL_COUPON_BOOT = {

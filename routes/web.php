@@ -107,22 +107,23 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
     Route::view('/signup', 'pages.auth.signup.coming-soon')->name('signup.coming-soon');
 
     Route::view('/', 'pages.entire')->name('home');
-    Route::view('/about', 'pages.about')->name('about'); //
     Route::view('/overview', 'pages.overview')->name('overview');
     Route::view('/fulloverview', 'pages.fulloverview')->name('fulloverview');
 
     Route::view('/services', 'pages.services')->name('services');
-    Route::view('/insights', 'pages.market-insight')->name('insights');
-    Route::view('/security_raymoch', 'pages.security')->name('security_raymoch');
     Route::view('/business', 'pages.Business_landing')->name('business_landing');
     Route::view('/customer', 'pages.customer')->name('customer');
 
     // Trial request pagesbusiness_landing
     Route::get('/request-trial', [TrialRequestController::class, 'create'])->name('trial.page');
+
     Route::view('/trial/verify', 'pages.auth.trial-verify')->name('trial.verify.page');
     Route::post('/trial/verify-coupon', [TrialRequestController::class, 'verifyCoupon'])
         ->middleware('throttle:10,1')
         ->name('trial.coupon.verify');
+    Route::post('/trial/coupon-login', [TrialRequestController::class, 'loginWithCoupon'])
+        ->middleware('throttle:5,1')
+        ->name('trial.coupon.login');
     Route::post('/trial/logout', function (\Illuminate\Http\Request $request) {
         $request->session()->forget('trial_access_id');
         $request->session()->regenerateToken();
@@ -133,12 +134,7 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
     Route::get('/request', [RequestTrialController::class, 'show'])->name('request.show');
 
     Route::view('/partner-programs', 'pages.services.partner-programs')->name('partner-programs');
-    Route::view('/matching', 'pages.services.matching')->name('matching');
     Route::view('/visibility-listing', 'pages.services.visibility-listing')->name('visibility-listing');
-    Route::view('/verification', 'pages.services.verification')->name('verification');
-
-    Route::get('/explore', [ExploreController::class, 'index'])->name('explore.index');
-    Route::get('/explore/data', [ExploreController::class, 'data'])->name('explore.data');
 
     Route::view('/careers', 'pages.entire')->name('careers');
     Route::view('/press', 'pages.entire')->name('press');
@@ -147,7 +143,10 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
     Route::get('/services/options', [ServiceController::class, 'options'])->name('services.options');
 });
 
-// Public pricing overview: available to both guests and authenticated users.
+// Public pages: available to both guests and authenticated users.
+Route::view('/about', 'pages.about')->name('about');
+Route::view('/security_raymoch', 'pages.security')->name('security_raymoch');
+Route::view('/matching', 'pages.matching')->name('matching');
 Route::view('/pricing', 'pages.Pricing')->name('pricing');
 Route::view('/for-businesses', 'pages.for-businesses')->name('for-businesses');
 Route::view('/for-investors', 'pages.for-investors')->name('for-investors');
@@ -315,12 +314,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Logout must be POST
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     Route::view('/partner-programs', 'pages.services.partner-programs')->name('partner-programs');
-    Route::view('/matching', 'pages.services.matching')->name('matching');
     Route::view('/visibility-listing', 'pages.services.visibility-listing')->name('visibility-listing');
-    Route::view('/verification', 'pages.services.verification')->name('verification');
-
     Route::get('/explore', [ExploreController::class, 'index'])->name('explore.index');
     Route::get('/explore/data', [ExploreController::class, 'data'])->name('explore.data');
+    Route::view('/verification', 'pages.services.verification')->name('verification');
+    Route::view('/insights', 'pages.market-insight')->name('insights');
 
     // Payment intents/subscription creation (only authed users should create)
     Route::post('/payment/create-payment-intent', [PaymentController::class, 'createPaymentIntent'])->name('payment.create_payment_intent');
@@ -351,10 +349,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/company_classifications/import', [CompanyClassificationController::class, 'import'])->name('company_classifications.import');
     Route::resource('company_classifications', CompanyClassificationController::class);
     Route::view('/companies', 'pages.companies')->name('companies'); // main companies listing page // Static placeholders used in header/footer links (wire up later as you build them)
-    Route::view('/matching', 'pages.matching')->name('matching'); // main companies listing page // Static placeholders used in header/footer links (wire up later as you build them)
-    Route::view('/verification', 'pages.services.verification')->name('verification');
     Route::view('/services', 'pages.services')->name('services'); // temp → point to real page later
-    Route::view('/insights', 'pages.market-insight')->name('insights'); // temp // services sub-pages
     Route::view('/partner-programs', 'pages.services.partner-programs')->name('partner-programs'); // partner programs page
     Route::view('/price-how-to-pay', 'pages.price_how_to_pay')->name('price.how.to.pay');
 

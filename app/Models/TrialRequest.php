@@ -20,6 +20,10 @@ class TrialRequest extends Model
         'coupon',
         'status',
         'trial_ends_at',
+        'verification_code',
+        'code_expires_at',
+        'verified_at',
+        'users_trail_request_id',
         'ip',
         'user_agent',
     ];
@@ -37,5 +41,10 @@ class TrialRequest extends Model
             'verified_at' => 'datetime',
             'trial_ends_at' => 'datetime',
         ];
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'users_trail_request_id');
     }
 }

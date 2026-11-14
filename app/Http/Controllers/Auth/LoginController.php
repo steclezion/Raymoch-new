@@ -63,6 +63,13 @@ class LoginController extends Controller
         RateLimiter::clear($this->throttleKey($request));
         $user = User::where($credentialKey, $login)->firstOrFail();
 
+        if ($user->type_of_account === 'trial' && (! $user->trial_ends_at || $user->trial_ends_at->isPast())) {
+            $user->delete();
+            RateLimiter::hit($this->throttleKey($request));
+
+            return response()->json(['ok' => false, 'message' => 'This trial has expired.'], 403);
+        }
+
         $mfaEnabled = (bool) ($user->two_factor_secret && $user->two_factor_confirmed_at);
         if ($mfaEnabled || (bool) ($validated['secure_sign_in'] ?? false)) {
             if (! $mfaEnabled) {

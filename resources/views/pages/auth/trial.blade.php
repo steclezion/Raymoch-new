@@ -10,6 +10,7 @@
     window.TRIAL_BOOT = {
       apiTrial: @json(route('api.trial-requests.store')),
       apiCheck: @json(route('api.trial-requests.check')),
+      couponLogin: @json(route('trial.coupon.login')),
       csrf: @json(csrf_token()),
       countries: @json($countries),
     };

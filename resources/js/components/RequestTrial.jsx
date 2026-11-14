@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
+  ArrowLeft,
   ArrowRight,
   BadgeCheck,
   Building2,
@@ -13,8 +14,6 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import AuthAwareNavigation from "./AuthAwareNavigation.jsx";
-import Footer from "./layout_master/Footer.jsx";
 import "./trial.css";
 
 const INITIAL_FORM = {
@@ -28,16 +27,33 @@ const INITIAL_FORM = {
   agree_privacy: false,
 };
 
-export default function RequestTrial({ apiUrl, apiCheckUrl, csrfToken, countries = [] }) {
+export default function RequestTrial({ apiUrl, apiCheckUrl, apiCouponLoginUrl, csrfToken, countries = [] }) {
   const [form, setForm] = useState(INITIAL_FORM);
   const [errors, setErrors] = useState({});
   const [busy, setBusy] = useState(false);
   const [checking, setChecking] = useState(false);
   const [notice, setNotice] = useState(null);
   const [showPolicy, setShowPolicy] = useState(false);
+  const [hasCoupon, setHasCoupon] = useState(() => window.location.hash === "#coupon-login");
+  const [couponLogin, setCouponLogin] = useState(() => ({
+    email: new URLSearchParams(window.location.search).get("email") || "",
+    coupon: "",
+  }));
+  const [couponBusy, setCouponBusy] = useState(false);
+  const [couponNotice, setCouponNotice] = useState(null);
   const noticeRef = useRef(null);
-  const dialingCodes = [...new Set(countries.map((country) => country.tele_code).filter(Boolean))]
-    .sort((left, right) => left.localeCompare(right, undefined, { numeric: true }));
+  const couponSectionRef = useRef(null);
+  const couponEmailRef = useRef(null);
+
+  useEffect(() => {
+    if (window.location.hash !== "#coupon-login") return;
+    setHasCoupon(true);
+    const frame = window.requestAnimationFrame(() => {
+      couponSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      window.setTimeout(() => couponEmailRef.current?.focus({ preventScroll: true }), 650);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
 
   useEffect(() => {
     if (!showPolicy) return undefined;
@@ -174,9 +190,40 @@ export default function RequestTrial({ apiUrl, apiCheckUrl, csrfToken, countries
     </label>
   );
 
+  const submitCouponLogin = async (event) => {
+    event.preventDefault();
+    setCouponBusy(true);
+    setCouponNotice(null);
+    try {
+      const response = await fetch(apiCouponLoginUrl, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { Accept: "application/json", "Content-Type": "application/json", ...(csrfToken ? { "X-CSRF-TOKEN": csrfToken } : {}) },
+        body: JSON.stringify(couponLogin),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) throw new Error(Object.values(data.errors || {}).flat()[0] || data.message || "Coupon login failed.");
+      setCouponNotice({ type: "success", message: data.message });
+      window.setTimeout(() => window.location.assign(data.redirect || "/dashboard"), 500);
+    } catch (error) {
+      setCouponNotice({ type: "error", message: error.message });
+    } finally {
+      setCouponBusy(false);
+    }
+  };
+
   return (
     <div className="trial-page">
-      <AuthAwareNavigation activePath="/request-trial" />
+      <nav className="trial-return-nav" aria-label="Trial page navigation">
+        <a className="trial-return-brand" href="/" aria-label="Raymoch home">
+          <img src="/images/raymoch_logo_11_10-26.svg" alt="" />
+          <span><strong>Raymoch</strong><small>Trial access</small></span>
+        </a>
+        <a className="trial-return-link" href="/">
+          <span className="trial-return-link__icon"><ArrowLeft aria-hidden="true" /></span>
+          <span><small>Exit trial request</small><strong>Back to home</strong></span>
+        </a>
+      </nav>
       <main className="trial-main">
         <section className="trial-intro" aria-labelledby="trial-page-title">
           <div className="trial-intro__copy">
@@ -228,12 +275,11 @@ export default function RequestTrial({ apiUrl, apiCheckUrl, csrfToken, countries
                   },
                 }
               )}
-              {selectField(
-                "country_code",
-                "Country code",
-                dialingCodes.map((code) => ({ value: code, label: code })),
-                { required: true, autoComplete: "tel-country-code", placeholder: "Code" }
-              )}
+              <label className={`trial-field ${errors.country_code ? "has-error" : ""}`}>
+                <span>Country code<em aria-hidden="true">*</em></span>
+                <span className="trial-input-shell"><Globe2 size={18} aria-hidden="true" /><input name="country_code" value={form.country_code} readOnly aria-readonly="true" tabIndex={-1} placeholder="Select country first" /></span>
+                {errors.country_code ? <small role="alert">{Array.isArray(errors.country_code) ? errors.country_code[0] : errors.country_code}</small> : null}
+              </label>
               {field("phone", "Phone number", Phone, { type: "tel", autoComplete: "tel-national", placeholder: "555 000 0000", maxLength: 40, onBlur: checkExisting })}
               {field("company", "Company or organization", Building2, { type: "text", autoComplete: "organization", placeholder: "Your organization", maxLength: 255 })}
             </div>
@@ -253,9 +299,26 @@ export default function RequestTrial({ apiUrl, apiCheckUrl, csrfToken, countries
       </main>
 
       <section className="trial-assurance" aria-label="Trial assurance">
-        <p><strong>What happens next?</strong> Enter the six-digit coupon from your email to activate the trial and sign in securely.</p>
+        <p><strong>What happens next?</strong> Verify the six-digit number from your first email. We will then send your secure 16-character login coupon.</p>
       </section>
-      <Footer />
+      <section ref={couponSectionRef} className="trial-coupon-access" id="coupon-login" aria-labelledby="coupon-login-title">
+        <label className="trial-coupon-toggle"><input type="checkbox" checked={hasCoupon} onChange={(event) => setHasCoupon(event.target.checked)} /><span><strong>I have a coupon</strong><small>Use the 16-character coupon sent after email verification.</small></span></label>
+        {hasCoupon ? <form className="trial-coupon-login" onSubmit={submitCouponLogin}>
+          <div><p>Trial access</p><h2 id="coupon-login-title">Sign in with your coupon</h2></div>
+          {couponNotice ? <div className={`trial-notice is-${couponNotice.type}`} role="status">{couponNotice.message}</div> : null}
+          <label><span>Email</span><input ref={couponEmailRef} type="email" required value={couponLogin.email} onChange={(event) => setCouponLogin((current) => ({ ...current, email: event.target.value }))} autoComplete="email" /></label>
+          <label><span>16-character coupon</span><input type="text" required minLength={16} maxLength={16} value={couponLogin.coupon} onChange={(event) => setCouponLogin((current) => ({ ...current, coupon: event.target.value }))} autoComplete="off" /></label>
+          <button type="submit" disabled={couponBusy}>{couponBusy ? "Checking coupon…" : "Login"}</button>
+        </form> : null}
+      </section>
+      <footer className="trial-login-footer">
+        <div>© 2026 Raymoch. All rights reserved.</div>
+        <nav aria-label="Legal links">
+          <a href="/privacy">Privacy</a>
+          <a href="/terms">Terms</a>
+          <a href="/cookies">Cookies</a>
+        </nav>
+      </footer>
 
       {showPolicy ? (
         <div className="trial-modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setShowPolicy(false)}>

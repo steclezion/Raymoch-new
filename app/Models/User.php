@@ -4,21 +4,19 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Spatie\Permission\Traits\HasRoles;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
 use Laravel\Cashier\Billable;
-use App\Models\Industry;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\InvestorPreference;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
+    use Billable, HasRoles;
+
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
-    use HasRoles, Billable;
 
     /**
      * The attributes that are mass assignable.
@@ -67,8 +65,11 @@ class User extends Authenticatable
             'two_factor_confirmed_at' => 'datetime',
             'two_factor_last_used_step' => 'integer',
             'settings' => 'array',
+            'trial_ends_at' => 'datetime',
+            'deactivated_at' => 'datetime',
         ];
     }
+
     public function industry()
     {
         return $this->hasMany(Industry::class);
@@ -79,5 +80,10 @@ class User extends Authenticatable
         return $this->hasMany(
             InvestorPreference::class
         );
+    }
+
+    public function trialRequest(): HasOne
+    {
+        return $this->hasOne(TrialRequest::class, 'users_trail_request_id');
     }
 }

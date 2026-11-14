@@ -256,6 +256,7 @@ mountPage("trial-request-root", () => import("./components/RequestTrial.jsx"), {
   props: {
     apiUrl: window.TRIAL_BOOT?.apiTrial || "/api/trial-requests",
     apiCheckUrl: window.TRIAL_BOOT?.apiCheck || "/api/trial-requests/check",
+    apiCouponLoginUrl: window.TRIAL_BOOT?.couponLogin || "/trial/coupon-login",
     csrfToken: window.TRIAL_BOOT?.csrf || getCsrf(),
     countries: window.TRIAL_BOOT?.countries || [],
   },
