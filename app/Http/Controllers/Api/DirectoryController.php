@@ -65,6 +65,11 @@ class DirectoryController extends Controller
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
             'q' => ['nullable', 'string', 'max:200'],
             'sector_id' => ['nullable', 'integer', 'min:1'],
+            'sector_ids' => ['nullable', 'string', 'max:1000', 'regex:/^\d+(,\d+)*$/'],
+            'region_ids' => ['nullable', 'string', 'max:1000', 'regex:/^\d+(,\d+)*$/'],
+            'country_ids' => ['nullable', 'string', 'max:1000', 'regex:/^\d+(,\d+)*$/'],
+            'state_ids' => ['nullable', 'string', 'max:1000', 'regex:/^\d+(,\d+)*$/'],
+            'industry_ids' => ['nullable', 'string', 'max:1000', 'regex:/^\d+(,\d+)*$/'],
             'region_id' => ['nullable', 'integer', 'min:1'],
             'country_id' => ['nullable', 'integer', 'min:1'],
             'state_id' => ['nullable', 'integer', 'min:1'],
@@ -75,8 +80,29 @@ class DirectoryController extends Controller
 
         $query = DB::table(self::BUSINESS_SEARCH_VIEW);
 
+        $collectionFilters = [
+            'region_ids' => 'region_id',
+            'country_ids' => 'country_id',
+            'state_ids' => 'state_id',
+            'sector_ids' => 'sector_id',
+            'industry_ids' => 'industry_id',
+        ];
+
+        foreach ($collectionFilters as $parameter => $column) {
+            if (! $request->filled($parameter)) {
+                continue;
+            }
+
+            $ids = collect(explode(',', $filters[$parameter]))
+                ->map(fn ($id) => (int) $id)
+                ->unique()
+                ->values()
+                ->all();
+            $query->whereIn($column, $ids);
+        }
+
         foreach (self::FILTER_COLUMNS as $parameter => $column) {
-            if ($request->filled($parameter)) {
+            if ($request->filled($parameter) && ! $request->filled(str_replace('_id', '_ids', $parameter))) {
                 $query->where($column, $filters[$parameter]);
             }
         }

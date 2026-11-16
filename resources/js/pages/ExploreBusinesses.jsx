@@ -37,12 +37,12 @@ export default function ExploreBusinesses() {
   const [sectors, setSectors] = useState([]);
   const [industries, setIndustries] = useState([]);
 
-  const [region, setRegion] = useState("all");
-  const [country, setCountry] = useState("all");
-  const [stateItem, setStateItem] = useState("");
+  const [region, setRegion] = useState([]);
+  const [country, setCountry] = useState([]);
+  const [stateItem, setStateItem] = useState([]);
   const [city, setCity] = useState("");
-  const [sector, setSector] = useState("");
-  const [industry, setIndustry] = useState("");
+  const [sector, setSector] = useState([]);
+  const [industry, setIndustry] = useState([]);
   const [verified, setVerified] = useState(false);
 
   const [gridQuery, setGridQuery] = useState("");
@@ -50,16 +50,9 @@ export default function ExploreBusinesses() {
   const pageSize = 20;
   const [loading, setLoading] = useState(true);
 
-  const selectedSectorObject = useMemo(() => {
-    if (!sector) return null;
-
-    return sectors.find(
-      (s) =>
-        String(s.id) === String(sector) ||
-        String(s.code) === String(sector) ||
-        String(s.title) === String(sector) ||
-        String(s.name) === String(sector)
-    );
+  const selectedSectorObjects = useMemo(() => {
+    const selectedIds = Array.isArray(sector) ? sector.map(String) : [];
+    return sectors.filter((item) => selectedIds.includes(String(item.id)));
   }, [sector, sectors]);
 
   useEffect(() => {
@@ -84,19 +77,20 @@ export default function ExploreBusinesses() {
 
   useEffect(() => {
     const fetchCountries = async () => {
-      if (!region || region === "all") {
+      if (region.length === 0) {
         const res = await fetchJson("/api/countries-africans");
         setCountries(res?.data ?? []);
         return;
       }
 
       const res = await fetchJson(
-        `/api/countries-africans?region_id=${encodeURIComponent(region)}`
+        `/api/countries-africans?region_ids=${encodeURIComponent(region.join(","))}`
       );
       setCountries(res?.data ?? []);
     };
 
-    setStateItem("");
+    setCountry([]);
+    setStateItem([]);
     setCity("");
     setStates([]);
     setCities([]);
@@ -106,18 +100,18 @@ export default function ExploreBusinesses() {
 
   useEffect(() => {
     const fetchStates = async () => {
-      if (!country || country === "all") {
+      if (country.length === 0) {
         setStates([]);
         return;
       }
 
       const res = await fetchJson(
-        `/api/states-all?countries_all_id=${encodeURIComponent(country)}`
+        `/api/states-all?country_ids=${encodeURIComponent(country.join(","))}`
       );
       setStates(res?.data ?? []);
     };
 
-    setStateItem("");
+    setStateItem([]);
     setCity("");
     setCities([]);
     fetchStates();
@@ -125,52 +119,48 @@ export default function ExploreBusinesses() {
 
   useEffect(() => {
     const fetchCities = async () => {
-      if (!stateItem || stateItem === "all") {
+      if (stateItem.length === 0) {
+        setCities([]);
+        return;
+      }
+
+      const selectedStateIds = stateItem.includes("all")
+        ? states.map((item) => String(item.id))
+        : stateItem;
+
+      if (selectedStateIds.length === 0) {
         setCities([]);
         return;
       }
 
       const res = await fetchJson(
-        `/api/cities-all?state_id=${encodeURIComponent(stateItem)}`
+        `/api/cities-all?state_ids=${encodeURIComponent(selectedStateIds.join(","))}`
       );
       setCities(res?.data ?? []);
     };
 
     setCity("");
     fetchCities();
-  }, [stateItem]);
+  }, [stateItem, states]);
 
   useEffect(() => {
     const fetchIndustries = async () => {
-      if (!selectedSectorObject?.id) {
+      const sectorIds = selectedSectorObjects.map((item) => item.id);
+      if (sectorIds.length === 0) {
         const res = await fetchJson("/api/industries");
         setIndustries(res?.data ?? []);
         return;
       }
 
       const res = await fetchJson(
-        `/api/industries?sector_id=${encodeURIComponent(selectedSectorObject.id)}`
+        `/api/industries?sector_ids=${encodeURIComponent(sectorIds.join(","))}`
       );
       setIndustries(res?.data ?? []);
     };
 
-    setIndustry("");
+    setIndustry([]);
     fetchIndustries();
-  }, [selectedSectorObject]);
-
-  const handleCountryFirstSelection = async (countryId) => {
-    if (!countryId || countryId === "all") {
-      return;
-    }
-
-    const res = await fetchJson(
-      `/api/country-region?country_id=${encodeURIComponent(countryId)}`
-    );
-
-    if (res?.ok && res?.data?.region_id) {
-      setRegion(String(res.data.region_id));
-    }
-  };
+  }, [selectedSectorObjects]);
 
   useEffect(() => {
     setPage(1);
@@ -201,11 +191,10 @@ export default function ExploreBusinesses() {
     window.location.assign(`/companies?${p.toString()}`);
   };
 
-  const activeSectorName =
-    selectedSectorObject?.title ||
-    selectedSectorObject?.name ||
-    selectedSectorObject?.label ||
-    "";
+  const activeSectorName = selectedSectorObjects
+    .map((item) => item.title || item.name || item.label)
+    .filter(Boolean)
+    .join(", ");
 
   return (
     <ResponsiveController>
@@ -289,7 +278,6 @@ export default function ExploreBusinesses() {
               sectors={sectors}
               industries={industries}
               onSearch={onSearch}
-              onCountryFirstSelection={handleCountryFirstSelection}
             />
           </section>
 
@@ -324,8 +312,8 @@ export default function ExploreBusinesses() {
               loading={loading}
               sectors={sectors}
               industries={industries}
-              selectedSector={sector}
-              selectedSectorObject={selectedSectorObject}
+              selectedSector={sector[0] ?? ""}
+              selectedSectorObject={selectedSectorObjects[0] ?? null}
               gridQuery={gridQuery}
               setGridQuery={setGridQuery}
               page={page}

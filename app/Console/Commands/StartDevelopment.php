@@ -52,11 +52,12 @@ class StartDevelopment extends Command
         $process = new Process([
             $concurrently,
             '--kill-others',
-            '--names=server,company-search,search,vite',
+            '--names=server,company-search,search,vite,schedule',
             '--prefix-colors=blue,magenta,cyan,yellow',
             sprintf('"%s" artisan serve --port=%s', PHP_BINARY, $port),
             sprintf('"%s" artisan queue:work database --queue=company-search --tries=3 --timeout=120 --verbose', PHP_BINARY),
             sprintf('"%s" artisan queue:work database --queue=search --tries=3 --timeout=120 --verbose', PHP_BINARY),
+            sprintf('"%s" artisan schedule:work --verbose', PHP_BINARY),
             'npm run dev',
         ], base_path());
 

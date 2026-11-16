@@ -105,14 +105,31 @@ class CompanySearchEngineService
             ->get();
 
 
-        $selectedValue = $payload[$step] ?? 'all';
+        $collectionKeys = [
+            'region' => 'regions',
+            'country' => 'countries',
+            'state' => 'states',
+            'sector' => 'sectors',
+            'industry' => 'industries',
+        ];
+        $selectedValue = isset($collectionKeys[$step])
+            ? ($payload[$collectionKeys[$step]] ?? [])
+            : ($payload[$step] ?? 'all');
 
-        $label = $step === 'verification'
-            ? (($payload['verification'] ?? false) ? 'ON' : 'OFF')
-            : ($selectedValue === 'all'
+        if (is_array($selectedValue)) {
+            $label = $selectedValue === []
                 ? 'all'
-                : ($this->labelResolver->resolveOne($dimension, $selectedValue)
-                    ?? (string) ($rows->first()->name ?? $selectedValue)));
+                : collect($selectedValue)
+                    ->map(fn ($value) => $this->labelResolver->resolveOne($dimension, $value) ?? (string) $value)
+                    ->join(', ');
+        } else {
+            $label = $step === 'verification'
+                ? (($payload['verification'] ?? false) ? 'ON' : 'OFF')
+                : ($selectedValue === 'all'
+                    ? 'all'
+                    : ($this->labelResolver->resolveOne($dimension, $selectedValue)
+                        ?? (string) ($rows->first()->name ?? $selectedValue)));
+        }
 
         return [
             'count' => (int) $rows->sum('total'),
@@ -182,12 +199,7 @@ class CompanySearchEngineService
         }
 
         $filters = [
-            'region'   => 'region_id',
-            'country'  => 'country_id',
-            'state'    => 'state_id',
             'city'     => 'city_id',
-            'sector'   => 'sector_id',
-            'industry' => 'industry_id',
         ];
 
         foreach ($filters as $payloadKey => $column) {
@@ -195,6 +207,21 @@ class CompanySearchEngineService
 
             if ($value !== 'all' && $value !== '' && $value !== null) {
                 $query->where($column, $value);
+            }
+        }
+
+        $collectionFilters = [
+            'regions' => 'region_id',
+            'countries' => 'country_id',
+            'states' => 'state_id',
+            'sectors' => 'sector_id',
+            'industries' => 'industry_id',
+        ];
+
+        foreach ($collectionFilters as $payloadKey => $column) {
+            $values = collect($payload[$payloadKey] ?? [])->filter()->unique()->values()->all();
+            if ($values !== []) {
+                $query->whereIn($column, $values);
             }
         }
 
@@ -208,9 +235,15 @@ class CompanySearchEngineService
     private function resultsUrl(array $payload): string
     {
         $filters = array_filter(
-            $payload,
+            collect($payload)->except(['regions', 'countries', 'states', 'sectors', 'industries'])->all(),
             static fn(mixed $value): bool => !in_array($value, [null, '', 'all', false], true),
         );
+        foreach (['region', 'country', 'state', 'sector', 'industry'] as $dimension) {
+            $plural = $dimension === 'country' ? 'countries' : $dimension . 's';
+            if (! empty($payload[$plural])) {
+                $filters[$dimension . '_ids'] = implode(',', $payload[$plural]);
+            }
+        }
         $filters['from'] = 'explore';
 
         return '/companies?' . http_build_query($filters);

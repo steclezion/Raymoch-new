@@ -124,7 +124,7 @@ function buildSelectStyles(hasError = false) {
     control: (base, state) => ({
       ...base,
       minHeight: 50,
-      height: 50,
+      height: "auto",
       borderRadius: 999,
       borderColor: hasError
         ? "#ef4444"
@@ -147,7 +147,7 @@ function buildSelectStyles(hasError = false) {
     }),
     valueContainer: (base) => ({
       ...base,
-      height: 50,
+      minHeight: 50,
       padding: "0 8px 0 0",
     }),
     input: (base) => ({
@@ -257,7 +257,6 @@ export default function TopSearchPanel({
   cities,
   sectors,
   industries,
-  onCountryFirstSelection,
 }) {
   const [fieldErrors, setFieldErrors] = useState({
     sector: false,
@@ -272,30 +271,24 @@ export default function TopSearchPanel({
   };
 
   const regionOptions = useMemo(() => {
-    return [
-      { value: "all", label: "All" },
-      ...(regions ?? []).map((r) => ({
+    return (regions ?? []).map((r) => ({
         value: String(r.id),
         label: r.name,
-      })),
-    ];
+      }));
   }, [regions]);
 
   const countryOptions = useMemo(() => {
-    return [
-      { value: "all", label: "All" },
-      ...(countries ?? []).map((c) => ({
+    return (countries ?? []).map((c) => ({
         value: String(c.countries_all_id ?? c.id),
         label: c.country_name ?? c.name,
-      })),
-    ];
+      }));
   }, [countries]);
 
   const stateOptions = useMemo(() => {
-    if (!country || country === "all") return [];
+    if (!Array.isArray(country) || country.length === 0) return [];
 
     return [
-      { value: "all", label: "All" },
+      { value: "all", label: "All states" },
       ...(states ?? []).map((s) => ({
         value: String(s.id),
         label: s.name,
@@ -304,7 +297,7 @@ export default function TopSearchPanel({
   }, [states, country]);
 
   const cityOptions = useMemo(() => {
-    if (!stateItem || stateItem === "all") return [];
+    if (!Array.isArray(stateItem) || stateItem.length === 0) return [];
 
     return [
       { value: "all", label: "All" },
@@ -329,23 +322,19 @@ export default function TopSearchPanel({
     }));
   }, [industries]);
 
-  const selectedRegion = useMemo(
-    () =>
-      regionOptions.find((opt) => opt.value === String(region ?? "all")) ||
-      regionOptions[0],
-    [regionOptions, region]
-  );
+  const selectedRegion = useMemo(() => {
+    const values = Array.isArray(region) ? region.map(String) : [];
+    return regionOptions.filter((option) => values.includes(option.value));
+  }, [regionOptions, region]);
 
-  const selectedCountry = useMemo(
-    () =>
-      countryOptions.find((opt) => opt.value === String(country ?? "all")) ||
-      countryOptions[0],
-    [countryOptions, country]
-  );
+  const selectedCountry = useMemo(() => {
+    const values = Array.isArray(country) ? country.map(String) : [];
+    return countryOptions.filter((option) => values.includes(option.value));
+  }, [countryOptions, country]);
 
   const selectedState = useMemo(() => {
-    if (!stateItem) return null;
-    return stateOptions.find((opt) => opt.value === String(stateItem)) || null;
+    const values = Array.isArray(stateItem) ? stateItem.map(String) : [];
+    return stateOptions.filter((option) => values.includes(option.value));
   }, [stateOptions, stateItem]);
 
   const selectedCity = useMemo(() => {
@@ -354,79 +343,57 @@ export default function TopSearchPanel({
   }, [cityOptions, city]);
 
   const selectedSector = useMemo(() => {
-    return sectorOptions.find((opt) => opt.value === String(sector ?? "")) || null;
+    const selectedValues = Array.isArray(sector) ? sector.map(String) : [];
+    return sectorOptions.filter((opt) => selectedValues.includes(opt.value));
   }, [sectorOptions, sector]);
 
   const selectedIndustry = useMemo(() => {
-    return industryOptions.find((opt) => opt.value === String(industry ?? "")) || null;
+    const values = Array.isArray(industry) ? industry.map(String) : [];
+    return industryOptions.filter((option) => values.includes(option.value));
   }, [industryOptions, industry]);
 
   const countryDisabled = false;
-  const stateDisabled = !country || country === "all" || isSearching;
-  const cityDisabled = !stateItem || stateItem === "all" || isSearching;
-  const industryDisabled = !sector || String(sector).trim() === "" || isSearching;
+  const stateDisabled = !Array.isArray(country) || country.length === 0 || isSearching;
+  const cityDisabled = !Array.isArray(stateItem) || stateItem.length === 0 || isSearching;
+  const industryDisabled = !Array.isArray(sector) || sector.length === 0 || isSearching;
 
   const clearAll = () => {
     if (isSearching) return;
 
     setQ("");
-    setRegion("all");
-    setCountry("all");
-    setStateItem("");
+    setRegion([]);
+    setCountry([]);
+    setStateItem([]);
     setCity("");
-    setSector("");
-    setIndustry("");
+    setSector([]);
+    setIndustry([]);
     setVerified(false);
     clearValidation();
   };
 
-  const handleRegionChange = (option) => {
+  const handleRegionChange = (options) => {
     if (isSearching) return;
 
-    const value = option?.value ?? "all";
     clearValidation();
-    setRegion(value);
-
-    if (value === "all") {
-      setCountry("all");
-      setStateItem("");
-      setCity("");
-    }
+    setRegion((options ?? []).map((option) => option.value));
   };
 
-  const handleCountryChange = async (option) => {
+  const handleCountryChange = (options) => {
     if (isSearching) return;
 
-    const value = option?.value ?? "all";
     clearValidation();
-    setCountry(value);
-
-    if (value === "all" || !value) {
-      setStateItem("");
-      setCity("");
-      return;
-    }
-
-    if (typeof onCountryFirstSelection === "function") {
-      await onCountryFirstSelection(value);
-    }
-
-    setStateItem("all");
-    setCity("");
+    setCountry((options ?? []).map((option) => option.value));
   };
 
-  const handleStateChange = (option) => {
+  const handleStateChange = (options, actionMeta) => {
     if (isSearching) return;
 
-    const value = option?.value ?? "";
-    setStateItem(value);
-
-    if (!value || value === "all") {
-      setCity("");
-      return;
-    }
-
-    setCity("all");
+    const values = (options ?? []).map((option) => option.value);
+    setStateItem(
+      actionMeta?.option?.value === "all"
+        ? ["all"]
+        : values.filter((value) => value !== "all")
+    );
   };
 
   const handleCityChange = (option) => {
@@ -434,19 +401,16 @@ export default function TopSearchPanel({
     setCity(option?.value ?? "");
   };
 
-  const handleSectorChange = (option) => {
+  const handleSectorChange = (options) => {
     if (isSearching) return;
 
     clearValidation();
-    setSector(option?.value ?? "");
-    setIndustry("");
+    setSector((options ?? []).map((option) => option.value));
+    setIndustry([]);
   };
 
   const validateBeforeSearch = () => {
-    const normalizedSector =
-      sector && String(sector).trim() !== "" ? String(sector).trim() : "";
-
-    if (!normalizedSector) {
+    if (!Array.isArray(sector) || sector.length === 0) {
       setFieldErrors({ sector: true });
       toast.error("Sector should be selected.");
       return false;
@@ -459,12 +423,12 @@ export default function TopSearchPanel({
   const buildPayload = () => {
     return {
       keyword: String(q ?? "").trim(),
-      region: region ?? "all",
-      country: country ?? "all",
-      state: stateItem ?? "all",
+      regions: region,
+      countries: country,
+      states: stateItem.filter((value) => value !== "all"),
       city: city ?? "all",
-      sector: sector ?? "all",
-      industry: industry ?? "all",
+      sectors: sector,
+      industries: industry,
       verification: Boolean(verified),
     };
   };
@@ -539,7 +503,10 @@ export default function TopSearchPanel({
                     value={selectedRegion}
                     onChange={handleRegionChange}
                     options={regionOptions}
-                    placeholder="Select region"
+                    isMulti
+                    closeMenuOnSelect={false}
+                    isClearable
+                    placeholder="All regions"
                     styles={buildSelectStyles(false)}
                     isDisabled={isSearching}
                   />
@@ -555,8 +522,11 @@ export default function TopSearchPanel({
                     value={selectedCountry}
                     onChange={handleCountryChange}
                     options={countryOptions}
+                    isMulti
+                    closeMenuOnSelect={false}
+                    isClearable
                     isDisabled={countryDisabled || isSearching}
-                    placeholder="Select country"
+                    placeholder="All countries in selected regions"
                     styles={buildSelectStyles(false)}
                   />
                 </div>
@@ -571,6 +541,8 @@ export default function TopSearchPanel({
                     value={selectedState}
                     onChange={handleStateChange}
                     options={stateOptions}
+                    isMulti
+                    closeMenuOnSelect={false}
                     isClearable
                     isDisabled={stateDisabled}
                     placeholder={
@@ -607,8 +579,10 @@ export default function TopSearchPanel({
                     value={selectedSector}
                     onChange={handleSectorChange}
                     options={sectorOptions}
+                    isMulti
+                    closeMenuOnSelect={false}
                     isClearable
-                    placeholder="Select sector"
+                    placeholder="Select one or more sectors"
                     styles={buildSelectStyles(fieldErrors.sector)}
                     isDisabled={isSearching}
                   />
@@ -625,8 +599,10 @@ export default function TopSearchPanel({
                   <Select
                     {...selectSharedProps}
                     value={selectedIndustry}
-                    onChange={(option) => setIndustry(option?.value ?? "")}
+                    onChange={(options) => setIndustry((options ?? []).map((option) => option.value))}
                     options={industryOptions}
+                    isMulti
+                    closeMenuOnSelect={false}
                     isClearable
                     isDisabled={industryDisabled}
                     placeholder={

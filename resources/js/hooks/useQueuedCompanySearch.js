@@ -226,6 +226,19 @@ export default function useQueuedCompanySearch() {
     const params = new URLSearchParams();
     for (const [key, value] of Object.entries(filters)) {
       if (value === null || value === "" || value === "all" || value === false) continue;
+      if (Array.isArray(value)) {
+        const parameterNames = {
+          regions: "region_ids",
+          countries: "country_ids",
+          states: "state_ids",
+          sectors: "sector_ids",
+          industries: "industry_ids",
+        };
+        if (value.length > 0 && parameterNames[key]) {
+          params.set(parameterNames[key], value.join(","));
+        }
+        continue;
+      }
       params.set(key, value === true ? "1" : String(value));
     }
     params.set("from", "explore");

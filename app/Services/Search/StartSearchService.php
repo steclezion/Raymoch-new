@@ -20,11 +20,21 @@ class StartSearchService
         $validated = $request->validate([
             'request_id' => ['nullable', 'uuid'],
             'keyword' => ['nullable', 'string', 'max:255'],
+            'regions' => ['nullable', 'array'],
+            'regions.*' => ['integer', 'distinct', 'min:1'],
             'region' => ['nullable', 'string', 'max:64'],
+            'countries' => ['nullable', 'array'],
+            'countries.*' => ['integer', 'distinct', 'min:1'],
             'country' => ['nullable', 'string', 'max:64'],
+            'states' => ['nullable', 'array'],
+            'states.*' => ['integer', 'distinct', 'min:1'],
             'state' => ['nullable', 'string', 'max:64'],
             'city' => ['nullable', 'string', 'max:64'],
+            'sectors' => ['nullable', 'array'],
+            'sectors.*' => ['integer', 'distinct', 'min:1'],
             'sector' => ['nullable', 'string', 'max:64'],
+            'industries' => ['nullable', 'array'],
+            'industries.*' => ['integer', 'distinct', 'min:1'],
             'industry' => ['nullable', 'string', 'max:64'],
             'verification' => ['required', 'boolean'],
         ]);
@@ -66,9 +76,18 @@ class StartSearchService
     public function makeInitialStatus(array $payload): array
     {
         $steps = [];
+        $collectionKeys = [
+            'region' => 'regions',
+            'country' => 'countries',
+            'state' => 'states',
+            'sector' => 'sectors',
+            'industry' => 'industries',
+        ];
 
         foreach (config('search.steps') as $key) {
-            $selectedValue = $payload[$key] ?? null;
+            $selectedValue = isset($collectionKeys[$key])
+                ? ($payload[$collectionKeys[$key]] ?? [])
+                : ($payload[$key] ?? null);
             $displayName = $this->initialLabel($key, $selectedValue);
 
             $steps[$key] = [
@@ -139,6 +158,19 @@ class StartSearchService
             return $selectedValue ? 'ON' : 'OFF';
         }
 
+        if (is_array($selectedValue)) {
+            if ($selectedValue === []) {
+                return 'all';
+            }
+
+            return collect($selectedValue)
+                ->map(fn ($value) => $this->labelResolver->resolveOne(
+                    SearchDimensions::columnsFor($key),
+                    $value,
+                ) ?? (string) $value)
+                ->join(', ');
+        }
+
         if ($selectedValue === null || $selectedValue === '' || $selectedValue === 'all') {
             return 'all';
         }
@@ -163,14 +195,22 @@ class StartSearchService
             return $value === '' || strtolower($value) === 'all' ? 'all' : $value;
         };
 
+        $collection = static function (string $plural, string $singular) use ($values): array {
+            return collect($values[$plural] ?? (! empty($values[$singular]) && $values[$singular] !== 'all' ? [$values[$singular]] : []))
+                ->map(fn ($value) => (string) $value)
+                ->unique()
+                ->values()
+                ->all();
+        };
+
         return [
             'keyword' => trim((string) ($values['keyword'] ?? '')),
-            'region' => $dimension('region'),
-            'country' => $dimension('country'),
-            'state' => $dimension('state'),
+            'regions' => $collection('regions', 'region'),
+            'countries' => $collection('countries', 'country'),
+            'states' => $collection('states', 'state'),
             'city' => $dimension('city'),
-            'sector' => $dimension('sector'),
-            'industry' => $dimension('industry'),
+            'sectors' => $collection('sectors', 'sector'),
+            'industries' => $collection('industries', 'industry'),
             'verification' => (bool) $values['verification'],
         ];
     }

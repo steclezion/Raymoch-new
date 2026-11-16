@@ -13,11 +13,13 @@ import {
   ChevronDown,
   ChevronRight,
   Eye,
-  CreditCard,
   XCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import SearchResultsChart from "./SearchResultsChart.jsx";
+
+// Subscription enforcement is intentionally retained below so it can be
+// re-enabled without rebuilding this flow. Product access is temporarily open.
+const BYPASS_SUBSCRIPTION_ACCESS = true;
 
 const STEP_META = {
   keyword: {
@@ -115,7 +117,7 @@ function formatStepTitle(step, meta) {
   );
 
   if (step.key === "keyword") {
-    return "Keyword match found";
+    return "Keyword filter processed";
   }
 
   return `${meta.title}: ${label}`;
@@ -186,13 +188,11 @@ export default function SnakeSearchLoading({
   )?.key || "keyword";
   const successful = Boolean(statusData?.meta?.is_completed && !statusData?.meta?.has_error);
 
-  const hasPremiumAccess = Boolean(subscriptionAccess.can_view);
+  const hasPremiumAccess = BYPASS_SUBSCRIPTION_ACCESS || Boolean(subscriptionAccess.can_view);
 
-  const ActionIcon = hasPremiumAccess ? Eye : CreditCard;
+  const ActionIcon = Eye;
 
-  const actionLabel = hasPremiumAccess
-    ? "View Results"
-    : "Pay To View Results";
+  const actionLabel = "Open Intelligence Results";
 
   const stepRows = useMemo(() => {
     const rawSteps = statusData?.steps || {};
@@ -237,7 +237,7 @@ export default function SnakeSearchLoading({
     return {
       title:
         currentStep.key === "keyword"
-          ? "Keyword match found"
+          ? "Search scope processed"
           : `${meta.title}: ${label}`,
       image: meta.image,
     };
@@ -245,6 +245,17 @@ export default function SnakeSearchLoading({
 
   useEffect(() => {
     if (!open) return;
+
+    if (BYPASS_SUBSCRIPTION_ACCESS) {
+      setSubscriptionAccess({
+        loading: false,
+        can_view: true,
+        plan: "Open access",
+        status: "bypassed",
+        message: "",
+      });
+      return undefined;
+    }
 
     let mounted = true;
 
@@ -380,7 +391,7 @@ const handleSummaryAction = async () => {
 
               <div className="rm-snake-subtitle-row">
                 <div className="rm-snake-subtitle-text">
-                  Keyword match found
+                  Search scope processed
                   {keywordStep.label && keywordStep.label !== "(empty)" ? (
                     <>: <strong>{keywordLabel}</strong></>
                   ) : null}
@@ -397,6 +408,7 @@ const handleSummaryAction = async () => {
             </div>
 
             <div className="rm-snake-running-pill">
+              <strong className="rm-snake-compact-progress">{smoothProgress}%</strong>
               {successful ? (
                 <>
                   <span className="rm-snake-done-dot" />
@@ -536,193 +548,36 @@ const handleSummaryAction = async () => {
                 })}
               </div>
 
-              <div className="rm-snake-progress-wrap">
-                <motion.div
-                  className="rm-snake-progress-ring"
-                  animate={{
-                    background: `conic-gradient(#67c4f2 ${
-                      smoothProgress * 3.6
-                    }deg, #dbeafe 0deg)`,
-                  }}
-                  transition={{ duration: 0.35, ease: "easeOut" }}
-                >
-                  <div className="rm-snake-progress-hole">
-                    <div className="rm-snake-progress-value">
-                      {smoothProgress}%
-                    </div>
-                  </div>
-                </motion.div>
-              </div>
             </aside>
 
-            <section className="rm-snake-main">
-              <div className="rm-intelligence-shell">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={`${activeCard.title}-${activeCard.image}`}
-                    className="rm-intelligence-card"
-                    initial={{ opacity: 0, scale: 0.985, filter: "blur(10px)" }}
-                    animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-                    exit={{ opacity: 0, scale: 1.015, filter: "blur(8px)" }}
-                    transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
-                  >
-                    <motion.img
-                      src={activeCard.image}
-                      alt={activeCard.title}
-                      className="rm-intelligence-image"
-                      initial={{ scale: 1.02 }}
-                      animate={{ scale: 1.09 }}
-                      transition={{ duration: 12, ease: "linear" }}
-                    />
+            {successful && smoothProgress >= 100 ? (
+              <section className="rm-snake-main">
+                <div className="rm-snake-summary-card">
+                  <div className="rm-snake-action-wrap">
+                    <button
+                      type="button"
+                      disabled={subscriptionAccess.loading}
+                      className={`rm-snake-action-btn ${
+                        hasPremiumAccess ? "view" : "pay"
+                      } ${subscriptionAccess.loading ? "disabled" : ""}`}
+                      onClick={handleSummaryAction}
+                    >
+                      {subscriptionAccess.loading ? (
+                        <Loader2 size={17} className="rm-spin" />
+                      ) : (
+                        <ActionIcon size={17} />
+                      )}
 
-                    <div className="rm-intelligence-vignette" />
-                    <div className="rm-intelligence-grid" />
-                    <div className="rm-intelligence-scan" />
-
-                    <div className="rm-intelligence-corner top-left" />
-                    <div className="rm-intelligence-corner top-right" />
-                    <div className="rm-intelligence-corner bottom-left" />
-                    <div className="rm-intelligence-corner bottom-right" />
-
-                    <div className="rm-intelligence-topbar">
-                      <div className="rm-intelligence-live">
-                        <motion.span
-                          className="rm-intelligence-live-dot"
-                          animate={{ scale: [1, 1.45, 1], opacity: [1, 0.45, 1] }}
-                          transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-                        />
-                        <span>{successful ? "INTELLIGENCE READY" : "LIVE DISCOVERY"}</span>
-                      </div>
-
-                      <div className="rm-intelligence-step">
-                        STEP {String(Math.max(1, ORDER.indexOf(activeStepKey) + 1)).padStart(2, "0")}
-                        <span>/</span>
-                        {String(ORDER.length).padStart(2, "0")}
-                      </div>
-                    </div>
-
-                    <div className="rm-intelligence-center" aria-hidden="true">
-                      <motion.div
-                        className="rm-intelligence-orbit"
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
-                      >
-                        <span />
-                        <span />
-                        <span />
-                      </motion.div>
-                    </div>
-
-                    <div className="rm-intelligence-content">
-                      <div className="rm-intelligence-progress-value">
-                        <motion.span
-                          key={smoothProgress}
-                          initial={{ opacity: 0, y: 12 }}
-                          animate={{ opacity: 1, y: 0 }}
-                        >
-                          {smoothProgress}
-                        </motion.span>
-                        <small>%</small>
-                      </div>
-
-                      <div className="rm-intelligence-copy">
-                        <span className="rm-intelligence-eyebrow">Raymoch Advanced Search</span>
-                        <motion.h2
-                          initial={{ opacity: 0, y: 18 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.18, duration: 0.7 }}
-                        >
-                          {activeCard.title}
-                        </motion.h2>
-                        <p>Analyzing verified business intelligence across your selected market.</p>
-                      </div>
-                    </div>
-
-                    <div className="rm-intelligence-progress">
-                      <motion.div
-                        className="rm-intelligence-progress-fill"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${smoothProgress}%` }}
-                        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                      />
-                      <motion.div
-                        className="rm-intelligence-progress-glow"
-                        animate={{ left: `${Math.max(0, smoothProgress - 2)}%` }}
-                        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                      />
-                    </div>
-                  </motion.div>
-                </AnimatePresence>
-              </div>
-
-              <div className="rm-snake-summary-card">
-                <div className="rm-snake-summary-top">
-                  <div className="rm-snake-summary-title">
-                    Live Search Monitor
-                  </div>
-                <SearchResultsChart token={token} statusData={statusData} />
-
-                  <div
-                    className={`rm-snake-summary-badge ${
-                      statusData?.meta?.is_completed ? "done" : "running"
-                    }`}
-                  >
-                    {statusData?.meta?.is_completed ? "Finished" : "Running"}
+                      <span>
+                        {subscriptionAccess.loading
+                          ? "Preparing access..."
+                          : actionLabel}
+                      </span>
+                    </button>
                   </div>
                 </div>
-
-                <div className="rm-snake-summary-grid">
-                  {stepRows.map((step) => {
-                    const meta = STEP_META[step.key] || STEP_META.keyword;
-
-                    return (
-                      <div className="rm-snake-summary-box" key={step.key}>
-                        <div className="rm-snake-summary-box-title">
-                          {meta.title}
-                        </div>
-                        <div className="rm-snake-summary-box-value">
-                          {["done", "completed"].includes(step.status) ? Number(step.found_count || 0) : "—"}
-                        </div>
-                        <div className="rm-snake-summary-box-sub">
-                          {step.status === "skipped" ? "Not applied" : step.status}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="rm-snake-action-wrap">
-                  <button
-                    type="button"
-                    disabled={subscriptionAccess.loading || !successful}
-                    className={`rm-snake-action-btn ${
-                      hasPremiumAccess ? "view" : "pay"
-                    } ${subscriptionAccess.loading ? "disabled" : ""}`}
-                    onClick={handleSummaryAction}
-                  >
-                    {subscriptionAccess.loading ? (
-                      <Loader2 size={17} className="rm-spin" />
-                    ) : (
-                      <ActionIcon size={17} />
-                    )}
-
-                    <span>
-                      {subscriptionAccess.loading
-                        ? "Checking plan..."
-                        : actionLabel}
-                    </span>
-                  </button>
-
-                  <div className="rm-snake-plan-note">
-                    {subscriptionAccess.loading
-                      ? "Checking your subscription access..."
-                      : hasPremiumAccess
-                        ? `Your ${subscriptionAccess.plan} plan is active. You can view the matched search results.`
-                        : "Basic, inactive, or missing subscription requires payment before viewing results."}
-                  </div>
-                </div>
-              </div>
-            </section>
+              </section>
+            ) : null}
           </div>
         </div>
       </div>
@@ -843,6 +698,15 @@ const styles = `
     flex: 0 0 auto;
   }
 
+  .rm-snake-compact-progress {
+    min-width: 44px;
+    padding-right: 10px;
+    border-right: 1px solid currentColor;
+    font-size: 15px;
+    line-height: 1;
+    text-align: center;
+  }
+
   .rm-spin {
     animation: rmspin 1s linear infinite;
   }
@@ -882,28 +746,52 @@ const styles = `
     flex: 1 1 auto;
     min-height: 0;
     display: grid;
-    grid-template-columns: 380px minmax(0, 1fr);
-    overflow: hidden;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: #b99877 #f3e7cf;
+  }
+
+  .rm-snake-layout::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  .rm-snake-layout::-webkit-scrollbar-track {
+    background: #f3e7cf;
+  }
+
+  .rm-snake-layout::-webkit-scrollbar-thumb {
+    border: 2px solid #f3e7cf;
+    border-radius: 999px;
+    background: #b99877;
+  }
+
+  .rm-snake-layout::-webkit-scrollbar-thumb:hover {
+    background: #8f6847;
   }
 
   .rm-snake-left {
     padding: 22px 18px 18px 20px;
-    border-right: 1px solid #e5e7eb;
+    border-right: 0;
     display: flex;
     flex-direction: column;
     min-height: 0;
     min-width: 0;
-    overflow: hidden;
+    overflow: visible;
   }
 
   .rm-snake-checks {
     display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 12px;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: visible;
     padding-right: 6px;
     min-height: 0;
-    max-height: 100%;
+    max-height: none;
   }
 
   .rm-snake-check-item {
@@ -911,6 +799,7 @@ const styles = `
     background: #ffffff;
     border-radius: 16px;
     padding: 12px;
+    min-height: 132px;
     transition:
       border-color 0.2s ease,
       background-color 0.2s ease,
@@ -1074,13 +963,12 @@ const styles = `
   .rm-snake-main {
     min-width: 0;
     min-height: 0;
-    padding: 20px;
+    padding: 0 20px 20px;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     gap: 18px;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: visible;
   }
 
   .rm-snake-card-shell {
@@ -1157,9 +1045,9 @@ const styles = `
 
   .rm-snake-summary-card {
     width: 100%;
-    max-width: 760px;
+    max-width: none;
     margin: 0 auto;
-    border-radius: 24px;
+    border-radius: 16px;
     background: #fff;
     border: 1px solid #e2e8f0;
     box-shadow: 0 18px 34px rgba(15, 23, 42, 0.08);
@@ -1233,12 +1121,12 @@ const styles = `
   }
 
   .rm-snake-action-wrap {
-    margin-top: 18px;
-    padding-top: 18px;
-    border-top: 1px solid #e2e8f0;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     gap: 14px;
     flex-wrap: wrap;
   }
@@ -1469,13 +1357,14 @@ const styles = `
 
     .rm-snake-left {
       border-right: 0;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 0;
       padding-bottom: 20px;
       overflow: visible;
     }
 
     .rm-snake-checks {
-      max-height: 360px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      max-height: none;
     }
 
     .rm-snake-main {
@@ -1501,6 +1390,14 @@ const styles = `
 
     .rm-snake-title {
       font-size: 20px;
+    }
+
+    .rm-snake-checks {
+      grid-template-columns: 1fr;
+    }
+
+    .rm-snake-check-item {
+      min-height: 0;
     }
 
     .rm-snake-summary-grid {

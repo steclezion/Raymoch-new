@@ -27,7 +27,11 @@ class SearchFilterController extends Controller
     {
         $query = Country::query();
 
-        if ($request->region_id) {
+        $regionIds = $this->csvIds($request->query('region_ids'));
+
+        if ($regionIds !== []) {
+            $query->whereIn('region_id', $regionIds);
+        } elseif ($request->region_id) {
             $query->where('region_id', $request->region_id);
         }
 
@@ -39,7 +43,18 @@ class SearchFilterController extends Controller
     // 3. States (dependent on country)
     public function states(Request $request)
     {
-        $states = State::where('country_id', $request->countries_all_id)
+        $countryIds = $this->csvIds($request->query('country_ids'));
+        $query = State::query();
+
+        if ($countryIds !== []) {
+            $query->whereIn('country_id', $countryIds);
+        } elseif ($request->countries_all_id) {
+            $query->where('country_id', $request->countries_all_id);
+        } else {
+            return response()->json(['data' => []]);
+        }
+
+        $states = $query
             ->select('id', 'name', 'country_id')
             ->orderBy('name')
             ->get();
@@ -50,7 +65,18 @@ class SearchFilterController extends Controller
     // 4. Cities (dependent on state)
     public function cities(Request $request)
     {
-        $cities = City::where('state_id', $request->state_id)
+        $stateIds = $this->csvIds($request->query('state_ids'));
+        $query = City::query();
+
+        if ($stateIds !== []) {
+            $query->whereIn('state_id', $stateIds);
+        } elseif ($request->state_id) {
+            $query->where('state_id', $request->state_id);
+        } else {
+            return response()->json(['data' => []]);
+        }
+
+        $cities = $query
             ->select('id', 'name', 'state_id')
             ->orderBy('name')
             ->get();
@@ -71,7 +97,15 @@ class SearchFilterController extends Controller
     {
         $query = Industry::query();
 
-        if ($request->sector_id) {
+        $sectorIds = collect(explode(',', (string) $request->query('sector_ids', '')))
+            ->filter(fn ($id) => ctype_digit($id) && (int) $id > 0)
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+
+        if ($sectorIds->isNotEmpty()) {
+            $query->whereIn('sector_id', $sectorIds);
+        } elseif ($request->sector_id) {
             $query->where('sector_id', $request->sector_id);
         }
 
@@ -111,5 +145,15 @@ class SearchFilterController extends Controller
                 'region_name' => $region,
             ],
         ]);
+    }
+
+    private function csvIds(mixed $value): array
+    {
+        return collect(explode(',', (string) $value))
+            ->filter(fn ($id) => ctype_digit($id) && (int) $id > 0)
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
     }
 }

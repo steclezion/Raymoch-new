@@ -235,12 +235,12 @@ export default function Companies() {
     const qs = new URLSearchParams(window.location.search);
 
     const qParam = (qs.get("q") || "").trim();
-    const regionIdParam = (qs.get("region_id") || "").trim();
-    const countryIdParam = (qs.get("country_id") || "").trim();
-    const stateIdParam = (qs.get("state_id") || "").trim();
+    const regionIdParam = (qs.get("region_ids") || qs.get("region_id") || "").trim();
+    const countryIdParam = (qs.get("country_ids") || qs.get("country_id") || "").trim();
+    const stateIdParam = (qs.get("state_ids") || qs.get("state_id") || "").trim();
     const cityIdParam = (qs.get("city_id") || "").trim();
-    const sectorIdParam = (qs.get("sector_id") || "").trim();
-    const industryIdParam = (qs.get("industry_id") || "").trim();
+    const sectorIdParam = (qs.get("sector_ids") || qs.get("sector_id") || "").trim();
+    const industryIdParam = (qs.get("industry_ids") || qs.get("industry_id") || "").trim();
     const pageParam = parseInt(qs.get("page") || "1", 10);
     const verifiedParam = qs.get("verification_status");
     const from = (qs.get("from") || "").toLowerCase();
@@ -262,12 +262,12 @@ export default function Companies() {
     // Keep only canonical search parameters in the browser URL.
     const cleanParams = new URLSearchParams();
     if (qParam) cleanParams.set("q", qParam);
-    if (sectorIdParam) cleanParams.set("sector_id", sectorIdParam);
-    if (regionIdParam) cleanParams.set("region_id", regionIdParam);
-    if (countryIdParam) cleanParams.set("country_id", countryIdParam);
-    if (stateIdParam) cleanParams.set("state_id", stateIdParam);
+    if (sectorIdParam) cleanParams.set("sector_ids", sectorIdParam);
+    if (regionIdParam) cleanParams.set("region_ids", regionIdParam);
+    if (countryIdParam) cleanParams.set("country_ids", countryIdParam);
+    if (stateIdParam) cleanParams.set("state_ids", stateIdParam);
     if (cityIdParam) cleanParams.set("city_id", cityIdParam);
-    if (industryIdParam) cleanParams.set("industry_id", industryIdParam);
+    if (industryIdParam) cleanParams.set("industry_ids", industryIdParam);
     if (!Number.isNaN(pageParam) && pageParam > 1) cleanParams.set("page", String(pageParam));
     if (/^(1|true|on|verified)$/i.test(verifiedParam || "")) {
       cleanParams.set("verification_status", "verified");
@@ -399,12 +399,12 @@ export default function Companies() {
         setOrDelete("page", page > 1 ? page : "");
         setOrDelete("q", q);
 
-        setOrDelete("sector_id", sectorId);
-        setOrDelete("region_id", regionId);
-        setOrDelete("country_id", countryId);
-        setOrDelete("state_id", stateId);
+        setOrDelete("sector_ids", sectorId);
+        setOrDelete("region_ids", regionId);
+        setOrDelete("country_ids", countryId);
+        setOrDelete("state_ids", stateId);
         setOrDelete("city_id", cityId);
-        setOrDelete("industry_id", industryId);
+        setOrDelete("industry_ids", industryId);
         setOrDelete("verification_status", verified ? "verified" : "");
 
         const qs = qp.toString();
