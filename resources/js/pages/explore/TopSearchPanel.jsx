@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import Select, { components } from "react-select";
+import { toast } from "sonner";
 import useQueuedCompanySearch from "../../hooks/useQueuedCompanySearch";
 import SearchSplashModal from "../../components/behaviours/SearchSplashModal";
 
@@ -257,6 +258,7 @@ export default function TopSearchPanel({
   sectors,
   industries,
 }) {
+  const [sectorError, setSectorError] = useState(false);
   const search = useQueuedCompanySearch();
   const isSearching = search.open && !search.status?.meta?.is_completed;
 
@@ -358,6 +360,7 @@ export default function TopSearchPanel({
     setSector([]);
     setIndustry([]);
     setVerified(false);
+    setSectorError(false);
   };
 
   const handleRegionChange = (options) => {
@@ -391,7 +394,9 @@ export default function TopSearchPanel({
   const handleSectorChange = (options) => {
     if (isSearching) return;
 
-    setSector((options ?? []).map((option) => option.value));
+    const values = (options ?? []).map((option) => option.value);
+    setSector(values);
+    if (values.length > 0) setSectorError(false);
     setIndustry([]);
   };
 
@@ -411,6 +416,14 @@ export default function TopSearchPanel({
   const submitSearch = async (e) => {
     e.preventDefault();
     if (isSearching) return;
+
+    if (!Array.isArray(sector) || sector.length === 0) {
+      setSectorError(true);
+      toast.error("Select at least one sector before starting the search.");
+      return;
+    }
+
+    setSectorError(false);
     await search.start(buildPayload());
   };
   return (
@@ -558,10 +571,16 @@ export default function TopSearchPanel({
                     closeMenuOnSelect={false}
                     isClearable
                     placeholder="Select one or more sectors"
-                    styles={buildSelectStyles(false)}
+                    styles={buildSelectStyles(sectorError)}
                     isDisabled={isSearching}
+                    aria-invalid={sectorError}
                   />
                 </div>
+                {sectorError && (
+                  <div className="sf-error-text" role="alert">
+                    Select at least one sector.
+                  </div>
+                )}
               </div>
 
               <div>
