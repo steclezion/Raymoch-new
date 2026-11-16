@@ -40,6 +40,11 @@ const NAV_ITEMS = [
   { label: "Market Insights", icon: Globe2, href: "/insights" },
 ];
 
+const TEMPORARILY_HIDDEN_AUTH_NAV_PATHS = new Set([
+  "/investors",
+  "/verification",
+]);
+
 const EXPLORE_ITEMS = [
   {
     label: "Trusted Matching",
@@ -229,6 +234,9 @@ export default function HorizontalNavigation({
   const supportMessageIdRef = useRef(1);
   const hasControlledAuth = typeof isAuthedProp === "boolean";
   const isAuthed = hasControlledAuth ? isAuthedProp : sessionAuthed;
+  const visibleNavItems = isAuthed
+    ? NAV_ITEMS.filter(({ href }) => !TEMPORARILY_HIDDEN_AUTH_NAV_PATHS.has(href))
+    : NAV_ITEMS;
   const authLoading = hasControlledAuth
     ? Boolean(authLoadingProp)
     : sessionLoading;
@@ -788,7 +796,7 @@ export default function HorizontalNavigation({
           </form>
 
           <nav className="ray-nav__links" aria-label="Main navigation">
-            {NAV_ITEMS.map(({ label, icon: Icon, href, badge }) => {
+            {visibleNavItems.map(({ label, icon: Icon, href, badge }) => {
               const itemPath = normalizePath(href);
               const active =
                 currentPath === itemPath ||
