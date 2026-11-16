@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from "react";
 import Select, { components } from "react-select";
-import { toast } from "sonner";
 import useQueuedCompanySearch from "../../hooks/useQueuedCompanySearch";
 import SearchSplashModal from "../../components/behaviours/SearchSplashModal";
 
@@ -258,17 +257,8 @@ export default function TopSearchPanel({
   sectors,
   industries,
 }) {
-  const [fieldErrors, setFieldErrors] = useState({
-    sector: false,
-  });
   const search = useQueuedCompanySearch();
   const isSearching = search.open && !search.status?.meta?.is_completed;
-
-  const clearValidation = () => {
-    setFieldErrors({
-      sector: false,
-    });
-  };
 
   const regionOptions = useMemo(() => {
     return (regions ?? []).map((r) => ({
@@ -279,7 +269,7 @@ export default function TopSearchPanel({
 
   const countryOptions = useMemo(() => {
     return (countries ?? []).map((c) => ({
-        value: String(c.countries_all_id ?? c.id),
+        value: String(c.countries_all_id),
         label: c.country_name ?? c.name,
       }));
   }, [countries]);
@@ -355,7 +345,7 @@ export default function TopSearchPanel({
   const countryDisabled = false;
   const stateDisabled = !Array.isArray(country) || country.length === 0 || isSearching;
   const cityDisabled = !Array.isArray(stateItem) || stateItem.length === 0 || isSearching;
-  const industryDisabled = !Array.isArray(sector) || sector.length === 0 || isSearching;
+  const industryDisabled = isSearching;
 
   const clearAll = () => {
     if (isSearching) return;
@@ -368,20 +358,17 @@ export default function TopSearchPanel({
     setSector([]);
     setIndustry([]);
     setVerified(false);
-    clearValidation();
   };
 
   const handleRegionChange = (options) => {
     if (isSearching) return;
 
-    clearValidation();
     setRegion((options ?? []).map((option) => option.value));
   };
 
   const handleCountryChange = (options) => {
     if (isSearching) return;
 
-    clearValidation();
     setCountry((options ?? []).map((option) => option.value));
   };
 
@@ -404,20 +391,8 @@ export default function TopSearchPanel({
   const handleSectorChange = (options) => {
     if (isSearching) return;
 
-    clearValidation();
     setSector((options ?? []).map((option) => option.value));
     setIndustry([]);
-  };
-
-  const validateBeforeSearch = () => {
-    if (!Array.isArray(sector) || sector.length === 0) {
-      setFieldErrors({ sector: true });
-      toast.error("Sector should be selected.");
-      return false;
-    }
-
-    setFieldErrors({ sector: false });
-    return true;
   };
 
   const buildPayload = () => {
@@ -435,7 +410,7 @@ export default function TopSearchPanel({
 
   const submitSearch = async (e) => {
     e.preventDefault();
-    if (isSearching || !validateBeforeSearch()) return;
+    if (isSearching) return;
     await search.start(buildPayload());
   };
   return (
@@ -583,13 +558,10 @@ export default function TopSearchPanel({
                     closeMenuOnSelect={false}
                     isClearable
                     placeholder="Select one or more sectors"
-                    styles={buildSelectStyles(fieldErrors.sector)}
+                    styles={buildSelectStyles(false)}
                     isDisabled={isSearching}
                   />
                 </div>
-                {fieldErrors.sector && (
-                  <div className="sf-error-text">Sector should be selected.</div>
-                )}
               </div>
 
               <div>
@@ -605,9 +577,7 @@ export default function TopSearchPanel({
                     closeMenuOnSelect={false}
                     isClearable
                     isDisabled={industryDisabled}
-                    placeholder={
-                      industryDisabled ? "Select sector first" : "Select industry"
-                    }
+                    placeholder="Select one or more industries"
                     styles={buildSelectStyles(false)}
                   />
                 </div>

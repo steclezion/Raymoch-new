@@ -3,6 +3,7 @@
 use App\Http\Controllers\AllCompaniesController;
 use App\Http\Controllers\Api\AIBusinessSearchController;
 use App\Http\Controllers\Api\ApplicantInfoController;
+use App\Http\Controllers\Api\BusinessCountController;
 use App\Http\Controllers\Api\CompanySearchFilterResolveController;
 use App\Http\Controllers\Api\CompanySearchLogController;
 use App\Http\Controllers\Api\CountryCodeController;
@@ -62,6 +63,7 @@ Route::middleware('throttle:10,1')->group(function (): void {
 
 
 Route::get('/business-sectors', [DirectoryController::class, 'sectors']);
+Route::get('/business-count', BusinessCountController::class)->name('api.business-count');
 Route::get('/countries', [DirectoryController::class, 'countries']);
 Route::get('/companies', [DirectoryController::class, 'companies']);
 

@@ -122,6 +122,7 @@ class StartSearchService
                 'failed_steps' => 0,
                 'skipped_steps' => 0,
                 'total_steps' => count($steps),
+                'result_count' => null,
                 'expires_at' => time() + (int) config('search.ttl_seconds'),
                 'progress_percent' => 0,
                 'started_at' => null,

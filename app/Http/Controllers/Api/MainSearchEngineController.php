@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Services\Search\RunSearchService;
 use App\Services\Search\StartSearchService;
 use Illuminate\Http\Request;
-use App\Services\Search\CompanySearchEngineService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 
@@ -50,6 +49,27 @@ class MainSearchEngineController extends Controller
 
         return response()->json([
             'ok' => true,
+            'data' => $result['data'],
+        ], $result['status_code']);
+    }
+
+    public function results(Request $request, string $token): JsonResponse
+    {
+        $result = $this->runSearchService->results(
+            $token,
+            max(1, $request->integer('page', 1))
+        );
+
+        if (! $result['ok']) {
+            return response()->json([
+                'ok' => false,
+                'message' => $result['message'],
+            ], $result['status_code']);
+        }
+
+        return response()->json([
+            'ok' => true,
+            'message' => $result['message'],
             'data' => $result['data'],
         ], $result['status_code']);
     }

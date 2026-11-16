@@ -22,6 +22,10 @@ import { motion, AnimatePresence } from "framer-motion";
 const BYPASS_SUBSCRIPTION_ACCESS = true;
 
 const STEP_META = {
+  results: {
+    title: "Matching companies",
+    icon: Briefcase,
+  },
   keyword: {
     title: "Keyword",
     icon: Search,
@@ -73,6 +77,7 @@ const STEP_META = {
 };
 
 const ORDER = [
+  "results",
   "keyword",
   "region",
   "country",
@@ -118,6 +123,10 @@ function formatStepTitle(step, meta) {
 
   if (step.key === "keyword") {
     return "Keyword filter processed";
+  }
+
+  if (step.key === "results") {
+    return "Matching companies";
   }
 
   return `${meta.title}: ${label}`;

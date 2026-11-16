@@ -20,7 +20,7 @@ final class SearchDimensions
 
         ],
         'country' => [
-            'filter_id' => 'country_id',
+            'filter_id' => 'co_main_ref_id',
             'result_name' => 'country_name',
             'lookup_table' => 'countries_africans',
             'lookup_id' => 'countries_all_id',

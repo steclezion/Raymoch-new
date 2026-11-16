@@ -25,6 +25,7 @@ return [
 
     // One queued job instance per search dimension.
     'steps' => [
+        'results',
         'keyword',
         'region',
         'country',

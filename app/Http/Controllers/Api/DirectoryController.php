@@ -16,7 +16,7 @@ class DirectoryController extends Controller
     private const FILTER_COLUMNS = [
         'sector_id' => 'sector_id',
         'region_id' => 'region_id',
-        'country_id' => 'country_id',
+        'country_id' => 'co_main_ref_id',
         'state_id' => 'state_id',
         'city_id' => 'city_id',
         'industry_id' => 'industry_id',
@@ -82,7 +82,7 @@ class DirectoryController extends Controller
 
         $collectionFilters = [
             'region_ids' => 'region_id',
-            'country_ids' => 'country_id',
+            'country_ids' => 'co_main_ref_id',
             'state_ids' => 'state_id',
             'sector_ids' => 'sector_id',
             'industry_ids' => 'industry_id',

@@ -25,6 +25,7 @@ class CompanySearchEngineService
         }
 
         return match ($step) {
+            'results' => $this->searchResults($payload),
             'keyword' => $this->searchKeyword($payload),
             'region' => $this->searchRegion($payload),
             'country' => $this->searchCountry($payload),
@@ -40,6 +41,7 @@ class CompanySearchEngineService
     public function results(array $payload, int $page): array
     {
         $rows = $this->baseQuery($payload)
+            ->distinct()
             ->select([
                 'id as company_id',
                 'CompanyName as company_name',
@@ -77,11 +79,20 @@ class CompanySearchEngineService
             ];
         }
 
-        $count = $this->baseQuery($payload)->count();
+        $count = $this->baseQuery($payload)->distinct()->count('id');
 
         return [
             'count' => $count,
             'label' => $keyword,
+            'grouped_results' => [],
+        ];
+    }
+
+    public function searchResults(array $payload): array
+    {
+        return [
+            'count' => $this->baseQuery($payload)->distinct()->count('id'),
+            'label' => 'Matching companies',
             'grouped_results' => [],
         ];
     }
@@ -91,18 +102,35 @@ class CompanySearchEngineService
         $dimension = SearchDimensions::COLUMNS[$step];
         $idColumn = $dimension['filter_id'];
         $nameColumn = $dimension['result_name'];
+        $selectedValues = $this->selectedValues($step, $payload);
 
         // The selected dimension remains active; each worker reports the
         // distribution of the final matching set, using one query per worker.
-        $rows = $this->baseQuery($payload)
+        $query = $this->baseQuery($payload);
+
+        // Keep the grouped worker independently constrained to its submitted
+        // values. This prevents a region/sector/etc. tile from ever reporting
+        // unselected groups if the shared query is changed in the future.
+        if ($selectedValues !== []) {
+            $query->whereIn($idColumn, $selectedValues);
+        }
+
+        $rows = $query
             ->selectRaw("{$idColumn} as value")
             ->selectRaw("COALESCE({$nameColumn}, 'Unknown') as name")
-            ->selectRaw('COUNT(*) as total')
+            ->selectRaw('COUNT(DISTINCT id) as total')
             // Verification uses the same column as both its ID and label.
             // De-duplicate group columns to avoid GROUP BY column, column.
             ->groupBy(...array_values(array_unique([$idColumn, $nameColumn])))
             ->orderByDesc('total')
             ->get();
+
+        if ($selectedValues !== []) {
+            $selected = array_fill_keys(array_map('strval', $selectedValues), true);
+            $rows = $rows
+                ->filter(static fn (object $row): bool => isset($selected[(string) $row->value]))
+                ->values();
+        }
 
 
         $collectionKeys = [
@@ -146,7 +174,57 @@ class CompanySearchEngineService
 
     public function searchRegion(array $payload): array
     {
-        return $this->dimensionResult('region', $payload);
+        $regionValues = $this->selectedValues('region', $payload);
+        $regionDimension = SearchDimensions::COLUMNS['region'];
+        $countryDimension = SearchDimensions::COLUMNS['country'];
+
+        // The region worker answers a regional question. Country, state and
+        // city are intentionally removed so the regional total is not reduced
+        // to the user's narrower location selection. All non-location filters
+        // (keyword, sectors, industries and verification) remain active.
+        $regionalPayload = array_merge($payload, [
+            'countries' => [],
+            'states' => [],
+            'city' => 'all',
+        ]);
+
+        $query = $this->baseQuery($regionalPayload);
+
+        if ($regionValues !== []) {
+            $query->whereIn($regionDimension['filter_id'], $regionValues);
+        }
+
+        $rows = $query
+            ->selectRaw("{$countryDimension['filter_id']} as value")
+            ->selectRaw("COALESCE({$countryDimension['result_name']}, 'Unknown') as name")
+            ->selectRaw('COUNT(DISTINCT id) as total')
+            ->groupBy(
+                $countryDimension['filter_id'],
+                $countryDimension['result_name'],
+            )
+            ->orderByDesc('total')
+            ->get();
+
+        $label = $regionValues === []
+            ? 'all'
+            : collect($regionValues)
+                ->map(fn ($value) => $this->labelResolver->resolveOne(
+                    $regionDimension,
+                    $value,
+                ) ?? (string) $value)
+                ->join(', ');
+
+        return [
+            'count' => (int) $rows->sum('total'),
+            'label' => $label,
+            'selected_id' => $regionValues,
+            'display_name' => $label,
+            'grouped_results' => $rows->map(static fn (object $row): array => [
+                'value' => (string) ($row->value ?? ''),
+                'name' => (string) $row->name,
+                'count' => (int) $row->total,
+            ])->values()->all(),
+        ];
     }
 
     public function searchCountry(array $payload): array
@@ -212,7 +290,7 @@ class CompanySearchEngineService
 
         $collectionFilters = [
             'regions' => 'region_id',
-            'countries' => 'country_id',
+            'countries' => 'co_main_ref_id',
             'states' => 'state_id',
             'sectors' => 'sector_id',
             'industries' => 'industry_id',
@@ -230,6 +308,28 @@ class CompanySearchEngineService
         }
         //dd($query);
         return $query;
+    }
+
+    private function selectedValues(string $step, array $payload): array
+    {
+        $collectionKeys = [
+            'region' => 'regions',
+            'country' => 'countries',
+            'state' => 'states',
+            'sector' => 'sectors',
+            'industry' => 'industries',
+        ];
+
+        if (! isset($collectionKeys[$step])) {
+            return [];
+        }
+
+        return collect($payload[$collectionKeys[$step]] ?? [])
+            ->map(static fn (mixed $value): string => trim((string) $value))
+            ->reject(static fn (string $value): bool => $value === '' || strtolower($value) === 'all')
+            ->unique()
+            ->values()
+            ->all();
     }
 
     private function resultsUrl(array $payload): string

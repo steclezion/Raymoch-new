@@ -33,7 +33,7 @@ import useRefreshingFavicon from "./behaviours/useRefreshingFavicon.jsx";
 
 const NAV_ITEMS = [
   { label: "Home", icon: Home, href: "/home" },
-  { label: "Businesses", icon: Building2, href: "/explore", badge: "46" },
+  { label: "Businesses", icon: Building2, href: "/explore", showBusinessCount: true },
   { label: "Matching", icon: Handshake, href: "/matching" },
   { label: "Investors", icon: Users, href: "/investors" },
   { label: "Verification", icon: ShieldCheck, href: "/verification" },
@@ -206,6 +206,7 @@ export default function HorizontalNavigation({
   const [brandAnimationCycle, setBrandAnimationCycle] = useState(0);
   const [supportModalOpen, setSupportModalOpen] = useState(false);
   const [businessSearchOpen, setBusinessSearchOpen] = useState(false);
+  const [businessCount, setBusinessCount] = useState(null);
   const [trialRemaining, setTrialRemaining] = useState("");
   const [supportModalClosing, setSupportModalClosing] = useState(false);
   const [supportQuestion, setSupportQuestion] = useState("");
@@ -234,12 +235,12 @@ export default function HorizontalNavigation({
   const supportMessageIdRef = useRef(1);
   const hasControlledAuth = typeof isAuthedProp === "boolean";
   const isAuthed = hasControlledAuth ? isAuthedProp : sessionAuthed;
-  const visibleNavItems = isAuthed
-    ? NAV_ITEMS.filter(({ href }) => !TEMPORARILY_HIDDEN_AUTH_NAV_PATHS.has(href))
-    : NAV_ITEMS;
   const authLoading = hasControlledAuth
     ? Boolean(authLoadingProp)
     : sessionLoading;
+  const visibleNavItems = isAuthed || authLoading
+    ? NAV_ITEMS.filter(({ href }) => !TEMPORARILY_HIDDEN_AUTH_NAV_PATHS.has(href))
+    : NAV_ITEMS;
   const authUser = authUserProp ?? sessionUser;
   const isTrialRequestUser = authUser?.auth_kind === "trial_request";
   const avatarSrc =
@@ -267,6 +268,26 @@ export default function HorizontalNavigation({
   useEffect(() => {
     document.title = getPageTitle(currentPath);
   }, [currentPath]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetch("/api/business-count", {
+      credentials: "same-origin",
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+    })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((payload) => {
+        const total = Number(payload?.data?.total);
+        if (Number.isSafeInteger(total) && total >= 0) setBusinessCount(total);
+      })
+      .catch((error) => {
+        if (error.name !== "AbortError") console.error("Unable to load business count", error);
+      });
+
+    return () => controller.abort();
+  }, []);
 
   useEffect(() => {
     if (!isTrialRequestUser || !authUser?.trial_ends_at) {
@@ -796,8 +817,11 @@ export default function HorizontalNavigation({
           </form>
 
           <nav className="ray-nav__links" aria-label="Main navigation">
-            {visibleNavItems.map(({ label, icon: Icon, href, badge }) => {
+            {visibleNavItems.map(({ label, icon: Icon, href, badge, showBusinessCount }) => {
               const itemPath = normalizePath(href);
+              const visibleBadge = showBusinessCount && businessCount !== null
+                ? new Intl.NumberFormat().format(businessCount)
+                : badge;
               const active =
                 currentPath === itemPath ||
                 (itemPath !== "/" &&
@@ -814,7 +838,14 @@ export default function HorizontalNavigation({
                 >
                   <Icon size={17} aria-hidden="true" />
                   <span>{label}</span>
-                  {badge ? <span className="ray-nav__badge">{badge}</span> : null}
+                  {visibleBadge ? (
+                    <span
+                      className="ray-nav__badge"
+                      title={showBusinessCount ? `${visibleBadge} businesses available` : undefined}
+                    >
+                      {visibleBadge}
+                    </span>
+                  ) : null}
                 </a>
               );
             })}

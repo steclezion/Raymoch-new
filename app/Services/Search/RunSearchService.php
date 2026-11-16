@@ -145,6 +145,10 @@ class RunSearchService
             $current = $status['steps'][$step]['status'];
             if ($current === 'completed') {
                 $status['meta']['completed_steps']++;
+
+                if ($step === 'results') {
+                    $status['meta']['result_count'] = (int) ($changes['found_count'] ?? 0);
+                }
             } elseif ($current === 'skipped') {
                 $status['meta']['skipped_steps'] = ($status['meta']['skipped_steps'] ?? 0) + 1;
             } elseif ($current === 'failed') {
