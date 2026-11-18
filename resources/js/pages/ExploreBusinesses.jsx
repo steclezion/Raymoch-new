@@ -40,7 +40,7 @@ export default function ExploreBusinesses() {
   const [region, setRegion] = useState([]);
   const [country, setCountry] = useState([]);
   const [stateItem, setStateItem] = useState([]);
-  const [city, setCity] = useState("");
+  const [city, setCity] = useState([]);
   const [sector, setSector] = useState([]);
   const [industry, setIndustry] = useState([]);
   const [verified, setVerified] = useState(false);
@@ -91,7 +91,7 @@ export default function ExploreBusinesses() {
 
     setCountry([]);
     setStateItem([]);
-    setCity("");
+    setCity([]);
     setStates([]);
     setCities([]);
 
@@ -112,7 +112,7 @@ export default function ExploreBusinesses() {
     };
 
     setStateItem([]);
-    setCity("");
+    setCity([]);
     setCities([]);
     fetchStates();
   }, [country]);
@@ -139,7 +139,7 @@ export default function ExploreBusinesses() {
       setCities(res?.data ?? []);
     };
 
-    setCity("");
+    setCity([]);
     fetchCities();
   }, [stateItem, states]);
 
@@ -176,7 +176,7 @@ export default function ExploreBusinesses() {
       region_id: payload?.region,
       country_id: payload?.country,
       state_id: payload?.stateItem,
-      city_id: payload?.city,
+      city_ids: Array.isArray(payload?.cities) ? payload.cities.join(",") : payload?.city,
       industry_id: payload?.industry,
     };
 

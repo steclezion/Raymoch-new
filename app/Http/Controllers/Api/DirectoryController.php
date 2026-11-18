@@ -69,6 +69,7 @@ class DirectoryController extends Controller
             'region_ids' => ['nullable', 'string', 'max:1000', 'regex:/^\d+(,\d+)*$/'],
             'country_ids' => ['nullable', 'string', 'max:1000', 'regex:/^\d+(,\d+)*$/'],
             'state_ids' => ['nullable', 'string', 'max:1000', 'regex:/^\d+(,\d+)*$/'],
+            'city_ids' => ['nullable', 'string', 'max:1000', 'regex:/^\d+(,\d+)*$/'],
             'industry_ids' => ['nullable', 'string', 'max:1000', 'regex:/^\d+(,\d+)*$/'],
             'region_id' => ['nullable', 'integer', 'min:1'],
             'country_id' => ['nullable', 'integer', 'min:1'],
@@ -84,6 +85,7 @@ class DirectoryController extends Controller
             'region_ids' => 'region_id',
             'country_ids' => 'co_main_ref_id',
             'state_ids' => 'state_id',
+            'city_ids' => 'city_id',
             'sector_ids' => 'sector_id',
             'industry_ids' => 'industry_id',
         ];

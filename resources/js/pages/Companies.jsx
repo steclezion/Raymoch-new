@@ -238,7 +238,7 @@ export default function Companies() {
     const regionIdParam = (qs.get("region_ids") || qs.get("region_id") || "").trim();
     const countryIdParam = (qs.get("country_ids") || qs.get("country_id") || "").trim();
     const stateIdParam = (qs.get("state_ids") || qs.get("state_id") || "").trim();
-    const cityIdParam = (qs.get("city_id") || "").trim();
+    const cityIdParam = (qs.get("city_ids") || qs.get("city_id") || "").trim();
     const sectorIdParam = (qs.get("sector_ids") || qs.get("sector_id") || "").trim();
     const industryIdParam = (qs.get("industry_ids") || qs.get("industry_id") || "").trim();
     const pageParam = parseInt(qs.get("page") || "1", 10);
@@ -266,7 +266,7 @@ export default function Companies() {
     if (regionIdParam) cleanParams.set("region_ids", regionIdParam);
     if (countryIdParam) cleanParams.set("country_ids", countryIdParam);
     if (stateIdParam) cleanParams.set("state_ids", stateIdParam);
-    if (cityIdParam) cleanParams.set("city_id", cityIdParam);
+    if (cityIdParam) cleanParams.set("city_ids", cityIdParam);
     if (industryIdParam) cleanParams.set("industry_ids", industryIdParam);
     if (!Number.isNaN(pageParam) && pageParam > 1) cleanParams.set("page", String(pageParam));
     if (/^(1|true|on|verified)$/i.test(verifiedParam || "")) {
@@ -403,7 +403,7 @@ export default function Companies() {
         setOrDelete("region_ids", regionId);
         setOrDelete("country_ids", countryId);
         setOrDelete("state_ids", stateId);
-        setOrDelete("city_id", cityId);
+        setOrDelete("city_ids", cityId);
         setOrDelete("industry_ids", industryId);
         setOrDelete("verification_status", verified ? "verified" : "");
 
@@ -522,7 +522,7 @@ export default function Companies() {
     if (regionId) p.set("region_id", regionId);
     if (countryId) p.set("country_id", countryId);
     if (stateId) p.set("state_id", stateId);
-    if (cityId) p.set("city_id", cityId);
+    if (cityId) p.set("city_ids", cityId);
     if (sectorId) p.set("sector_id", sectorId);
     if (industryId) p.set("industry_id", industryId);
     if (verified) p.set("verification_status", "verified");

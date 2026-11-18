@@ -231,6 +231,7 @@ export default function useQueuedCompanySearch() {
           regions: "region_ids",
           countries: "country_ids",
           states: "state_ids",
+          cities: "city_ids",
           sectors: "sector_ids",
           industries: "industry_ids",
         };

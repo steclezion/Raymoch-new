@@ -48,10 +48,16 @@ final class SearchDimensions
         'sector' => [
             'filter_id' => 'sector_id',
             'result_name' => 'sector_title',
+            'lookup_table' => 'sectors',
+            'lookup_id' => 'id',
+            'lookup_name' => 'title',
         ],
         'industry' => [
             'filter_id' => 'industry_id',
             'result_name' => 'industry_name',
+            'lookup_table' => 'industries',
+            'lookup_id' => 'id',
+            'lookup_name' => 'name',
         ],
         'verification' => [
             'filter_id' => 'VerificationStatus',

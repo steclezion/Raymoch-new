@@ -21,6 +21,8 @@ class StoreSessionSearchController extends Controller
             'states.*' => ['integer', 'distinct', 'min:1'],
             'state' => ['nullable', 'string', 'max:64'],
             'city' => ['nullable', 'string', 'max:64'],
+            'cities' => ['nullable', 'array'],
+            'cities.*' => ['integer', 'distinct', 'min:1'],
             'sectors' => ['nullable', 'array'],
             'sectors.*' => ['integer', 'distinct', 'min:1'],
             'sector' => ['nullable', 'string', 'max:64'],
@@ -79,6 +81,7 @@ class StoreSessionSearchController extends Controller
         $regions = $collection('regions', 'region');
         $countries = $collection('countries', 'country');
         $states = $collection('states', 'state');
+        $cities = $collection('cities', 'city');
         $sectors = $collection('sectors', 'sector');
         $industries = $collection('industries', 'industry');
 
@@ -90,7 +93,8 @@ class StoreSessionSearchController extends Controller
             'country' => $countries[0] ?? 'all',
             'states' => $states,
             'state' => $states[0] ?? 'all',
-            'city' => $dimension('city'),
+            'cities' => $cities,
+            'city' => $cities[0] ?? 'all',
             'sectors' => $sectors,
             'sector' => $sectors[0] ?? 'all',
             'industries' => $industries,
@@ -104,12 +108,16 @@ class StoreSessionSearchController extends Controller
         $parameters = array_filter(
             collect($filters)->except([
                 'region', 'regions', 'country', 'countries', 'state', 'states',
-                'sector', 'sectors', 'industry', 'industries',
+                'city', 'cities', 'sector', 'sectors', 'industry', 'industries',
             ])->all(),
             static fn(mixed $value): bool => !in_array($value, [null, '', 'all', false], true),
         );
-        foreach (['region', 'country', 'state', 'sector', 'industry'] as $dimension) {
-            $plural = $dimension === 'country' ? 'countries' : $dimension . 's';
+        foreach (['region', 'country', 'state', 'city', 'sector', 'industry'] as $dimension) {
+            $plural = match ($dimension) {
+                'country' => 'countries',
+                'city' => 'cities',
+                default => $dimension . 's',
+            };
             if (! empty($filters[$plural])) {
                 $parameters[$dimension . '_ids'] = implode(',', $filters[$plural]);
             }

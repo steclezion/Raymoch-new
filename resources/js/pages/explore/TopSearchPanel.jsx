@@ -330,8 +330,8 @@ export default function TopSearchPanel({
   }, [stateOptions, stateItem]);
 
   const selectedCity = useMemo(() => {
-    if (!city) return null;
-    return cityOptions.find((opt) => opt.value === String(city)) || null;
+    const values = Array.isArray(city) ? city.map(String) : [];
+    return cityOptions.filter((option) => values.includes(option.value));
   }, [cityOptions, city]);
 
   const selectedSector = useMemo(() => {
@@ -356,7 +356,7 @@ export default function TopSearchPanel({
     setRegion([]);
     setCountry([]);
     setStateItem([]);
-    setCity("");
+    setCity([]);
     setSector([]);
     setIndustry([]);
     setVerified(false);
@@ -386,9 +386,15 @@ export default function TopSearchPanel({
     );
   };
 
-  const handleCityChange = (option) => {
+  const handleCityChange = (options, actionMeta) => {
     if (isSearching) return;
-    setCity(option?.value ?? "");
+
+    const values = (options ?? []).map((option) => option.value);
+    setCity(
+      actionMeta?.option?.value === "all"
+        ? ["all"]
+        : values.filter((value) => value !== "all")
+    );
   };
 
   const handleSectorChange = (options) => {
@@ -406,7 +412,7 @@ export default function TopSearchPanel({
       regions: region,
       countries: country,
       states: stateItem.filter((value) => value !== "all"),
-      city: city ?? "all",
+      cities: city.filter((value) => value !== "all"),
       sectors: sector,
       industries: industry,
       verification: Boolean(verified),
@@ -550,6 +556,8 @@ export default function TopSearchPanel({
                     value={selectedCity}
                     onChange={handleCityChange}
                     options={cityOptions}
+                    isMulti
+                    closeMenuOnSelect={false}
                     isClearable
                     isDisabled={cityDisabled}
                     placeholder={cityDisabled ? "Select state first" : "Select city"}
