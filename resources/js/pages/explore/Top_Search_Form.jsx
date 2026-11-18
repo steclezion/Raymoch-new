@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import Select, { components } from "react-select";
 import useQueuedCompanySearch from "../../hooks/useQueuedCompanySearch";
 import SearchSplashModal from "../../components/behaviours/SearchSplashModal";
+import TopSearchSelectedFilters from "../companies/Top_search_selected_filters.jsx";
 import "../../styles/top-search-form.css";
 
 function IconSearch(props) {
@@ -68,7 +69,7 @@ function buildSelectStyles() {
     control: (base, state) => ({
       ...base,
       minHeight: 50,
-      height: 50,
+      height: "auto",
       borderRadius: 999,
       borderColor: state.isFocused ? "#8f6847" : "#ded2c3",
       boxShadow: state.isFocused
@@ -79,7 +80,7 @@ function buildSelectStyles() {
       paddingRight: 8,
       cursor: state.isDisabled ? "not-allowed" : "pointer",
     }),
-    valueContainer: (base) => ({ ...base, height: 50, padding: "0 8px 0 0" }),
+    valueContainer: (base) => ({ ...base, minHeight: 50, padding: "4px 8px 4px 0" }),
     input: (base) => ({ ...base, margin: 0, padding: 0, color: "#1c1d1f", fontFamily: "inherit" }),
     indicatorSeparator: () => ({ display: "none" }),
     dropdownIndicator: (base) => ({ ...base, color: "#6b7280", padding: 8 }),
@@ -161,6 +162,37 @@ function optionByValue(options, value) {
   );
 }
 
+function toValueList(value) {
+  if (Array.isArray(value)) return value.map(String).filter(Boolean);
+  const normalized = String(value ?? "").trim();
+  if (!normalized) return [];
+  return normalized.split(",").map((item) => item.trim()).filter(Boolean);
+}
+
+function optionsByValue(options, value) {
+  const values = toValueList(value);
+  return options.filter((option) => values.includes(String(option.value)));
+}
+
+function multiValue(options, emptyValue = "all", actionMeta) {
+  const values = (options ?? []).map((option) => String(option.value));
+  if (actionMeta?.option?.value === "all") return "all";
+  const selected = values.filter((value) => value !== "all");
+  return selected.length ? selected.join(",") : emptyValue;
+}
+
+function selectedIds(value) {
+  return toValueList(value).filter((item) => item !== "all");
+}
+
+function sessionDimension(session, pluralKey, singularKey, emptyValue = "all") {
+  const pluralValues = selectedIds(session?.[pluralKey]);
+  if (pluralValues.length) return pluralValues.join(",");
+
+  const singularValues = selectedIds(session?.[singularKey]);
+  return singularValues.length ? singularValues.join(",") : emptyValue;
+}
+
 function normalizeVerification(value) {
   const v = String(value ?? "").trim().toLowerCase();
   return ["1", "true", "on", "yes", "verified"].includes(v);
@@ -202,10 +234,11 @@ export default function TopSearchForm({
   industry,
   setIndustry,
 
-  SelectedFiltersComponent,
+  SelectedFiltersComponent: SelectedFiltersComponentProp,
 }) {
   const queuedSearch = useQueuedCompanySearch();
-  const liveResolveIdRef = useRef(0);
+  const SelectedFiltersComponent =
+    SelectedFiltersComponentProp || TopSearchSelectedFilters;
   const hasControlledFilters = [
     setQ,
     setRegion,
@@ -281,6 +314,8 @@ export default function TopSearchForm({
 
   const [bootReady, setBootReady] = useState(false);
   const [searchValidationError, setSearchValidationError] = useState("");
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [showPreviousSelections, setShowPreviousSelections] = useState(true);
 
   const [loading, setLoading] = useState({
     regions: false,
@@ -297,43 +332,13 @@ export default function TopSearchForm({
     setLoading((prev) => ({ ...prev, [key]: value }));
   };
 
-const resolveLiveFilters = async (filters, requestId) => {
-  setLoadingKey("resolving", true);
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setShowPreviousSelections(false);
+    }, 10000);
 
-  const params = new URLSearchParams({
-    keyword: filters.keyword || "",
-    region: filters.region || "all",
-    country: filters.country || "all",
-    state: filters.state || "all",
-    city: filters.city || "all",
-    sector: filters.sector || "",
-    industry: filters.industry || "all",
-    verification: filters.verification || "OFF",
-  });
-
-  const resolveRes = await fetchJson(
-    `/api/companies/resolve-search-filters?${params.toString()}`
-  );
-  if (requestId !== liveResolveIdRef.current) return;
-
-  const data = resolveRes?.data || {};
-
-  setResolvedPrevious({
-    keyword: data.keyword ?? filters.keyword ?? "",
-    region: normalizedResolvedItem(data.region, "All"),
-    country: normalizedResolvedItem(data.country, "All"),
-    state: normalizedResolvedItem(data.state, "All"),
-    city: normalizedResolvedItem(data.city, "All"),
-    sector: normalizedResolvedItem(data.sector, "All"),
-    industry: normalizedResolvedItem(data.industry, "All"),
-    verification: data.verification
-      ? normalizeVerifiedLabel(data.verification)
-      : normalizeVerifiedLabel(filters.verification),
-  });
-
-  setLoadingKey("resolving", false);
-};
-  
+    return () => window.clearTimeout(timeoutId);
+  }, []);
 
   const regionOptions = useMemo(() => {
     return [
@@ -394,32 +399,31 @@ const resolveLiveFilters = async (filters, requestId) => {
   }, [industries]);
 
   const selectedRegion = useMemo(
-    () => optionByValue(regionOptions, safeRegion),
+    () => optionsByValue(regionOptions, safeRegion),
     [regionOptions, safeRegion]
   );
 
   const selectedCountry = useMemo(
-    () => optionByValue(countryOptions, safeCountry),
+    () => optionsByValue(countryOptions, safeCountry),
     [countryOptions, safeCountry]
   );
 
   const selectedState = useMemo(
-    () => optionByValue(stateOptions, safeStateItem),
+    () => optionsByValue(stateOptions, safeStateItem),
     [stateOptions, safeStateItem]
   );
 
   const selectedCity = useMemo(
-    () => optionByValue(cityOptions, safeCity),
+    () => optionsByValue(cityOptions, safeCity),
     [cityOptions, safeCity]
   );
 
   const selectedSector = useMemo(() => {
-    if (isAll(safeSector)) return null;
-    return optionByValue(sectorOptions, safeSector);
+    return optionsByValue(sectorOptions, safeSector);
   }, [sectorOptions, safeSector]);
 
   const selectedIndustry = useMemo(
-    () => optionByValue(industryOptions, safeIndustry),
+    () => optionsByValue(industryOptions, safeIndustry),
     [industryOptions, safeIndustry]
   );
 
@@ -473,7 +477,29 @@ const resolveLiveFilters = async (filters, requestId) => {
 
       const session = sessionRes?.data || {};
 
-      const filters = hasControlledFilters
+      const sessionFilters = {
+        keyword: session.keyword || "",
+        region: sessionDimension(session, "regions", "region"),
+        country: sessionDimension(session, "countries", "country"),
+        state: sessionDimension(session, "states", "state"),
+        city: sessionDimension(session, "cities", "city"),
+        sector: sessionDimension(session, "sectors", "sector", ""),
+        industry: sessionDimension(session, "industries", "industry"),
+        verification: session.verification ? "ON" : "OFF",
+      };
+
+      const hasPreviousExploreSearch = Boolean(
+        sessionFilters.keyword ||
+        selectedIds(sessionFilters.region).length ||
+        selectedIds(sessionFilters.country).length ||
+        selectedIds(sessionFilters.state).length ||
+        selectedIds(sessionFilters.city).length ||
+        selectedIds(sessionFilters.sector).length ||
+        selectedIds(sessionFilters.industry).length ||
+        session.verification
+      );
+
+      const controlledFilters = hasControlledFilters
         ? {
             keyword: safeQ || "",
             region: safeRegion || "all",
@@ -484,16 +510,9 @@ const resolveLiveFilters = async (filters, requestId) => {
             industry: safeIndustry || "all",
             verification: safeVerified ? "ON" : "OFF",
           }
-        : {
-            keyword: session.keyword || "",
-            region: session.region || "all",
-            country: session.country || "all",
-            state: session.state || "all",
-            city: session.city || "all",
-            sector: session.sector || "",
-            industry: session.industry || "all",
-            verification: session.verification || "OFF",
-          };
+        : sessionFilters;
+
+      const filters = hasPreviousExploreSearch ? sessionFilters : controlledFilters;
 
       safeSetQ(filters.keyword);
       safeSetRegion(filters.region);
@@ -511,15 +530,20 @@ const resolveLiveFilters = async (filters, requestId) => {
       setLoadingKey("regions", false);
       setLoadingKey("sectors", false);
 
-      await resolvePreviousSearch(filters);
+      await resolvePreviousSearch(hasPreviousExploreSearch ? sessionFilters : filters);
 
-      const countryUrl = isAll(filters.region)
+      const regionIds = selectedIds(filters.region);
+      const sectorIds = selectedIds(filters.sector);
+      const countryIds = selectedIds(filters.country);
+      const stateIds = selectedIds(filters.state);
+
+      const countryUrl = regionIds.length === 0
         ? "/api/countries-africans"
-        : `/api/countries-africans?region_id=${encodeURIComponent(filters.region)}`;
+        : `/api/countries-africans?region_ids=${encodeURIComponent(regionIds.join(","))}`;
 
-      const industryUrl = isAll(filters.sector)
+      const industryUrl = sectorIds.length === 0
         ? "/api/industries"
-        : `/api/industries?sector_id=${encodeURIComponent(filters.sector)}`;
+        : `/api/industries?sector_ids=${encodeURIComponent(sectorIds.join(","))}`;
 
       setLoadingKey("countries", true);
       setLoadingKey("industries", true);
@@ -536,26 +560,19 @@ const resolveLiveFilters = async (filters, requestId) => {
       setLoadingKey("countries", false);
       setLoadingKey("industries", false);
 
-      if (!isAll(filters.country)) {
+      if (countryIds.length > 0) {
         setLoadingKey("states", true);
-        const selectedCountryItem = countryItems.find((item) =>
-          String(item.id ?? item.country_id ?? item.countries_all_id) === String(filters.country)
-        );
-        const statesCountryId =
-          selectedCountryItem?.countries_all_id ??
-          selectedCountryItem?.id ??
-          filters.country;
         const stateRes = await fetchJson(
-          `/api/states-all?countries_all_id=${encodeURIComponent(statesCountryId)}`
+          `/api/states-all?country_ids=${encodeURIComponent(countryIds.join(","))}`
         );
         setStates(getDataArray(stateRes));
         setLoadingKey("states", false);
       }
 
-      if (!isAll(filters.state)) {
+      if (stateIds.length > 0) {
         setLoadingKey("cities", true);
         const cityRes = await fetchJson(
-          `/api/cities-all?state_id=${encodeURIComponent(filters.state)}`
+          `/api/cities-all?state_ids=${encodeURIComponent(stateIds.join(","))}`
         );
         setCities(getDataArray(cityRes));
         setLoadingKey("cities", false);
@@ -587,9 +604,10 @@ const resolveLiveFilters = async (filters, requestId) => {
 
       setLoadingKey("countries", true);
 
-      const url = isAll(safeRegion)
+      const regionIds = selectedIds(safeRegion);
+      const url = regionIds.length === 0
         ? "/api/countries-africans"
-        : `/api/countries-africans?region_id=${encodeURIComponent(safeRegion)}`;
+        : `/api/countries-africans?region_ids=${encodeURIComponent(regionIds.join(","))}`;
 
       const res = await fetchJson(url);
       setCountries(getDataArray(res));
@@ -611,13 +629,13 @@ const resolveLiveFilters = async (filters, requestId) => {
       setStates([]);
       setCities([]);
 
-      if (isAll(safeCountry)) return;
+      const countryIds = selectedIds(safeCountry);
+      if (countryIds.length === 0) return;
 
       setLoadingKey("states", true);
 
-      const statesCountryId = selectedCountry?.statesCountryId ?? safeCountry;
       const res = await fetchJson(
-        `/api/states-all?countries_all_id=${encodeURIComponent(statesCountryId)}`
+        `/api/states-all?country_ids=${encodeURIComponent(countryIds.join(","))}`
       );
 
       setStates(getDataArray(res));
@@ -626,7 +644,7 @@ const resolveLiveFilters = async (filters, requestId) => {
 
     fetchStates();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [safeCountry, selectedCountry]);
+  }, [safeCountry]);
 
   useEffect(() => {
     if (!bootReady) return;
@@ -637,12 +655,13 @@ const resolveLiveFilters = async (filters, requestId) => {
       safeSetCity("all");
       setCities([]);
 
-      if (isAll(safeStateItem)) return;
+      const stateIds = selectedIds(safeStateItem);
+      if (stateIds.length === 0) return;
 
       setLoadingKey("cities", true);
 
       const res = await fetchJson(
-        `/api/cities-all?state_id=${encodeURIComponent(safeStateItem)}`
+        `/api/cities-all?state_ids=${encodeURIComponent(stateIds.join(","))}`
       );
 
       setCities(getDataArray(res));
@@ -663,9 +682,10 @@ const resolveLiveFilters = async (filters, requestId) => {
 
       setLoadingKey("industries", true);
 
-      const url = isAll(safeSector)
+      const sectorIds = selectedIds(safeSector);
+      const url = sectorIds.length === 0
         ? "/api/industries"
-        : `/api/industries?sector_id=${encodeURIComponent(safeSector)}`;
+        : `/api/industries?sector_ids=${encodeURIComponent(sectorIds.join(","))}`;
 
       const res = await fetchJson(url);
       setIndustries(getDataArray(res));
@@ -676,30 +696,6 @@ const resolveLiveFilters = async (filters, requestId) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [safeSector]);
 
-
-  useEffect(() => {
-    if (!bootReady) return undefined;
-
-    const requestId = ++liveResolveIdRef.current;
-    const timeoutId = window.setTimeout(() => {
-      resolveLiveFilters({
-        keyword: safeQ || "",
-        region: safeRegion || "all",
-        country: safeCountry || "all",
-        state: safeStateItem || "all",
-        city: safeCity || "all",
-        sector: safeSector || "",
-        industry: safeIndustry || "all",
-        verification: safeVerified ? "ON" : "OFF",
-      }, requestId);
-    }, 350);
-
-    return () => window.clearTimeout(timeoutId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    bootReady, safeQ, safeRegion, safeCountry, safeStateItem,
-    safeCity, safeSector, safeIndustry, safeVerified,
-  ]);
 
   const stateDisabled = isAll(safeCountry);
   const cityDisabled = isAll(safeStateItem);
@@ -719,17 +715,6 @@ const resolveLiveFilters = async (filters, requestId) => {
 
     setStates([]);
     setCities([]);
-
-    setResolvedPrevious({
-      keyword: "",
-      region: { id: "all", name: "All" },
-      country: { id: "all", name: "All" },
-      state: { id: "all", name: "All" },
-      city: { id: "all", name: "All" },
-      sector: { id: "all", name: "All" },
-      industry: { id: "all", name: "All" },
-      verification: "OFF",
-    });
 
     if (typeof onClearFilters === "function") onClearFilters();
     safeSetPage(1);
@@ -757,12 +742,12 @@ const resolveLiveFilters = async (filters, requestId) => {
 
     const payload = {
       keyword: String(safeQ || "").trim(),
-      region: safeRegion || "all",
-      country: safeCountry || "all",
-      state: safeStateItem || "all",
-      city: safeCity || "all",
-      sector: safeSector || "all",
-      industry: safeIndustry || "all",
+      regions: selectedIds(safeRegion),
+      countries: selectedIds(safeCountry),
+      states: selectedIds(safeStateItem),
+      cities: selectedIds(safeCity),
+      sectors: selectedIds(safeSector),
+      industries: selectedIds(safeIndustry),
       verification: Boolean(safeVerified),
     };
 
@@ -784,6 +769,67 @@ const resolveLiveFilters = async (filters, requestId) => {
         onResume={queuedSearch.resume}
       />
 
+      {SelectedFiltersComponent && !showPreviousSelections && (
+        <div className="sf-selection-toggle-wrap">
+          <button
+            type="button"
+            className="sf-selection-toggle is-collapsed"
+            onClick={() => setShowPreviousSelections(true)}
+            aria-expanded="false"
+            aria-controls="explore-search-selections-panel"
+          >
+            <span className="sf-selection-toggle-symbol" aria-hidden="true">+</span>
+            <span>Previous &amp; current search selections</span>
+            <span className="sf-selection-signal" aria-hidden="true" />
+          </button>
+        </div>
+      )}
+
+      {SelectedFiltersComponent && showPreviousSelections && (
+        <section
+          className="sf-previous-panel"
+          id="explore-search-selections-panel"
+          aria-label="Selections passed from Explore"
+        >
+          <div className="sf-previous-panel-heading">
+            <div>
+              <div className="sf-previous-panel-title">EXPLORE SEARCH SELECTIONS</div>
+              <div className="sf-previous-panel-subtitle">
+                Values passed from the Explore page are preserved here.
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="sf-selection-toggle is-expanded"
+              onClick={() => setShowPreviousSelections(false)}
+              aria-expanded="true"
+              aria-controls="explore-search-selections-panel"
+              aria-label="Hide previous and current search selections"
+              title="Hide previous and current search selections"
+            >
+              <span className="sf-selection-toggle-symbol" aria-hidden="true">−</span>
+            </button>
+          </div>
+
+          <SelectedFiltersComponent
+            resolvedPrevious={resolvedPrevious}
+            currentSelections={{
+              keyword: safeQ || "(empty)",
+              region: selectedRegion.map((item) => item.label).join(", ") || "All",
+              country: selectedCountry.map((item) => item.label).join(", ") || "All",
+              state: selectedState.map((item) => item.label).join(", ") || "All",
+              city: selectedCity.map((item) => item.label).join(", ") || "All",
+              sector: selectedSector.map((item) => item.label).join(", ") || "All",
+              industry: selectedIndustry.map((item) => item.label).join(", ") || "All",
+              verification: safeVerified ? "ON" : "OFF",
+            }}
+            loadingSession={loading.session}
+            loadingResolving={loading.resolving}
+          />
+        </section>
+      )}
+
       <div className="sf-panel-wrap">
         <form className="sf-card" onSubmit={submitSearch}>
           <div className="sf-topbar">
@@ -794,13 +840,28 @@ const resolveLiveFilters = async (filters, requestId) => {
               </div>
             </div>
 
-            <div className={`sf-badge ${safeVerified ? "on" : "off"}`}>
-              <span className="check">✓</span>
-              Verified: {verifiedText}
+            <div className="sf-topbar-actions">
+              <div className={`sf-badge ${safeVerified ? "on" : "off"}`}>
+                <span className="check">✓</span>
+                Verified: {verifiedText}
+              </div>
+
+              <button
+                type="button"
+                className="sf-collapse-button"
+                onClick={() => setIsCollapsed((collapsed) => !collapsed)}
+                aria-expanded={!isCollapsed}
+                aria-controls="intelligence-search-form-body"
+                aria-label={isCollapsed ? "Expand search and filters" : "Collapse search and filters"}
+                title={isCollapsed ? "Expand search and filters" : "Collapse search and filters"}
+              >
+                <span aria-hidden="true">{isCollapsed ? "+" : "−"}</span>
+              </button>
             </div>
           </div>
 
-          <div className="sf-body">
+          {!isCollapsed && (
+          <div className="sf-body" id="intelligence-search-form-body">
             <div className="sf-grid">
               <div>
                 <label className="sf-label">
@@ -832,11 +893,13 @@ const resolveLiveFilters = async (filters, requestId) => {
                   <Select
                     {...selectSharedProps}
                     value={selectedRegion}
-                    onChange={(option) => {
-                      safeSetRegion(option?.value ?? "all");
+                    onChange={(options, actionMeta) => {
+                      safeSetRegion(multiValue(options, "all", actionMeta));
                       safeSetPage(1);
                     }}
                     options={regionOptions}
+                    isMulti
+                    closeMenuOnSelect={false}
                     placeholder="Select region"
                     styles={buildSelectStyles()}
                     isLoading={loading.regions}
@@ -851,11 +914,13 @@ const resolveLiveFilters = async (filters, requestId) => {
                   <Select
                     {...selectSharedProps}
                     value={selectedCountry}
-                    onChange={(option) => {
-                      safeSetCountry(option?.value ?? "all");
+                    onChange={(options, actionMeta) => {
+                      safeSetCountry(multiValue(options, "all", actionMeta));
                       safeSetPage(1);
                     }}
                     options={countryOptions}
+                    isMulti
+                    closeMenuOnSelect={false}
                     placeholder="Select country"
                     styles={buildSelectStyles()}
                     isLoading={loading.countries}
@@ -870,11 +935,13 @@ const resolveLiveFilters = async (filters, requestId) => {
                   <Select
                     {...selectSharedProps}
                     value={selectedState}
-                    onChange={(option) => {
-                      safeSetStateItem(option?.value ?? "all");
+                    onChange={(options, actionMeta) => {
+                      safeSetStateItem(multiValue(options, "all", actionMeta));
                       safeSetPage(1);
                     }}
                     options={stateOptions}
+                    isMulti
+                    closeMenuOnSelect={false}
                     isDisabled={stateDisabled}
                     placeholder={stateDisabled ? "Select specific country first" : "Select state"}
                     styles={buildSelectStyles()}
@@ -890,11 +957,13 @@ const resolveLiveFilters = async (filters, requestId) => {
                   <Select
                     {...selectSharedProps}
                     value={selectedCity}
-                    onChange={(option) => {
-                      safeSetCity(option?.value ?? "all");
+                    onChange={(options, actionMeta) => {
+                      safeSetCity(multiValue(options, "all", actionMeta));
                       safeSetPage(1);
                     }}
                     options={cityOptions}
+                    isMulti
+                    closeMenuOnSelect={false}
                     isDisabled={cityDisabled}
                     placeholder={cityDisabled ? "Select state first" : "Select city"}
                     styles={buildSelectStyles()}
@@ -910,11 +979,13 @@ const resolveLiveFilters = async (filters, requestId) => {
                   <Select
                     {...selectSharedProps}
                     value={selectedSector}
-                    onChange={(option) => {
-                      safeSetSector(option?.value ?? "");
+                    onChange={(options, actionMeta) => {
+                      safeSetSector(multiValue(options, "", actionMeta));
                       safeSetPage(1);
                     }}
                     options={sectorOptions}
+                    isMulti
+                    closeMenuOnSelect={false}
                     placeholder="Select sector"
                     styles={buildSelectStyles()}
                     isLoading={loading.sectors}
@@ -929,11 +1000,13 @@ const resolveLiveFilters = async (filters, requestId) => {
                   <Select
                     {...selectSharedProps}
                     value={selectedIndustry}
-                    onChange={(option) => {
-                      safeSetIndustry(option?.value ?? "all");
+                    onChange={(options, actionMeta) => {
+                      safeSetIndustry(multiValue(options, "all", actionMeta));
                       safeSetPage(1);
                     }}
                     options={industryOptions}
+                    isMulti
+                    closeMenuOnSelect={false}
                     isDisabled={industryDisabled}
                     placeholder={industryDisabled ? "Select sector first" : "Select industry"}
                     styles={buildSelectStyles()}
@@ -966,18 +1039,19 @@ const resolveLiveFilters = async (filters, requestId) => {
                   Clear
                 </button>
 
+                <button
+                  type="submit"
+                  className="sf-btn primary"
+                  disabled={queuedSearch.open}
+                  aria-label="Search companies"
+                >
+                  {queuedSearch.open ? "Searching…" : "Search"}
+                </button>
+
                 {/* <a className="sf-btn outline" href="/companies">
                   All Companies <span aria-hidden="true">↗</span>
                 </a> */}
               </div>
-
-              {/* <button
-                type="submit"
-                className="sf-btn primary"
-                disabled={queuedSearch.open}
-              >
-                {queuedSearch.open ? "Searching…" : "Search"}
-              </button> */}
             </div>
 
             {searchValidationError ? (
@@ -985,14 +1059,6 @@ const resolveLiveFilters = async (filters, requestId) => {
                 {searchValidationError}
               </p>
             ) : null}
-
-            {SelectedFiltersComponent && (
-              <SelectedFiltersComponent
-                resolvedPrevious={resolvedPrevious}
-                loadingSession={loading.session}
-                loadingResolving={loading.resolving}
-              />
-            )}
 
             {!safeQ && (
               <div className="sf-local-filter">
@@ -1010,6 +1076,7 @@ const resolveLiveFilters = async (filters, requestId) => {
               </div>
             )}
           </div>
+          )}
         </form>
       </div>
     </>

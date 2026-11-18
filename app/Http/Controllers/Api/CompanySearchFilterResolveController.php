@@ -37,20 +37,35 @@ class CompanySearchFilterResolveController extends Controller
         return !$value || strtolower(trim((string) $value)) === 'all';
     }
 
+    private function values($value): array
+    {
+        if ($this->isAll($value)) {
+            return [];
+        }
+
+        return collect(explode(',', (string) $value))
+            ->map(fn ($item) => trim($item))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+    }
+
     private function resolveRegion($value): array
     {
         if ($this->isAll($value)) {
             return ['id' => 'all', 'name' => 'All'];
         }
 
-        $row = DB::table('regions')
-            ->where('id', $value)
-            ->orWhere('name', $value)
-            ->first();
+        $values = $this->values($value);
+        $rows = DB::table('regions')
+            ->whereIn('id', $values)
+            ->orWhereIn('name', $values)
+            ->get();
 
         return [
-            'id' => $row->id ?? $value,
-            'name' => $row->name ?? $value,
+            'id' => implode(',', $values),
+            'name' => $rows->pluck('name')->implode(', ') ?: implode(', ', $values),
         ];
     }
 
@@ -60,14 +75,15 @@ class CompanySearchFilterResolveController extends Controller
             return ['id' => 'all', 'name' => 'All'];
         }
 
-        $row = DB::table('countries_africans')
-            ->where('countries_all_id', $value)
-            ->orWhere('country_name', $value)
-            ->first();
+        $values = $this->values($value);
+        $rows = DB::table('countries_africans')
+            ->whereIn('countries_all_id', $values)
+            ->orWhereIn('country_name', $values)
+            ->get();
 
         return [
-            'id' => $row->id ?? $value,
-            'name' => $row->country_name ??  $value,
+            'id' => implode(',', $values),
+            'name' => $rows->pluck('country_name')->implode(', ') ?: implode(', ', $values),
         ];
     }
 
@@ -77,14 +93,15 @@ class CompanySearchFilterResolveController extends Controller
             return ['id' => 'all', 'name' => 'All'];
         }
 
-        $row = DB::table('states_all')
-            ->where('id', $value)
-            ->orWhere('name', $value)
-            ->first();
+        $values = $this->values($value);
+        $rows = DB::table('states_all')
+            ->whereIn('id', $values)
+            ->orWhereIn('name', $values)
+            ->get();
 
         return [
-            'id' => $row->id ?? $value,
-            'name' => $row->name ?? $value,
+            'id' => implode(',', $values),
+            'name' => $rows->pluck('name')->implode(', ') ?: implode(', ', $values),
         ];
     }
 
@@ -94,14 +111,15 @@ class CompanySearchFilterResolveController extends Controller
             return ['id' => 'all', 'name' => 'All'];
         }
 
-        $row = DB::table('cities_all')
-            ->where('id', $value)
-            ->orWhere('name', $value)
-            ->first();
+        $values = $this->values($value);
+        $rows = DB::table('cities_all')
+            ->whereIn('id', $values)
+            ->orWhereIn('name', $values)
+            ->get();
 
         return [
-            'id' => $row->id ?? $value,
-            'name' => $row->name ?? $value,
+            'id' => implode(',', $values),
+            'name' => $rows->pluck('name')->implode(', ') ?: implode(', ', $values),
         ];
     }
 
@@ -111,14 +129,15 @@ class CompanySearchFilterResolveController extends Controller
             return ['id' => 'all', 'name' => 'All'];
         }
 
-        $row = DB::table('sectors')
-            ->where('id', $value)
-            ->orWhere('title', $value)
-            ->first();
+        $values = $this->values($value);
+        $rows = DB::table('sectors')
+            ->whereIn('id', $values)
+            ->orWhereIn('title', $values)
+            ->get();
 
         return [
-            'id' => $row->id ?? $value,
-            'name' => $row->title ?? $row->name ?? $value,
+            'id' => implode(',', $values),
+            'name' => $rows->map(fn ($row) => $row->title ?? $row->name)->implode(', ') ?: implode(', ', $values),
         ];
     }
 
@@ -128,14 +147,15 @@ class CompanySearchFilterResolveController extends Controller
             return ['id' => 'all', 'name' => 'All'];
         }
 
-        $row = DB::table('industries')
-            ->where('id', $value)
-            ->orWhere('name', $value)
-            ->first();
+        $values = $this->values($value);
+        $rows = DB::table('industries')
+            ->whereIn('id', $values)
+            ->orWhereIn('name', $values)
+            ->get();
 
         return [
-            'id' => $row->id ?? $value,
-            'name' => $row->name ?? $row->title ?? $value,
+            'id' => implode(',', $values),
+            'name' => $rows->map(fn ($row) => $row->name ?? $row->title)->implode(', ') ?: implode(', ', $values),
         ];
     }
 }

@@ -2,6 +2,7 @@ import React from "react";
 
 export default function TopSearchSelectedFilters({
   resolvedPrevious,
+  currentSelections,
   loadingSession = false,
   loadingResolving = false,
 }) {
@@ -11,7 +12,7 @@ export default function TopSearchSelectedFilters({
 
       <div className="sf-active-wrap">
         <div className="sf-active-title">
-          Selected filters from previous search:
+          Previous Explore selections:
           {(loadingSession || loadingResolving) && (
             <span className="sf-resolving"> Resolving names...</span>
           )}
@@ -43,6 +44,18 @@ export default function TopSearchSelectedFilters({
             Verified: {resolvedPrevious?.verification || "OFF"}
           </span>
         </div>
+
+        <div className="sf-active-title sf-current-title">Current form selections:</div>
+        <div className="sf-active-list">
+          <span className="sf-chip">Keyword: {currentSelections?.keyword || "(empty)"}</span>
+          <span className="sf-chip">Region: {currentSelections?.region || "All"}</span>
+          <span className="sf-chip">Country: {currentSelections?.country || "All"}</span>
+          <span className="sf-chip">State: {currentSelections?.state || "All"}</span>
+          <span className="sf-chip">City: {currentSelections?.city || "All"}</span>
+          <span className="sf-chip">Sector: {currentSelections?.sector || "All"}</span>
+          <span className="sf-chip">Industry: {currentSelections?.industry || "All"}</span>
+          <span className="sf-chip">Verified: {currentSelections?.verification || "OFF"}</span>
+        </div>
       </div>
     </>
   );
@@ -53,18 +66,23 @@ const selectedFiltersCss = `
   margin-top:16px;
   padding:12px;
   border-radius:18px;
-  background:#f8fafc;
-  border:1px dashed #cbd5e1;
+  background:#fbf8f3;
+  border:1px solid #ded2c3;
 }
 .sf-active-title{
   font-size:13px;
   font-weight:900;
-  color:#64748b;
+  color:#382116;
   margin-bottom:8px;
+}
+.sf-current-title{
+  margin-top:14px;
+  padding-top:12px;
+  border-top:1px solid #ded2c3;
 }
 .sf-resolving{
   font-weight:800;
-  color:#2563eb;
+  color:#6f452e;
 }
 .sf-active-list{
   display:flex;
@@ -73,9 +91,9 @@ const selectedFiltersCss = `
   flex-wrap:wrap;
 }
 .sf-chip{
-  border:1px solid #dbeafe;
-  background:#eff6ff;
-  color:#1e40af;
+  border:1px solid #cdbdac;
+  background:#f3e7cf;
+  color:#5b3825;
   font-weight:800;
   font-size:12px;
   border-radius:999px;

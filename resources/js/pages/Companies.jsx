@@ -10,10 +10,10 @@ import "../styles/companies.css";
 import "../styles/companies-dashboard.css";
 import CompanyDetailDialog from "../components/companies/CompanyDetailDialog.jsx";
 import HorizontalNavigation from "../components/HorizontalNavigation.jsx";
-import { fetchCompanies, fetchCountries, fetchSectors } from "../utils/api.js";
+import { fetchCompanies } from "../utils/api.js";
 
 // import FilterPanel from "../pages/companies/Filter_panel.jsx"; // removed
-import TopSearchPanelCompanies from "../pages/companies/Top_search_panel_companies.jsx";
+import TopSearchForm from "./explore/Top_Search_Form.jsx";
 import MainLoadPanel from "../pages/companies/Main_load_panel.jsx";
 
 function ascii(s) {
@@ -212,13 +212,9 @@ export default function Companies() {
   const [cityId, setCityId] = useState("");
   const [sectorId, setSectorId] = useState("");
   const [industryId, setIndustryId] = useState("");
-  const [localFilter, setLocalFilter] = useState("");
   const [groupBy, setGroupBy] = useState("country");
 
   const [companies, setCompanies] = useState([]);
-  const [sectorOptions, setSectorOptions] = useState([]);
-  const [countryOptions, setCountryOptions] = useState([]);
-
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
@@ -234,7 +230,7 @@ export default function Companies() {
   useEffect(() => {
     const qs = new URLSearchParams(window.location.search);
 
-    const qParam = (qs.get("q") || "").trim();
+    const qParam = (qs.get("q") || qs.get("keyword") || "").trim();
     const regionIdParam = (qs.get("region_ids") || qs.get("region_id") || "").trim();
     const countryIdParam = (qs.get("country_ids") || qs.get("country_id") || "").trim();
     const stateIdParam = (qs.get("state_ids") || qs.get("state_id") || "").trim();
@@ -242,7 +238,7 @@ export default function Companies() {
     const sectorIdParam = (qs.get("sector_ids") || qs.get("sector_id") || "").trim();
     const industryIdParam = (qs.get("industry_ids") || qs.get("industry_id") || "").trim();
     const pageParam = parseInt(qs.get("page") || "1", 10);
-    const verifiedParam = qs.get("verification_status");
+    const verifiedParam = qs.get("verification_status") || qs.get("verification");
     const from = (qs.get("from") || "").toLowerCase();
 
     if (qParam) setQ(qParam);
@@ -283,47 +279,6 @@ export default function Companies() {
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-
-    async function loadOptions() {
-      try {
-        const [sectorRes, countryRes] = await Promise.all([
-          fetchSectors().catch(() => null),
-          fetchCountries().catch(() => null),
-        ]);
-
-        if (cancelled) return;
-
-        if (sectorRes && Array.isArray(sectorRes.data)) {
-          const list = sectorRes.data
-            .map((s) => s.title || s.sector_name || s.name)
-            .filter(Boolean)
-            .sort();
-
-          setSectorOptions(list);
-        }
-
-        if (countryRes && Array.isArray(countryRes.data)) {
-          const list = countryRes.data
-            .map((c) => c.country_name || c.name)
-            .filter(Boolean)
-            .sort();
-
-          setCountryOptions(list);
-        }
-      } catch (e) {
-        console.error("Filter options error", e);
-      }
-    }
-
-    loadOptions();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
     if (!loading) {
       setProgress(100);
       return;
@@ -338,8 +293,7 @@ export default function Companies() {
     return () => clearInterval(id);
   }, [loading]);
 
-  const isAllInputsEmpty = !q && !sector && !country && !regionId && !countryId && !stateId && !cityId && !sectorId && !industryId && !verified && !localFilter.trim();
-  const hasAnyFilter = !!(q || sector || country || regionId || countryId || stateId || cityId || sectorId || industryId || verified);
+  const isAllInputsEmpty = !q && !sector && !country && !regionId && !countryId && !stateId && !cityId && !sectorId && !industryId && !verified;
 
   useEffect(() => {
     let cancelled = false;
@@ -434,13 +388,8 @@ export default function Companies() {
       list = list.filter((c) => c.verified);
     }
 
-    if (!q && localFilter.trim()) {
-      const term = localFilter.trim().toLowerCase();
-      list = list.filter((c) => (c.name || "").toLowerCase().includes(term));
-    }
-
     return list;
-  }, [companies, verified, q, localFilter]);
+  }, [companies, verified]);
 
   const shouldGroupBySector = useMemo(
     () => !q && !!(country || countryId) && !(sector || sectorId) && !isAllInputsEmpty,
@@ -534,21 +483,6 @@ export default function Companies() {
     };
   }, [fromParam, q, sector, country, regionId, countryId, stateId, cityId, sectorId, industryId, verified]);
 
-  const onClearFilters = () => {
-    setQ("");
-    setSector("");
-    setCountry("");
-    setVerified(false);
-    setRegionId("");
-    setCountryId("");
-    setStateId("");
-    setCityId("");
-    setSectorId("");
-    setIndustryId("");
-    setLocalFilter("");
-    setPage(1);
-  };
-
   const openDetailDialog = (company) => {
     setSelectedCompany(company);
     setDialogOpen(true);
@@ -625,23 +559,32 @@ export default function Companies() {
             <p>Use one or more filters to narrow the directory.</p>
           </div>
 
-          <TopSearchPanelCompanies
+          <TopSearchForm
           q={q}
-          setQ={setQ}
+          setQ={(value) => {
+            setQ(value);
+            setPage(1);
+          }}
           region={regionId || "all"}
           setRegion={(value) => {
             setRegionId(value === "all" ? "" : String(value));
+            setCountryId("");
+            setStateId("");
+            setCityId("");
             setPage(1);
           }}
           country={countryId || "all"}
           setCountry={(value) => {
             setCountryId(value === "all" ? "" : String(value));
+            setStateId("");
+            setCityId("");
             setCountry("");
             setPage(1);
           }}
           stateItem={stateId || "all"}
           setStateItem={(value) => {
             setStateId(value === "all" ? "" : String(value));
+            setCityId("");
             setPage(1);
           }}
           city={cityId || "all"}
@@ -665,13 +608,6 @@ export default function Companies() {
             setVerified(Boolean(value));
             setPage(1);
           }}
-          localFilter={localFilter}
-          setLocalFilter={setLocalFilter}
-          sectorOptions={sectorOptions}
-          countryOptions={countryOptions}
-          hasAnyFilter={hasAnyFilter}
-          onClearFilters={onClearFilters}
-          setPage={setPage}
           />
         </section>
 
