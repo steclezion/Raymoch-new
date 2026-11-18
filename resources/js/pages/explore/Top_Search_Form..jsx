@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Select, { components } from "react-select";
-import useQueuedCompanySearch from "../../hooks/useQueuedCompanySearch";
-import SearchSplashModal from "../../components/behaviours/SearchSplashModal";
+import useQueuedCompanySearch from "../../hooks/useQueuedCompanySearch.js";
+import SearchSplashModal from "../../components/behaviours/SearchSplashModal.jsx";
 import TopSearchSelectedFilters from "../companies/Top_search_selected_filters.jsx";
 import "../../styles/top-search-form.css";
 

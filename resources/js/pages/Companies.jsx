@@ -13,7 +13,7 @@ import HorizontalNavigation from "../components/HorizontalNavigation.jsx";
 import { fetchCompanies } from "../utils/api.js";
 
 // import FilterPanel from "../pages/companies/Filter_panel.jsx"; // removed
-import TopSearchForm from "./explore/Top_Search_Form.jsx";
+import TopSearchForm from "./explore/Top_Search_Form..jsx";
 import MainLoadPanel from "../pages/companies/Main_load_panel.jsx";
 
 function ascii(s) {
