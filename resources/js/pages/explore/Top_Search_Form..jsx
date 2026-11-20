@@ -844,9 +844,6 @@ export default function TopSearchForm({
           <div className="sf-topbar">
             <div>
               <div className="sf-title">SEARCH &amp; FILTERS</div>
-              <div className="sf-sub">
-                Selected values from Explore are filled automatically below.
-              </div>
             </div>
 
             <div className="sf-topbar-actions">

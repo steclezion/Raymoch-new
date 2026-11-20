@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { ShieldCheck } from "lucide-react";
 
 // MUI
-import { Box, Alert, Breadcrumbs, Link as MLink, Typography } from "@mui/material";
+import { Box, Alert, Breadcrumbs, Link as MLink, TextField, Typography } from "@mui/material";
 
 // Local
 import "../styles/companies.css";
@@ -213,6 +213,7 @@ export default function Companies({ launchInvoker = "", selectionCompanies = nul
   const [sectorId, setSectorId] = useState("");
   const [industryId, setIndustryId] = useState("");
   const [groupBy, setGroupBy] = useState("country");
+  const [companyNameFilter, setCompanyNameFilter] = useState("");
 
   const [companies, setCompanies] = useState([]);
   const [page, setPage] = useState(1);
@@ -465,8 +466,15 @@ export default function Companies({ launchInvoker = "", selectionCompanies = nul
       list = list.filter((c) => c.verified);
     }
 
+    const companyName = companyNameFilter.trim().toLowerCase();
+    if (companyName) {
+      list = list.filter((company) =>
+        String(company.name || "").toLowerCase().includes(companyName)
+      );
+    }
+
     return list;
-  }, [companies, verified]);
+  }, [companies, verified, companyNameFilter]);
 
   const shouldGroupBySector = useMemo(
     () => !q && !!(country || countryId) && !(sector || sectorId) && !isAllInputsEmpty,
@@ -671,8 +679,19 @@ export default function Companies({ launchInvoker = "", selectionCompanies = nul
             <div>
               <h2 id="company-results-title">Browse profiles</h2>
             </div>
-            <p>Open a company to review its complete profile.</p>
           </div>
+
+          <TextField
+            fullWidth
+            size="small"
+            type="search"
+            label="Search company name"
+            placeholder="Enter a company name…"
+            value={companyNameFilter}
+            onChange={(event) => setCompanyNameFilter(event.target.value)}
+            sx={{ mb: 2, maxWidth: 520 }}
+            inputProps={{ "aria-label": "Search companies by name" }}
+          />
 
           <MainLoadPanel
           loading={loading}
