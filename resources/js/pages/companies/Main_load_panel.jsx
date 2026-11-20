@@ -86,6 +86,7 @@ export default function MainLoadPanel({
   goToPage,
   goPrev,
   goNext,
+  lockCountryGrouping = false,
 }) {
   return (
     <>
@@ -124,18 +125,25 @@ export default function MainLoadPanel({
                   </span>
                 </div>
 
-                <label className="group-by-control" htmlFor="company-group-by">
-                  <span>Group companies by</span>
-                  <select
-                    id="company-group-by"
-                    value={groupBy}
-                    onChange={(event) => setGroupBy(event.target.value)}
-                  >
-                    {Object.entries(GROUP_LABELS).map(([value, label]) => (
-                      <option key={value} value={value}>{label}</option>
-                    ))}
-                  </select>
-                </label>
+                {lockCountryGrouping ? (
+                  <div className="group-by-control" aria-label="Companies grouped by country">
+                    <span>Grouped by</span>
+                    <strong>Country</strong>
+                  </div>
+                ) : (
+                  <label className="group-by-control" htmlFor="company-group-by">
+                    <span>Group companies by</span>
+                    <select
+                      id="company-group-by"
+                      value={groupBy}
+                      onChange={(event) => setGroupBy(event.target.value)}
+                    >
+                      {Object.entries(GROUP_LABELS).map(([value, label]) => (
+                        <option key={value} value={value}>{label}</option>
+                      ))}
+                    </select>
+                  </label>
+                )}
               </div>
 
               {groupedCompanies.map((group) => (

@@ -80,7 +80,7 @@ async function api(url, options = {}) {
   }
 }
 
-export default function useQueuedCompanySearch() {
+export default function useQueuedCompanySearch({ resumeStoredSession = true } = {}) {
   const [open, setOpen] = useState(false);
   const [token, setToken] = useState("");
   const [status, setStatus] = useState(null);
@@ -249,6 +249,11 @@ export default function useQueuedCompanySearch() {
   }, [status, token]);
 
   useEffect(() => {
+    if (!resumeStoredSession) {
+      saveSession(null);
+      return undefined;
+    }
+
     // Deferred so React Strict Mode cleanup cannot leave a duplicate poller.
     const pending = window.setTimeout(() => {
       const saved = readSession();
@@ -263,7 +268,7 @@ export default function useQueuedCompanySearch() {
       activeRef.current = false;
       clearTimer();
     };
-  }, [clearTimer, resume]);
+  }, [clearTimer, resume, resumeStoredSession]);
 
   return { open, token, status, error, starting, start, stop, resume, close: stop, viewResults };
 }

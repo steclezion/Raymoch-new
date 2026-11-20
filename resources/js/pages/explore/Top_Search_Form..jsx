@@ -233,10 +233,15 @@ export default function TopSearchForm({
   setCity,
   industry,
   setIndustry,
+  ignoreStoredSearch = false,
+  initiallyCollapsed = false,
+  initiallySelectionsCollapsed = false,
 
   SelectedFiltersComponent: SelectedFiltersComponentProp,
 }) {
-  const queuedSearch = useQueuedCompanySearch();
+  const queuedSearch = useQueuedCompanySearch({
+    resumeStoredSession: !ignoreStoredSearch,
+  });
   const SelectedFiltersComponent =
     SelectedFiltersComponentProp || TopSearchSelectedFilters;
   const hasControlledFilters = [
@@ -314,8 +319,10 @@ export default function TopSearchForm({
 
   const [bootReady, setBootReady] = useState(false);
   const [searchValidationError, setSearchValidationError] = useState("");
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [showPreviousSelections, setShowPreviousSelections] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(initiallyCollapsed);
+  const [showPreviousSelections, setShowPreviousSelections] = useState(
+    !initiallySelectionsCollapsed
+  );
 
   const [loading, setLoading] = useState({
     regions: false,
@@ -470,7 +477,9 @@ export default function TopSearchForm({
       setLoadingKey("sectors", true);
 
       const [sessionRes, regionRes, sectorRes] = await Promise.all([
-        fetchJson("/search-session/current"),
+        ignoreStoredSearch
+          ? Promise.resolve({ data: {} })
+          : fetchJson("/search-session/current"),
         fetchJson("/api/regions"),
         fetchJson("/api/sectors"),
       ]);
@@ -779,7 +788,7 @@ export default function TopSearchForm({
             aria-controls="explore-search-selections-panel"
           >
             <span className="sf-selection-toggle-symbol" aria-hidden="true">+</span>
-            <span>Previous &amp; current search selections</span>
+            <span>EXPLORE SEARCH SELECTIONS</span>
             <span className="sf-selection-signal" aria-hidden="true" />
           </button>
         </div>

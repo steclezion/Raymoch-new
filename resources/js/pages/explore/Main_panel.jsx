@@ -304,6 +304,62 @@ export default function MainPanel({
   const [tooltipCache, setTooltipCache] = useState({});
   const [loadingTooltipKey, setLoadingTooltipKey] = useState("");
 
+  const openCompaniesFromCard = async (event, destination) => {
+    if (
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const csrfToken =
+      document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "";
+    const headers = {
+      Accept: "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+      ...(csrfToken ? { "X-CSRF-TOKEN": csrfToken } : {}),
+    };
+
+    let activeSearch = null;
+    try {
+      activeSearch = JSON.parse(
+        window.sessionStorage.getItem("raymoch.search.active") || "null"
+      );
+    } catch {
+      // Invalid browser state should never prevent the new card task.
+    }
+
+    window.sessionStorage.removeItem("raymoch.search.active");
+
+    const cleanupRequests = [
+      fetch("/search-session/current", {
+        method: "DELETE",
+        credentials: "same-origin",
+        headers,
+      }),
+    ];
+
+    if (activeSearch?.token) {
+      cleanupRequests.push(
+        fetch(`/api/main-search-engine/stop/${encodeURIComponent(activeSearch.token)}`, {
+          method: "POST",
+          credentials: "same-origin",
+          headers,
+        })
+      );
+    }
+
+    // Cleanup is best-effort; the selected card must still open if an old
+    // search has already expired or cannot be stopped.
+    await Promise.allSettled(cleanupRequests);
+    window.location.assign(destination);
+  };
+
   const showingIndustries = Boolean(
     selectedSector && String(selectedSector).trim() !== ""
   );
@@ -316,7 +372,7 @@ export default function MainPanel({
     ? `Showing industries grouped under ${
         selectedSectorObject?.title ?? selectedSectorObject?.name ?? "selected sector"
       }`
-    : "Showing all sectors just like the initial phase.";
+    : "";
 
   const sourceItems = useMemo(() => {
     return showingIndustries ? industries ?? [] : sectors ?? [];
@@ -398,7 +454,7 @@ export default function MainPanel({
       <style>{css}</style>
 
       <div className="h3sub">{panelTitle}</div>
-      <div className="subcopy">{panelSubtitle}</div>
+      {panelSubtitle && <div className="subcopy">{panelSubtitle}</div>}
 
       <div className="data-search-row">
         <TextField
@@ -426,6 +482,11 @@ export default function MainPanel({
               const tooltipKey = `${showingIndustries ? "industry" : "sector"}-${item.id}`;
               const stats = tooltipCache[tooltipKey];
               const isTooltipLoading = loadingTooltipKey === tooltipKey;
+              const companiesHref = showingIndustries
+                ? `/companies_selection?sector_id=${encodeURIComponent(
+                    selectedSector
+                  )}&industry_id=${encodeURIComponent(item.id)}&from=explore&invoker=main-panel`
+                : `/companies_selection?sector_id=${encodeURIComponent(item.id)}&from=explore&invoker=main-panel`;
 
               return (
                 <Tooltip
@@ -459,13 +520,8 @@ export default function MainPanel({
                 >
                   <a
                     className="card"
-                    href={
-                      showingIndustries
-                        ? `/companies?sector_id=${encodeURIComponent(
-                            selectedSector
-                          )}&industry_id=${encodeURIComponent(item.id)}&from=explore`
-                        : `/companies?sector_id=${encodeURIComponent(item.id)}&from=explore`
-                    }
+                    href={companiesHref}
+                    onClick={(event) => openCompaniesFromCard(event, companiesHref)}
                     onMouseEnter={() => fetchTooltipStats(item)}
                     onFocus={() => fetchTooltipStats(item)}
                   >

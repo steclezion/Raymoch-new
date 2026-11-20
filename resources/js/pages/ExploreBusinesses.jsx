@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { BriefcaseBusiness, Search } from "lucide-react";
 
 // Split components
 import TopSearchPanel from "../pages/explore/TopSearchPanel.jsx";
@@ -191,11 +190,6 @@ export default function ExploreBusinesses() {
     window.location.assign(`/companies?${p.toString()}`);
   };
 
-  const activeSectorName = selectedSectorObjects
-    .map((item) => item.title || item.name || item.label)
-    .filter(Boolean)
-    .join(", ");
-
   return (
     <ResponsiveController>
       <div className="dashboard-shell precisely-dashboard">
@@ -204,25 +198,9 @@ export default function ExploreBusinesses() {
       <main className="dashboard-main">
         <header className="dashboard-topbar">
           <div className="dashboard-heading">
-            <p>Company discovery workspace</p>
             <h1>Businesses</h1>
           </div>
 
-          <div className="topbar-actions">
-            <form className="topbar-search" action="/companies" role="search">
-              <Search size={17} aria-hidden="true" />
-              <label className="sr-only" htmlFor="topbar-company-search">
-                Search companies
-              </label>
-              <input
-                id="topbar-company-search"
-                name="q"
-                type="search"
-                placeholder="Search companies…"
-              />
-            </form>
-{null}
-          </div>
         </header>
 {/* 
         <section className="dashboard-hero" aria-labelledby="explore-title">
@@ -245,15 +223,7 @@ export default function ExploreBusinesses() {
             <BreadcrumbsNav />
           </section> */}
 
-          <section className="dashboard-panel workspace-panel search-workspace" aria-labelledby="filter-title">
-            <div className="panel-heading">
-              <div>
-                <span>Discovery filters</span>
-                <h2 id="filter-title">Find the right businesses</h2>
-              </div>
-              <p>Combine filters to narrow your results.</p>
-            </div>
-
+          <section className="dashboard-panel workspace-panel search-workspace" aria-label="Business search filters">
             <TopSearchPanel
               q={q}
               setQ={setQ}
@@ -288,24 +258,6 @@ export default function ExploreBusinesses() {
                 <h2 id="results-title">Explore results</h2>
               </div>
               <p>Browse sectors and available company profiles.</p>
-            </div>
-
-            <div className="sector-status" role="status" aria-live="polite">
-              <div className="sector-status-icon" aria-hidden="true">
-                <BriefcaseBusiness size={21} />
-              </div>
-              <div className="sector-status-copy">
-                <span className="sector-status-eyebrow">Current view</span>
-                <h3>{activeSectorName || "All Sectors"}</h3>
-                <p>
-                  {activeSectorName
-                    ? `Showing companies in ${activeSectorName}.`
-                    : "Showing all sectors just like the initial phase."}
-                </p>
-              </div>
-              <span className="sector-status-badge">
-                {activeSectorName ? "Filtered" : "All available"}
-              </span>
             </div>
 
             <MainPanel

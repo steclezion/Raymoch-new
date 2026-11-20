@@ -184,7 +184,7 @@ function groupByCountryAndSector(items) {
   });
 }
 
-export default function Companies() {
+export default function Companies({ launchInvoker = "", selectionCompanies = null }) {
   const ROUTES = useMemo(
     () => ({
       privacy: "/privacy",
@@ -223,9 +223,36 @@ export default function Companies() {
   const [progress, setProgress] = useState(10);
   const [error, setError] = useState("");
   const [fromParam, setFromParam] = useState("");
+  const [invoker, setInvoker] = useState(
+    () => (
+      launchInvoker ||
+      new URLSearchParams(window.location.search).get("invoker") ||
+      ""
+    ).toLowerCase()
+  );
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState(null);
+
+  useEffect(() => {
+    if (invoker !== "main-panel") return;
+
+    window.sessionStorage.removeItem("raymoch.search.active");
+    const csrfToken =
+      document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "";
+
+    fetch("/search-session/current", {
+      method: "DELETE",
+      credentials: "same-origin",
+      headers: {
+        Accept: "application/json",
+        "X-Requested-With": "XMLHttpRequest",
+        ...(csrfToken ? { "X-CSRF-TOKEN": csrfToken } : {}),
+      },
+    }).catch(() => {
+      // The card's new task is already isolated locally even if cleanup fails.
+    });
+  }, [invoker]);
 
   useEffect(() => {
     const qs = new URLSearchParams(window.location.search);
@@ -240,6 +267,9 @@ export default function Companies() {
     const pageParam = parseInt(qs.get("page") || "1", 10);
     const verifiedParam = qs.get("verification_status") || qs.get("verification");
     const from = (qs.get("from") || "").toLowerCase();
+    const requestedInvoker = (
+      launchInvoker || qs.get("invoker") || ""
+    ).toLowerCase();
 
     if (qParam) setQ(qParam);
     setRegionId(regionIdParam);
@@ -254,6 +284,18 @@ export default function Companies() {
     }
 
     setFromParam(from);
+    setInvoker(requestedInvoker);
+
+    // A taxonomy card always opens the full matching directory: geography and
+    // verification are intentionally unrestricted, and results are grouped by country.
+    if (requestedInvoker === "main-panel") {
+      setRegionId("");
+      setCountryId("");
+      setStateId("");
+      setCityId("");
+      setVerified(false);
+      setGroupBy("country");
+    }
 
     // Keep only canonical search parameters in the browser URL.
     const cleanParams = new URLSearchParams();
@@ -303,8 +345,10 @@ export default function Companies() {
         setLoading(true);
         setError("");
 
-        const js = await fetchCompanies({
+        const selectionMode = invoker === "main-panel";
+        const requestFilters = {
           page,
+          perPage: selectionMode ? 100 : undefined,
           q,
           sector,
           country,
@@ -315,7 +359,17 @@ export default function Companies() {
           sectorId,
           industryId,
           verified,
-        });
+        };
+        const js = selectionMode && Array.isArray(selectionCompanies)
+          ? {
+              data: {
+                data: selectionCompanies,
+                current_page: 1,
+                last_page: 1,
+                total: selectionCompanies.length,
+              },
+            }
+          : await fetchCompanies(requestFilters);
 
         if (cancelled) return;
 
@@ -332,11 +386,34 @@ export default function Companies() {
           payload = { current_page: page, last_page: 1, total: js.length };
         }
 
+        // A Main Panel card represents the whole selected taxonomy box. Load
+        // every API page so /companies_selection contains every matching
+        // company and can group the complete result by country.
+        if (selectionMode && Number(payload?.last_page || 1) > 1) {
+          const lastPage = Number(payload.last_page);
+          for (let nextPage = 2; nextPage <= lastPage; nextPage += 1) {
+            const nextResponse = await fetchCompanies({
+              ...requestFilters,
+              page: nextPage,
+            });
+            if (cancelled) return;
+
+            const nextPayload = nextResponse?.data;
+            if (Array.isArray(nextPayload?.data)) {
+              list.push(...nextPayload.data);
+            } else if (Array.isArray(nextPayload)) {
+              list.push(...nextPayload);
+            } else if (Array.isArray(nextResponse)) {
+              list.push(...nextResponse);
+            }
+          }
+        }
+
         const normalized = list.map(normalizeCompany);
 
         setCompanies(normalized);
-        setPage(payload.current_page || 1);
-        setTotalPages(payload.last_page || 1);
+        setPage(selectionMode ? 1 : (payload.current_page || 1));
+        setTotalPages(selectionMode ? 1 : (payload.last_page || 1));
         setTotal(payload.total || normalized.length || 0);
 
         // Write canonical search parameters only. Legacy `sector`, `country`,
@@ -379,7 +456,7 @@ export default function Companies() {
     return () => {
       cancelled = true;
     };
-  }, [page, q, sector, country, regionId, countryId, stateId, cityId, sectorId, industryId, verified, fromParam]);
+  }, [page, q, sector, country, regionId, countryId, stateId, cityId, sectorId, industryId, verified, fromParam, invoker, selectionCompanies]);
 
   const visibleCompanies = useMemo(() => {
     let list = companies;
@@ -488,10 +565,6 @@ export default function Companies() {
     setDialogOpen(true);
   };
 
-  const resultLabel = loading
-    ? "Loading companies"
-    : `${total.toLocaleString()} ${total === 1 ? "company" : "companies"}`;
-
   return (
     <div className="dashboard-shell companies-dashboard">
       <HorizontalNavigation activePath="/explore" />
@@ -529,19 +602,6 @@ export default function Companies() {
           </Breadcrumbs>
         </Box> */}
 
-        {/* <section className="dashboard-panel directory-summary" aria-label="Directory status">
-          <div>
-            <span className="summary-label">Current view</span>
-            <h2>{isAllInputsEmpty ? "All companies" : "Filtered companies"}</h2>
-            <p>
-              {isAllInputsEmpty
-                ? "Showing companies across all countries and sectors."
-                : "Showing companies that match your active filters."}
-            </p>
-          </div>
-          <span className="result-count" role="status" aria-live="polite">{resultLabel}</span>
-        </section> */}
-
         {error && (
           <Box sx={{ my: 1 }}>
             <Alert severity="error" variant="filled">
@@ -550,15 +610,7 @@ export default function Companies() {
           </Box>
         )}
 
-        <section className="dashboard-panel workspace-panel search-workspace" aria-labelledby="company-filters-title">
-          <div className="panel-heading">
-            <div>
-              <span>Directory filters</span>
-              <h2 id="company-filters-title">Refine your company search</h2>
-            </div>
-            <p>Use one or more filters to narrow the directory.</p>
-          </div>
-
+        <section className="dashboard-panel workspace-panel search-workspace" aria-label="Company search filters">
           <TopSearchForm
           q={q}
           setQ={(value) => {
@@ -599,6 +651,9 @@ export default function Companies() {
             setPage(1);
           }}
           industry={industryId || "all"}
+          ignoreStoredSearch={invoker === "main-panel"}
+          initiallyCollapsed={invoker === "main-panel"}
+          initiallySelectionsCollapsed={invoker === "main-panel"}
           setIndustry={(value) => {
             setIndustryId(value === "all" ? "" : String(value));
             setPage(1);
@@ -630,6 +685,7 @@ export default function Companies() {
           groupedCompanies={groupedCompanies}
           groupBy={groupBy}
           setGroupBy={setGroupBy}
+          lockCountryGrouping={invoker === "main-panel"}
           visibleCount={visibleCompanies.length}
           shouldGroupBySector={shouldGroupBySector}
           verified={verified}
