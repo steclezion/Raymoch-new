@@ -266,9 +266,6 @@ export default function FilterPanel({
         {/* BLUE HEADER */}
         <Box className="rmx-panel-head">
           <div className="title">SEARCH &amp; FILTERS</div>
-          <div className="sub">
-            Use filters below to open the company list with matching results.
-          </div>
 
           <div className="rmx-verified-pill" aria-label="Verified status">
             <span className="dot">

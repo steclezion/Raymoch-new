@@ -366,7 +366,7 @@ export default function MainPanel({
 
   const panelTitle = showingIndustries
     ? "Industries Under Selected Sector"
-    : "All Sectors";
+    : "";
 
   const panelSubtitle = showingIndustries
     ? `Showing industries grouped under ${
@@ -453,7 +453,7 @@ export default function MainPanel({
     <>
       <style>{css}</style>
 
-      <div className="h3sub">{panelTitle}</div>
+      {panelTitle && <div className="h3sub">{panelTitle}</div>}
       {panelSubtitle && <div className="subcopy">{panelSubtitle}</div>}
 
       <div className="data-search-row">

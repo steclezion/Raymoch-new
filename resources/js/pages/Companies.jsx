@@ -669,7 +669,6 @@ export default function Companies({ launchInvoker = "", selectionCompanies = nul
         <section className="dashboard-panel workspace-panel results-workspace" aria-labelledby="company-results-title">
           <div className="panel-heading">
             <div>
-              <span>Company directory</span>
               <h2 id="company-results-title">Browse profiles</h2>
             </div>
             <p>Open a company to review its complete profile.</p>

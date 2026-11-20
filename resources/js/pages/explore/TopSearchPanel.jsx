@@ -452,9 +452,6 @@ export default function TopSearchPanel({
           <div className="sf-topbar">
             <div>
               <div className="sf-title">SEARCH &amp; FILTERS</div>
-              <div className="sf-sub">
-                Use filters below to open the company list with matching results.
-              </div>
             </div>
 
             <div className={`sf-badge ${verified ? "on" : "off"}`}>

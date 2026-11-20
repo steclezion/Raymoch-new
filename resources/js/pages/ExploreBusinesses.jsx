@@ -254,10 +254,8 @@ export default function ExploreBusinesses() {
           <section className="dashboard-panel workspace-panel results-workspace" aria-labelledby="results-title">
             <div className="panel-heading">
               <div>
-                <span>Company directory</span>
-                <h2 id="results-title">Explore results</h2>
+                <h2 id="results-title">Explore sectors</h2>
               </div>
-              <p>Browse sectors and available company profiles.</p>
             </div>
 
             <MainPanel
