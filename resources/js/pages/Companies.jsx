@@ -704,6 +704,7 @@ export default function Companies({ launchInvoker = "", selectionCompanies = nul
           groupBy={groupBy}
           setGroupBy={setGroupBy}
           lockCountryGrouping={invoker === "main-panel"}
+          hideGroupingSummary={invoker === "main-panel"}
           visibleCount={visibleCompanies.length}
           shouldGroupBySector={shouldGroupBySector}
           verified={verified}

@@ -87,6 +87,7 @@ export default function MainLoadPanel({
   goPrev,
   goNext,
   lockCountryGrouping = false,
+  hideGroupingSummary = false,
 }) {
   return (
     <>
@@ -115,7 +116,7 @@ export default function MainLoadPanel({
             </Typography>
           ) : (
             <>
-              <div className="results-grouping-bar">
+              {!hideGroupingSummary && <div className="results-grouping-bar">
                 <div className="results-count" role="status" aria-live="polite">
                   <strong>{visibleCount.toLocaleString()}</strong>
                   <span>{visibleCount === 1 ? "company" : "companies"}</span>
@@ -144,7 +145,7 @@ export default function MainLoadPanel({
                     </select>
                   </label>
                 )}
-              </div>
+              </div>}
 
               {groupedCompanies.map((group) => (
                 <section className="company-group" key={`${groupBy}-${group.label}`}>
