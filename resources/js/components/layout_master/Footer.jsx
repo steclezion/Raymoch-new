@@ -95,7 +95,7 @@ export default function Footer({ routes = {} }) {
                                 aria-hidden="true"
                             >
                                 <img
-                                    src="/images/raymoch_logo_11_10-26.svg"
+                                    src="/images/raymoch_logo_11_21_2026.svg"
                                     alt=""
                                 />
                             </span>
