@@ -133,6 +133,7 @@
         "react-pdf": "^10.2.0",
         "react-router-dom": "^7.9.5",
         "react-select": "^5.10.2",
+        "react-sunburst-chart": "^1.0.1",
         "react-toastify": "^11.0.5",
         "read-cache": "^1.0.0",
         "readdirp": "^3.6.0",

@@ -14,6 +14,7 @@ use App\Http\Controllers\company_description_type_controller;
 use App\Http\Controllers\CompanyClassificationController;
 use App\Http\Controllers\CompanyInfosController;
 use App\Http\Controllers\CompanySelectionController;
+use App\Http\Controllers\CompanySelectionSearchController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ControlLayoutController;
 use App\Http\Controllers\ExploreController;
@@ -352,6 +353,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('/companies', 'pages.companies')->name('companies'); // main companies listing page // Static placeholders used in header/footer links (wire up later as you build them)
     Route::get('/companies_selection', [CompanySelectionController::class, 'index'])
         ->name('companies.selection');
+    Route::get('/companies_selection_search', [CompanySelectionSearchController::class, 'index'])
+        ->name('companies.selection.search');
+    Route::view('/company', 'pages.company')->name('company.details');
     Route::view('/services', 'pages.services')->name('services'); // temp → point to real page later
     Route::view('/partner-programs', 'pages.services.partner-programs')->name('partner-programs'); // partner programs page
     Route::view('/price-how-to-pay', 'pages.price_how_to_pay')->name('price.how.to.pay');

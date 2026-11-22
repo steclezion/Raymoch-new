@@ -289,6 +289,7 @@ mountPage("verification-root", () => import("./pages/Verification.jsx"));
 mountPage("explore-root", () => import("./pages/ExploreBusinesses.jsx"), {wrap: (page) => <BrowserRouter>{page}</BrowserRouter>});
 mountPage("explore-companies", () => import("./pages/Companies.jsx"));
 mountPage("companies-selection-root", () => import("./pages/CompaniesSelection.jsx"));
+mountPage("companies-selection-search-root", () => import("./pages/CompaniesSelectionSearch.jsx"));
 mountPage("matching-root", () => import("./pages/Matching.jsx"));
 
 mountPage(
