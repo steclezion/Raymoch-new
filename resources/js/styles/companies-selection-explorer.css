@@ -151,7 +151,7 @@
 .company-preview dt { display: inline-flex; align-items: center; gap: 7px; }
 .company-preview dt svg { width: 16px; height: 16px; color: #9e5317; }
 .company-preview dd { max-width: 52%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.company-preview .full-profile-button { min-height: 42px; margin-top: 0; }
+.company-preview .full-profile-button { width: 100%; min-height: 42px; margin-top: 0; border: 0; font: inherit; cursor: pointer; }
 
 @media (max-width: 760px) {
   .sunburst-view-options { grid-template-columns: repeat(2, minmax(0, 1fr)); border-radius: 20px; }

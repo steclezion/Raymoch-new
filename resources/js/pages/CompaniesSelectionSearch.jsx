@@ -3,6 +3,7 @@ import Sunburst from "react-sunburst-chart";
 import { BadgeCheck, BookOpen, Bookmark, BriefcaseBusiness, Building2, ChevronDown, CircleAlert, Coins, Cpu, ExternalLink, Factory, Globe2, GraduationCap, Hammer, HardHat, HeartPulse, Landmark, Layers3, Leaf, MapPin, Package, Plane, Search, ShieldCheck, ShoppingBag, Sprout, Store, Sun, Truck, Users, Wheat, Wifi, Zap } from "lucide-react";
 import HorizontalNavigation from "../components/HorizontalNavigation.jsx";
 import Footer from "../components/layout_master/Footer.jsx";
+import CompanyDetailDialog from "../components/companies/CompanyDetailDialog.jsx";
 import "../styles/companies-selection-search.css";
 import "../styles/companies-selection-explorer.css";
 
@@ -61,6 +62,36 @@ function formatRevenue(company) {
   return Number.isFinite(numeric) ? `$${numeric.toLocaleString()}` : String(revenue);
 }
 
+function normalizeDialogCompany(company) {
+  if (!company) return null;
+  const verificationStatus = clean(company.VerificationStatus, "").toLowerCase();
+  return {
+    ...company,
+    id: company.co_main_ref_id ?? company.id ?? null,
+    name: company.CompanyName ?? company.name ?? "Unnamed company",
+    sector: company.sector_title ?? company.sector ?? "",
+    sector_id: company.sector_id ?? null,
+    industry: company.industry_name ?? company.industry ?? "",
+    industry_id: company.industry_id ?? null,
+    region: company.region_name ?? company.region ?? "",
+    region_id: company.region_id ?? null,
+    country: company.country_name ?? company.country ?? "",
+    country_id: company.country_id ?? null,
+    state: company.state_name ?? company.state ?? "",
+    state_id: company.state_id ?? null,
+    city: company.city_name ?? company.city ?? "",
+    city_id: company.city_id ?? null,
+    stage: company.Stage ?? company.stage ?? "",
+    verified: /\bverified\b/.test(verificationStatus),
+    verification_status: verificationStatus,
+    cti: {
+      tier: company.CTI_Tier ?? company.cti?.tier ?? "",
+      score: company.CTI_Score ?? company.cti?.score ?? "",
+    },
+    logo_url: company.Logo ?? company.logo_url ?? null,
+  };
+}
+
 function distribution(items, field, fallback) {
   const counts = new Map();
   items.forEach((item) => {
@@ -83,8 +114,10 @@ export default function CompaniesSelectionSearch({ bootData }) {
   const [viewMode, setViewMode] = useState("country");
   const [analysisCollapsed, setAnalysisCollapsed] = useState(false);
   const [stageCollapsed, setStageCollapsed] = useState(false);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const sunburstWrapRef = useRef(null);
   const hoveredSliceRef = useRef(null);
+  const dialogCompany = useMemo(() => normalizeDialogCompany(selectedCompany), [selectedCompany]);
 
   const countryCompanies = useMemo(() => companies.filter((company) => clean(company.country_name, "Unspecified country") === selectedCountry), [companies, selectedCountry]);
   const visibleCompanies = useMemo(() => {
@@ -278,12 +311,13 @@ export default function CompaniesSelectionSearch({ bootData }) {
               <div className="preview-pills"><b className="stage-pill">{clean(selectedCompany.Stage, "Stage unavailable")}</b><b className={`cti-pill ${ctiClass(selectedCompany.CTI_Tier)}`}>CTI: {clean(selectedCompany.CTI_Tier, "Unrated")}</b></div>
               <p className="preview-description">{clean(selectedCompany.business_description || selectedCompany.Description || selectedCompany.products_or_services, "Open the full profile to review this company's complete information.")}</p>
               <dl><div><dt><Users/> Employees</dt><dd>{clean(selectedCompany.number_of_employees || selectedCompany.employee_count, "Not disclosed")}</dd></div><div><dt><Coins/> Revenue</dt><dd>{formatRevenue(selectedCompany)}</dd></div><div><dt><Globe2/> Markets</dt><dd>{clean(selectedCompany.market_scope || selectedCompany.country_name, "Not disclosed")}</dd></div></dl>
-              <a className="full-profile-button" href={`/company?id=${encodeURIComponent(selectedCompany.co_main_ref_id)}`}>View Full Profile <ExternalLink/></a>
+              <button className="full-profile-button" type="button" onClick={() => setDetailDialogOpen(true)}>View Full Profile <ExternalLink/></button>
             </> : <div className="preview-empty"><Building2/><p>Select a company to view its profile.</p></div>}
           </aside>
         </div>
       </section>
     </main>
     <Footer />
+    <CompanyDetailDialog open={detailDialogOpen} onClose={() => setDetailDialogOpen(false)} company={dialogCompany} />
   </div>;
 }
