@@ -1,16 +1,12 @@
 import React from "react";
-import Companies from "./Companies.jsx";
+import CompaniesSelectionSearch from "./CompaniesSelectionSearch.jsx";
 
 /**
  * Dedicated destination for sector and industry cards from /explore.
- * It reuses the complete Companies directory while isolating the card task
- * from searches previously submitted to /companies.
+ * It presents the selected sector as an interactive business explorer.
  */
 export default function CompaniesSelection() {
   return (
-    <Companies
-      launchInvoker="main-panel"
-      selectionCompanies={window.COMPANY_SELECTION_BOOT?.companies || []}
-    />
+    <CompaniesSelectionSearch bootData={window.COMPANY_SELECTION_BOOT || {}} />
   );
 }

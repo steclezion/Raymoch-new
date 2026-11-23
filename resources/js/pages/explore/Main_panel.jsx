@@ -483,10 +483,10 @@ export default function MainPanel({
               const stats = tooltipCache[tooltipKey];
               const isTooltipLoading = loadingTooltipKey === tooltipKey;
               const companiesHref = showingIndustries
-                ? `/companies_selection_search?sector_id=${encodeURIComponent(
+                ? `/companies_selection?sector_id=${encodeURIComponent(
                     selectedSector
                   )}&industry_id=${encodeURIComponent(item.id)}&from=explore&invoker=main-panel`
-                : `/companies_selection_search?sector_id=${encodeURIComponent(item.id)}&from=explore&invoker=main-panel`;
+                : `/companies_selection?sector_id=${encodeURIComponent(item.id)}&from=explore&invoker=main-panel`;
 
               return (
                 <Tooltip

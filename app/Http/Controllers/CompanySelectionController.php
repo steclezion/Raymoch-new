@@ -29,6 +29,16 @@ class CompanySelectionController extends Controller
             ->orderBy('CompanyName')
             ->get();
 
+        $sector = DB::table('sectors')
+            ->where('id', $filters['sector_id'])
+            ->first(['id', 'title', 'icon', 'description']);
+        abort_unless($sector, 404);
+
+        $sectors = DB::table('sectors')
+            ->distinct()
+            ->orderBy('title')
+            ->get(['id', 'title', 'icon']);
+
         return view('pages.companies_selection', [
             'selectionBoot' => [
                 'sector_id' => (string) $filters['sector_id'],
@@ -36,6 +46,8 @@ class CompanySelectionController extends Controller
                     ? (string) $filters['industry_id']
                     : '',
                 'companies' => $companies,
+                'sector' => $sector,
+                'sectors' => $sectors,
                 'total' => $companies->count(),
             ],
         ]);

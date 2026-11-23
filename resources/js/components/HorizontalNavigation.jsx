@@ -4,6 +4,7 @@ import {
   Building2,
   Camera,
   ChevronDown,
+  ChevronRight,
   Edit3,
   Globe2,
   Handshake,
@@ -95,6 +96,47 @@ function normalizePath(path) {
   return normalized || "/";
 }
 
+const BREADCRUMB_LABELS = {
+  dashboard: "Dashboard",
+  explore: "Businesses",
+  matching: "Matching",
+  investors: "Investors",
+  verification: "Verification",
+  insights: "Market Insights",
+  insight: "Market Insights",
+  notifications: "Notifications",
+  settings: "Settings",
+  search: "Search",
+  profile: "Profile",
+  security: "Security",
+  authenticator: "Authenticator",
+  overview: "Overview",
+  services: "Services",
+  incentives: "Policy & Incentives",
+  whitespace: "Whitespace Map",
+};
+
+function readableBreadcrumbLabel(segment) {
+  return BREADCRUMB_LABELS[segment] || segment
+    .replace(/[-_]+/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function breadcrumbsForPath(path) {
+  const segments = normalizePath(path).split("/").filter(Boolean);
+  if (segments.length === 0 || (segments.length === 1 && segments[0] === "home")) {
+    return [{ label: "Home" }];
+  }
+  const items = [{ label: "Home", href: "/home" }];
+
+  segments.forEach((segment, index) => {
+    const href = `/${segments.slice(0, index + 1).join("/")}`;
+    items.push({ label: readableBreadcrumbLabel(segment), href: index < segments.length - 1 ? href : undefined });
+  });
+
+  return items;
+}
+
 const PAGE_TITLES = {
   "/": "Home",
   "/home": "Home",
@@ -178,6 +220,7 @@ function formatTrialRemaining(expiresAt) {
 
 export default function HorizontalNavigation({
   activePath,
+  breadcrumbs,
   isAuthed: isAuthedProp,
   authLoading: authLoadingProp,
   authUser: authUserProp,
@@ -249,6 +292,12 @@ export default function HorizontalNavigation({
   const currentPath = normalizePath(
     activePath || (typeof window !== "undefined" ? window.location.pathname : "/home"),
   );
+  const browserPath = normalizePath(
+    typeof window !== "undefined" ? window.location.pathname : currentPath,
+  );
+  const breadcrumbItems = Array.isArray(breadcrumbs) && breadcrumbs.length
+    ? breadcrumbs
+    : breadcrumbsForPath(browserPath);
   const dashboardActive =
     currentPath === "/dashboard" || currentPath.startsWith("/dashboard/");
   const safeRoutes = {
@@ -931,6 +980,30 @@ export default function HorizontalNavigation({
           </div>
         </div>
       </header>
+
+      <nav className="ray-nav__breadcrumbs" aria-label="Breadcrumb">
+        <ol>
+          {breadcrumbItems.map((item, index) => {
+            const isCurrent = index === breadcrumbItems.length - 1;
+            return (
+              <li key={`${item.label}-${index}`}>
+                {index > 0 ? <ChevronRight aria-hidden="true" /> : null}
+                {item.href && !isCurrent ? (
+                  <a href={item.href}>
+                    {index === 0 ? <Home aria-hidden="true" /> : null}
+                    <span>{item.label}</span>
+                  </a>
+                ) : (
+                  <span aria-current={isCurrent ? "page" : undefined}>
+                    {index === 0 ? <Home aria-hidden="true" /> : null}
+                    {item.label}
+                  </span>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+      </nav>
 
       {mobileOpen ? (
         <button
