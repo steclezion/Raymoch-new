@@ -17,16 +17,18 @@ class CompanySelectionController extends Controller
             'industry_id' => ['nullable', 'integer', 'min:1'],
         ]);
 
-        $query = DB::table(self::BUSINESS_SEARCH_VIEW)
-            ->where('sector_id', $filters['sector_id']);
+        $query = DB::table(self::BUSINESS_SEARCH_VIEW . ' as business_search')
+            ->join('stages', 'business_search.Stage', '=', 'stages.id')
+            ->select('business_search.*', 'stages.name as Stage')
+            ->where('business_search.sector_id', $filters['sector_id']);
 
         if (! empty($filters['industry_id'])) {
-            $query->where('industry_id', $filters['industry_id']);
+            $query->where('business_search.industry_id', $filters['industry_id']);
         }
 
         $companies = $query
-            ->orderBy('country_name')
-            ->orderBy('CompanyName')
+            ->orderBy('business_search.country_name')
+            ->orderBy('business_search.CompanyName')
             ->get();
 
         $sector = DB::table('sectors')

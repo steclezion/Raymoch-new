@@ -20,10 +20,13 @@ class CompanySelectionSearchController extends Controller
         $sector = DB::table('sectors')->where('id', $filters['sector_id'])->first(['id', 'title', 'icon', 'description']);
         abort_unless($sector, 404);
 
-        $query = DB::table(self::SEARCH_VIEW)->where('sector_id', $filters['sector_id']);
-        if (! empty($filters['industry_id'])) $query->where('industry_id', $filters['industry_id']);
+        $query = DB::table(self::SEARCH_VIEW . ' as business_search')
+            ->join('stages', 'business_search.Stage', '=', 'stages.id')
+            ->select('business_search.*', 'stages.name as Stage')
+            ->where('business_search.sector_id', $filters['sector_id']);
+        if (! empty($filters['industry_id'])) $query->where('business_search.industry_id', $filters['industry_id']);
 
-        $companies = $query->orderBy('country_name')->orderBy('CompanyName')->get();
+        $companies = $query->orderBy('business_search.country_name')->orderBy('business_search.CompanyName')->get();
         $sectors = DB::table('sectors')->orderBy('title')->get(['id', 'title', 'icon']);
 
         return view('pages.companies_selection_search', ['selectionSearchBoot' => [
