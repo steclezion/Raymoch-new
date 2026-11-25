@@ -221,6 +221,7 @@ function formatTrialRemaining(expiresAt) {
 export default function HorizontalNavigation({
   activePath,
   breadcrumbs,
+  showBreadcrumbs = true,
   isAuthed: isAuthedProp,
   authLoading: authLoadingProp,
   authUser: authUserProp,
@@ -981,7 +982,7 @@ export default function HorizontalNavigation({
         </div>
       </header>
 
-      <nav className="ray-nav__breadcrumbs" aria-label="Breadcrumb">
+      {showBreadcrumbs && <nav className="ray-nav__breadcrumbs" aria-label="Breadcrumb">
         <ol>
           {breadcrumbItems.map((item, index) => {
             const isCurrent = index === breadcrumbItems.length - 1;
@@ -1003,7 +1004,7 @@ export default function HorizontalNavigation({
             );
           })}
         </ol>
-      </nav>
+      </nav>}
 
       {mobileOpen ? (
         <button

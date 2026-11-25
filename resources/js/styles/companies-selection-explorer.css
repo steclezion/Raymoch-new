@@ -42,6 +42,10 @@
 }
 
 .atlas-ring-map > svg { display: block; width: 100%; height: auto; }
+.atlas-companies .atlas-company-name {
+  color: #382116;
+  -webkit-text-fill-color: currentColor;
+}
 .atlas-ring-map path[role="button"] { cursor: pointer; }
 .atlas-inspect-control, .atlas-inspect-hint { display: none; }
 .atlas-ring-map.is-inspecting { touch-action: none; user-select: none; }

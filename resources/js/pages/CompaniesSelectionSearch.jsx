@@ -177,15 +177,8 @@ export default function CompaniesSelectionSearch({ bootData }) {
   const navigation = [{ id: "atlas", label: "Economic Atlas", icon: Globe2 }, { id: "industries", label: "Industries", icon: Layers3 }, { id: "companies", label: "Companies", icon: Building2 }, { id: "analysis", label: "Analysis", icon: BarChart3 }];
 
   return <div className="atlas-page">
-    <HorizontalNavigation activePath="/explore" />
+    <HorizontalNavigation activePath="/explore" showBreadcrumbs={false} />
     <main className="atlas-shell">
-      <header className="atlas-hero">
-        <div className="atlas-heading"><span>Business Discovery</span><h1>Economic Atlas</h1></div>
-        <p>Explore Africa’s businesses by sector, industry, and company.<br />Discover opportunities, assess trust, and make informed connections.</p>
-        <div className="atlas-stats">
-          <article><Building2 /><strong>{companies.length.toLocaleString()}</strong><span>Businesses</span></article><article><Layers3 /><strong>{industries.length}</strong><span>Industries</span></article><article><ShieldCheck /><strong>{tiers.length}</strong><span>Trust tiers</span></article><article><Layers3 /><strong>{stages.length}</strong><span>Stages</span></article>
-        </div>
-      </header>
       <section className="atlas-workspace">
         <aside className="atlas-rail">
           <details className="atlas-rail-sections" open>
