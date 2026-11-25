@@ -106,6 +106,8 @@ export default function CompaniesSelectionSearch({ bootData }) {
     const bounds = chart.getBoundingClientRect();
     setTooltip({
       label: target.dataset.orbitCaption,
+      action: target.dataset.orbitAction,
+      value: target.dataset.orbitValue,
       x: (event.clientX - bounds.left) / bounds.width * 100,
       y: (event.clientY - bounds.top) / bounds.height * 100,
     });
@@ -153,6 +155,24 @@ export default function CompaniesSelectionSearch({ bootData }) {
     }
   };
   const openCompany = (company) => { setSelectedCompany(company); setDialogOpen(true); };
+  const selectCountry = (country) => {
+    setSelectedCountry((current) => current === country ? "" : country);
+    setQuery("");
+  };
+  const selectInspectedSlice = () => {
+    if (!tooltip?.action) return;
+    const { action, value } = tooltip;
+    setInspectSlices(false);
+    setTooltip(null);
+
+    if (action === "sector") changeSector(value);
+    if (action === "country") selectCountry(value);
+    if (action === "company") {
+      const [countryIndex, companyIndex] = value.split(":").map(Number);
+      const company = countryGroups[countryIndex]?.[1][companyIndex];
+      if (company) openCompany(company);
+    }
+  };
   const toggleSaved = (id) => setSaved((current) => { const next = new Set(current); next.has(id) ? next.delete(id) : next.add(id); return next; });
   const navigation = [{ id: "atlas", label: "Economic Atlas", icon: Globe2 }, { id: "industries", label: "Industries", icon: Layers3 }, { id: "companies", label: "Companies", icon: Building2 }, { id: "analysis", label: "Analysis", icon: BarChart3 }];
 
@@ -184,7 +204,15 @@ export default function CompaniesSelectionSearch({ bootData }) {
             }}>
             {inspectSlices ? "Done inspecting" : "Inspect slices"}
           </button>
-          {inspectSlices && <p className="atlas-inspect-hint">Touch or drag across the chart to preview a slice.</p>}
+          {inspectSlices && (
+            <>
+              <button className="atlas-inspect-control" type="button" disabled={!tooltip?.action}
+                onClick={selectInspectedSlice}>
+                Select slice
+              </button>
+              <p className="atlas-inspect-hint">Touch or drag to preview, then tap Select slice.</p>
+            </>
+          )}
           <div className={`atlas-ring-map${inspectSlices ? " is-inspecting" : ""}`}
             onPointerDown={(event) => {
               if (!inspectSlices || !event.isPrimary || event.button !== 0) return;
@@ -210,6 +238,7 @@ export default function CompaniesSelectionSearch({ bootData }) {
                   <g key={item.id}>
                     <OrbitSlice inner={88} outer={153} start={start} end={end}
                       fill={active ? "#ffc44b" : "#efd6ad"} label={item.title} aria-pressed={active}
+                      data-orbit-action="sector" data-orbit-value={item.id}
                       onClick={() => changeSector(item.id)} onTooltip={showHoverTooltip}
                     />
                     <text className="atlas-sector-ring-icon" aria-hidden="true"
@@ -229,6 +258,7 @@ export default function CompaniesSelectionSearch({ bootData }) {
                     end={(index + (companyIndex + 1) / businesses.length) / countryGroups.length}
                     fill={["#352015", "#42271b", "#4d2e20", "#563728"][companyIndex % 4]}
                     label={clean(company.CompanyName, "Unnamed company")} onClick={() => openCompany(company)}
+                    data-orbit-action="company" data-orbit-value={`${index}:${companyIndex}`}
                     onTooltip={showHoverTooltip}
                   />
                 ))
@@ -239,11 +269,9 @@ export default function CompaniesSelectionSearch({ bootData }) {
                   fill={COLORS[4 + index % 4]}
                   label={`${country} · ${businesses.length} ${businesses.length === 1 ? "company" : "companies"}`}
                   aria-pressed={selectedCountry === country}
+                  data-orbit-action="country" data-orbit-value={country}
                   onTooltip={showHoverTooltip}
-                  onClick={() => {
-                    setSelectedCountry((current) => current === country ? "" : country);
-                    setQuery("");
-                  }}
+                  onClick={() => selectCountry(country)}
                 />
               ))}
             </svg>
