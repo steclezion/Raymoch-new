@@ -46,6 +46,64 @@
   color: #382116;
   -webkit-text-fill-color: currentColor;
 }
+.atlas-companies > header { grid-template-columns: minmax(0, 1fr) auto auto; }
+.atlas-companies > header h2 { overflow-wrap: anywhere; }
+.atlas-filter-toggle {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid #e4cdb3;
+  border-radius: 10px;
+  background: #fffaf2;
+  color: #382116;
+  cursor: pointer;
+}
+.atlas-filter-toggle[aria-expanded="true"] { background: #382116; color: #fffaf2; }
+.atlas-filter-toggle svg { width: 19px; height: 19px; }
+.atlas-filter-toggle span {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  padding: 1px 4px;
+  border-radius: 10px;
+  background: #ecb34f;
+  color: #382116;
+  font-size: .65rem;
+}
+.atlas-company-filters:not([hidden]) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 120px), 1fr));
+  align-items: end;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid #eadccc;
+}
+.atlas-company-filters label {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  font-size: .82rem;
+  font-weight: 700;
+}
+.atlas-company-filters select,
+.atlas-company-filters button {
+  min-width: 0;
+  min-height: 38px;
+  padding: 4px 8px;
+  border: 1px solid #e4cdb3;
+  border-radius: 8px;
+  background: #fffaf2;
+  color: #382116;
+}
+.atlas-company-filters button { cursor: pointer; }
+.atlas-company-filters button:disabled { opacity: .55; cursor: default; }
+@media (max-width: 480px) {
+  .atlas-companies input:focus,
+  .atlas-companies input:not(:placeholder-shown) { width: 96px; }
+}
 .atlas-ring-map path[role="button"] { cursor: pointer; }
 .atlas-inspect-control, .atlas-inspect-hint { display: none; }
 .atlas-ring-map.is-inspecting { touch-action: none; user-select: none; }
