@@ -27,6 +27,19 @@ function orbitSlice(inner, outer, start, end) {
 }
 
 function OrbitSlice({ inner, outer, start, end, fill, label, onClick, onTooltip, ...props }) {
+  const showTooltip = (event) => {
+    let [x, y] = orbitPoint((inner + outer) / 2, (start + end) / 2)
+      .split(" ").map((coordinate) => Number(coordinate) / 6.3);
+
+    if (event.type === "mouseenter") {
+      const bounds = event.currentTarget.ownerSVGElement.getBoundingClientRect();
+      x = (event.clientX - bounds.left) / bounds.width * 100;
+      y = (event.clientY - bounds.top) / bounds.height * 100;
+    }
+
+    onTooltip({ label, x, y });
+  };
+
   return (
     <path
       d={orbitSlice(inner, outer, start, end)}
@@ -34,11 +47,12 @@ function OrbitSlice({ inner, outer, start, end, fill, label, onClick, onTooltip,
       role="button"
       tabIndex={0}
       aria-label={label}
+      data-orbit-caption={label}
       onClick={onClick}
-      onMouseEnter={() => onTooltip(label)}
-      onMouseLeave={() => onTooltip("")}
-      onFocus={() => onTooltip(label)}
-      onBlur={() => onTooltip("")}
+      onMouseEnter={showTooltip}
+      onMouseLeave={() => onTooltip(null)}
+      onFocus={showTooltip}
+      onBlur={() => onTooltip(null)}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
@@ -75,7 +89,27 @@ export default function CompaniesSelectionSearch({ bootData }) {
   const [activeView, setActiveView] = useState("industry");
   const [query, setQuery] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("");
-  const [tooltip, setTooltip] = useState("");
+  const [tooltip, setTooltip] = useState(null);
+  const [inspectSlices, setInspectSlices] = useState(false);
+  const showHoverTooltip = (caption) => {
+    if (!inspectSlices) setTooltip(caption);
+  };
+  const inspectAtPointer = (event) => {
+    const chart = event.currentTarget;
+    const target = document.elementFromPoint(event.clientX, event.clientY)
+      ?.closest("[data-orbit-caption]");
+    if (!target || !chart.contains(target)) {
+      setTooltip(null);
+      return;
+    }
+
+    const bounds = chart.getBoundingClientRect();
+    setTooltip({
+      label: target.dataset.orbitCaption,
+      x: (event.clientX - bounds.left) / bounds.width * 100,
+      y: (event.clientY - bounds.top) / bounds.height * 100,
+    });
+  };
   const [selectedCompany, setSelectedCompany] = useState(companies[0] || null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saved, setSaved] = useState(() => new Set());
@@ -143,7 +177,29 @@ export default function CompaniesSelectionSearch({ bootData }) {
           </details>
         </aside>
         <section className="atlas-orbit" aria-label={`${sectorName} business map: sectors, countries, companies`}>
-          <div className="atlas-ring-map">
+          <button className="atlas-inspect-control" type="button" aria-pressed={inspectSlices}
+            onClick={() => {
+              setInspectSlices((current) => !current);
+              setTooltip(null);
+            }}>
+            {inspectSlices ? "Done inspecting" : "Inspect slices"}
+          </button>
+          {inspectSlices && <p className="atlas-inspect-hint">Touch or drag across the chart to preview a slice.</p>}
+          <div className={`atlas-ring-map${inspectSlices ? " is-inspecting" : ""}`}
+            onPointerDown={(event) => {
+              if (!inspectSlices || !event.isPrimary || event.button !== 0) return;
+              event.currentTarget.setPointerCapture(event.pointerId);
+              inspectAtPointer(event);
+            }}
+            onPointerMove={(event) => {
+              if (inspectSlices && event.currentTarget.hasPointerCapture(event.pointerId)) {
+                inspectAtPointer(event);
+              }
+            }}
+            onPointerCancel={() => { if (inspectSlices) setTooltip(null); }}
+            onClickCapture={(event) => {
+              if (inspectSlices && event.detail > 0) event.stopPropagation();
+            }}>
             <svg viewBox="0 0 630 630" aria-label="Business rings">
               <circle cx="315" cy="315" r="309" fill="#f4e3c9" />
               {distinctSectors.map((item, index) => {
@@ -154,7 +210,7 @@ export default function CompaniesSelectionSearch({ bootData }) {
                   <g key={item.id}>
                     <OrbitSlice inner={88} outer={153} start={start} end={end}
                       fill={active ? "#ffc44b" : "#efd6ad"} label={item.title} aria-pressed={active}
-                      onClick={() => changeSector(item.id)} onTooltip={setTooltip}
+                      onClick={() => changeSector(item.id)} onTooltip={showHoverTooltip}
                     />
                     <text className="atlas-sector-ring-icon" aria-hidden="true"
                       transform={`translate(${orbitPoint(121, (start + end) / 2)})`}
@@ -173,7 +229,7 @@ export default function CompaniesSelectionSearch({ bootData }) {
                     end={(index + (companyIndex + 1) / businesses.length) / countryGroups.length}
                     fill={["#352015", "#42271b", "#4d2e20", "#563728"][companyIndex % 4]}
                     label={clean(company.CompanyName, "Unnamed company")} onClick={() => openCompany(company)}
-                    onTooltip={setTooltip}
+                    onTooltip={showHoverTooltip}
                   />
                 ))
               )}
@@ -183,7 +239,7 @@ export default function CompaniesSelectionSearch({ bootData }) {
                   fill={COLORS[4 + index % 4]}
                   label={`${country} · ${businesses.length} ${businesses.length === 1 ? "company" : "companies"}`}
                   aria-pressed={selectedCountry === country}
-                  onTooltip={setTooltip}
+                  onTooltip={showHoverTooltip}
                   onClick={() => {
                     setSelectedCountry((current) => current === country ? "" : country);
                     setQuery("");
@@ -191,14 +247,21 @@ export default function CompaniesSelectionSearch({ bootData }) {
                 />
               ))}
             </svg>
-            <div className="atlas-orbit-center" onMouseEnter={() => setTooltip(sectorName)} onMouseLeave={() => setTooltip("")}>
+            <div className="atlas-orbit-center" data-orbit-caption={sectorName}
+              onMouseEnter={() => showHoverTooltip({ label: sectorName, x: 50, y: 36 })}
+              onMouseLeave={() => showHoverTooltip(null)}>
               <span className="atlas-center-icon" aria-hidden="true">{clean(sector.icon, "🏢")}</span>
               <strong>{sectorName}</strong>
             </div>
             {tooltip && (
-              <div className="atlas-orbit-tooltip" role="tooltip">
-                {tooltip}
+              <div className="atlas-orbit-tooltip" role="tooltip"
+                style={{ left: `${tooltip.x}%`, top: `${tooltip.y}%`, "--tooltip-shift": `${-tooltip.x}%` }}>
+                {tooltip.label}
               </div>
+            )}
+            {inspectSlices && tooltip && (
+              <span className="atlas-inspect-pointer" aria-hidden="true"
+                style={{ left: `${tooltip.x}%`, top: `${tooltip.y}%` }} />
             )}
           </div>
         </section>
