@@ -83,12 +83,10 @@ export default function CompaniesSelectionSearch({ bootData }) {
   const sectors = boot.sectors || [];
   const companies = boot.companies || [];
   const sectorName = clean(sector.title, "Business Sector");
-  const industries = useMemo(() => distribute(companies, (c) => c.industry_name, "Other"), [companies]);
   const tiers = useMemo(() => distribute(companies, (c) => c.CTI_Tier, "Not tiered"), [companies]);
   const stages = useMemo(() => distribute(companies, (c) => c.Stage, "Not specified"), [companies]);
-  const [activeView, setActiveView] = useState("industry");
+  const [activeView, setActiveView] = useState("tier");
   const [query, setQuery] = useState("");
-  const [selectedIndustry, setSelectedIndustry] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("");
   const [tooltip, setTooltip] = useState(null);
   const [inspectSlices, setInspectSlices] = useState(false);
@@ -121,18 +119,15 @@ export default function CompaniesSelectionSearch({ bootData }) {
     return companies.filter((company) => clean(company.country_name, "Unspecified country") === selectedCountry);
   }, [companies, selectedCountry]);
   const visibleCompanies = useMemo(() => {
-    if (selectedIndustry) {
-      return countryCompanies.filter((company) => clean(company.industry_name, "Other") === selectedIndustry);
-    }
     const term = query.trim().toLowerCase();
     if (!term) return countryCompanies;
     return countryCompanies.filter((company) =>
       [company.CompanyName, company.industry_name, company.country_name]
         .some((value) => clean(value).toLowerCase().includes(term))
     );
-  }, [countryCompanies, query, selectedIndustry]);
-  const distribution = activeView === "tier" ? tiers : activeView === "stage" ? stages : industries;
-  const distributionTitle = activeView === "tier" ? "Trust Tier Distribution" : activeView === "stage" ? "Stage Distribution" : "Industry Distribution";
+  }, [countryCompanies, query]);
+  const distribution = activeView === "tier" ? tiers : stages;
+  const distributionTitle = activeView === "tier" ? "Trust Tier Distribution" : "Stage Distribution";
   const maxDistribution = Math.max(1, ...distribution.map(([, count]) => count));
   const countryGroups = useMemo(() => {
     const groups = new Map();
@@ -162,7 +157,6 @@ export default function CompaniesSelectionSearch({ bootData }) {
   const selectCountry = (country) => {
     setSelectedCountry((current) => current === country ? "" : country);
     setQuery("");
-    setSelectedIndustry("");
   };
   const selectInspectedSlice = () => {
     if (!tooltip?.action) return;
@@ -179,9 +173,6 @@ export default function CompaniesSelectionSearch({ bootData }) {
     }
   };
   const toggleSaved = (id) => setSaved((current) => { const next = new Set(current); next.has(id) ? next.delete(id) : next.add(id); return next; });
-  const scrollToPanel = (selector) => {
-    document.querySelector(selector)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  };
 
   return <div className="atlas-page">
     <HorizontalNavigation activePath="/explore" showBreadcrumbs={false} />
@@ -191,49 +182,6 @@ export default function CompaniesSelectionSearch({ bootData }) {
         <div><small>Sector</small><h1>{sectorName}</h1></div>
       </header>
       <section className="atlas-workspace">
-        <aside className="atlas-rail">
-          <nav className="atlas-sidebar-menus" aria-label="Business explorer sections">
-            <details>
-              <summary><Layers3 aria-hidden="true" />Industries</summary>
-              <ul>
-                {industries.map(([industry]) => (
-                  <li key={industry}>
-                    <button type="button" onClick={() => {
-                      setSelectedIndustry(industry);
-                      setQuery(industry);
-                      scrollToPanel(".atlas-companies");
-                    }}>{industry}</button>
-                  </li>
-                ))}
-              </ul>
-            </details>
-            <details>
-              <summary><Building2 aria-hidden="true" />Companies</summary>
-              <ul>
-                {countryCompanies.map((company, index) => (
-                  <li key={`${companyId(company)}-${index}`}>
-                    <button type="button" onClick={() => openCompany(company)}>
-                      {clean(company.CompanyName, "Unnamed company")}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </details>
-            <details>
-              <summary><BarChart3 aria-hidden="true" />Analysis</summary>
-              <ul>
-                {[["industry", "Industry distribution"], ["tier", "Trust tier distribution"], ["stage", "Stage distribution"]].map(([id, label]) => (
-                  <li key={id}>
-                    <button type="button" onClick={() => {
-                      setActiveView(id);
-                      scrollToPanel(".atlas-distribution");
-                    }}>{label}</button>
-                  </li>
-                ))}
-              </ul>
-            </details>
-          </nav>
-        </aside>
         <section className="atlas-orbit" aria-label={`${sectorName} business map: sectors, countries, companies`}>
           <button className="atlas-inspect-control" type="button" aria-pressed={inspectSlices}
             onClick={() => {
@@ -310,7 +258,6 @@ export default function CompaniesSelectionSearch({ bootData }) {
             <div className="atlas-orbit-center" data-orbit-caption={sectorName}
               onMouseEnter={() => showHoverTooltip({ label: sectorName, x: 50, y: 36 })}
               onMouseLeave={() => showHoverTooltip(null)}>
-              <span className="atlas-center-icon" aria-hidden="true">{clean(sector.icon, "🏢")}</span>
               <strong>{sectorName}</strong>
             </div>
             {tooltip && (
@@ -326,10 +273,11 @@ export default function CompaniesSelectionSearch({ bootData }) {
           </div>
         </section>
         <aside className="atlas-side">
-          <div className="atlas-view-tabs" role="group" aria-label="Distribution view">{[{ id: "industry", label: "Analysis", icon: BarChart3 }, { id: "tier", label: "By Tier", icon: ShieldCheck }, { id: "stage", label: "By Stage", icon: Layers3 }].map(({ id, label, icon: Icon }) => <button type="button" key={id} className={activeView === id ? "is-active" : ""} onClick={() => setActiveView(id)}><Icon />{label}</button>)}</div>
+          <h2 className="atlas-analysis-title">Analysis</h2>
+          <div className="atlas-view-tabs" role="group" aria-label="Distribution view">{[{ id: "tier", label: "By Tier", icon: ShieldCheck }, { id: "stage", label: "By Stage", icon: Layers3 }].map(({ id, label, icon: Icon }) => <button type="button" key={id} className={activeView === id ? "is-active" : ""} aria-pressed={activeView === id} onClick={() => setActiveView(id)}><Icon />{label}</button>)}</div>
           <section className="atlas-distribution"><h2><BarChart3 />{distributionTitle}</h2><div>{distribution.slice(0, 6).map(([label, count], index) => <div className="atlas-bar" key={label}><span title={label}>{label}</span><b><i style={{ width: `${(count / maxDistribution) * 100}%`, opacity: 1 - index * .08 }} /></b><strong>{companies.length ? Math.round((count / companies.length) * 100) : 0}%</strong></div>)}</div></section>
           <section className="atlas-companies">
-            <header><h2 aria-live="polite"><Building2 />{selectedCountry || "Companies"} <span>({countryCompanies.length})</span></h2><label><Search /><input value={query} onChange={(event) => { setSelectedIndustry(""); setQuery(event.target.value); }} aria-label="Search companies" placeholder="Search" /></label><SlidersHorizontal /></header>
+            <header><h2 aria-live="polite"><Building2 />{selectedCountry || "Companies"} <span>({countryCompanies.length})</span></h2><label><Search /><input value={query} onChange={(event) => setQuery(event.target.value)} aria-label="Search companies" placeholder="Search" /></label><SlidersHorizontal /></header>
             <div className="atlas-company-list" key={selectedCountry}>{visibleCompanies.map((company, index) => { const verified = /^verified$/i.test(clean(company.VerificationStatus)); const id = companyId(company); return <article key={`${id}-${index}`} className={selectedCompany && companyId(selectedCompany) === id ? "is-selected" : ""}><span className="atlas-company-mark"><CompanyMark company={company} /></span><button type="button" className="atlas-company-name" onClick={() => setSelectedCompany(company)}><strong>{clean(company.CompanyName, "Unnamed company")}</strong><small>{clean(company.industry_name || company.sector_title, sectorName)}</small></button><span className={verified ? "atlas-status is-verified" : "atlas-status"} title={verified ? "Verified" : "Verification in progress"}>{verified ? <BadgeCheck /> : <CircleAlert />}</span><button type="button" className="atlas-profile" onClick={() => openCompany(company)}>Visit Profile <ExternalLink /></button><button type="button" className={`atlas-save${saved.has(id) ? " is-saved" : ""}`} onClick={() => toggleSaved(id)} aria-label={saved.has(id) ? "Remove bookmark" : "Bookmark company"}><Bookmark /></button></article>; })}{!visibleCompanies.length && <p className="atlas-empty">No companies match your search.</p>}</div>
             <div className="atlas-tier-legend" role="group" aria-label="Trust tier legend">
               {["Platinum", "Gold", "Bronze", "Silver"].map((tier) => (

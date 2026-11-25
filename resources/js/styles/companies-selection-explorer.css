@@ -109,10 +109,25 @@
   font-size: clamp(.65rem, 1vw, .92rem);
 }
 .atlas-sector-ring-icon { pointer-events: none; }
-.atlas-ring-map .atlas-center-icon {
-  margin: 0 0 3px;
-  font-size: clamp(.85rem, 2vw, 1.6rem);
-  line-height: 1;
+.atlas-shell > .atlas-workspace {
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+}
+.atlas-side > .atlas-analysis-title {
+  grid-column: 1 / -1;
+  justify-self: start;
+  margin: 0;
+  padding: 9px 26px 9px 18px;
+  border: 1px solid #6c411f;
+  border-radius: 999px;
+  background: linear-gradient(110deg, #171210 0%, #382116 57%, #a96213 83%, #e5a93d 100%);
+  color: #fffaf2;
+  box-shadow: 0 3px 8px rgba(56, 33, 22, .18);
+  font: 700 1.1rem Georgia, serif;
+}
+.atlas-side > .atlas-view-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+@media (max-width: 1240px) {
+  .atlas-shell > .atlas-workspace { grid-template-columns: minmax(0, 1fr); }
 }
 .atlas-workspace .atlas-orbit { overflow: visible; }
 .atlas-orbit-tooltip {
