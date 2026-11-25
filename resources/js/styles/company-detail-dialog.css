@@ -8,8 +8,8 @@
   transform: translateX(-50%) rotate(45deg);
   width: 26px;
   height: 26px;
-  background: #ffffff;
-  box-shadow: 0 0 10px rgba(148, 163, 184, 0.45);
+  background: #fffdfa;
+  box-shadow: 0 0 10px rgba(56, 33, 22, 0.18);
 }
 
 /* Underlined clickable distance links in Location tab */
@@ -48,7 +48,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  background: radial-gradient(circle at top left, #eff6ff 0, #ffffff 42%);
+  background: radial-gradient(circle at top left, #f4e8d6 0, #fffdfa 42%);
 }
 
 .ai-chat-bubble {
@@ -62,15 +62,15 @@
 
 .ai-chat-bubble-user {
   align-self: flex-end;
-  background: #2563eb;
-  color: #f9fafb;
+  background: #6f452e;
+  color: #fffdfa;
   border-bottom-right-radius: 4px;
 }
 
 .ai-chat-bubble-bot {
   align-self: flex-start;
-  background: #f3f4f6;
-  color: #111827;
+  background: #f7f2ea;
+  color: #382116;
   border-bottom-left-radius: 4px;
 }
 
@@ -78,6 +78,6 @@
   padding: 8px 10px;
   display: flex;
   align-items: flex-end;
-  border-top: 1px solid #e5e7eb;
-  background: #f9fafb;
+  border-top: 1px solid #e6d1bb;
+  background: #fbf8f3;
 }

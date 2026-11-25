@@ -1030,9 +1030,10 @@ useEffect(() => {
           sx: {
             borderRadius: isMobile ? 0 : 5,
             overflow: "hidden",
-            border: "1px solid rgba(148,163,184,0.55)",
-            boxShadow: "0 18px 45px rgba(15,23,42,0.22)",
-            backgroundColor: "#ffffff",
+            border: "1px solid #e6d1bb",
+            boxShadow: "0 18px 45px rgba(56,33,22,0.22)",
+            backgroundColor: "#fbf8f3",
+            color: "#382116",
             width: "100%",
             ...(isMobile
               ? { height: "100%", maxHeight: "100%" }
@@ -1059,10 +1060,11 @@ useEffect(() => {
               top: 10,
               right: 10,
               zIndex: 20,
-              bgcolor: "rgba(255,255,255,0.9)",
+              bgcolor: "#fffdfa",
+              color: "#6f452e",
               backdropFilter: "blur(4px)",
               boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
-              "&:hover": { bgcolor: "white" },
+              "&:hover": { bgcolor: "#f4e8d6" },
             }}
             size="small"
           >
@@ -1082,7 +1084,7 @@ useEffect(() => {
                 alignItems: { xs: "flex-start", sm: "center" },
                 justifyContent: "space-between",
                 rowGap: 1,
-                background: "#ffffff",
+                background: "#fffdfa",
                 flexShrink: 0,
               }}
             >
@@ -1378,14 +1380,20 @@ useEffect(() => {
               scrollButtons="auto"
               sx={{
                 px: { xs: 1.5, sm: 3 },
-                borderBottom: "1px solid #eef0f6",
-                bgcolor: "#f8f9ff",
+                borderBottom: "1px solid #e6d1bb",
+                bgcolor: "#fbf8f3",
+                "& .MuiTab-root": {
+                  color: "#765c4c",
+                  "& .MuiTab-iconWrapper": { color: "inherit" },
+                  "&:hover": { bgcolor: "#f7f2ea", color: "#6f452e" },
+                  "&.Mui-selected": { bgcolor: "#f4e8d6", color: "#382116" },
+                },
               }}
               TabIndicatorProps={{
                 sx: {
                   height: 3,
                   borderRadius: 999,
-                  background: "linear-gradient(90deg,#3b82f6,#22c55e,#f97316)",
+                  background: "#7a5036",
                 },
               }}
             >
@@ -1512,7 +1520,7 @@ useEffect(() => {
                   px: { xs: 1.5, sm: 3 },
                   pb: 0.5,
                   pt: 0.5,
-                  bgcolor: "#f8f9ff",
+                  bgcolor: "#fbf8f3",
                 }}
               >
                 <Box
@@ -1549,7 +1557,7 @@ useEffect(() => {
           <Box
             sx={{
               p: { xs: 2, sm: 3 },
-              bgcolor: "#f5f6fb",
+              bgcolor: "#f7f2ea",
               flexGrow: 1,
               minHeight: 0,
               overflowY: "auto",
