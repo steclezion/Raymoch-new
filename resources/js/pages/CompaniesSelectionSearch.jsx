@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from "react";
-import Sunburst from "react-sunburst-chart";
-import { Badge, BadgeCheck, BarChart3, Bookmark, Building2, Check, CircleAlert, Clock, ExternalLink, Globe2, Layers3, Search, Shield, ShieldCheck, SlidersHorizontal, Sprout, Sun, Zap } from "lucide-react";
+import { Badge, BadgeCheck, BarChart3, Bookmark, Building2, Check, CircleAlert, Clock, ExternalLink, Globe2, Layers3, Search, Shield, ShieldCheck, SlidersHorizontal, Sprout, Sun } from "lucide-react";
 import HorizontalNavigation from "../components/HorizontalNavigation.jsx";
 import CompanyDetailDialog from "../components/companies/CompanyDetailDialog.jsx";
 import "../styles/companies-selection-search.css";
@@ -9,6 +8,47 @@ import "../styles/companies-selection-explorer.css";
 const COLORS = ["#542311", "#713016", "#8f4219", "#ad5511", "#ca6a09", "#e18a11", "#f0a92d", "#ffc44b"];
 const clean = (value, fallback = "") => String(value ?? "").trim() || fallback;
 const companyId = (company) => company.co_main_ref_id ?? company.id ?? company.CompanyName;
+
+function orbitPoint(radius, turn) {
+  const angle = (turn - 0.25) * 2 * Math.PI;
+  return [315 + radius * Math.cos(angle), 315 + radius * Math.sin(angle)].join(" ");
+}
+
+function orbitSlice(inner, outer, start, end) {
+  const middle = (start + end) / 2;
+  return [
+    `M ${orbitPoint(outer, start)}`,
+    `A ${outer} ${outer} 0 0 1 ${orbitPoint(outer, middle)}`,
+    `A ${outer} ${outer} 0 0 1 ${orbitPoint(outer, end)}`,
+    `L ${orbitPoint(inner, end)}`,
+    `A ${inner} ${inner} 0 0 0 ${orbitPoint(inner, middle)}`,
+    `A ${inner} ${inner} 0 0 0 ${orbitPoint(inner, start)} Z`,
+  ].join(" ");
+}
+
+function OrbitSlice({ inner, outer, start, end, fill, label, onClick, onTooltip, ...props }) {
+  return (
+    <path
+      d={orbitSlice(inner, outer, start, end)}
+      fill={fill}
+      role="button"
+      tabIndex={0}
+      aria-label={label}
+      onClick={onClick}
+      onMouseEnter={() => onTooltip(label)}
+      onMouseLeave={() => onTooltip("")}
+      onFocus={() => onTooltip(label)}
+      onBlur={() => onTooltip("")}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onClick();
+        }
+      }}
+      {...props}
+    />
+  );
+}
 
 function distribute(items, getter, fallback) {
   const counts = new Map();
@@ -35,6 +75,7 @@ export default function CompaniesSelectionSearch({ bootData }) {
   const [activeView, setActiveView] = useState("industry");
   const [query, setQuery] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("");
+  const [tooltip, setTooltip] = useState("");
   const [selectedCompany, setSelectedCompany] = useState(companies[0] || null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saved, setSaved] = useState(() => new Set());
@@ -53,29 +94,30 @@ export default function CompaniesSelectionSearch({ bootData }) {
   const distribution = activeView === "tier" ? tiers : activeView === "stage" ? stages : industries;
   const distributionTitle = activeView === "tier" ? "Trust Tier Distribution" : activeView === "stage" ? "Stage Distribution" : "Industry Distribution";
   const maxDistribution = Math.max(1, ...distribution.map(([, count]) => count));
-  const chartData = useMemo(() => {
-    const countries = new Map();
+  const countryGroups = useMemo(() => {
+    const groups = new Map();
     for (const company of companies) {
       const country = clean(company.country_name, "Unspecified country");
-      if (!countries.has(country)) countries.set(country, []);
-      countries.get(country).push(company);
+      if (!groups.has(country)) groups.set(country, []);
+      groups.get(country).push(company);
     }
-
-    return {
-      name: sectorName,
-      children: [...countries].map(([country, businesses], countryIndex) => ({
-        name: country,
-        color: COLORS[4 + countryIndex % 4],
-        count: businesses.length,
-        children: businesses.map((company, index) => ({
-          name: clean(company.CompanyName, "Unnamed company"),
-          value: 1,
-          company,
-          color: COLORS[(countryIndex + index) % 4],
-        })),
-      })),
-    };
-  }, [companies, sectorName]);
+    return [...groups];
+  }, [companies]);
+  const distinctSectors = useMemo(() => {
+    const unique = new Map();
+    for (const item of [sector, ...sectors]) {
+      const title = clean(item.title);
+      if (item.id != null && title && !unique.has(title.toLowerCase())) {
+        unique.set(title.toLowerCase(), item);
+      }
+    }
+    return [...unique.values()];
+  }, [sector, sectors]);
+  const changeSector = (id) => {
+    if (id && String(id) !== String(sector.id)) {
+      window.location.assign(`/companies_selection?sector_id=${encodeURIComponent(id)}`);
+    }
+  };
   const openCompany = (company) => { setSelectedCompany(company); setDialogOpen(true); };
   const toggleSaved = (id) => setSaved((current) => { const next = new Set(current); next.has(id) ? next.delete(id) : next.add(id); return next; });
   const navigation = [{ id: "atlas", label: "Economic Atlas", icon: Globe2 }, { id: "industries", label: "Industries", icon: Layers3 }, { id: "companies", label: "Companies", icon: Building2 }, { id: "analysis", label: "Analysis", icon: BarChart3 }];
@@ -92,40 +134,73 @@ export default function CompaniesSelectionSearch({ bootData }) {
       </header>
       <section className="atlas-workspace">
         <aside className="atlas-rail">
-          <div className="atlas-sector"><span><Sprout /></span><div><small>Sector</small><strong>{sectorName}</strong></div></div>
+          <details className="atlas-rail-sections" open>
+            <summary className="atlas-sector">
+              <span><Sprout aria-hidden="true" /></span>
+              <div><small>Sector</small><strong>{sectorName}</strong></div>
+            </summary>
           <nav aria-label="Business explorer sections">{navigation.map(({ id, label, icon: Icon }) => <button key={id} type="button" className={id === "atlas" ? "is-active" : ""} onClick={() => { if (id === "industries") setActiveView("industry"); if (id === "companies") document.querySelector(".atlas-companies")?.scrollIntoView({ behavior: "smooth", block: "center" }); if (id === "analysis") document.querySelector(".atlas-distribution")?.scrollIntoView({ behavior: "smooth", block: "center" }); }}><Icon /><span>{label}</span></button>)}</nav>
-          {sectors.length > 1 && <label className="atlas-sector-picker"><span>Change sector</span><select value={sector.id || ""} onChange={(event) => window.location.assign(`/companies_selection?sector_id=${encodeURIComponent(event.target.value)}`)}>{sectors.map((item) => <option value={item.id} key={item.id}>{item.title}</option>)}</select></label>}
+          </details>
         </aside>
-        <section className="atlas-orbit" aria-label={`${sectorName} business map: sector, countries, companies`}>
-          <Sunburst
-            data={chartData}
-            width={630}
-            height={630}
-            size="value"
-            excludeRoot
-            centerRadius={0.28}
-            radiusScaleExponent={1}
-            strokeColor="#ffd98b"
-            color={(node) => node.data?.color || node.color || "#d77812"}
-            showLabels
-            label={(node) => node.name}
-            tooltipTitle={(node) => node.data?.name || node.name}
-            tooltipContent={(node) => {
-              const entry = node.data || node;
-              return entry.company
-                ? clean(entry.company.country_name, "Unspecified country")
-                : `${entry.count ?? 0} businesses`;
-            }}
-            onClick={(node) => {
-              const entry = node?.data || node;
-              if (entry?.company) openCompany(entry.company);
-              if (entry?.count) {
-                setSelectedCountry((current) => current === entry.name ? "" : entry.name);
-                setQuery("");
-              }
-            }}
-          />
-          <div className="atlas-orbit-center"><Zap /><strong>{sectorName}</strong><span>{companies.length.toLocaleString()} businesses</span></div>
+        <section className="atlas-orbit" aria-label={`${sectorName} business map: sectors, countries, companies`}>
+          <div className="atlas-ring-map">
+            <svg viewBox="0 0 630 630" aria-label="Business rings">
+              <circle cx="315" cy="315" r="309" fill="#f4e3c9" />
+              {distinctSectors.map((item, index) => {
+                const start = index / distinctSectors.length;
+                const end = (index + 1) / distinctSectors.length;
+                const active = String(item.id) === String(sector.id);
+                return (
+                  <g key={item.id}>
+                    <OrbitSlice inner={88} outer={153} start={start} end={end}
+                      fill={active ? "#ffc44b" : "#efd6ad"} label={item.title} aria-pressed={active}
+                      onClick={() => changeSector(item.id)} onTooltip={setTooltip}
+                    />
+                    <text className="atlas-sector-ring-icon" aria-hidden="true"
+                      transform={`translate(${orbitPoint(121, (start + end) / 2)})`}
+                      fontSize={Math.min(26, 600 / distinctSectors.length)}
+                      textAnchor="middle" dominantBaseline="central">
+                      {clean(item.icon, "🏢")}
+                    </text>
+                  </g>
+                );
+              })}
+              {countryGroups.flatMap(([country, businesses], index) =>
+                businesses.map((company, companyIndex) => (
+                  <OrbitSlice key={`${country}-${companyId(company)}-${companyIndex}`}
+                    inner={225} outer={309}
+                    start={(index + companyIndex / businesses.length) / countryGroups.length}
+                    end={(index + (companyIndex + 1) / businesses.length) / countryGroups.length}
+                    fill={["#352015", "#42271b", "#4d2e20", "#563728"][companyIndex % 4]}
+                    label={clean(company.CompanyName, "Unnamed company")} onClick={() => openCompany(company)}
+                    onTooltip={setTooltip}
+                  />
+                ))
+              )}
+              {countryGroups.map(([country, businesses], index) => (
+                <OrbitSlice key={country} className="atlas-country-slice" inner={153} outer={225}
+                  start={index / countryGroups.length} end={(index + 1) / countryGroups.length}
+                  fill={COLORS[4 + index % 4]}
+                  label={`${country} · ${businesses.length} ${businesses.length === 1 ? "company" : "companies"}`}
+                  aria-pressed={selectedCountry === country}
+                  onTooltip={setTooltip}
+                  onClick={() => {
+                    setSelectedCountry((current) => current === country ? "" : country);
+                    setQuery("");
+                  }}
+                />
+              ))}
+            </svg>
+            <div className="atlas-orbit-center" onMouseEnter={() => setTooltip(sectorName)} onMouseLeave={() => setTooltip("")}>
+              <span className="atlas-center-icon" aria-hidden="true">{clean(sector.icon, "🏢")}</span>
+              <strong>{sectorName}</strong>
+            </div>
+            {tooltip && (
+              <div className="atlas-orbit-tooltip" role="tooltip">
+                {tooltip}
+              </div>
+            )}
+          </div>
         </section>
         <aside className="atlas-side">
           <div className="atlas-view-tabs" role="group" aria-label="Distribution view">{[{ id: "industry", label: "By Industry", icon: Globe2 }, { id: "tier", label: "By Tier", icon: ShieldCheck }, { id: "stage", label: "By Stage", icon: Layers3 }].map(({ id, label, icon: Icon }) => <button type="button" key={id} className={activeView === id ? "is-active" : ""} onClick={() => setActiveView(id)}><Icon />{label}</button>)}</div>
