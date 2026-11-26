@@ -5,7 +5,8 @@ import CompanyDetailDialog from "../components/companies/CompanyDetailDialog.jsx
 import "../styles/companies-selection-search.css";
 import "../styles/companies-selection-explorer.css";
 
-const COLORS = ["#542311", "#713016", "#8f4219", "#ad5511", "#ca6a09", "#e18a11", "#f0a92d", "#ffc44b"];
+const COUNTRY_COLORS = ["var(--atlas-clay)", "var(--atlas-gold)", "#d5ae75", "#b8805c"];
+const COMPANY_COLORS = ["var(--atlas-ink)", "#3d271d", "#523627", "#6f4935"];
 const clean = (value, fallback = "") => String(value ?? "").trim() || fallback;
 const companyId = (company) => company.co_main_ref_id ?? company.id ?? company.CompanyName;
 const COMPANY_FILTERS = [
@@ -151,7 +152,12 @@ export default function CompaniesSelectionSearch({ bootData }) {
       if (!groups.has(country)) groups.set(country, []);
       groups.get(country).push(company);
     }
-    return [...groups];
+    let offset = 0;
+    return [...groups].map(([country, businesses]) => {
+      const group = { country, businesses, offset };
+      offset += businesses.length;
+      return group;
+    });
   }, [companies]);
   const distinctSectors = useMemo(() => {
     const unique = new Map();
@@ -173,9 +179,18 @@ export default function CompaniesSelectionSearch({ bootData }) {
     setSelectedCountry((current) => current === country ? "" : country);
     setQuery("");
   };
+  const resetSectorView = () => {
+    setSelectedCountry("");
+    setInspectSlices(false);
+    setTooltip(null);
+  };
   const selectInspectedSlice = () => {
     if (!tooltip?.action) return;
     const { action, value } = tooltip;
+    if (action === "reset") {
+      resetSectorView();
+      return;
+    }
     setInspectSlices(false);
     setTooltip(null);
 
@@ -183,7 +198,7 @@ export default function CompaniesSelectionSearch({ bootData }) {
     if (action === "country") selectCountry(value);
     if (action === "company") {
       const [countryIndex, companyIndex] = value.split(":").map(Number);
-      const company = countryGroups[countryIndex]?.[1][companyIndex];
+      const company = countryGroups[countryIndex]?.businesses[companyIndex];
       if (company) openCompany(company);
     }
   };
@@ -230,7 +245,7 @@ export default function CompaniesSelectionSearch({ bootData }) {
               if (inspectSlices && event.detail > 0) event.stopPropagation();
             }}>
             <svg viewBox="0 0 630 630" aria-label="Business rings">
-              <circle cx="315" cy="315" r="309" fill="#f4e3c9" />
+              <circle cx="315" cy="315" r="309" fill="var(--atlas-line)" />
               {distinctSectors.map((item, index) => {
                 const start = index / distinctSectors.length;
                 const end = (index + 1) / distinctSectors.length;
@@ -238,30 +253,34 @@ export default function CompaniesSelectionSearch({ bootData }) {
                 return (
                   <OrbitSlice key={item.id} className="atlas-sector-slice"
                     inner={88} outer={153} start={start} end={end}
-                    fill={active ? "#ffc44b" : ["#f6dfb2", "#c38a52"][index % 2]}
+                    fill={active ? "var(--atlas-gold)" : ["#eadfd3", "#dfc7a7"][index % 2]}
                     label={item.title} aria-pressed={active}
                     data-orbit-action="sector" data-orbit-value={item.id}
                     onClick={() => changeSector(item.id)} onTooltip={showHoverTooltip}
                   />
                 );
               })}
-              {countryGroups.flatMap(([country, businesses], index) =>
-                businesses.map((company, companyIndex) => (
+              {countryGroups.flatMap(({ country, businesses, offset }, index) => {
+                if (selectedCountry && country !== selectedCountry) return [];
+
+                const ringOffset = selectedCountry ? 0 : offset;
+                const ringCount = selectedCountry ? businesses.length : companies.length;
+                return businesses.map((company, companyIndex) => (
                   <OrbitSlice key={`${country}-${companyId(company)}-${companyIndex}`}
                     inner={225} outer={309}
-                    start={(index + companyIndex / businesses.length) / countryGroups.length}
-                    end={(index + (companyIndex + 1) / businesses.length) / countryGroups.length}
-                    fill={["#352015", "#42271b", "#4d2e20", "#563728"][companyIndex % 4]}
+                    start={(ringOffset + companyIndex) / ringCount}
+                    end={(ringOffset + companyIndex + 1) / ringCount}
+                    fill={COMPANY_COLORS[companyIndex % COMPANY_COLORS.length]}
                     label={clean(company.CompanyName, "Unnamed company")} onClick={() => openCompany(company)}
                     data-orbit-action="company" data-orbit-value={`${index}:${companyIndex}`}
                     onTooltip={showHoverTooltip}
                   />
-                ))
-              )}
-              {countryGroups.map(([country, businesses], index) => (
+                ));
+              })}
+              {countryGroups.map(({ country, businesses, offset }, index) => (
                 <OrbitSlice key={country} className="atlas-country-slice" inner={153} outer={225}
-                  start={index / countryGroups.length} end={(index + 1) / countryGroups.length}
-                  fill={COLORS[4 + index % 4]}
+                  start={offset / companies.length} end={(offset + businesses.length) / companies.length}
+                  fill={COUNTRY_COLORS[index % COUNTRY_COLORS.length]}
                   label={`${country} · ${businesses.length} ${businesses.length === 1 ? "company" : "companies"}`}
                   aria-pressed={selectedCountry === country}
                   data-orbit-action="country" data-orbit-value={country}
@@ -270,11 +289,14 @@ export default function CompaniesSelectionSearch({ bootData }) {
                 />
               ))}
             </svg>
-            <div className="atlas-orbit-center" data-orbit-caption={sectorName}
-              onMouseEnter={() => showHoverTooltip({ label: sectorName, x: 50, y: 36 })}
-              onMouseLeave={() => showHoverTooltip(null)}>
+            <button type="button" className="atlas-orbit-center"
+              aria-label={`Reset explorer for ${sectorName}`}
+              data-orbit-action="reset" data-orbit-caption={`Reset ${sectorName} view`}
+              onMouseEnter={() => showHoverTooltip({ label: `Reset ${sectorName} view`, x: 50, y: 36 })}
+              onMouseLeave={() => showHoverTooltip(null)}
+              onClick={resetSectorView}>
               <strong>{sectorName}</strong>
-            </div>
+            </button>
             {tooltip && (
               <div className="atlas-orbit-tooltip" role="tooltip"
                 style={{ left: `${tooltip.x}%`, top: `${tooltip.y}%`, "--tooltip-shift": `${-tooltip.x}%` }}>

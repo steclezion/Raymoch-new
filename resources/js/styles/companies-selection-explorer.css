@@ -155,11 +155,16 @@
 
 .atlas-ring-map .atlas-orbit-center {
   pointer-events: auto;
+  cursor: pointer;
   width: 28%;
   height: 28%;
   padding: 4%;
   box-sizing: border-box;
   border: 2px solid #ffd98b;
+}
+.atlas-ring-map .atlas-orbit-center:focus-visible {
+  outline: 2px solid #5b3825;
+  outline-offset: 3px;
 }
 .atlas-ring-map .atlas-orbit-center strong {
   max-width: 100%;
@@ -301,3 +306,74 @@
   color: #fff;
   stroke-width: 3;
 }
+
+/* Match the authenticated home page palette. */
+.atlas-page {
+  --atlas-ink: #271b15;
+  --atlas-coffee: #5b3825;
+  --atlas-clay: #9c6648;
+  --atlas-paper: #fffdf9;
+  --atlas-sage: #466a56;
+  --atlas-gold: #c89855;
+  --atlas-line: #dfd2c3;
+  --atlas-muted: #746b64;
+  color: var(--atlas-ink);
+  background: radial-gradient(circle at 7% 2%, rgba(200, 152, 85, .13), transparent 24rem), #f5efe6;
+}
+.atlas-page .atlas-page-title,
+.atlas-page .atlas-view-tabs,
+.atlas-page .atlas-distribution,
+.atlas-page .atlas-companies,
+.atlas-page .atlas-companies > header,
+.atlas-page .atlas-company-list article,
+.atlas-page .atlas-company-filters,
+.atlas-page .atlas-tier-legend { border-color: var(--atlas-line); }
+.atlas-page .atlas-distribution,
+.atlas-page .atlas-companies {
+  background: var(--atlas-paper);
+  box-shadow: 0 14px 32px rgba(76, 53, 39, .08);
+}
+.atlas-page .atlas-view-tabs,
+.atlas-page .atlas-filter-toggle,
+.atlas-page .atlas-inspect-control,
+.atlas-page .atlas-company-filters select,
+.atlas-page .atlas-company-filters button {
+  background: var(--atlas-paper);
+  border-color: var(--atlas-line);
+  color: var(--atlas-coffee);
+}
+.atlas-page .atlas-view-tabs .is-active,
+.atlas-page .atlas-filter-toggle[aria-expanded="true"],
+.atlas-page .atlas-inspect-control[aria-pressed="true"] {
+  color: var(--atlas-paper);
+  background: var(--atlas-coffee);
+}
+.atlas-page .atlas-analysis-title {
+  background: linear-gradient(110deg, var(--atlas-ink), var(--atlas-coffee) 60%, var(--atlas-gold));
+  border-color: var(--atlas-coffee);
+  color: var(--atlas-paper);
+}
+.atlas-page .atlas-page-title h1,
+.atlas-page .atlas-companies .atlas-company-name,
+.atlas-page .atlas-orbit-center { color: var(--atlas-ink); }
+.atlas-page .atlas-orbit-center {
+  background: var(--atlas-paper);
+  border-color: var(--atlas-gold);
+}
+.atlas-page .atlas-orbit-tooltip,
+.atlas-page .atlas-inspect-pointer { background: var(--atlas-ink); color: var(--atlas-paper); }
+.atlas-page .atlas-sector > span,
+.atlas-page .atlas-company-mark { background: #eadfd3; color: var(--atlas-coffee); }
+.atlas-page .atlas-distribution h2 svg,
+.atlas-page .atlas-companies h2 > svg { color: var(--atlas-clay); }
+.atlas-page .atlas-status.is-verified { color: var(--atlas-sage); }
+.atlas-page .atlas-bar > b { background: #eadfd3; }
+.atlas-page .atlas-bar i { background: linear-gradient(90deg, var(--atlas-gold), var(--atlas-clay)); }
+.atlas-page .atlas-profile {
+  border-color: var(--atlas-line);
+  color: var(--atlas-coffee);
+  background: var(--atlas-paper);
+}
+.atlas-page .atlas-profile:hover { color: var(--atlas-paper); background: var(--atlas-coffee); }
+.atlas-page .atlas-company-list article.is-selected { background: #f5efe6; }
+.atlas-page .atlas-empty { color: var(--atlas-muted); }
