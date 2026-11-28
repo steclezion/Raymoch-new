@@ -11,7 +11,8 @@
 //  - AI Insight (UI-only chat)
 //  + Header social reactions + comment box
 // ------------------------------------------------------------------
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useId, useMemo, useRef, useState } from "react";
+import { DataGrid } from "@mui/x-data-grid";
 import {
   Box,
   Button,
@@ -38,50 +39,32 @@ import {
   TableCell,
   TableContainer,
   Paper,
+  Popover,
   TextField,
   Avatar,
   Grid,
   Snackbar,
 } from "@mui/material";
 
-// Header / general icons
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import MapIcon from "@mui/icons-material/Map";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
-import BusinessIcon from "@mui/icons-material/Business";
-import ZoomInIcon from "@mui/icons-material/ZoomIn";
-import ZoomOutIcon from "@mui/icons-material/ZoomOut";
-import MyLocationIcon from "@mui/icons-material/MyLocation";
-import CloseIcon from "@mui/icons-material/Close";
-import SendIcon from "@mui/icons-material/Send";
-
-// Contact Tab icons (even if not all used, we keep them available)
-import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
-import PhoneIphoneOutlinedIcon from "@mui/icons-material/PhoneIphoneOutlined";
-import LanguageOutlinedIcon from "@mui/icons-material/LanguageOutlined";
-import LinkedInIcon from "@mui/icons-material/LinkedIn";
-import RoomOutlinedIcon from "@mui/icons-material/RoomOutlined";
-
-// Tab icons
-import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
-import PaidOutlinedIcon from "@mui/icons-material/PaidOutlined";
-import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
-import PhotoLibraryOutlinedIcon from "@mui/icons-material/PhotoLibraryOutlined";
-import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
-import ContactMailOutlinedIcon from "@mui/icons-material/ContactMailOutlined";
-import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
-import PsychologyOutlinedIcon from "@mui/icons-material/PsychologyOutlined";
-
-// Gallery carousel icons
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
-
-// Social reaction icons
-import ThumbUpAltOutlinedIcon from "@mui/icons-material/ThumbUpAltOutlined";
-import ThumbDownAltOutlinedIcon from "@mui/icons-material/ThumbDownAltOutlined";
-import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import {
+  Badge, BadgeAlert, BadgeCheck, BadgeX, Clock, ShieldCheck,
+  LayoutDashboard, CircleDollarSign, UsersRound, Images, FileText, ContactRound, Sparkles,
+  Circle, CircleAlert, TriangleAlert,
+  Map as MapIcon,
+  MapPin as LocationOnIcon,
+  Building2 as BusinessIcon,
+  ZoomIn as ZoomInIcon,
+  ZoomOut as ZoomOutIcon,
+  LocateFixed as MyLocationIcon,
+  X as CloseIcon,
+  Send as SendIcon,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+  ThumbsUp as ThumbUpAltOutlinedIcon,
+  ThumbsDown as ThumbDownAltOutlinedIcon,
+  Bookmark as BookmarkBorderIcon,
+  CircleCheck as CheckCircleOutlineIcon,
+} from "lucide-react";
 
 import {
   ResponsiveContainer,
@@ -107,42 +90,76 @@ import {
 } from "../../utils/api.js";
 
 /* ------------------------------ Constants ------------------------------ */
-const TAB_KEYS = [
-  "overview",
-  "financials",
-  "team",
-  "gallery",
-  "documents",
-  "contact",
-  "location",
-  "ai-insight",
-];
+async function postCompanyInsight(companyId, action, data, signal) {
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+  const response = await fetch(`/api/company-insight/${encodeURIComponent(companyId)}/${action}`, {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { Accept: "application/json", "Content-Type": "application/json", "X-CSRF-TOKEN": csrfToken || "" },
+    body: JSON.stringify(data),
+    signal,
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(result.message || "Company Insight is temporarily unavailable.");
+  return result;
+}
+
+const REACTIONS = {
+  marked: { label: "Mark information", icon: CheckCircleOutlineIcon, bg: "#f4e8d6", ink: "#5b3825" },
+  future: { label: "Save for future use", icon: BookmarkBorderIcon, bg: "#f8edd6", ink: "#80571e" },
+  satisfied: { label: "Satisfied with information", icon: ThumbUpAltOutlinedIcon, bg: "#e8f0e9", ink: "#466a56" },
+  unsatisfied: { label: "Unsatisfied with information", icon: ThumbDownAltOutlinedIcon, bg: "#f8e7e2", ink: "#934835" },
+};
+
+const reactionCommentKey = (companyId, reaction) =>
+  `raymoch:company:${companyId}:reaction:${reaction}:comment`;
+
+const reactionTooltipStyle = {
+  bgcolor: "#271b15",
+  color: "#fffdf9",
+  px: 1.25,
+  py: 0.75,
+  borderRadius: "6px",
+  fontSize: ".82rem",
+  lineHeight: 1.35,
+  boxShadow: "0 3px 10px #0002",
+};
+
+const VERIFICATION_BADGES = new Map([
+  ["verified", [BadgeCheck, "Verified", "#466a56"]],
+  ["unverified", [BadgeAlert, "Unverified", "#9c6648"]],
+  ["rejected", [BadgeX, "Verification rejected", "#a63d35"]],
+  ["verification rejected", [BadgeX, "Verification rejected", "#a63d35"]],
+  ["not yet verified", [Badge, "Not yet verified", "#746b64"]],
+  ["pending", [Clock, "Pending verification", "#89601f"]],
+  ["pending verification", [Clock, "Pending verification", "#89601f"]],
+  ["trusted", [ShieldCheck, "Trusted business", "#466a56"]],
+  ["trusted business", [ShieldCheck, "Trusted business", "#466a56"]],
+]);
+
+
+
+const financialNumber = (value) => {
+  if (value == null || value === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+};
+
+const financialNumberFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
 
 const financialColumns = [
-  { field: "fiscal_year", headerName: "Fiscal year", flex: 1, minWidth: 110 },
-  {
-    field: "revenue",
-    headerName: "Revenue",
-    flex: 1.2,
-    minWidth: 130,
-    valueFormatter: (params) => (params.value != null ? params.value : "—"),
-  },
-  {
-    field: "ebitda",
-    headerName: "EBITDA",
-    flex: 1.1,
+  { field: "fiscal_year", headerName: "Fiscal year", type: "number", minWidth: 110, valueGetter: financialNumber },
+  ...[["revenue", "Revenue"], ["ebitda", "EBITDA"], ["net_income", "Net income"]].map(([field, headerName]) => ({
+    field,
+    headerName,
+    type: "number",
+    flex: 1,
     minWidth: 120,
-    valueFormatter: (params) => (params.value != null ? params.value : "—"),
-  },
-  {
-    field: "net_income",
-    headerName: "Net income",
-    flex: 1.1,
-    minWidth: 130,
-    valueFormatter: (params) => (params.value != null ? params.value : "—"),
-  },
-  { field: "currency", headerName: "Currency", width: 110 },
-  { field: "created_at", headerName: "Created at", flex: 1, minWidth: 140 },
+    valueGetter: financialNumber,
+    valueFormatter: (value) => value == null ? "—" : financialNumberFormat.format(value),
+  })),
+  { field: "currency", headerName: "Currency", minWidth: 105 },
+  { field: "created_at", headerName: "Created at", flex: 1, minWidth: 150 },
 ];
 
 /* --------------------------- Dialog Transition --------------------------- */
@@ -171,7 +188,7 @@ function LocationMap({ data, company }) {
 
   if (!GOOGLE_MAPS_KEY) {
     return (
-      <Alert severity="warning" sx={{ mt: 1.5 }}>
+      <Alert severity="warning" icon={<TriangleAlert size={20} />} sx={{ mt: 1.5 }}>
         Google Maps API key is missing. Please set
         <code style={{ margin: "0 4px" }}>VITE_GOOGLE_MAPS_KEY</code> in your
         <strong>.env</strong> and restart Vite.
@@ -234,7 +251,7 @@ markers.push(mainMarker);
 
           const polyline = new window.google.maps.Polyline({
             path: [center, pos],
-            strokeColor: "#2563eb",
+            strokeColor: "#5b3825",
             strokeOpacity: 0.8,
             strokeWeight: 2,
           });
@@ -284,43 +301,7 @@ markers.push(mainMarker);
   };
 
 
-  // CHANGE this handler
-const handleReactionClick = (reaction) => {
-  setInfoReaction(reaction);
-  setInfoCommentOpen(true); // show the grid message box
 
-  // persist reaction immediately (without waiting for Post)
-  if (company?.id) {
-    const payload = {
-      reaction,
-      comment: infoComment || "",
-    };
-    window.localStorage.setItem(
-      getCompanyReactionKey(company.id),
-      JSON.stringify(payload)
-    );
-  }
-};
-
-
-// CHANGE this handler
-const handlePostComment = async () => {
-  try {
-    await fetchJSON(
-      `${API_BASE}/companies/${company.id}/reactions`,
-      "POST",
-      {
-        reaction: infoReaction,
-        comment: infoComment,
-        session_id: getSessionId()
-      }
-    );
-
-    setInfoCommentOpen(false); // hide grid box
-  } catch (err) {
-    console.error("Reaction post error:", err);
-  }
-};
 
 
 
@@ -330,7 +311,7 @@ const handlePostComment = async () => {
         ref={containerRef}
         sx={{
           width: "100%",
-          height: 360,
+          height: "clamp(220px, 48dvh, 440px)",
           borderRadius: 3,
           overflow: "hidden",
           border: "1px solid #e5e7eb",
@@ -368,7 +349,7 @@ const handlePostComment = async () => {
       )}
 
       {loadError && (
-        <Alert severity="error" sx={{ mt: 1.5 }}>
+        <Alert severity="error" icon={<CircleAlert size={20} />} sx={{ mt: 1.5 }}>
           {loadError}
         </Alert>
       )}
@@ -390,7 +371,7 @@ const handlePostComment = async () => {
             sx={{ bgcolor: "white", boxShadow: 1 }}
             onClick={handleZoomIn}
           >
-            <ZoomInIcon fontSize="small" />
+            <ZoomInIcon size={18} />
           </IconButton>
         </Tooltip>
         <Tooltip title="Zoom out" arrow>
@@ -399,7 +380,7 @@ const handlePostComment = async () => {
             sx={{ bgcolor: "white", boxShadow: 1 }}
             onClick={handleZoomOut}
           >
-            <ZoomOutIcon fontSize="small" />
+            <ZoomOutIcon size={18} />
           </IconButton>
         </Tooltip>
         <Tooltip title="Recenter on company" arrow>
@@ -408,7 +389,7 @@ const handlePostComment = async () => {
             sx={{ bgcolor: "white", boxShadow: 1 }}
             onClick={handleRecenter}
           >
-            <MyLocationIcon fontSize="small" />
+            <MyLocationIcon size={18} />
           </IconButton>
         </Tooltip>
       </Box>
@@ -432,15 +413,15 @@ const handlePostComment = async () => {
         }}
       >
         <Stack direction="row" alignItems="center" spacing={0.5}>
-          <LocationOnIcon sx={{ fontSize: 16, color: "#60a5fa" }} />
+          <LocationOnIcon size={16} color={"#5b3825"} />
           <span>Main company</span>
         </Stack>
         <Stack direction="row" alignItems="center" spacing={0.5}>
-          <BusinessIcon sx={{ fontSize: 16, color: "#f97316" }} />
+          <BusinessIcon size={16} color={"#9c6648"} />
           <span>Nearby companies</span>
         </Stack>
         <Stack direction="row" alignItems="center" spacing={0.5}>
-          <MapIcon sx={{ fontSize: 16, color: "#22c55e" }} />
+          <MapIcon size={16} color={"#466a56"} />
           <span>Lines show distance (miles)</span>
         </Stack>
       </Box>
@@ -461,7 +442,7 @@ const handlePostComment = async () => {
               >
                 <Typography
                   variant="body2"
-                  color="primary"
+                  sx={{ color: "#5b3825" }}
                   className="distance-link"
                   onClick={() => {
                     if (!mapRef.current) return;
@@ -483,6 +464,16 @@ const handlePostComment = async () => {
 
 /* ========================== Detail Dialog ========================== */
 export default function CompanyDetailDialog({ open, onClose, company }) {
+  const tabsId = useId();
+  const tabId = (tab) => `${tabsId}-tab-${tab}`;
+  const panelId = (tab) => `${tabsId}-panel-${tab}`;
+  const panelProps = (tab) => ({
+    id: panelId(tab),
+    role: "tabpanel",
+    "aria-labelledby": tabId(tab),
+    hidden: activeTab !== tab,
+    tabIndex: 0,
+  });
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -503,16 +494,51 @@ export default function CompanyDetailDialog({ open, onClose, company }) {
   // Gallery carousel index
   const [galleryIndex, setGalleryIndex] = useState(0);
 
-  // AI Insight UI-only state
-  const [aiMessages, setAiMessages] = useState([
-    {
-      id: 1,
-      from: "bot",
-      text: "This AI panel will eventually summarize signals from financials, team, and market data. For now, type your question to sketch the UX.",
-      ts: new Date().toISOString(),
-    },
-  ]);
+  const [aiMessages, setAiMessages] = useState([]);
   const [aiInput, setAiInput] = useState("");
+  const aiInputRef = useRef(null);
+  const aiMessagesRef = useRef(null);
+
+  useEffect(() => {
+    if (!aiMessages.length) return;
+    const frame = requestAnimationFrame(() => {
+      const conversation = aiMessagesRef.current;
+      if (conversation) conversation.scrollTop = conversation.scrollHeight;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [aiMessages]);
+  const [aiComposerOptions, setAiComposerOptions] = useState({ starters: [], corrections: {} });
+  const correctedAiInput = aiInput.replace(/\p{L}+/gu, (word) => {
+    const key = word.toLowerCase();
+    return Object.hasOwn(aiComposerOptions.corrections, key) ? aiComposerOptions.corrections[key] : word;
+  });
+  const aiSearchTerms = correctedAiInput.toLowerCase().match(/[\p{L}\p{N}]{3,}/gu) ?? [];
+  const aiSuggestions = aiSearchTerms.length
+    ? aiComposerOptions.starters.filter((starter) =>
+        aiSearchTerms.some((term) => starter.toLowerCase().includes(term)),
+      )
+    : aiComposerOptions.starters;
+  const [aiPending, setAiPending] = useState(false);
+  const [aiError, setAiError] = useState("");
+  const aiRequestRef = useRef(null);
+  const aiSelectionRef = useRef(null);
+
+  useEffect(() => {
+    if (!open || company?.id == null) return;
+    const controller = new AbortController();
+    aiSelectionRef.current = postCompanyInsight(company.id, "selection", {}, controller.signal)
+      .then((options) => {
+        if (controller.signal.aborted) return false;
+        setAiComposerOptions({ starters: options.starters ?? [], corrections: options.corrections ?? {} });
+        return true;
+      }, () => false);
+    return () => {
+      controller.abort();
+      aiRequestRef.current?.abort();
+      aiRequestRef.current = null;
+      aiSelectionRef.current = null;
+    };
+  }, [open, company?.id]);
 
   // DOCUMENTS: search + inline PDF state
   const [docSearch, setDocSearch] = useState("");
@@ -521,64 +547,17 @@ export default function CompanyDetailDialog({ open, onClose, company }) {
   const [pdfError, setPdfError] = useState("");
 
   // Tab wheel scroll throttle
-  const tabsWheelLockRef = useRef(0);
 
-  // Social reaction/comment state
-  const [infoReaction, setInfoReaction] = useState(null); // "marked" | "future" | "satisfied" | "unsatisfied" | null
-  const [infoCommentOpen, setInfoCommentOpen] = useState(false);
+  const [infoReaction, setInfoReaction] = useState(null);
+  const [infoAnchor, setInfoAnchor] = useState(null);
   const [infoCommentText, setInfoCommentText] = useState("");
   const [infoCommentLoading, setInfoCommentLoading] = useState(false);
+  const [infoCommentError, setInfoCommentError] = useState("");
+  const [savedComments, setSavedComments] = useState({});
   const [infoSnackbarOpen, setInfoSnackbarOpen] = useState(false);
   const [infoSnackbarMessage, setInfoSnackbarMessage] = useState("");
-
-  // Positioning for comment box
-  const [infoAnchorX, setInfoAnchorX] = useState(null); // viewport X of clicked icon
-  const reactionAreaRef = useRef(null); // wraps header + comment box
-  const commentContainerRef = useRef(null); // container for comment box positioning
-
-  const reactionLabelMap = {
-    marked: "Information is marked",
-    future: "Information for future use",
-    satisfied: "Information satisfied",
-    unsatisfied: "Information unsatisfied",
-  };
-
-  const getCompanyReactionKey = (companyId) =>`company_reaction_${companyId}`;
-
-
-  const reactionColorMap = {
-    marked: { bg: "#eef2ff", border: "#2563eb" },
-    future: { bg: "#ecfdf3", border: "#16a34a" },
-    satisfied: { bg: "#eff6ff", border: "#2563eb" },
-    unsatisfied: { bg: "#fef2f2", border: "#dc2626" },
-  };
-
-  // ADD / UPDATE: useEffect that runs when dialog/list opens for a company
-useEffect(() => {
-  if (!open || !company?.id) return;
-
-  try {
-    const raw = window.localStorage.getItem(
-      getCompanyReactionKey(company.id)
-    );
-
-    if (raw) {
-      const saved = JSON.parse(raw);
-      setInfoReaction(saved.reaction || null);
-      setInfoComment(saved.comment || "");
-    } else {
-      setInfoReaction(null);
-      setInfoComment("");
-    }
-  } catch (e) {
-    console.warn("Failed to load saved reaction", e);
-    setInfoReaction(null);
-    setInfoComment("");
-  }
-
-  // when opening, keep the box hidden until user clicks reaction again
-  setInfoCommentOpen(false);
-}, [open, company?.id]);
+  const reaction = REACTIONS[infoReaction];
+  const reactionPopoverId = `${tabsId}-reaction-comment`;
 
 
   // Reset when dialog opens for a new company
@@ -596,49 +575,39 @@ useEffect(() => {
     setLocationData(null);
     setSelectedFinancialIndex(null);
     setGalleryIndex(0);
-    setAiMessages([
-      {
-        id: 1,
-        from: "bot",
-        text: "This AI panel will eventually summarize signals from financials, team, and market data. For now, type your question to sketch the UX.",
-        ts: new Date().toISOString(),
-      },
-    ]);
+    setAiMessages([]);
+    setAiComposerOptions({ starters: [], corrections: {} });
     setAiInput("");
+    setAiPending(false);
+    setAiError("");
     setDocSearch("");
     setSelectedDoc(null);
     setDocLoadingId(null);
     setPdfError("");
     setInfoReaction(null);
-    setInfoCommentOpen(false);
+    setInfoAnchor(null);
     setInfoCommentText("");
     setInfoCommentLoading(false);
+    setInfoCommentError("");
     setInfoSnackbarOpen(false);
     setInfoSnackbarMessage("");
-    setInfoAnchorX(null);
+    const comments = {};
+    if (company.id != null) {
+      try {
+        for (const key of Object.keys(REACTIONS)) {
+          const comment = window.localStorage.getItem(reactionCommentKey(company.id, key));
+          if (comment) comments[key] = comment;
+        }
+      } catch {
+        // Posting still works if browser storage is unavailable.
+      }
+    }
+    setSavedComments(comments);
     loadTabData("overview", company);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, company?.id]);
 
-  // Close comment box when clicking outside header + message box
-  useEffect(() => {
-    if (!open) return;
 
-    const handleGlobalClick = (e) => {
-      if (!reactionAreaRef.current) return;
-      const clickedInside = reactionAreaRef.current.contains(e.target);
-      if (!clickedInside) {
-        setInfoCommentOpen(false);
-        setInfoReaction(null);
-        setInfoAnchorX(null);
-      }
-    };
-
-    document.addEventListener("mousedown", handleGlobalClick);
-    return () => {
-      document.removeEventListener("mousedown", handleGlobalClick);
-    };
-  }, [open]);
 
   // Default-select first financial row for pie chart when data loads
   useEffect(() => {
@@ -733,36 +702,9 @@ useEffect(() => {
 
   const handleTabChange = (_, newValue) => {
     setActiveTab(newValue);
-    // Close the comment box when changing tabs
-    setInfoCommentOpen(false);
-    setInfoReaction(null);
-    setInfoAnchorX(null);
+    setInfoAnchor(null);
     if (company) {
       loadTabData(newValue, company);
-    }
-  };
-
-  // Allow switching tabs with mouse wheel / touchpad when hovering over Tabs
-  const handleTabsWheel = (event) => {
-    const now = Date.now();
-    if (now - tabsWheelLockRef.current < 220) return;
-
-    const { deltaX, deltaY } = event;
-    const dominant = Math.abs(deltaY) > Math.abs(deltaX) ? deltaY : deltaX;
-    if (Math.abs(dominant) < 5) return;
-
-    const currentIndex = TAB_KEYS.indexOf(activeTab);
-    let nextIndex = currentIndex;
-
-    if (dominant > 0 && currentIndex < TAB_KEYS.length - 1) {
-      nextIndex = currentIndex + 1;
-    } else if (dominant < 0 && currentIndex > 0) {
-      nextIndex = currentIndex - 1;
-    }
-
-    if (nextIndex !== currentIndex) {
-      tabsWheelLockRef.current = now;
-      handleTabChange(null, TAB_KEYS[nextIndex]);
     }
   };
 
@@ -796,46 +738,36 @@ useEffect(() => {
   };
 
   const handleInfoReactionClick = (key, event) => {
-    // clicking the same reaction while box is open closes it
-    if (infoReaction === key && infoCommentOpen) {
-      setInfoCommentOpen(false);
-      setInfoReaction(null);
-      setInfoAnchorX(null);
-      return;
-    }
-
-    // compute the center X of the clicked icon (relative to viewport)
-    if (event && event.currentTarget) {
-      const rect = event.currentTarget.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      setInfoAnchorX(centerX);
-    }
-
     setInfoReaction(key);
-    setInfoCommentText("");
-    setInfoCommentOpen(true);
+    setInfoAnchor(event.currentTarget);
+    setInfoCommentText(savedComments[key] ?? "");
+    setInfoCommentError("");
   };
 
-  const handleInfoCommentSubmit = async () => {
-    if (!infoReaction || !company?.id) return;
+  const handleInfoCommentSubmit = async (event) => {
+    event.preventDefault();
     const trimmed = infoCommentText.trim();
-    if (!trimmed) return;
+    if (!infoReaction || company?.id == null || !trimmed || infoCommentLoading) return;
 
+    const key = infoReaction;
+    const companyId = company.id;
     setInfoCommentLoading(true);
+    setInfoCommentError("");
     try {
-      await postCompanyReaction(company.id, infoReaction, trimmed);
-      setInfoCommentLoading(false);
-      setInfoCommentOpen(false);
-      setInfoReaction(null);
-      setInfoCommentText("");
-      setInfoAnchorX(null);
-      setInfoSnackbarMessage("Your comment has been posted.");
+      await postCompanyReaction(companyId, key, trimmed);
+      setSavedComments((previous) => ({ ...previous, [key]: trimmed }));
+      setInfoAnchor(null);
+      try {
+        window.localStorage.setItem(reactionCommentKey(companyId, key), trimmed);
+        setInfoSnackbarMessage("Your comment has been posted and saved here.");
+      } catch {
+        setInfoSnackbarMessage("Comment posted. Browser storage is unavailable.");
+      }
       setInfoSnackbarOpen(true);
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      setInfoCommentError(error.message || "Could not post your comment.");
+    } finally {
       setInfoCommentLoading(false);
-      setInfoSnackbarMessage(err.message || "Failed to post comment.");
-      setInfoSnackbarOpen(true);
     }
   };
 
@@ -864,6 +796,11 @@ useEffect(() => {
   );
 
   /* ------------------------ Financial pie chart data ------------------------ */
+  const financialRows = useMemo(
+    () => financialData.map((row, index) => ({ ...row, financialIndex: index })),
+    [financialData],
+  );
+
   const selectedFinancialRow = useMemo(() => {
     if (
       selectedFinancialIndex == null ||
@@ -888,30 +825,43 @@ useEffect(() => {
     ];
   }, [selectedFinancialRow]);
 
-  /* ------------------------ AI Insight UI handlers ------------------------ */
-  const handleSendAiMessage = () => {
-    const trimmed = aiInput.trim();
-    if (!trimmed) return;
-    const nextId = aiMessages.length ? aiMessages[aiMessages.length - 1].id + 1 : 1;
-    const userMessage = {
-      id: nextId,
-      from: "user",
-      text: trimmed,
-      ts: new Date().toISOString(),
-    };
-    const botMessage = {
-      id: nextId + 1,
-      from: "bot",
-      text:
-        "This is a placeholder AI response. In production, this panel will use your Raymoch signals to generate insights about this company.",
-      ts: new Date().toISOString(),
-    };
-    setAiMessages((prev) => [...prev, userMessage, botMessage]);
-    setAiInput("");
+  const handleSendAiMessage = async () => {
+    const question = aiInput.trim();
+    if (!question || company?.id == null || aiRequestRef.current) return;
+    const controller = new AbortController();
+    aiRequestRef.current = controller;
+    setAiError("");
+    setAiPending(true);
+    try {
+      if (!(await aiSelectionRef.current)) {
+        const options = await postCompanyInsight(company.id, "selection", {}, controller.signal);
+        setAiComposerOptions({ starters: options.starters ?? [], corrections: options.corrections ?? {} });
+        aiSelectionRef.current = Promise.resolve(true);
+      }
+      const result = await postCompanyInsight(company.id, "question", { question }, controller.signal);
+      if (controller.signal.aborted) return;
+      setAiMessages((previous) => [
+        ...previous,
+        { id: previous.length, from: "user", text: result.question || question },
+        { id: previous.length + 1, from: "bot", text: result.answer },
+      ]);
+      setAiInput("");
+    } catch (error) {
+      if (!controller.signal.aborted) setAiError(error.message);
+    } finally {
+      if (aiRequestRef.current === controller) {
+        aiRequestRef.current = null;
+        setAiPending(false);
+        requestAnimationFrame(() => {
+          const input = aiInputRef.current;
+          if (input?.getClientRects().length) input.focus({ preventScroll: true });
+        });
+      }
+    }
   };
 
   const handleAiKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
       handleSendAiMessage();
     }
@@ -1009,13 +959,14 @@ useEffect(() => {
     );
   };
 
-  const activeTabIndex = TAB_KEYS.indexOf(activeTab);
-  const tabProgressRatio =
-    activeTabIndex <= 0
-      ? 0
-      : activeTabIndex >= TAB_KEYS.length - 1
-      ? 1
-      : activeTabIndex / (TAB_KEYS.length - 1);
+  const verificationStatus = [company?.VerificationStatus, company?.verification_status, overviewData?.VerificationStatus]
+    .map((status) => String(status ?? "").trim())
+    .find(Boolean) || (company?.verified ? "Verified" : "");
+  const statusKey = verificationStatus.toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " ");
+  const [VerificationIcon, verificationLabel, verificationColor] = VERIFICATION_BADGES.get(statusKey)
+    ?? [Badge, verificationStatus || "Verification status unavailable", "#746b64"];
+
+
 
   return (
     <>
@@ -1029,6 +980,13 @@ useEffect(() => {
         PaperProps={{
           sx: {
             borderRadius: isMobile ? 0 : 5,
+            fontFamily: "var(--font-family-sans, Inter, system-ui, sans-serif)",
+            "& .MuiTypography-body1, & .MuiTypography-body2": { fontSize: ".92rem", lineHeight: 1.65 },
+            "& .MuiTypography-caption": { fontSize: ".77rem" },
+            "& .MuiButton-root": { fontSize: ".79rem" },
+            "& .MuiButton-containedPrimary": { bgcolor: "#5b3825", "&:hover": { bgcolor: "#271b15" } },
+            "& .MuiChip-colorPrimary": { bgcolor: "#f4e8d6", color: "#5b3825" },
+            "& .MuiIconButton-colorPrimary, & .MuiButton-textPrimary, & .MuiButton-outlinedPrimary": { color: "#5b3825" },
             overflow: "hidden",
             border: "1px solid #e6d1bb",
             boxShadow: "0 18px 45px rgba(56,33,22,0.22)",
@@ -1037,7 +995,7 @@ useEffect(() => {
             width: "100%",
             ...(isMobile
               ? { height: "100%", maxHeight: "100%" }
-              : { maxWidth: "1550px", height: "92vh", maxHeight: "92vh" }),
+              : { maxWidth: "1550px", height: "92dvh", maxHeight: "calc(100dvh - 32px)", m: 2, width: "calc(100% - 32px)" }),
           },
         }}
       >
@@ -1047,7 +1005,10 @@ useEffect(() => {
             position: "relative",
             display: "flex",
             flexDirection: "column",
-            height: "200%",
+            flex: 1,
+            minHeight: 0,
+            minWidth: 0,
+            overflow: "hidden",
           }}
         >
           <Box className="dialog-arrow" />
@@ -1068,15 +1029,16 @@ useEffect(() => {
             }}
             size="small"
           >
-            <CloseIcon fontSize="small" />
+            <CloseIcon size={18} />
           </IconButton>
 
           {/* Header + reaction area wrapper */}
-          <Box ref={reactionAreaRef}>
+          <Box sx={{ flexShrink: 0, maxHeight: "45dvh", overflowY: "auto" }}>
             {/* Header */}
             <Box
               sx={{
-                px: { xs: 2, sm: 3 },
+                pl: { xs: 2, sm: 3 },
+                pr: 6,
                 py: { xs: 1.5, sm: 2 },
                 borderBottom: "1px solid #eef0f6",
                 display: "flex",
@@ -1093,17 +1055,24 @@ useEffect(() => {
                 <Typography
                   variant="h6"
                   sx={{
-                    fontWeight: 900,
+                    fontWeight: 750,
+                    fontSize: "1.35rem",
                     display: "flex",
                     alignItems: "center",
                   }}
                 >
                   {overviewData?.CompanyName || company?.name || "Loading..."}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {overviewData?.Sector || company?.sector || "—"} •{" "}
-                  {overviewData?.Country || company?.country || "—"}
-                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Stage: {company.stage || "Not available"}
+                  </Typography>
+                  <Tooltip title={verificationLabel}>
+                    <Box component="span" role="img" tabIndex={0} aria-label={verificationLabel} sx={{ display: "inline-flex", color: verificationColor }}>
+                      <VerificationIcon size={18} aria-hidden="true" />
+                    </Box>
+                  </Tooltip>
+                </Box>
               </Box>
 
               {/* Right: social reaction controls */}
@@ -1115,259 +1084,80 @@ useEffect(() => {
                   mt: { xs: 1, sm: 0 },
                 }}
               >
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ mr: 0.5, fontWeight: 500 }}
-                  >
-                    Social reaction
-                  </Typography>
-
-                  {/* information is marked (checkmark) */}
-                  <Tooltip title="Information is marked" arrow>
-                    <IconButton
-                      size="small"
-                      onClick={(e) => handleInfoReactionClick("marked", e)}
-                      sx={{
-                        borderRadius: "999px",
-                        bgcolor:
-                          infoReaction === "marked"
-                            ? "primary.main"
-                            : "rgba(37,99,235,0.10)",
-                        color:
-                          infoReaction === "marked"
-                            ? "common.white"
-                            : "primary.main",
-                        boxShadow:
-                          infoReaction === "marked"
-                            ? "0 0 0 1px rgba(37,99,235,0.35)"
-                            : "none",
-                      }}
-                    >
-                      <CheckCircleOutlineIcon fontSize="medium" />
-                    </IconButton>
-                  </Tooltip>
-
-                  {/* information for future use (bookmark) */}
-                  <Tooltip title="Information for future use" arrow>
-                    <IconButton
-                      size="small"
-                      onClick={(e) => handleInfoReactionClick("future", e)}
-                      sx={{
-                        borderRadius: "999px",
-                        bgcolor:
-                          infoReaction === "future"
-                            ? "success.main"
-                            : "rgba(22,163,74,0.10)",
-                        color:
-                          infoReaction === "future"
-                            ? "common.white"
-                            : "success.main",
-                        boxShadow:
-                          infoReaction === "future"
-                            ? "0 0 0 1px rgba(34,197,94,0.35)"
-                            : "none",
-                      }}
-                    >
-                      <BookmarkBorderIcon fontSize="medium" />
-                    </IconButton>
-                  </Tooltip>
-
-                  {/* information satisfied (like) */}
-                  <Tooltip title="Information satisfied" arrow>
-                    <IconButton
-                      size="small"
-                      onClick={(e) => handleInfoReactionClick("satisfied", e)}
-                      sx={{
-                        borderRadius: "999px",
-                        bgcolor:
-                          infoReaction === "satisfied"
-                            ? "primary.main"
-                            : "rgba(37,99,235,0.10)",
-                        color:
-                          infoReaction === "satisfied"
-                            ? "common.white"
-                            : "primary.main",
-                        boxShadow:
-                          infoReaction === "satisfied"
-                            ? "0 0 0 1px rgba(37,99,235,0.35)"
-                            : "none",
-                      }}
-                    >
-                      <ThumbUpAltOutlinedIcon fontSize="medium" />
-                    </IconButton>
-                  </Tooltip>
-
-                  {/* information unsatisfied (dislike) */}
-                  <Tooltip title="Information unsatisfied" arrow>
-                    <IconButton
-                      size="small"
-                      onClick={(e) => handleInfoReactionClick("unsatisfied", e)}
-                      sx={{
-                        borderRadius: "999px",
-                        bgcolor:
-                          infoReaction === "unsatisfied"
-                            ? "error.main"
-                            : "rgba(239,68,68,0.12)",
-                        color:
-                          infoReaction === "unsatisfied"
-                            ? "common.white"
-                            : "error.main",
-                        boxShadow:
-                          infoReaction === "unsatisfied"
-                            ? "0 0 0 1px rgba(239,68,68,0.4)"
-                            : "none",
-                      }}
-                    >
-                      <ThumbDownAltOutlinedIcon fontSize="medium" />
-                    </IconButton>
-                  </Tooltip>
+                <Stack direction="row" sx={{ flexWrap: "wrap", gap: 0.75 }} alignItems="center">
+                  {Object.entries(REACTIONS).map(([key, { label, icon: Icon, bg, ink }]) => {
+                    const expanded = Boolean(infoAnchor) && infoReaction === key;
+                    const saved = Boolean(savedComments[key]);
+                    const tooltip = saved ? `${label} · View saved comment` : label;
+                    return (
+                      <Tooltip key={key} title={tooltip} slotProps={{ tooltip: { sx: reactionTooltipStyle } }}>
+                        <IconButton
+                          aria-label={tooltip}
+                          aria-haspopup="dialog"
+                          aria-expanded={expanded}
+                          aria-controls={expanded ? reactionPopoverId : undefined}
+                          onClick={(event) => handleInfoReactionClick(key, event)}
+                          sx={{
+                            border: "1px solid",
+                            borderColor: saved || expanded ? ink : "#dfd2c3",
+                            color: ink,
+                            bgcolor: saved || expanded ? bg : "#fffdf9",
+                            transition: "transform 150ms ease, background-color 150ms ease",
+                            "&:hover": { bgcolor: bg },
+                            "&:active": { transform: "scale(.93)" },
+                          }}
+                        >
+                          <Icon size={19} aria-hidden="true" />
+                        </IconButton>
+                      </Tooltip>
+                    );
+                  })}
                 </Stack>
               </Box>
             </Box>
 
-            {/* Reaction Comment Box - appears above Tabs */}
-            <Fade
-              in={infoCommentOpen && Boolean(infoReaction)}
-              timeout={220}
-              unmountOnExit
+            <Popover
+              open={Boolean(open && infoAnchor && reaction)}
+              anchorEl={infoAnchor}
+              onClose={() => { if (!infoCommentLoading) setInfoAnchor(null); }}
+              anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+              transformOrigin={{ vertical: "top", horizontal: "center" }}
+              marginThreshold={12}
+              slotProps={{ paper: { sx: {
+                mt: 1,
+                width: 360,
+                maxWidth: "calc(100vw - 24px)",
+                borderRadius: "20px",
+                bgcolor: reaction?.bg,
+                color: reaction?.ink,
+                border: "1px solid #dfd2c3",
+                boxShadow: "0 14px 40px rgba(56,33,22,.20)",
+              } } }}
             >
-              <Box
-                ref={commentContainerRef}
-                sx={{
-                  position: "relative",
-                  width: "100%",
-                  display: "flex",
-                  justifyContent: "center",
-                  mt: 1,
-                  mb: 1.5,
-                  zIndex: 10,
-                }}
-              >
-                <Box
-                  sx={(theme) => {
-                    const cfg =
-                      infoReaction && reactionColorMap[infoReaction]
-                        ? reactionColorMap[infoReaction]
-                        : null;
-
-                    const bg = cfg
-                      ? cfg.bg
-                      : theme.palette.background.paper;
-                    const border = cfg ? cfg.border : "rgba(148,163,184,0.5)";
-
-                    // position relative to clicked icon
-                    let leftPx = "50%";
-                    if (infoAnchorX && commentContainerRef.current) {
-                      const parentRect =
-                        commentContainerRef.current.getBoundingClientRect();
-                      const rel = infoAnchorX - parentRect.left;
-                      leftPx = `${rel}px`;
-                    }
-
-                    return {
-                      position: "absolute",
-                      top: 0,
-                      left: leftPx,
-                      transform: "translateX(-50%)",
-                      maxWidth: 260,
-                      width: "100%",
-                      borderRadius: 2,
-                      p: 1.2,
-                      bgcolor: bg,
-                      border: `1px solid ${border}`,
-                      boxShadow: "0 8px 18px rgba(15,23,42,0.18)",
-                    };
-                  }}
-                >
-                  {/* Arrow pointing to the clicked reaction icon */}
-                  <Box
-                    sx={(theme) => {
-                      const cfg =
-                        infoReaction && reactionColorMap[infoReaction]
-                          ? reactionColorMap[infoReaction]
-                          : null;
-                      const bg = cfg
-                        ? cfg.bg
-                        : theme.palette.background.paper;
-
-                      return {
-                        position: "absolute",
-                        top: -6,
-                        left: "50%",
-                        transform: "translateX(-50%) rotate(45deg)",
-                        width: 10,
-                        height: 10,
-                        bgcolor: bg,
-                        borderLeft: "1px solid rgba(148,163,184,0.35)",
-                        borderTop: "1px solid rgba(148,163,184,0.35)",
-                      };
-                    }}
-                  />
-
-                  {/* Title */}
-                  <Typography
-                    variant="caption"
-                    sx={{ fontWeight: 600, mb: 0.6, display: "block" }}
-                  >
-                    {infoReaction ? reactionLabelMap[infoReaction] : "Comment"}
-                  </Typography>
-
-                  {/* Input + Buttons */}
-                  <Grid container spacing={1} alignItems="center">
-                    <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        multiline
-                        maxRows={3}
-                        autoFocus
-                        placeholder="Write a short comment…"
-                        value={infoCommentText}
-                        onChange={(e) => setInfoCommentText(e.target.value)}
-                      />
-                    </Grid>
-
-                    <Grid
-                      item
-                      xs={12}
-                      sx={{
-                        display: "flex",
-                        justifyContent: "flex-end",
-                        gap: 1,
-                        mt: 0.5,
-                      }}
-                    >
-                      <Button
-                        size="small"
-                        variant="text"
-                        onClick={() => {
-                          setInfoCommentOpen(false);
-                          setInfoReaction(null);
-                          setInfoAnchorX(null);
-                        }}
-                      >
-                        Cancel
-                      </Button>
-
-                      <Button
-                        size="small"
-                        variant="contained"
-                        disabled={
-                          infoCommentLoading ||
-                          !infoCommentText.trim() ||
-                          !infoReaction
-                        }
-                        onClick={handleInfoCommentSubmit}
-                      >
-                        {infoCommentLoading ? "Posting…" : "Post"}
-                      </Button>
-                    </Grid>
-                  </Grid>
-                </Box>
+              <Box component="form" id={reactionPopoverId} role="dialog"
+                aria-labelledby={`${reactionPopoverId}-title`} onSubmit={handleInfoCommentSubmit} sx={{ p: 2 }}>
+                <Typography id={`${reactionPopoverId}-title`} sx={{ fontSize: ".92rem", fontWeight: 750, mb: 1.5 }}>
+                  {reaction?.label}
+                </Typography>
+                <TextField
+                  fullWidth multiline minRows={3} maxRows={6} size="small"
+                  autoFocus label="Company comment" value={infoCommentText}
+                  onChange={(event) => setInfoCommentText(event.target.value)}
+                  disabled={infoCommentLoading}
+                  error={Boolean(infoCommentError)} helperText={infoCommentError}
+                  slotProps={{ htmlInput: { maxLength: 2000 } }}
+                  sx={{ "& .MuiInputBase-root": { bgcolor: "#fffdf9", borderRadius: 2 } }}
+                />
+                <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ mt: 1.5 }}>
+                  <Button size="small" onClick={() => setInfoAnchor(null)} disabled={infoCommentLoading} sx={{ color: "inherit", textTransform: "none" }}>Cancel</Button>
+                  <Button type="submit" size="small" variant="contained"
+                    disabled={infoCommentLoading || !infoCommentText.trim() || infoCommentText.trim() === savedComments[infoReaction]}
+                    sx={{ borderRadius: 999, bgcolor: "#5b3825", textTransform: "none", "&:hover": { bgcolor: "#271b15" } }}>
+                    {infoCommentLoading ? "Saving…" : "Save comment"}
+                  </Button>
+                </Stack>
               </Box>
-            </Fade>
+            </Popover>
           </Box>
 
           {/* Tabs header */}
@@ -1375,193 +1165,65 @@ useEffect(() => {
             <Tabs
               value={activeTab}
               onChange={handleTabChange}
-              onWheel={handleTabsWheel}
+              aria-label="Company details"
               variant="scrollable"
-              scrollButtons="auto"
+              visibleScrollbar
+              scrollButtons={false}
               sx={{
                 px: { xs: 1.5, sm: 3 },
-                borderBottom: "1px solid #e6d1bb",
-                bgcolor: "#fbf8f3",
-                "& .MuiTab-root": {
-                  color: "#765c4c",
-                  "& .MuiTab-iconWrapper": { color: "inherit" },
-                  "&:hover": { bgcolor: "#f7f2ea", color: "#6f452e" },
-                  "&.Mui-selected": { bgcolor: "#f4e8d6", color: "#382116" },
-                },
-              }}
-              TabIndicatorProps={{
-                sx: {
-                  height: 3,
+                bgcolor: "#fffdf9",
+                borderBottom: "1px solid #dfd2c3",
+                "& .MuiTabs-scroller": { scrollbarWidth: "thin", scrollbarColor: "#9c6648 #f5efe6" },
+                "& .MuiTabs-list": { gap: 0.5, py: 0.75, position: "relative", zIndex: 1 },
+                "& .MuiTabs-indicator": {
+                  top: 6,
+                  bottom: 6,
+                  height: "auto",
                   borderRadius: 999,
-                  background: "#7a5036",
+                  bgcolor: "#f4e8d6",
+                  boxShadow: "inset 0 0 0 1px #dfd2c3, 0 1px 2px rgba(56,33,22,.12)",
+                  pointerEvents: "none",
+                  "@media (prefers-reduced-motion: reduce)": { transition: "none" },
+                },
+                "& .MuiTab-root": {
+                  minHeight: 44,
+                  px: 1.75,
+                  borderRadius: 999,
+                  fontSize: ".79rem",
+                  fontWeight: 750,
+                  textTransform: "none",
+                  whiteSpace: "nowrap",
+                  color: "#746b64",
+                  "&:hover": { bgcolor: "rgba(156,102,72,.08)" },
+                  "&.Mui-focusVisible": { outline: "2px solid #9c6648", outlineOffset: -3 },
+                  "&.Mui-selected": { color: "#271b15" },
                 },
               }}
             >
-              <Tab
-                value="overview"
-                icon={<DashboardOutlinedIcon fontSize="small" />}
-                iconPosition="start"
-                label="Overview"
-                sx={{
-                  color:
-                    activeTab === "overview" ? "primary.main" : "text.secondary",
-                  "& .MuiTab-iconWrapper": {
-                    color: activeTab === "overview" ? "primary.main" : "#111827",
-                  },
-                }}
-              />
-              <Tab
-                value="financials"
-                icon={<PaidOutlinedIcon fontSize="small" />}
-                iconPosition="start"
-                label="Financials"
-                sx={{
-                  color:
-                    activeTab === "financials"
-                      ? "primary.main"
-                      : "text.secondary",
-                  "& .MuiTab-iconWrapper": {
-                    color:
-                      activeTab === "financials" ? "primary.main" : "#111827",
-                  },
-                }}
-              />
-              <Tab
-                value="team"
-                icon={<GroupsOutlinedIcon fontSize="small" />}
-                iconPosition="start"
-                label="Team"
-                sx={{
-                  color: activeTab === "team" ? "primary.main" : "text.secondary",
-                  "& .MuiTab-iconWrapper": {
-                    color: activeTab === "team" ? "primary.main" : "#111827",
-                  },
-                }}
-              />
-              <Tab
-                value="gallery"
-                icon={<PhotoLibraryOutlinedIcon fontSize="small" />}
-                iconPosition="start"
-                label="Gallery"
-                sx={{
-                  color:
-                    activeTab === "gallery" ? "primary.main" : "text.secondary",
-                  "& .MuiTab-iconWrapper": {
-                    color: activeTab === "gallery" ? "primary.main" : "#111827",
-                  },
-                }}
-              />
-              <Tab
-                value="documents"
-                icon={<DescriptionOutlinedIcon fontSize="small" />}
-                iconPosition="start"
-                label="Documents"
-                sx={{
-                  color:
-                    activeTab === "documents"
-                      ? "primary.main"
-                      : "text.secondary",
-                  "& .MuiTab-iconWrapper": {
-                    color:
-                      activeTab === "documents" ? "primary.main" : "#111827",
-                  },
-                }}
-              />
-              <Tab
-                value="contact"
-                icon={<ContactMailOutlinedIcon fontSize="small" />}
-                iconPosition="start"
-                label="Contact"
-                sx={{
-                  color:
-                    activeTab === "contact" ? "primary.main" : "text.secondary",
-                  "& .MuiTab-iconWrapper": {
-                    color: activeTab === "contact" ? "primary.main" : "#111827",
-                  },
-                }}
-              />
-              <Tab
-                value="location"
-                icon={<PlaceOutlinedIcon fontSize="small" />}
-                iconPosition="start"
-                label="Location"
-                sx={{
-                  color:
-                    activeTab === "location" ? "primary.main" : "text.secondary",
-                  "& .MuiTab-iconWrapper": {
-                    color:
-                      activeTab === "location" ? "primary.main" : "#111827",
-                  },
-                }}
-              />
-              <Tab
-                value="ai-insight"
-                icon={<PsychologyOutlinedIcon fontSize="small" />}
-                iconPosition="start"
-                label="AI Insight"
-                sx={{
-                  color:
-                    activeTab === "ai-insight"
-                      ? "primary.main"
-                      : "text.secondary",
-                  "& .MuiTab-iconWrapper": {
-                    color:
-                      activeTab === "ai-insight"
-                        ? "primary.main"
-                        : "#111827",
-                  },
-                }}
-              />
+              <Tab value="overview" id={tabId("overview")} aria-controls={panelId("overview")} label="Overview" icon={<LayoutDashboard size={16} />} iconPosition="start" />
+              <Tab value="financials" id={tabId("financials")} aria-controls={panelId("financials")} label="Financials" icon={<CircleDollarSign size={16} />} iconPosition="start" />
+              <Tab value="team" id={tabId("team")} aria-controls={panelId("team")} label="Team" icon={<UsersRound size={16} />} iconPosition="start" />
+              <Tab value="gallery" id={tabId("gallery")} aria-controls={panelId("gallery")} label="Gallery" icon={<Images size={16} />} iconPosition="start" />
+              <Tab value="documents" id={tabId("documents")} aria-controls={panelId("documents")} label="Documents" icon={<FileText size={16} />} iconPosition="start" />
+              <Tab value="contact" id={tabId("contact")} aria-controls={panelId("contact")} label="Contact" icon={<ContactRound size={16} />} iconPosition="start" />
+              <Tab value="location" id={tabId("location")} aria-controls={panelId("location")} label="Location" icon={<LocationOnIcon size={16} />} iconPosition="start" />
+              <Tab value="ai-insight" id={tabId("ai-insight")} aria-controls={panelId("ai-insight")} label="AI Insight" icon={<Sparkles size={16} />} iconPosition="start" />
             </Tabs>
 
-            {isMobile && (
-              <Box
-                sx={{
-                  px: { xs: 1.5, sm: 3 },
-                  pb: 0.5,
-                  pt: 0.5,
-                  bgcolor: "#fbf8f3",
-                }}
-              >
-                <Box
-                  sx={{
-                    height: 4,
-                    borderRadius: 999,
-                    bgcolor: "#e5e7eb",
-                    overflow: "hidden",
-                  }}
-                >
-                  <Box
-                    sx={{
-                      height: "100%",
-                      width: `${(tabProgressRatio || 0) * 100}%`,
-                      transition: "width 180ms ease-out",
-                      background:
-                        "linear-gradient(90deg,#3b82f6,#22c55e,#f97316)",
-                    }}
-                  />
-                </Box>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{ mt: 0.5, display: "block" }}
-                >
-                  Swipe / use arrows to move between Overview, Financials, Team,
-                  Gallery, Documents, Contact, Location, and AI Insight.
-                </Typography>
-              </Box>
-            )}
+
           </Box>
 
           {/* Tab content (scrollable area) */}
           <Box
             sx={{
-              p: { xs: 2, sm: 3 },
+              p: { xs: 1.5, sm: 3 },
               bgcolor: "#f7f2ea",
-              flexGrow: 1,
+              flex: "1 1 0",
               minHeight: 0,
+              minWidth: 0,
               overflowY: "auto",
-              overflowX: "auto",
+              overflowWrap: "anywhere",
+              "& .MuiTableContainer-root": { maxWidth: "100%", overflowX: "auto" },
             }}
           >
             {tabLoading[activeTab] && activeTab !== "ai-insight" && (
@@ -1597,15 +1259,16 @@ useEffect(() => {
               timeout={200}
               unmountOnExit
             >
-              <Box hidden={activeTab !== "overview"}>
+              <Box {...panelProps("overview")}>
                 <Stack
                   direction={{ xs: "column", md: "row" }}
                   spacing={2}
-                  alignItems="flex-start"
+                  alignItems="stretch"
                 >
                   <Box
                     sx={{
-                      flex: 2,
+                      flex: { md: 2 },
+                      minWidth: 0,
                       bgcolor: "#ffffff",
                       borderRadius: 3,
                       p: 2.2,
@@ -1646,7 +1309,7 @@ useEffect(() => {
                       <ResponsiveContainer width="100%" height={260}>
                         <BarChart data={summaryChartData}>
                           <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" />
+                          <XAxis dataKey="name" interval="preserveStartEnd" minTickGap={12} tick={{ fontSize: 11 }} />
                           <YAxis allowDecimals={false} />
                           <RechartsTooltip />
                           <Legend />
@@ -1658,7 +1321,8 @@ useEffect(() => {
 
                   <Box
                     sx={{
-                      flex: 1.3,
+                      flex: { md: 1.3 },
+                      minWidth: 0,
                       bgcolor: "#ffffff",
                       borderRadius: 3,
                       p: 2.2,
@@ -1675,10 +1339,9 @@ useEffect(() => {
                       sx={{ mb: 2 }}
                     >
                       <Chip
-                        label={
-                          company?.verified ? "Verified profile" : "Not yet verified"
-                        }
-                        color={company?.verified ? "success" : "default"}
+                        label={verificationLabel}
+                        icon={<VerificationIcon size={15} />}
+                        sx={{ color: verificationColor, "& .MuiChip-icon": { color: "inherit" } }}
                         size="small"
                       />
                       {company?.cti?.tier && (
@@ -1700,7 +1363,7 @@ useEffect(() => {
               timeout={200}
               unmountOnExit
             >
-              <Box hidden={activeTab !== "financials"}>
+              <Box {...panelProps("financials")}>
                 <Typography variant="subtitle1" sx={{ mb: 1 }}>
                   Financial information
                 </Typography>
@@ -1714,52 +1377,45 @@ useEffect(() => {
                     spacing={2}
                     alignItems="stretch"
                   >
-                    {/* Data Table */}
-                    <Box sx={{ flex: 1.6 }}>
-                      <TableContainer
-                        component={Paper}
-                        sx={{
-                          borderRadius: 2,
-                          boxShadow: "0 8px 20px rgba(15,23,42,.06)",
-                        }}
-                      >
-                        <Table size="small">
-                          <TableHead>
-                            <TableRow>
-                              <TableCell>Fiscal year</TableCell>
-                              <TableCell>Revenue</TableCell>
-                              <TableCell>EBITDA</TableCell>
-                              <TableCell>Net income</TableCell>
-                              <TableCell>Currency</TableCell>
-                              <TableCell>Created at</TableCell>
-                            </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            {financialData.map((row, idx) => (
-                              <TableRow
-                                key={row.id ?? idx}
-                                hover
-                                selected={idx === selectedFinancialIndex}
-                                onClick={() => setSelectedFinancialIndex(idx)}
-                                sx={{ cursor: "pointer" }}
-                              >
-                                <TableCell>{row.fiscal_year ?? "—"}</TableCell>
-                                <TableCell>
-                                  {row.revenue != null ? row.revenue : "—"}
-                                </TableCell>
-                                <TableCell>
-                                  {row.ebitda != null ? row.ebitda : "—"}
-                                </TableCell>
-                                <TableCell>
-                                  {row.net_income != null ? row.net_income : "—"}
-                                </TableCell>
-                                <TableCell>{row.currency ?? "—"}</TableCell>
-                                <TableCell>{row.created_at ?? "—"}</TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
+                    <Box sx={{ flex: { md: 1.6 }, minWidth: 0 }}>
+                      <Box sx={{ display: "flex", flexDirection: "column", minHeight: 280, maxHeight: 550 }}>
+                        <DataGrid
+                          aria-label="Financial records"
+                          rows={financialRows}
+                          columns={financialColumns}
+                          getRowId={(row) => row.financialIndex}
+                          showToolbar
+                          disableRowSelectionOnClick
+                          onRowClick={({ row }) => setSelectedFinancialIndex(row.financialIndex)}
+                          onCellKeyDown={({ row }, event) => {
+                            if (event.key === "Enter" && event.target === event.currentTarget) {
+                              setSelectedFinancialIndex(row.financialIndex);
+                            }
+                          }}
+                          getRowClassName={({ row }) =>
+                            row.financialIndex === selectedFinancialIndex ? "financial-row-selected" : ""
+                          }
+                          pageSizeOptions={[5, 10, 25]}
+                          initialState={{
+                            pagination: { paginationModel: { pageSize: 5 } },
+                            sorting: { sortModel: [{ field: "fiscal_year", sort: "desc" }] },
+                          }}
+                          sx={{
+                            fontFamily: "var(--font-family-sans, Inter, system-ui, sans-serif)",
+                            fontSize: ".92rem",
+                            color: "#271b15",
+                            bgcolor: "#fffdf9",
+                            borderColor: "#dfd2c3",
+                            borderRadius: 2,
+                            "& .MuiDataGrid-columnHeader, & .MuiDataGrid-filler": { bgcolor: "#f5efe6" },
+                            "& .MuiDataGrid-columnHeaderTitle": { fontSize: ".79rem", fontWeight: 750 },
+                            "& .MuiDataGrid-cell, & .MuiDataGrid-footerContainer": { borderColor: "#dfd2c3" },
+                            "& .MuiDataGrid-toolbar, & .MuiDataGrid-footerContainer": { color: "#5b3825" },
+                            "& .MuiDataGrid-row:hover": { bgcolor: "#f7f2ea", cursor: "pointer" },
+                            "& .MuiDataGrid-row.financial-row-selected": { bgcolor: "#f4e8d6" },
+                          }}
+                        />
+                      </Box>
                       <Typography
                         variant="caption"
                         color="text.secondary"
@@ -1778,7 +1434,7 @@ useEffect(() => {
                         borderRadius: 2,
                         p: 2,
                         boxShadow: "0 8px 20px rgba(15,23,42,.06)",
-                        minWidth: { xs: "100%", md: 280 },
+                        minWidth: 0,
                       }}
                     >
                       <Typography
@@ -1811,9 +1467,9 @@ useEffect(() => {
                                 isAnimationActive={true}
                                 label
                               >
-                                <Cell fill="#3b82f6" />
-                                <Cell fill="#22c55e" />
-                                <Cell fill="#f97316" />
+                                <Cell fill="#c89855" />
+                                <Cell fill="#466a56" />
+                                <Cell fill="#9c6648" />
                               </Pie>
                             </PieChart>
                           </ResponsiveContainer>
@@ -1839,7 +1495,7 @@ useEffect(() => {
               timeout={200}
               unmountOnExit
             >
-              <Box hidden={activeTab !== "team"}>
+              <Box {...panelProps("team")}>
                 <Typography variant="subtitle1" sx={{ mb: 1 }}>
                   Leadership &amp; team
                 </Typography>
@@ -1868,7 +1524,7 @@ useEffect(() => {
                       const isKey = member.is_key_contact;
 
                       return (
-                        <Grid item xs={12} sm={6} md={4} key={member.id ?? idx}>
+                        <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={member.id ?? idx}>
                           <Paper
                             elevation={3}
                             sx={{
@@ -1891,7 +1547,7 @@ useEffect(() => {
                                 sx={{
                                   width: 48,
                                   height: 48,
-                                  bgcolor: avatarUrl ? undefined : "#1d4ed8",
+                                  bgcolor: avatarUrl ? undefined : "#5b3825",
                                   fontWeight: 600,
                                 }}
                               >
@@ -1979,7 +1635,7 @@ useEffect(() => {
               timeout={200}
               unmountOnExit
             >
-              <Box hidden={activeTab !== "gallery"}>
+              <Box {...panelProps("gallery")}>
                 <Typography variant="subtitle1" sx={{ mb: 1 }}>
                   Gallery
                 </Typography>
@@ -2026,7 +1682,7 @@ useEffect(() => {
                                                     return (
                                                         <Box
                                                             sx={{
-                                                                height: 220,
+                                                                height: "clamp(150px, 34dvh, 320px)",
                                                                 width: "100%",
                                                                 display: "flex",
                                                                 alignItems:
@@ -2169,15 +1825,10 @@ useEffect(() => {
                                                             p: 0.3,
                                                         }}
                                                     >
-                                                        <FiberManualRecordIcon
-                                                            sx={{
-                                                                fontSize: 10,
-                                                                color:
-                                                                    idx ===
-                                                                    galleryIndex
-                                                                        ? "primary.main"
-                                                                        : "#9ca3af",
-                                                            }}
+                                                        <Circle
+                                                            size={8}
+                                                            fill="currentColor"
+                                                            color={idx === galleryIndex ? "#5b3825" : "#9ca3af"}
                                                         />
                                                     </IconButton>
                                                 ))}
@@ -2197,7 +1848,7 @@ useEffect(() => {
                             timeout={200}
                             unmountOnExit
                         >
-                            <Box hidden={activeTab !== "documents"}>
+                            <Box {...panelProps("documents")}>
                                 <Typography variant="subtitle1" sx={{ mb: 1 }}>
                                     Documents
                                 </Typography>
@@ -2242,7 +1893,7 @@ useEffect(() => {
 
                                             {/* MUI Table */}
                                             <TableContainer>
-                                                <Table size="small">
+                                                <Table size="small" sx={{ minWidth: 520 }}>
                                                     <TableHead>
                                                         <TableRow>
                                                             <TableCell>
@@ -2402,7 +2053,7 @@ useEffect(() => {
                                             </Typography>
                                             {pdfError && (
                                                 <Alert
-                                                    severity="error"
+                                                    severity="error" icon={<CircleAlert size={20} />}
                                                     sx={{ mb: 1.5 }}
                                                 >
                                                     {pdfError}
@@ -2491,7 +2142,7 @@ useEffect(() => {
                                                                 sx={{
                                                                     width: "100%",
                                                                     maxWidth: 800,
-                                                                    height: 500,
+                                                                    height: "clamp(240px, 65dvh, 620px)",
                                                                     mx: "auto",
                                                                     borderRadius: 2,
                                                                     overflow:
@@ -2584,7 +2235,7 @@ useEffect(() => {
                             timeout={200}
                             unmountOnExit
                         >
-                            <Box hidden={activeTab !== "contact"}>
+                            <Box {...panelProps("contact")}>
                                 <Typography variant="subtitle1" sx={{ mb: 1 }}>
                                     Contact information
                                 </Typography>
@@ -2624,10 +2275,7 @@ useEffect(() => {
 
                                             return (
                                                 <Grid
-                                                    item
-                                                    xs={12}
-                                                    sm={6}
-                                                    md={4}
+                                                    size={{ xs: 12, sm: 6, lg: 4 }}
                                                     key={member.id ?? idx}
                                                 >
                                                     <Paper
@@ -2661,7 +2309,7 @@ useEffect(() => {
                                                                     bgcolor:
                                                                         avatarUrl
                                                                             ? undefined
-                                                                            : "#1d4ed8",
+                                                                            : "#5b3825",
                                                                     fontWeight: 600,
                                                                 }}
                                                             >
@@ -2793,7 +2441,7 @@ useEffect(() => {
                             timeout={200}
                             unmountOnExit
                         >
-                            <Box hidden={activeTab !== "location"}>
+                            <Box {...panelProps("location")}>
                                 {locationData ? (
                                     <LocationMap
                                         data={locationData}
@@ -2816,26 +2464,26 @@ useEffect(() => {
                             timeout={200}
                             unmountOnExit
                         >
-                            <Box hidden={activeTab !== "ai-insight"}>
+                            <Box {...panelProps("ai-insight")}>
                                 <Typography
                                     variant="subtitle1"
                                     sx={{ mb: 0.5 }}
                                 >
-                                    AI Insight (experimental)
+                                    AI Insight
                                 </Typography>
                                 <Typography
                                     variant="body2"
                                     color="text.secondary"
                                     sx={{ mb: 1.5 }}
                                 >
-                                    This space is a prototype for AI-assisted
-                                    insights about{" "}
-                                    <strong>{company?.name}</strong>. Messages
-                                    stay only in the browser – there is no
-                                    backend or real AI call yet.
+                                    Ask about the available records for <strong>{company?.name}</strong>.
+                                    Each question retrieves matching records from Raymoch.
                                 </Typography>
                                 <Box className="ai-chat">
-                                    <Box className="ai-chat-messages">
+                                    <Box ref={aiMessagesRef} className="ai-chat-messages" role="log" aria-label="AI Insight answers" tabIndex={0}>
+                                        {!aiMessages.length && (
+                                            <Typography variant="body2">Try asking for the most recent financial results or a summary of the leadership team.</Typography>
+                                        )}
                                         {aiMessages.map((m) => (
                                             <Box
                                                 key={m.id}
@@ -2845,38 +2493,55 @@ useEffect(() => {
                                                         : "ai-chat-bubble-bot"
                                                 }`}
                                             >
-                                                <Typography variant="body2">
+                                                <Typography variant="body2" sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>
                                                     {m.text}
                                                 </Typography>
                                             </Box>
                                         ))}
                                     </Box>
-                                    <Box className="ai-chat-input-row">
-                                        <TextField
-                                            value={aiInput}
-                                            onChange={(e) =>
-                                                setAiInput(e.target.value)
-                                            }
-                                            onKeyDown={handleAiKeyDown}
-                                            size="small"
-                                            fullWidth
-                                            multiline
-                                            maxRows={3}
-                                            placeholder="Ask anything about this company (UI only; no real AI yet)…"
-                                        />
-                                        <Tooltip title="Send (UI only)">
-                                            <span>
-                                                <IconButton
-                                                    sx={{ ml: 1 }}
-                                                    onClick={
-                                                        handleSendAiMessage
-                                                    }
-                                                    disabled={!aiInput.trim()}
-                                                >
-                                                    <SendIcon fontSize="small" />
-                                                </IconButton>
-                                            </span>
-                                        </Tooltip>
+                                    {aiError && <Alert severity="error" icon={<CircleAlert size={20} />}>{aiError}</Alert>}
+                                    {aiPending && <Typography role="status" sx={{ px: 2 }}>Retrieving company records…</Typography>}
+                                    <Box className="ai-chat-composer">
+                                        {(aiSuggestions.length > 0 || correctedAiInput !== aiInput) && (
+                                            <Box className="ai-chat-suggestions" aria-label="Question suggestions">
+                                                {correctedAiInput !== aiInput && (
+                                                    <button type="button" onClick={() => {
+                                                        setAiInput(correctedAiInput);
+                                                        aiInputRef.current?.focus();
+                                                    }}>Use “{correctedAiInput}”</button>
+                                                )}
+                                                {aiSuggestions.map((suggestion) => (
+                                                    <button key={suggestion} type="button" onClick={() => {
+                                                        setAiInput(suggestion);
+                                                        aiInputRef.current?.focus();
+                                                    }}>{suggestion}</button>
+                                                ))}
+                                            </Box>
+                                        )}
+                                        <Box className="ai-chat-input-row">
+                                            <TextField
+                                                inputRef={aiInputRef}
+                                                value={aiInput}
+                                                onChange={(event) => setAiInput(event.target.value)}
+                                                onKeyDown={handleAiKeyDown}
+                                                variant="standard"
+                                                fullWidth multiline maxRows={4}
+                                                placeholder="Ask about this company…"
+                                                disabled={aiPending}
+                                                slotProps={{
+                                                    input: { disableUnderline: true },
+                                                    htmlInput: { maxLength: 1500, spellCheck: true, autoCorrect: "on", "aria-label": "Question about the selected company" },
+                                                }}
+                                            />
+                                            <IconButton
+                                                className="ai-chat-send"
+                                                onClick={handleSendAiMessage}
+                                                disabled={aiPending || !aiInput.trim()}
+                                                aria-label="Send company question"
+                                            >
+                                                <SendIcon size={18} />
+                                            </IconButton>
+                                        </Box>
                                     </Box>
                                 </Box>
                             </Box>
@@ -2891,6 +2556,8 @@ useEffect(() => {
   <Alert
     onClose={handleInfoSnackbarClose}
     severity="success"
+    icon={<CheckCircleOutlineIcon size={20} />}
+    slots={{ closeIcon: CloseIcon }}
     sx={{ width: "100%" }}
   >
     {infoSnackbarMessage || "Your comment has been posted."}

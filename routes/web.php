@@ -14,6 +14,7 @@ use App\Http\Controllers\company_description_type_controller;
 use App\Http\Controllers\CompanyClassificationController;
 use App\Http\Controllers\CompanyInfosController;
 use App\Http\Controllers\CompanySelectionController;
+use App\Http\Controllers\CompanyInsightController;
 use App\Http\Controllers\CompanySelectionSearchController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ControlLayoutController;
@@ -355,6 +356,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('companies.selection');
     Route::get('/companies_selection_search', [CompanySelectionSearchController::class, 'index'])
         ->name('companies.selection.search');
+    Route::post('/api/company-insight/{company}/selection', [CompanyInsightController::class, 'select'])
+        ->middleware('throttle:60,1');
+    Route::post('/api/company-insight/{company}/question', [CompanyInsightController::class, 'question'])
+        ->middleware('throttle:10,1');
     Route::view('/company', 'pages.company')->name('company.details');
     Route::view('/services', 'pages.services')->name('services'); // temp → point to real page later
     Route::view('/partner-programs', 'pages.services.partner-programs')->name('partner-programs'); // partner programs page

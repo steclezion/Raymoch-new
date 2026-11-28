@@ -8,7 +8,7 @@ import "../styles/companies-selection-explorer.css";
 const COUNTRY_COLORS = ["var(--atlas-clay)", "var(--atlas-gold)", "#d5ae75", "#b8805c"];
 const COMPANY_COLORS = ["var(--atlas-ink)", "#3d271d", "#523627", "#6f4935"];
 const clean = (value, fallback = "") => String(value ?? "").trim() || fallback;
-const companyId = (company) => company.co_main_ref_id ?? company.id ?? company.CompanyName;
+const companyId = (company) => company.id;
 const COMPANY_FILTERS = [
   { field: "industry_name", label: "Industry", fallback: "Other" },
   { field: "CTI_Tier", label: "Trust tier", fallback: "Not tiered" },
@@ -338,7 +338,7 @@ export default function CompaniesSelectionSearch({ bootData }) {
               ))}
               <button type="button" onClick={() => setFilters({})} disabled={!filterCount}>Clear filters</button>
             </div>
-            <div className="atlas-company-list" key={selectedCountry}>{visibleCompanies.map((company, index) => { const verified = /^verified$/i.test(clean(company.VerificationStatus)); const id = companyId(company); return <article key={`${id}-${index}`} className={selectedCompany && companyId(selectedCompany) === id ? "is-selected" : ""}><span className="atlas-company-mark"><CompanyMark company={company} /></span><button type="button" className="atlas-company-name" onClick={() => setSelectedCompany(company)}><strong>{clean(company.CompanyName, "Unnamed company")}</strong><small>{clean(company.industry_name || company.sector_title, sectorName)}</small></button><span className={verified ? "atlas-status is-verified" : "atlas-status"} title={verified ? "Verified" : "Verification in progress"}>{verified ? <BadgeCheck /> : <CircleAlert />}</span><button type="button" className="atlas-profile" onClick={() => openCompany(company)}>Visit Profile <ExternalLink /></button><button type="button" className={`atlas-save${saved.has(id) ? " is-saved" : ""}`} onClick={() => toggleSaved(id)} aria-label={saved.has(id) ? "Remove bookmark" : "Bookmark company"}><Bookmark /></button></article>; })}{!visibleCompanies.length && <p className="atlas-empty">No companies match your search.</p>}</div>
+            <div className="atlas-company-list" key={selectedCountry}>{visibleCompanies.map((company, index) => { const verified = /^verified$/i.test(clean(company.VerificationStatus)); const id = companyId(company); return <article key={`${id}-${index}`} className={selectedCompany && companyId(selectedCompany) === id ? "is-selected" : ""}><span className="atlas-company-mark"><CompanyMark company={company} /></span><button type="button" className="atlas-company-name" onClick={() => openCompany(company)}><strong>{clean(company.CompanyName, "Unnamed company")}</strong><small>{clean(company.industry_name || company.sector_title, sectorName)}</small></button><span className={verified ? "atlas-status is-verified" : "atlas-status"} title={verified ? "Verified" : "Verification in progress"}>{verified ? <BadgeCheck /> : <CircleAlert />}</span><button type="button" className="atlas-profile" onClick={() => openCompany(company)}>Visit Profile <ExternalLink /></button><button type="button" className={`atlas-save${saved.has(id) ? " is-saved" : ""}`} onClick={() => toggleSaved(id)} aria-label={saved.has(id) ? "Remove bookmark" : "Bookmark company"}><Bookmark /></button></article>; })}{!visibleCompanies.length && <p className="atlas-empty">No companies match your search.</p>}</div>
             <div className="atlas-tier-legend" role="group" aria-label="Trust tier legend">
               {["Platinum", "Gold", "Bronze", "Silver"].map((tier) => (
                 <span key={tier}>
@@ -355,6 +355,13 @@ export default function CompaniesSelectionSearch({ bootData }) {
         </aside>
       </section>
     </main>
-    <CompanyDetailDialog open={dialogOpen} onClose={() => setDialogOpen(false)} company={normalizeCompany(selectedCompany)} />
+    {dialogOpen && selectedCompany && (
+      <CompanyDetailDialog
+        key={companyId(selectedCompany)}
+        open
+        onClose={() => setDialogOpen(false)}
+        company={normalizeCompany(selectedCompany)}
+      />
+    )}
   </div>;
 }
