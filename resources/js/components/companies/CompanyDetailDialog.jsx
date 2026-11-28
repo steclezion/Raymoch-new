@@ -1216,7 +1216,7 @@ export default function CompanyDetailDialog({ open, onClose, company }) {
           {/* Tab content (scrollable area) */}
           <Box
             sx={{
-              p: { xs: 1.5, sm: 3 },
+              p: activeTab === "ai-insight" ? { xs: 1, sm: 2 } : { xs: 1.5, sm: 3 },
               bgcolor: "#f7f2ea",
               flex: "1 1 0",
               minHeight: 0,
@@ -2464,20 +2464,12 @@ export default function CompanyDetailDialog({ open, onClose, company }) {
                             timeout={200}
                             unmountOnExit
                         >
-                            <Box {...panelProps("ai-insight")}>
+                            <Box {...panelProps("ai-insight")} className="ai-chat-panel">
                                 <Typography
                                     variant="subtitle1"
-                                    sx={{ mb: 0.5 }}
+                                    sx={{ mb: 0.5, flexShrink: 0 }}
                                 >
                                     AI Insight
-                                </Typography>
-                                <Typography
-                                    variant="body2"
-                                    color="text.secondary"
-                                    sx={{ mb: 1.5 }}
-                                >
-                                    Ask about the available records for <strong>{company?.name}</strong>.
-                                    Each question retrieves matching records from Raymoch.
                                 </Typography>
                                 <Box className="ai-chat">
                                     <Box ref={aiMessagesRef} className="ai-chat-messages" role="log" aria-label="AI Insight answers" tabIndex={0}>

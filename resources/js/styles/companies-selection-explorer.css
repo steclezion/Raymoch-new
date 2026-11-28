@@ -15,7 +15,7 @@
   font: 0.82rem Georgia, serif;
 }
 
-.atlas-companies > .atlas-tier-legend span {
+.atlas-companies > .atlas-tier-legend > span {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -27,13 +27,35 @@
   height: 24px;
 }
 
-.atlas-tier-legend span > svg { color: #5e6264; }
-.atlas-tier-badge { position: relative; display: inline-flex; }
+.atlas-page .atlas-tier-badge {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  justify-self: start;
+  width: 24px;
+  height: 24px;
+  color: #5e6264;
+}
 .atlas-tier-badge.is-platinum { color: #502007; }
 .atlas-tier-badge.is-gold { color: #d17b00; }
 .atlas-tier-badge.is-bronze { color: #eea51b; }
 .atlas-tier-badge.is-silver { color: #777c47; }
-.atlas-tier-badge svg:first-child { fill: currentColor; }
+.atlas-tier-badge.is-earned svg:first-child { fill: currentColor; }
+.atlas-page .atlas-tier-badge > svg { width: 22px; height: 22px; }
+.atlas-page .atlas-tier-badge:focus-visible {
+  outline: 2px solid #9c6648;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.atlas-page .atlas-tier-badge > .atlas-tier-check {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  color: #271b15;
+  stroke-width: 3;
+}
+.atlas-page .atlas-tier-badge.is-platinum > .atlas-tier-check,
+.atlas-page .atlas-tier-badge.is-silver > .atlas-tier-check { color: #fffdf9; }
 .atlas-workspace .atlas-orbit .atlas-ring-map {
   position: relative;
   width: min(100%, 630px);
@@ -297,14 +319,6 @@
   .atlas-stats article { min-width: 0; }
   .atlas-bar { grid-template-columns: minmax(0, 1fr) minmax(0, 1.55fr) auto; }
   .atlas-company-list article { grid-template-columns: 48px minmax(0, 1fr) 24px 24px; }
-}
-.atlas-companies > .atlas-tier-legend .atlas-tier-badge svg:last-child {
-  position: absolute;
-  inset: 5px;
-  width: 14px;
-  height: 14px;
-  color: #fff;
-  stroke-width: 3;
 }
 
 /* Match the authenticated home page palette. */

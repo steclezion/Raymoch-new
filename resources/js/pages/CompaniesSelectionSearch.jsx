@@ -1,5 +1,6 @@
 import React, { useId, useMemo, useState } from "react";
-import { Badge, BadgeCheck, BarChart3, Bookmark, Building2, Check, CircleAlert, Clock, ExternalLink, Layers3, Search, Shield, ShieldCheck, SlidersHorizontal, Sprout, Sun } from "lucide-react";
+import Tooltip from "@mui/material/Tooltip";
+import { Badge, BarChart3, Bookmark, Building2, Check, Clock, ExternalLink, Layers3, Search, Shield, ShieldCheck, SlidersHorizontal, Sprout, Sun } from "lucide-react";
 import HorizontalNavigation from "../components/HorizontalNavigation.jsx";
 import CompanyDetailDialog from "../components/companies/CompanyDetailDialog.jsx";
 import "../styles/companies-selection-search.css";
@@ -9,6 +10,60 @@ const COUNTRY_COLORS = ["var(--atlas-clay)", "var(--atlas-gold)", "#d5ae75", "#b
 const COMPANY_COLORS = ["var(--atlas-ink)", "#3d271d", "#523627", "#6f4935"];
 const clean = (value, fallback = "") => String(value ?? "").trim() || fallback;
 const companyId = (company) => company.id;
+
+const TRUST_TIERS = ["Platinum", "Gold", "Bronze", "Silver", "In progress", "Not tiered"];
+const TRUST_TIER_DESCRIPTIONS = new Map([
+  ["Platinum", "This badge identifies companies assigned the Platinum trust tier."],
+  ["Gold", "This badge identifies companies assigned the Gold trust tier."],
+  ["Bronze", "This badge identifies companies assigned the Bronze trust tier."],
+  ["Silver", "This badge identifies companies assigned the Silver trust tier."],
+  ["In progress", "A trust tier assessment is pending. A final tier has not been assigned."],
+  ["Not tiered", "Raymoch has no trust tier recorded for this company."],
+]);
+
+function trustTierLabel(value) {
+  const label = clean(value, "Not tiered");
+  const key = label.toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " ");
+  if (key === "pending") return "In progress";
+  return TRUST_TIERS.find((tier) => tier.toLowerCase() === key) ?? label;
+}
+
+function TrustTierIcon({ tier }) {
+  const label = trustTierLabel(tier);
+  const key = label.toLowerCase();
+  const earned = TRUST_TIERS.slice(0, 4).includes(label);
+  const Icon = earned ? Badge : key === "in progress" ? Clock : Shield;
+  const description = TRUST_TIER_DESCRIPTIONS.get(label) ?? "This is the trust tier recorded in Raymoch.";
+  return (
+    <Tooltip
+      describeChild
+      title={`${label} — ${description}`}
+      slotProps={{ tooltip: { sx: {
+        bgcolor: "#271b15",
+        color: "#fffdf9",
+        borderRadius: "6px",
+        fontSize: ".82rem",
+        lineHeight: 1.35,
+        px: 1.25,
+        py: 0.75,
+      } } }}
+    >
+      <span
+        className={`atlas-tier-badge ${earned ? `is-${key} is-earned` : ""}`}
+        role="img"
+        tabIndex={0}
+        aria-label={`Trust tier: ${label}`}
+      >
+        <Icon aria-hidden="true" />
+        {earned && <Check className="atlas-tier-check" aria-hidden="true" />}
+      </span>
+    </Tooltip>
+  );
+}
+
+function companyFilterValue(company, field, fallback) {
+  return field === "CTI_Tier" ? trustTierLabel(company[field]) : clean(company[field], fallback);
+}
 const COMPANY_FILTERS = [
   { field: "industry_name", label: "Industry", fallback: "Other" },
   { field: "CTI_Tier", label: "Trust tier", fallback: "Not tiered" },
@@ -89,7 +144,7 @@ export default function CompaniesSelectionSearch({ bootData }) {
   const sectors = boot.sectors || [];
   const companies = boot.companies || [];
   const sectorName = clean(sector.title, "Business Sector");
-  const tiers = useMemo(() => distribute(companies, (c) => c.CTI_Tier, "Not tiered"), [companies]);
+  const tiers = useMemo(() => distribute(companies, (c) => trustTierLabel(c.CTI_Tier), "Not tiered"), [companies]);
   const stages = useMemo(() => distribute(companies, (c) => c.Stage, "Not specified"), [companies]);
   const [activeView, setActiveView] = useState("tier");
   const [query, setQuery] = useState("");
@@ -98,7 +153,7 @@ export default function CompaniesSelectionSearch({ bootData }) {
   const filtersId = useId();
   const filterCount = Object.values(filters).filter(Boolean).length;
   const filterOptions = useMemo(() => COMPANY_FILTERS.map(({ field, fallback }) =>
-    [...new Set(companies.map((company) => clean(company[field], fallback)))]
+    [...new Set(companies.map((company) => companyFilterValue(company, field, fallback)))]
       .sort((a, b) => a.localeCompare(b))
   ), [companies]);
   const [selectedCountry, setSelectedCountry] = useState("");
@@ -138,7 +193,7 @@ export default function CompaniesSelectionSearch({ bootData }) {
       const matchesSearch = !term || [company.CompanyName, company.industry_name, company.country_name]
         .some((value) => clean(value).toLowerCase().includes(term));
       return matchesSearch && COMPANY_FILTERS.every(({ field, fallback }) =>
-        !filters[field] || clean(company[field], fallback) === filters[field]
+        !filters[field] || companyFilterValue(company, field, fallback) === filters[field]
       );
     });
   }, [countryCompanies, filters, query]);
@@ -312,7 +367,7 @@ export default function CompaniesSelectionSearch({ bootData }) {
         <aside className="atlas-side">
           <h2 className="atlas-analysis-title">Analysis</h2>
           <div className="atlas-view-tabs" role="group" aria-label="Distribution view">{[{ id: "tier", label: "By Tier", icon: ShieldCheck }, { id: "stage", label: "By Stage", icon: Layers3 }].map(({ id, label, icon: Icon }) => <button type="button" key={id} className={activeView === id ? "is-active" : ""} aria-pressed={activeView === id} onClick={() => setActiveView(id)}><Icon />{label}</button>)}</div>
-          <section className="atlas-distribution"><h2><BarChart3 />{distributionTitle}</h2><div>{distribution.slice(0, 6).map(([label, count], index) => <div className="atlas-bar" key={label}><span title={label}>{label}</span><b><i style={{ width: `${(count / maxDistribution) * 100}%`, opacity: 1 - index * .08 }} /></b><strong>{companies.length ? Math.round((count / companies.length) * 100) : 0}%</strong></div>)}</div></section>
+          <section className="atlas-distribution"><h2><BarChart3 />{distributionTitle}</h2><div>{distribution.slice(0, 6).map(([label, count], index) => <div className="atlas-bar" key={label}>{activeView === "tier" ? <TrustTierIcon tier={label} /> : <span title={label}>{label}</span>}<b><i style={{ width: `${(count / maxDistribution) * 100}%`, opacity: 1 - index * .08 }} /></b><strong>{companies.length ? Math.round((count / companies.length) * 100) : 0}%</strong></div>)}</div></section>
           <section className="atlas-companies">
             <header>
               <h2 aria-live="polite"><Building2 />{selectedCountry || "Companies"} <span>({visibleCompanies.length})</span></h2>
@@ -338,18 +393,14 @@ export default function CompaniesSelectionSearch({ bootData }) {
               ))}
               <button type="button" onClick={() => setFilters({})} disabled={!filterCount}>Clear filters</button>
             </div>
-            <div className="atlas-company-list" key={selectedCountry}>{visibleCompanies.map((company, index) => { const verified = /^verified$/i.test(clean(company.VerificationStatus)); const id = companyId(company); return <article key={`${id}-${index}`} className={selectedCompany && companyId(selectedCompany) === id ? "is-selected" : ""}><span className="atlas-company-mark"><CompanyMark company={company} /></span><button type="button" className="atlas-company-name" onClick={() => openCompany(company)}><strong>{clean(company.CompanyName, "Unnamed company")}</strong><small>{clean(company.industry_name || company.sector_title, sectorName)}</small></button><span className={verified ? "atlas-status is-verified" : "atlas-status"} title={verified ? "Verified" : "Verification in progress"}>{verified ? <BadgeCheck /> : <CircleAlert />}</span><button type="button" className="atlas-profile" onClick={() => openCompany(company)}>Visit Profile <ExternalLink /></button><button type="button" className={`atlas-save${saved.has(id) ? " is-saved" : ""}`} onClick={() => toggleSaved(id)} aria-label={saved.has(id) ? "Remove bookmark" : "Bookmark company"}><Bookmark /></button></article>; })}{!visibleCompanies.length && <p className="atlas-empty">No companies match your search.</p>}</div>
+            <div className="atlas-company-list" key={selectedCountry}>{visibleCompanies.map((company, index) => { const id = companyId(company); return <article key={`${id}-${index}`} className={selectedCompany && companyId(selectedCompany) === id ? "is-selected" : ""}><span className="atlas-company-mark"><CompanyMark company={company} /></span><button type="button" className="atlas-company-name" onClick={() => openCompany(company)}><strong>{clean(company.CompanyName, "Unnamed company")}</strong><small>{clean(company.industry_name || company.sector_title, sectorName)}</small></button><TrustTierIcon tier={company.CTI_Tier} /><button type="button" className="atlas-profile" onClick={() => openCompany(company)}>Visit Profile <ExternalLink /></button><button type="button" className={`atlas-save${saved.has(id) ? " is-saved" : ""}`} onClick={() => toggleSaved(id)} aria-label={saved.has(id) ? "Remove bookmark" : "Bookmark company"}><Bookmark /></button></article>; })}{!visibleCompanies.length && <p className="atlas-empty">No companies match your search.</p>}</div>
             <div className="atlas-tier-legend" role="group" aria-label="Trust tier legend">
-              {["Platinum", "Gold", "Bronze", "Silver"].map((tier) => (
+              {TRUST_TIERS.map((tier) => (
                 <span key={tier}>
-                  <i className={`atlas-tier-badge is-${tier.toLowerCase()}`} aria-hidden="true">
-                    <Badge /><Check />
-                  </i>
+                  <TrustTierIcon tier={tier} />
                   {tier}
                 </span>
               ))}
-              <span><Clock aria-hidden="true" />In progress</span>
-              <span><Shield aria-hidden="true" />No tier yet</span>
             </div>
           </section>
         </aside>
