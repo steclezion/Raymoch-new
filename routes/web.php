@@ -113,7 +113,6 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
     Route::view('/overview', 'pages.overview')->name('overview');
     Route::view('/fulloverview', 'pages.fulloverview')->name('fulloverview');
 
-    Route::view('/services', 'pages.services')->name('services');
     Route::view('/business', 'pages.Business_landing')->name('business_landing');
     Route::view('/customer', 'pages.customer')->name('customer');
 
@@ -149,7 +148,8 @@ Route::middleware(['guest', 'throttle:50,1'])->group(function () {
 // Public pages: available to both guests and authenticated users.
 Route::view('/about', 'pages.about')->name('about');
 Route::view('/security_raymoch', 'pages.security')->name('security_raymoch');
-Route::view('/matching', 'pages.matching')->name('matching');
+Route::view('/services', 'pages.services.index')->name('services');
+Route::redirect('/matching', '/services', 301)->name('matching');
 Route::view('/pricing', 'pages.Pricing')->name('pricing');
 Route::view('/for-businesses', 'pages.for-businesses')->name('for-businesses');
 Route::view('/for-investors', 'pages.for-investors')->name('for-investors');
@@ -361,7 +361,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/api/company-insight/{company}/question', [CompanyInsightController::class, 'question'])
         ->middleware('throttle:10,1');
     Route::view('/company', 'pages.company')->name('company.details');
-    Route::view('/services', 'pages.services')->name('services'); // temp → point to real page later
     Route::view('/partner-programs', 'pages.services.partner-programs')->name('partner-programs'); // partner programs page
     Route::view('/price-how-to-pay', 'pages.price_how_to_pay')->name('price.how.to.pay');
 

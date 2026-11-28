@@ -631,7 +631,7 @@ export default function Matching({ onSubmitCompany } = {}) {
       <div className="dashboard-shell services-dashboard">
       <style>{dashboardCss}</style>
 
-      <HorizontalNavigation activePath="/matching" />
+      <HorizontalNavigation activePath="/services" />
 
       <main className="dashboard-main">
         <header className="dashboard-topbar">

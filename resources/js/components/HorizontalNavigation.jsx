@@ -35,7 +35,7 @@ import useRefreshingFavicon from "./behaviours/useRefreshingFavicon.jsx";
 const NAV_ITEMS = [
   { label: "Home", icon: Home, href: "/home" },
   { label: "Businesses", icon: Building2, href: "/explore" },
-  { label: "Matching", icon: Handshake, href: "/matching" },
+  { label: "Services", icon: Handshake, href: "/services" },
   { label: "Investors", icon: Users, href: "/investors" },
   { label: "Verification", icon: ShieldCheck, href: "/verification" },
   { label: "Market Insights", icon: Globe2, href: "/insights" },
@@ -99,7 +99,6 @@ function normalizePath(path) {
 const BREADCRUMB_LABELS = {
   dashboard: "Dashboard",
   explore: "Businesses",
-  matching: "Matching",
   investors: "Investors",
   verification: "Verification",
   insights: "Market Insights",
@@ -148,7 +147,6 @@ const PAGE_TITLES = {
   "/explore/programs-services": "Programs & Services",
   "/explore/policy-incentives": "Policy & Incentives",
   "/explore/whitespace-map": "Whitespace Map",
-  "/matching": "Matching",
   "/investors": "Investors",
   "/for-investors": "For Investors",
   "/for-businesses": "For Businesses",
